@@ -143,7 +143,7 @@ export function ChargerMap({
           <p style="font-size: 12px; color: #888; margin-bottom: 12px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
             ${charger.summary}
           </p>
-          <a href="${charger.full_report_link}" target="_blank" style="display: inline-block; padding: 6px 12px; background: #1F4E78; color: white; border-radius: 6px; font-size: 12px; text-decoration: none;">
+          <a href="${charger.full_report_link}" target="_blank" style="display: inline block; padding: 6px 12px; background: #1F4E78; color: white; border-radius: 6px; font-size: 12px; text-decoration: none;">
             View Report
           </a>
         </div>
@@ -162,6 +162,58 @@ export function ChargerMap({
       leafletMap.current.fitBounds(bounds, { padding: [50, 50] });
     }
   }, [chargers, mapLoaded, onChargerSelect]);
+
+  // Risk overlay circles
+  const riskOverlayRef = useRef<any[]>([]);
+  
+  useEffect(() => {
+    if (!mapLoaded || !leafletMap.current) return;
+
+    const L = (window as any).L;
+
+    // Clear existing risk overlays
+    riskOverlayRef.current.forEach((overlay) => overlay.remove());
+    riskOverlayRef.current = [];
+
+    if (!showHeatmap) return;
+
+    // Group chargers by location and calculate center points
+    const locationGroups = new Map<string, { lat: number; lng: number; critical: number; degraded: number }>();
+    
+    chargers.forEach((charger) => {
+      const key = `${charger.city}, ${charger.state}`;
+      if (!locationGroups.has(key)) {
+        locationGroups.set(key, { lat: charger.lat, lng: charger.lng, critical: 0, degraded: 0 });
+      }
+      const group = locationGroups.get(key)!;
+      if (charger.status === "Critical") group.critical++;
+      if (charger.status === "Degraded") group.degraded++;
+    });
+
+    locationGroups.forEach((data, location) => {
+      if (data.critical === 0 && data.degraded === 0) return;
+
+      const isHighRisk = data.critical >= 2;
+      const riskLevel = data.critical * 2 + data.degraded;
+      const radius = Math.min(50000, 15000 + riskLevel * 3000); // Scale radius by risk
+
+      const circle = L.circle([data.lat, data.lng], {
+        radius: radius,
+        fillColor: isHighRisk ? "#EF4444" : "#F59E0B",
+        color: isHighRisk ? "#EF4444" : "#F59E0B",
+        weight: 2,
+        opacity: 0.6,
+        fillOpacity: 0.15,
+      }).addTo(leafletMap.current);
+
+      circle.bindTooltip(`${location}: ${data.critical} Critical, ${data.degraded} Degraded`, {
+        permanent: false,
+        direction: "top",
+      });
+
+      riskOverlayRef.current.push(circle);
+    });
+  }, [chargers, mapLoaded, showHeatmap]);
 
   // Fly to selected charger
   useEffect(() => {
