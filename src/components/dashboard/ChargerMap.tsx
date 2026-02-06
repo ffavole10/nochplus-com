@@ -112,6 +112,11 @@ export function ChargerMap({
 
     const L = (window as any).L;
 
+    // Store current view before clearing (to preserve zoom when toggling overlay)
+    const currentCenter = leafletMap.current.getCenter();
+    const currentZoom = leafletMap.current.getZoom();
+    const hasExistingView = layerGroupRef.current !== null;
+
     // Clear existing layer group
     if (layerGroupRef.current) {
       layerGroupRef.current.clearLayers();
@@ -234,8 +239,12 @@ export function ChargerMap({
     // Add cluster group to map
     leafletMap.current.addLayer(layerGroupRef.current);
 
-    // Center on continental US
-    leafletMap.current.setView([39.0, -98.0], 4);
+    // Only set initial view on first load, preserve view on overlay toggle
+    if (!hasExistingView) {
+      leafletMap.current.setView([39.0, -98.0], 4);
+    } else {
+      leafletMap.current.setView(currentCenter, currentZoom);
+    }
   }, [chargers, mapLoaded, onChargerSelect, showHeatmap]);
 
   // Risk overlay circles
