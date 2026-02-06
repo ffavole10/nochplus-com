@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Charger } from "@/data/chargerData";
 import { Search, Grid, List, FileText, Calendar, MapPin, X, Download, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import reportCover from "@/assets/report-cover.jpg";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
