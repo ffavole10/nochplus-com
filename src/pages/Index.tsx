@@ -126,20 +126,22 @@ const Index = () => {
           onSiteClick={handleSiteClick}
         />
 
-        {/* Report Library */}
-        <ReportLibrary chargers={filteredChargers} />
-      </main>
+            {/* Report Library */}
+            <ReportLibrary chargers={filteredChargers} />
+          </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 py-6 mt-12">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>
-            PM Campaign Dashboard • Powered by Noch Power •{" "}
-            {new Date().getFullYear()}
-          </p>
+          {/* Footer */}
+          <footer className="border-t border-border/50 py-6 mt-12">
+            <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+              <p>
+                PM Campaign Dashboard • Powered by Noch Power •{" "}
+                {new Date().getFullYear()}
+              </p>
+            </div>
+          </footer>
         </div>
-      </footer>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
