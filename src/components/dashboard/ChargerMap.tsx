@@ -83,44 +83,44 @@ export function ChargerMap({
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    // Default blue color when Risk Overlay is off
-    const defaultBlue = "#1F4E78";
-    
-    const getMarkerColor = (status: string, useRiskColors: boolean) => {
-      if (!useRiskColors) return defaultBlue;
-      switch (status) {
-        case "Critical":
-          return "#EF4444";
-        case "Degraded":
-          return "#F59E0B";
-        default:
-          return "#10B981";
+    // Create custom icon based on status
+    const createIcon = (status: string, useRiskColors: boolean) => {
+      let color = "#1F9DD9"; // Default blue
+      if (useRiskColors) {
+        switch (status) {
+          case "Critical":
+            color = "#EF4444";
+            break;
+          case "Degraded":
+            color = "#F59E0B";
+            break;
+          default:
+            color = "#10B981";
+        }
       }
-    };
-
-    const getMarkerSize = (status: string, useRiskColors: boolean) => {
-      if (!useRiskColors) return 4; // Smaller uniform size when not showing risk
-      switch (status) {
-        case "Critical":
-          return 10;
-        case "Degraded":
-          return 7;
-        default:
-          return 4;
-      }
+      
+      // SVG pin marker
+      const svgIcon = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="20" height="30">
+          <path d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 24 12 24s12-16.8 12-24c0-6.6-5.4-12-12-12z" fill="${color}"/>
+          <circle cx="12" cy="12" r="5" fill="white"/>
+        </svg>
+      `;
+      
+      return L.divIcon({
+        html: svgIcon,
+        className: "custom-marker",
+        iconSize: [20, 30],
+        iconAnchor: [10, 30],
+        popupAnchor: [0, -30],
+      });
     };
 
     chargers.forEach((charger) => {
-      const color = getMarkerColor(charger.status, showHeatmap);
-      const size = getMarkerSize(charger.status, showHeatmap);
+      const icon = createIcon(charger.status, showHeatmap);
       
-      const marker = L.circleMarker([charger.lat, charger.lng], {
-        radius: size,
-        fillColor: color,
-        color: color,
-        weight: showHeatmap && charger.status === "Critical" ? 2 : 1,
-        opacity: 1,
-        fillOpacity: showHeatmap ? (charger.status === "Critical" ? 0.9 : 0.7) : 0.8,
+      const marker = L.marker([charger.lat, charger.lng], {
+        icon: icon,
       }).addTo(leafletMap.current);
 
       marker.bindPopup(`
@@ -158,7 +158,7 @@ export function ChargerMap({
       markersRef.current.push(marker);
     });
 
-    // Fit bounds to continental US
+    // Center on continental US
     leafletMap.current.setView([39.0, -98.0], 4);
   }, [chargers, mapLoaded, onChargerSelect, showHeatmap]);
 
@@ -262,21 +262,33 @@ export function ChargerMap({
             {showHeatmap ? (
               <>
                 <div className="flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full bg-critical"></span>
+                  <svg width="16" height="24" viewBox="0 0 24 36">
+                    <path d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 24 12 24s12-16.8 12-24c0-6.6-5.4-12-12-12z" fill="#EF4444"/>
+                    <circle cx="12" cy="12" r="5" fill="white"/>
+                  </svg>
                   <span>Critical</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-degraded"></span>
+                  <svg width="16" height="24" viewBox="0 0 24 36">
+                    <path d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 24 12 24s12-16.8 12-24c0-6.6-5.4-12-12-12z" fill="#F59E0B"/>
+                    <circle cx="12" cy="12" r="5" fill="white"/>
+                  </svg>
                   <span>Degraded</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-optimal"></span>
+                  <svg width="16" height="24" viewBox="0 0 24 36">
+                    <path d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 24 12 24s12-16.8 12-24c0-6.6-5.4-12-12-12z" fill="#10B981"/>
+                    <circle cx="12" cy="12" r="5" fill="white"/>
+                  </svg>
                   <span>Optimal</span>
                 </div>
               </>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "#1F4E78" }}></span>
+                <svg width="16" height="24" viewBox="0 0 24 36">
+                  <path d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 24 12 24s12-16.8 12-24c0-6.6-5.4-12-12-12z" fill="#1F9DD9"/>
+                  <circle cx="12" cy="12" r="5" fill="white"/>
+                </svg>
                 <span>Charger Location</span>
               </div>
             )}

@@ -224,6 +224,12 @@
     @apply rounded-lg shadow-lg;
   }
   
+  /* Custom marker icon styling */
+  .custom-marker {
+    background: transparent !important;
+    border: none !important;
+  }
+  
   /* Custom Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     @apply w-2;
