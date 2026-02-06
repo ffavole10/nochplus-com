@@ -182,7 +182,7 @@ export function DashboardSidebar({
       <SidebarHeader className="border-b border-sidebar-border p-4">
         {/* Noch Logo - half sidebar width */}
         {!isCollapsed && (
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-start mb-4">
             <img 
               src={nochLogo} 
               alt="Noch Power" 
