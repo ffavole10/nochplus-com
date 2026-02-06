@@ -14,6 +14,7 @@ const Index = () => {
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [filteredChargers, setFilteredChargers] = useState<Charger[]>(allChargers);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("evgo");
+  const [focusedLocation, setFocusedLocation] = useState<string | null>(null);
   const criticalRef = useRef<HTMLDivElement>(null);
 
   const stats = getNetworkStats(allChargers);
@@ -28,14 +29,23 @@ const Index = () => {
     document.getElementById("map-section")?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const handleLocationFilter = useCallback((location: string) => {
-    const [city, state] = location.split(", ");
-    const filtered = allChargers.filter(
-      (c) => c.city === city && c.state === state
-    );
-    setFilteredChargers(filtered);
-    if (filtered.length > 0) {
-      setSelectedCharger(filtered[0]);
+  const handleLocationFilter = useCallback((location: string | null) => {
+    if (location === null) {
+      // Deselect - show all chargers
+      setFilteredChargers(allChargers);
+      setFocusedLocation(null);
+      setSelectedCharger(null);
+    } else {
+      // Focus on specific location
+      const [city, state] = location.split(", ");
+      const filtered = allChargers.filter(
+        (c) => c.city === city && c.state === state
+      );
+      setFilteredChargers(filtered);
+      setFocusedLocation(location);
+      if (filtered.length > 0) {
+        setSelectedCharger(filtered[0]);
+      }
     }
   }, []);
 
@@ -109,13 +119,14 @@ const Index = () => {
               criticalRef={criticalRef}
             />
 
-            {/* Map Section */}
             <div id="map-section">
               <ChargerMap
                 chargers={filteredChargers}
+                allChargers={allChargers}
                 selectedCharger={selectedCharger}
                 onChargerSelect={setSelectedCharger}
                 onLocationFilter={handleLocationFilter}
+                focusedLocation={focusedLocation}
               />
             </div>
 
