@@ -14,7 +14,182 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      campaigns: {
+        Row: {
+          created_at: string
+          critical_count: number | null
+          customer: string
+          degraded_count: number | null
+          end_date: string | null
+          health_score: number | null
+          id: string
+          name: string
+          optimal_count: number | null
+          quarter: string | null
+          start_date: string | null
+          total_chargers: number | null
+          total_serviced: number | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          critical_count?: number | null
+          customer: string
+          degraded_count?: number | null
+          end_date?: string | null
+          health_score?: number | null
+          id?: string
+          name: string
+          optimal_count?: number | null
+          quarter?: string | null
+          start_date?: string | null
+          total_chargers?: number | null
+          total_serviced?: number | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          critical_count?: number | null
+          customer?: string
+          degraded_count?: number | null
+          end_date?: string | null
+          health_score?: number | null
+          id?: string
+          name?: string
+          optimal_count?: number | null
+          quarter?: string | null
+          start_date?: string | null
+          total_chargers?: number | null
+          total_serviced?: number | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      charger_records: {
+        Row: {
+          address: string | null
+          app_issue: boolean | null
+          campaign_id: string
+          cc_reader_issue: boolean | null
+          ccs_cable_issue: boolean | null
+          chademo_cable_issue: boolean | null
+          circuit_board_issue: boolean | null
+          city: string | null
+          created_at: string
+          holster_issue: boolean | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          max_power: number | null
+          model: string | null
+          other_issue: boolean | null
+          power_cabinet_report_url: string | null
+          power_cabinet_status: string | null
+          power_cabinet_summary: string | null
+          power_supply_issue: boolean | null
+          report_url: string | null
+          rfid_reader_issue: boolean | null
+          screen_damage: boolean | null
+          serial_number: string | null
+          service_date: string | null
+          service_required: number | null
+          serviced_qty: number | null
+          site_name: string | null
+          start_date: string | null
+          state: string | null
+          station_id: string
+          station_name: string | null
+          status: string | null
+          summary: string | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          app_issue?: boolean | null
+          campaign_id: string
+          cc_reader_issue?: boolean | null
+          ccs_cable_issue?: boolean | null
+          chademo_cable_issue?: boolean | null
+          circuit_board_issue?: boolean | null
+          city?: string | null
+          created_at?: string
+          holster_issue?: boolean | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          max_power?: number | null
+          model?: string | null
+          other_issue?: boolean | null
+          power_cabinet_report_url?: string | null
+          power_cabinet_status?: string | null
+          power_cabinet_summary?: string | null
+          power_supply_issue?: boolean | null
+          report_url?: string | null
+          rfid_reader_issue?: boolean | null
+          screen_damage?: boolean | null
+          serial_number?: string | null
+          service_date?: string | null
+          service_required?: number | null
+          serviced_qty?: number | null
+          site_name?: string | null
+          start_date?: string | null
+          state?: string | null
+          station_id: string
+          station_name?: string | null
+          status?: string | null
+          summary?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          app_issue?: boolean | null
+          campaign_id?: string
+          cc_reader_issue?: boolean | null
+          ccs_cable_issue?: boolean | null
+          chademo_cable_issue?: boolean | null
+          circuit_board_issue?: boolean | null
+          city?: string | null
+          created_at?: string
+          holster_issue?: boolean | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          max_power?: number | null
+          model?: string | null
+          other_issue?: boolean | null
+          power_cabinet_report_url?: string | null
+          power_cabinet_status?: string | null
+          power_cabinet_summary?: string | null
+          power_supply_issue?: boolean | null
+          report_url?: string | null
+          rfid_reader_issue?: boolean | null
+          screen_damage?: boolean | null
+          serial_number?: string | null
+          service_date?: string | null
+          service_required?: number | null
+          serviced_qty?: number | null
+          site_name?: string | null
+          start_date?: string | null
+          state?: string | null
+          station_id?: string
+          station_name?: string | null
+          status?: string | null
+          summary?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charger_records_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
