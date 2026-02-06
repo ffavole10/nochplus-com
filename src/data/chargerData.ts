@@ -329,7 +329,8 @@ function generateAdditionalChargers(): Charger[] {
   const additionalChargers: Charger[] = [];
   let idCounter = 8400;
   
-  for (let i = 0; i < 112; i++) {
+  // Generate ~5000 chargers to match real-world volume
+  for (let i = 0; i < 4988; i++) {
     const location = additionalLocations[i % additionalLocations.length];
     const statusRoll = Math.random();
     const status: ChargerStatus = statusRoll < 0.86 ? "Optimal" : statusRoll < 0.96 ? "Degraded" : "Critical";
@@ -343,10 +344,10 @@ function generateAdditionalChargers(): Charger[] {
     
     additionalChargers.push({
       charger_id: `C${idCounter + i}`,
-      station_number: `GEN${String(i).padStart(3, "0")}`,
+      station_number: `GEN${String(i).padStart(4, "0")}`,
       model: "EVPC-S-EVGO-012022-480-XXXX",
       manufacturer: "BTC",
-      address: `${1000 + i} Main Street`,
+      address: `${1000 + (i % 9000)} Main Street`,
       city: location.city,
       state: location.state,
       zip: "00000",
@@ -361,8 +362,8 @@ function generateAdditionalChargers(): Charger[] {
       full_report_link: `https://drive.google.com/file/d/gen-${i}`,
       start_date: "1/1/2022",
       max_power: 50,
-      lat: location.lat + (Math.random() - 0.5) * 0.02,
-      lng: location.lng + (Math.random() - 0.5) * 0.02,
+      lat: location.lat + (Math.random() - 0.5) * 0.05,
+      lng: location.lng + (Math.random() - 0.5) * 0.05,
       issues,
       technician: ["Mike Johnson", "Sarah Chen", "James Wilson", "David Park", "Emily Rodriguez"][Math.floor(Math.random() * 5)],
       estimated_cost: status === "Critical" ? 3000 + Math.floor(Math.random() * 2000) : status === "Degraded" ? 500 + Math.floor(Math.random() * 1000) : 0,
