@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/sidebar";
 import { allChargers, Charger } from "@/data/chargerData";
 import { cn } from "@/lib/utils";
+import nochLogo from "@/assets/noch-logo-white.png";
 
 interface DashboardSidebarProps {
   onFiltersChange: (chargers: Charger[]) => void;
@@ -179,6 +180,16 @@ export function DashboardSidebar({
   return (
     <Sidebar className="border-r border-border/50">
       <SidebarHeader className="border-b border-sidebar-border p-4">
+        {/* Noch Logo - half sidebar width */}
+        {!isCollapsed && (
+          <div className="flex justify-center mb-4">
+            <img 
+              src={nochLogo} 
+              alt="Noch Power" 
+              className="w-1/2 h-auto"
+            />
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5" />
           {!isCollapsed && <span className="font-semibold">Filters</span>}
