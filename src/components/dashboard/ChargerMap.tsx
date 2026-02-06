@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
-import { LatLngBounds } from "leaflet";
+import L from "leaflet";
 import { Charger, getGeographicRisk } from "@/data/chargerData";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { MapPin, AlertTriangle, Layers, Focus } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+
+// Fix for default marker icons in Leaflet with bundlers
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
 
 interface ChargerMapProps {
   chargers: Charger[];
