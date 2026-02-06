@@ -1,12 +1,9 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
-import { LatLngBounds } from "leaflet";
+import { useEffect, useRef, useState } from "react";
 import { Charger, getGeographicRisk } from "@/data/chargerData";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { MapPin, AlertTriangle, Layers, Focus } from "lucide-react";
-import "leaflet/dist/leaflet.css";
+import { MapPin, AlertTriangle, Layers, Focus, ExternalLink } from "lucide-react";
 
 interface ChargerMapProps {
   chargers: Charger[];
@@ -15,63 +12,165 @@ interface ChargerMapProps {
   onLocationFilter: (location: string) => void;
 }
 
-function MapController({ selectedCharger }: { selectedCharger: Charger | null }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (selectedCharger) {
-      map.flyTo([selectedCharger.lat, selectedCharger.lng], 15, { duration: 1 });
-    }
-  }, [selectedCharger, map]);
-
-  return null;
-}
-
-function FitBounds({ chargers }: { chargers: Charger[] }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (chargers.length > 0) {
-      const bounds = new LatLngBounds(
-        chargers.map((c) => [c.lat, c.lng] as [number, number])
-      );
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [chargers, map]);
-
-  return null;
-}
-
 export function ChargerMap({
   chargers,
   selectedCharger,
   onChargerSelect,
   onLocationFilter,
 }: ChargerMapProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const leafletMap = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const riskAreas = getGeographicRisk(chargers);
 
-  const getMarkerSize = (status: string) => {
-    switch (status) {
-      case "Critical":
-        return 12;
-      case "Degraded":
-        return 9;
-      default:
-        return 6;
-    }
-  };
+  // Load Leaflet dynamically
+  useEffect(() => {
+    const loadLeaflet = async () => {
+      // Add Leaflet CSS
+      if (!document.getElementById("leaflet-css")) {
+        const link = document.createElement("link");
+        link.id = "leaflet-css";
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(link);
+      }
 
-  const getMarkerColor = (status: string) => {
-    switch (status) {
-      case "Critical":
-        return "hsl(var(--critical))";
-      case "Degraded":
-        return "hsl(var(--degraded))";
-      default:
-        return "hsl(var(--optimal))";
+      // Load Leaflet JS
+      if (!(window as any).L) {
+        await new Promise<void>((resolve) => {
+          const script = document.createElement("script");
+          script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+          script.onload = () => resolve();
+          document.head.appendChild(script);
+        });
+      }
+
+      setMapLoaded(true);
+    };
+
+    loadLeaflet();
+  }, []);
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current || leafletMap.current) return;
+
+    const L = (window as any).L;
+    
+    leafletMap.current = L.map(mapRef.current).setView([37.0, -100.0], 4);
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    }).addTo(leafletMap.current);
+
+    return () => {
+      if (leafletMap.current) {
+        leafletMap.current.remove();
+        leafletMap.current = null;
+      }
+    };
+  }, [mapLoaded]);
+
+  // Update markers
+  useEffect(() => {
+    if (!mapLoaded || !leafletMap.current) return;
+
+    const L = (window as any).L;
+
+    // Clear existing markers
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
+
+    const getMarkerColor = (status: string) => {
+      switch (status) {
+        case "Critical":
+          return "#EF4444";
+        case "Degraded":
+          return "#F59E0B";
+        default:
+          return "#10B981";
+      }
+    };
+
+    const getMarkerSize = (status: string) => {
+      switch (status) {
+        case "Critical":
+          return 12;
+        case "Degraded":
+          return 9;
+        default:
+          return 6;
+      }
+    };
+
+    chargers.forEach((charger) => {
+      const marker = L.circleMarker([charger.lat, charger.lng], {
+        radius: getMarkerSize(charger.status),
+        fillColor: getMarkerColor(charger.status),
+        color: getMarkerColor(charger.status),
+        weight: charger.status === "Critical" ? 3 : 2,
+        opacity: 1,
+        fillOpacity: charger.status === "Critical" ? 0.9 : 0.7,
+      }).addTo(leafletMap.current);
+
+      const statusClass = charger.status === "Critical" 
+        ? "bg-red-500 text-white" 
+        : charger.status === "Degraded" 
+        ? "bg-yellow-500 text-white" 
+        : "bg-green-500 text-white";
+
+      marker.bindPopup(`
+        <div style="min-width: 200px; font-family: system-ui, sans-serif;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; ${
+              charger.status === "Critical" 
+                ? "background: #EF4444; color: white;" 
+                : charger.status === "Degraded" 
+                ? "background: #F59E0B; color: white;" 
+                : "background: #10B981; color: white;"
+            }">
+              ${charger.status}
+            </span>
+            <span style="font-family: monospace; font-size: 14px; font-weight: 600;">
+              ${charger.charger_id}
+            </span>
+          </div>
+          <p style="font-size: 14px; color: #666; margin-bottom: 8px;">
+            ${charger.site_name}
+          </p>
+          <p style="font-size: 12px; color: #888; margin-bottom: 12px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+            ${charger.summary}
+          </p>
+          <a href="${charger.full_report_link}" target="_blank" style="display: inline-block; padding: 6px 12px; background: #1F4E78; color: white; border-radius: 6px; font-size: 12px; text-decoration: none;">
+            View Report
+          </a>
+        </div>
+      `);
+
+      marker.on("click", () => {
+        onChargerSelect(charger);
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    // Fit bounds
+    if (chargers.length > 0) {
+      const bounds = L.latLngBounds(chargers.map((c) => [c.lat, c.lng]));
+      leafletMap.current.fitBounds(bounds, { padding: [50, 50] });
     }
-  };
+  }, [chargers, mapLoaded, onChargerSelect]);
+
+  // Fly to selected charger
+  useEffect(() => {
+    if (!mapLoaded || !leafletMap.current || !selectedCharger) return;
+
+    leafletMap.current.flyTo([selectedCharger.lat, selectedCharger.lng], 15, {
+      duration: 1,
+    });
+  }, [selectedCharger, mapLoaded]);
 
   return (
     <div className="dashboard-section">
@@ -98,73 +197,13 @@ export function ChargerMap({
             </div>
           </div>
 
-          <div className="map-container h-[500px]">
-            <MapContainer
-              center={[37.0, -100.0]}
-              zoom={4}
-              style={{ height: "100%", width: "100%" }}
-              scrollWheelZoom={true}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-              />
-              <FitBounds chargers={chargers} />
-              <MapController selectedCharger={selectedCharger} />
-
-              {chargers.map((charger) => (
-                <CircleMarker
-                  key={charger.charger_id}
-                  center={[charger.lat, charger.lng]}
-                  radius={getMarkerSize(charger.status)}
-                  pathOptions={{
-                    color: getMarkerColor(charger.status),
-                    fillColor: getMarkerColor(charger.status),
-                    fillOpacity: charger.status === "Critical" ? 0.9 : 0.7,
-                    weight: charger.status === "Critical" ? 3 : 2,
-                  }}
-                  eventHandlers={{
-                    click: () => onChargerSelect(charger),
-                  }}
-                >
-                  <Popup>
-                    <div className="p-2 min-w-[200px]">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            charger.status === "Critical"
-                              ? "status-critical"
-                              : charger.status === "Degraded"
-                              ? "status-degraded"
-                              : "status-optimal"
-                          }`}
-                        >
-                          {charger.status}
-                        </span>
-                        <span className="font-mono text-sm font-semibold">
-                          {charger.charger_id}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {charger.site_name}
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                        {charger.summary}
-                      </p>
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        onClick={() =>
-                          window.open(charger.full_report_link, "_blank")
-                        }
-                      >
-                        View Report
-                      </Button>
-                    </div>
-                  </Popup>
-                </CircleMarker>
-              ))}
-            </MapContainer>
+          <div className="map-container h-[500px] relative">
+            <div ref={mapRef} className="w-full h-full rounded-xl" />
+            {!mapLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted rounded-xl">
+                <div className="text-muted-foreground">Loading map...</div>
+              </div>
+            )}
           </div>
 
           {/* Legend */}
