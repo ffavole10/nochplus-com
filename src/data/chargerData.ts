@@ -329,8 +329,8 @@ function generateAdditionalChargers(): Charger[] {
   const additionalChargers: Charger[] = [];
   let idCounter = 8400;
   
-  // Generate ~5000 chargers to match real-world volume
-  for (let i = 0; i < 4988; i++) {
+  // Generate 5475 additional chargers (5487 total - 12 sample chargers)
+  for (let i = 0; i < 5475; i++) {
     const location = additionalLocations[i % additionalLocations.length];
     const statusRoll = Math.random();
     const status: ChargerStatus = statusRoll < 0.86 ? "Optimal" : statusRoll < 0.96 ? "Degraded" : "Critical";
