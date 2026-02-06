@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Charger } from "@/data/chargerData";
 import { Search, Grid, List, FileText, Calendar, MapPin, X, Download, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import reportCover from "@/assets/report-cover.jpg";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -192,6 +193,22 @@ export function ReportLibrary({ chargers }: ReportLibraryProps) {
                   </DialogTitle>
                 </div>
               </DialogHeader>
+
+              {/* Cover Header */}
+              <div className="relative h-32 -mx-6 -mt-6 mb-6 overflow-hidden rounded-t-lg">
+                <img
+                  src={reportCover}
+                  alt="Service Report Cover"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-primary/40" />
+                <div className="absolute inset-0 flex items-center px-6">
+                  <div className="text-white">
+                    <p className="text-xs uppercase tracking-wider opacity-80">Service Report</p>
+                    <h3 className="text-xl font-bold">Preventive Maintenance Inspection</h3>
+                  </div>
+                </div>
+              </div>
 
               <div className="space-y-6">
                 {/* Photo Gallery */}
