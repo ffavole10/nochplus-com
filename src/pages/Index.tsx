@@ -13,6 +13,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 const Index = () => {
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [filteredChargers, setFilteredChargers] = useState<Charger[]>(allChargers);
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("evgo");
   const criticalRef = useRef<HTMLDivElement>(null);
 
   const stats = getNetworkStats(allChargers);
