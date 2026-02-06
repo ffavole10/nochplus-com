@@ -9,8 +9,8 @@
 
 @layer base {
   :root {
-    /* Primary Brand - Deep Blue */
-    --primary: 209 59% 30%;
+    /* Primary Brand - Teal (#25b3a5) */
+    --primary: 174 66% 42%;
     --primary-foreground: 0 0% 100%;
     
     /* Secondary - Bright Blue */
