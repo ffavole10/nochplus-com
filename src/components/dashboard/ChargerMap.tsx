@@ -40,7 +40,7 @@ function FitBounds({ chargers }: { chargers: Charger[] }) {
 
   useEffect(() => {
     if (chargers.length > 0) {
-      const bounds = new LatLngBounds(
+      const bounds = new L.LatLngBounds(
         chargers.map((c) => [c.lat, c.lng] as [number, number])
       );
       map.fitBounds(bounds, { padding: [50, 50] });
