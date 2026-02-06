@@ -83,7 +83,11 @@ export function ChargerMap({
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    const getMarkerColor = (status: string) => {
+    // Default blue color when Risk Overlay is off
+    const defaultBlue = "#1F4E78";
+    
+    const getMarkerColor = (status: string, useRiskColors: boolean) => {
+      if (!useRiskColors) return defaultBlue;
       switch (status) {
         case "Critical":
           return "#EF4444";
@@ -94,32 +98,30 @@ export function ChargerMap({
       }
     };
 
-    const getMarkerSize = (status: string) => {
+    const getMarkerSize = (status: string, useRiskColors: boolean) => {
+      if (!useRiskColors) return 4; // Smaller uniform size when not showing risk
       switch (status) {
         case "Critical":
-          return 12;
+          return 10;
         case "Degraded":
-          return 9;
+          return 7;
         default:
-          return 6;
+          return 4;
       }
     };
 
     chargers.forEach((charger) => {
+      const color = getMarkerColor(charger.status, showHeatmap);
+      const size = getMarkerSize(charger.status, showHeatmap);
+      
       const marker = L.circleMarker([charger.lat, charger.lng], {
-        radius: getMarkerSize(charger.status),
-        fillColor: getMarkerColor(charger.status),
-        color: getMarkerColor(charger.status),
-        weight: charger.status === "Critical" ? 3 : 2,
+        radius: size,
+        fillColor: color,
+        color: color,
+        weight: showHeatmap && charger.status === "Critical" ? 2 : 1,
         opacity: 1,
-        fillOpacity: charger.status === "Critical" ? 0.9 : 0.7,
+        fillOpacity: showHeatmap ? (charger.status === "Critical" ? 0.9 : 0.7) : 0.8,
       }).addTo(leafletMap.current);
-
-      const statusClass = charger.status === "Critical" 
-        ? "bg-red-500 text-white" 
-        : charger.status === "Degraded" 
-        ? "bg-yellow-500 text-white" 
-        : "bg-green-500 text-white";
 
       marker.bindPopup(`
         <div style="min-width: 200px; font-family: system-ui, sans-serif;">
@@ -143,7 +145,7 @@ export function ChargerMap({
           <p style="font-size: 12px; color: #888; margin-bottom: 12px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
             ${charger.summary}
           </p>
-          <a href="${charger.full_report_link}" target="_blank" style="display: inline block; padding: 6px 12px; background: #1F4E78; color: white; border-radius: 6px; font-size: 12px; text-decoration: none;">
+          <a href="${charger.full_report_link}" target="_blank" style="display: inline-block; padding: 6px 12px; background: #1F4E78; color: white; border-radius: 6px; font-size: 12px; text-decoration: none;">
             View Report
           </a>
         </div>
@@ -156,12 +158,9 @@ export function ChargerMap({
       markersRef.current.push(marker);
     });
 
-    // Fit bounds
-    if (chargers.length > 0) {
-      const bounds = L.latLngBounds(chargers.map((c) => [c.lat, c.lng]));
-      leafletMap.current.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [chargers, mapLoaded, onChargerSelect]);
+    // Fit bounds to continental US
+    leafletMap.current.setView([39.0, -98.0], 4);
+  }, [chargers, mapLoaded, onChargerSelect, showHeatmap]);
 
   // Risk overlay circles
   const riskOverlayRef = useRef<any[]>([]);
@@ -260,18 +259,27 @@ export function ChargerMap({
 
           {/* Legend */}
           <div className="flex items-center justify-center gap-6 mt-4 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-4 h-4 rounded-full bg-critical"></span>
-              <span>Critical</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-degraded"></span>
-              <span>Degraded</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-optimal"></span>
-              <span>Optimal</span>
-            </div>
+            {showHeatmap ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-critical"></span>
+                  <span>Critical</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-degraded"></span>
+                  <span>Degraded</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-optimal"></span>
+                  <span>Optimal</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "#1F4E78" }}></span>
+                <span>Charger Location</span>
+              </div>
+            )}
           </div>
         </div>
 
