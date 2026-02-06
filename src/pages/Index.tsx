@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useMemo } from "react";
+import { useRef, useState, useCallback } from "react";
 import { allChargers, getNetworkStats, Charger, ChargerStatus } from "@/data/chargerData";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { HeroMetrics } from "@/components/dashboard/HeroMetrics";
@@ -9,58 +9,15 @@ import { SitePerformanceTable } from "@/components/dashboard/SitePerformanceTabl
 import { ReportLibrary } from "@/components/dashboard/ReportLibrary";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { CampaignHistoryPanel } from "@/components/campaigns/CampaignHistoryPanel";
-import { useChargerRecords, Campaign } from "@/hooks/useCampaigns";
 
 const Index = () => {
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [filteredChargers, setFilteredChargers] = useState<Charger[]>(allChargers);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("evgo");
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const criticalRef = useRef<HTMLDivElement>(null);
 
-  // Fetch charger records if a campaign is selected
-  const { data: campaignChargerRecords } = useChargerRecords(selectedCampaign?.id || null);
-
-  // Convert campaign charger records to Charger format for dashboard components
-  const campaignChargers = useMemo((): Charger[] => {
-    if (!campaignChargerRecords) return [];
-    return campaignChargerRecords.map((record) => ({
-      charger_id: record.station_id,
-      station_number: record.station_name || record.station_id,
-      model: record.model || "Unknown",
-      manufacturer: "BTC",
-      address: record.address || "",
-      city: record.city || "",
-      state: record.state || "",
-      zip: record.zip || "",
-      site_name: record.site_name || "",
-      serviced: record.serviced_qty || 0,
-      status: (record.status as ChargerStatus) || "Optimal",
-      summary: record.summary || "",
-      full_report_link: record.report_url || "",
-      start_date: record.start_date || "",
-      max_power: record.max_power || 50,
-      lat: record.latitude || 32.7 + Math.random() * 0.1,
-      lng: record.longitude || -117.2 + Math.random() * 0.1,
-      issues: [
-        record.ccs_cable_issue && "CCS Cable",
-        record.chademo_cable_issue && "CHAdeMO Cable",
-        record.screen_damage && "Screen Damage",
-        record.cc_reader_issue && "CC Reader",
-        record.rfid_reader_issue && "RFID Reader",
-        record.power_supply_issue && "Power Supply",
-        record.circuit_board_issue && "Circuit Board",
-        record.other_issue && "Other",
-      ].filter(Boolean) as string[],
-    }));
-  }, [campaignChargerRecords]);
-
-  // Use campaign chargers if a campaign is selected, otherwise use mock data
-  const activeChargers = selectedCampaign ? campaignChargers : filteredChargers;
-
   const stats = getNetworkStats(allChargers);
-  const filteredStats = getNetworkStats(activeChargers);
+  const filteredStats = getNetworkStats(filteredChargers);
 
   const handleCriticalClick = useCallback(() => {
     criticalRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -134,19 +91,6 @@ const Index = () => {
               <SidebarTrigger className="mb-4" />
             </div>
 
-            {/* Campaign History Panel */}
-            <div className="max-w-md">
-              <CampaignHistoryPanel
-                selectedCampaignId={selectedCampaign?.id || null}
-                onSelectCampaign={(campaign) => {
-                  setSelectedCampaign(campaign);
-                  if (!campaign) {
-                    setFilteredChargers(allChargers);
-                  }
-                }}
-              />
-            </div>
-
             {/* Hero Metrics */}
             <HeroMetrics
               healthScore={filteredStats.healthScore}
@@ -160,7 +104,7 @@ const Index = () => {
 
             {/* Critical Findings */}
             <FindingsSection
-              chargers={activeChargers}
+              chargers={filteredChargers}
               onShowOnMap={handleShowOnMap}
               criticalRef={criticalRef}
             />
@@ -168,7 +112,7 @@ const Index = () => {
             {/* Map Section */}
             <div id="map-section">
               <ChargerMap
-                chargers={activeChargers}
+                chargers={filteredChargers}
                 selectedCharger={selectedCharger}
                 onChargerSelect={setSelectedCharger}
                 onLocationFilter={handleLocationFilter}
@@ -177,18 +121,18 @@ const Index = () => {
 
             {/* Component Analysis */}
             <ComponentAnalysis
-              chargers={activeChargers}
+              chargers={filteredChargers}
               onComponentClick={handleComponentClick}
             />
 
             {/* Site Performance */}
             <SitePerformanceTable
-              chargers={activeChargers}
+              chargers={filteredChargers}
               onSiteClick={handleSiteClick}
             />
 
             {/* Report Library */}
-            <ReportLibrary chargers={activeChargers} />
+            <ReportLibrary chargers={filteredChargers} />
           </main>
 
           {/* Footer */}
