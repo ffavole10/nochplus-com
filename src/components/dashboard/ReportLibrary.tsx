@@ -194,6 +194,22 @@ export function ReportLibrary({ chargers }: ReportLibraryProps) {
                 </div>
               </DialogHeader>
 
+              {/* Cover Header */}
+              <div className="relative h-32 -mx-6 -mt-6 mb-6 overflow-hidden rounded-t-lg">
+                <img
+                  src={reportCover}
+                  alt="Service Report Cover"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-primary/40" />
+                <div className="absolute inset-0 flex items-center px-6">
+                  <div className="text-white">
+                    <p className="text-xs uppercase tracking-wider opacity-80">Service Report</p>
+                    <h3 className="text-xl font-bold">Preventive Maintenance Inspection</h3>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-6">
                 {/* Photo Gallery */}
                 <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
