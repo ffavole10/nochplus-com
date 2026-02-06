@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Filter,
   MapPin,
@@ -11,6 +12,7 @@ import {
   ChevronDown,
   ChevronRight,
   X,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -412,10 +414,20 @@ export function DashboardSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4">
+      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-3">
         {!isCollapsed && (
           <>
-            <div className="text-sm text-sidebar-foreground/80 mb-3">
+            <Link to="/campaigns">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent"
+              >
+                <FolderOpen className="w-4 h-4 mr-2" />
+                Campaign History
+              </Button>
+            </Link>
+            <div className="text-sm text-sidebar-foreground/80">
               Showing <strong>{filteredCount}</strong> of{" "}
               <strong>{totalCount}</strong> chargers
             </div>
