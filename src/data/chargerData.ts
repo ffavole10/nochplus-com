@@ -311,83 +311,84 @@ export const sampleChargers: Charger[] = [
 ];
 
 // US region data - Limited to specific states: CA, WA, AZ, TX, FL (Orlando), GA, VA, NY, IL
+// Coordinates adjusted to ensure all chargers remain on land (moved inland from coasts)
 const usRegions = [
-  // California - Heavy
-  { lat: 32.7, lng: -117.2, spread: 0.3, weight: 200, region: "San Diego", state: "CA" },
-  { lat: 33.9, lng: -118.2, spread: 0.5, weight: 280, region: "Los Angeles", state: "CA" },
-  { lat: 34.1, lng: -118.8, spread: 0.3, weight: 90, region: "Ventura", state: "CA" },
-  { lat: 34.4, lng: -119.7, spread: 0.2, weight: 50, region: "Santa Barbara", state: "CA" },
-  { lat: 35.3, lng: -120.6, spread: 0.3, weight: 40, region: "San Luis Obispo", state: "CA" },
-  { lat: 36.6, lng: -121.9, spread: 0.2, weight: 45, region: "Monterey", state: "CA" },
-  { lat: 37.4, lng: -122.2, spread: 0.4, weight: 220, region: "Bay Area South", state: "CA" },
-  { lat: 37.8, lng: -122.4, spread: 0.3, weight: 200, region: "San Francisco", state: "CA" },
-  { lat: 38.0, lng: -122.1, spread: 0.3, weight: 70, region: "East Bay North", state: "CA" },
-  { lat: 38.6, lng: -121.5, spread: 0.3, weight: 120, region: "Sacramento", state: "CA" },
+  // California - Coordinates moved slightly inland to avoid Pacific Ocean
+  { lat: 32.8, lng: -117.1, spread: 0.25, weight: 200, region: "San Diego", state: "CA" },
+  { lat: 34.0, lng: -118.1, spread: 0.4, weight: 280, region: "Los Angeles", state: "CA" },
+  { lat: 34.2, lng: -119.0, spread: 0.2, weight: 90, region: "Ventura", state: "CA" },
+  { lat: 34.5, lng: -119.8, spread: 0.15, weight: 50, region: "Santa Barbara", state: "CA" },
+  { lat: 35.3, lng: -120.5, spread: 0.2, weight: 40, region: "San Luis Obispo", state: "CA" },
+  { lat: 36.7, lng: -121.6, spread: 0.15, weight: 45, region: "Monterey", state: "CA" },
+  { lat: 37.4, lng: -121.9, spread: 0.3, weight: 220, region: "Bay Area South", state: "CA" },
+  { lat: 37.7, lng: -122.1, spread: 0.2, weight: 200, region: "San Francisco", state: "CA" },
+  { lat: 37.9, lng: -122.0, spread: 0.25, weight: 70, region: "East Bay North", state: "CA" },
+  { lat: 38.6, lng: -121.4, spread: 0.3, weight: 120, region: "Sacramento", state: "CA" },
   { lat: 36.7, lng: -119.8, spread: 0.4, weight: 60, region: "Fresno", state: "CA" },
   { lat: 35.4, lng: -119.0, spread: 0.3, weight: 40, region: "Bakersfield", state: "CA" },
-  { lat: 39.5, lng: -121.5, spread: 0.5, weight: 30, region: "Northern CA", state: "CA" },
+  { lat: 39.5, lng: -121.5, spread: 0.4, weight: 30, region: "Northern CA", state: "CA" },
   
-  // Washington
-  { lat: 47.6, lng: -122.3, spread: 0.4, weight: 180, region: "Seattle", state: "WA" },
-  { lat: 47.2, lng: -122.5, spread: 0.3, weight: 80, region: "Tacoma", state: "WA" },
-  { lat: 48.0, lng: -122.2, spread: 0.3, weight: 50, region: "Everett", state: "WA" },
-  { lat: 48.8, lng: -122.5, spread: 0.2, weight: 35, region: "Bellingham", state: "WA" },
+  // Washington - Coordinates adjusted to avoid Puget Sound
+  { lat: 47.6, lng: -122.1, spread: 0.25, weight: 180, region: "Seattle", state: "WA" },
+  { lat: 47.2, lng: -122.3, spread: 0.2, weight: 80, region: "Tacoma", state: "WA" },
+  { lat: 47.9, lng: -122.1, spread: 0.2, weight: 50, region: "Everett", state: "WA" },
+  { lat: 48.8, lng: -122.4, spread: 0.15, weight: 35, region: "Bellingham", state: "WA" },
   { lat: 47.7, lng: -117.4, spread: 0.3, weight: 45, region: "Spokane", state: "WA" },
   { lat: 46.6, lng: -120.5, spread: 0.3, weight: 30, region: "Yakima", state: "WA" },
   
-  // Arizona
-  { lat: 33.4, lng: -112.1, spread: 0.5, weight: 180, region: "Phoenix", state: "AZ" },
-  { lat: 32.2, lng: -111.0, spread: 0.3, weight: 70, region: "Tucson", state: "AZ" },
-  { lat: 33.4, lng: -111.9, spread: 0.3, weight: 60, region: "Scottsdale", state: "AZ" },
-  { lat: 33.3, lng: -111.8, spread: 0.3, weight: 50, region: "Mesa", state: "AZ" },
+  // Arizona - Inland state, no ocean concerns
+  { lat: 33.5, lng: -112.0, spread: 0.5, weight: 180, region: "Phoenix", state: "AZ" },
+  { lat: 32.2, lng: -110.9, spread: 0.3, weight: 70, region: "Tucson", state: "AZ" },
+  { lat: 33.5, lng: -111.9, spread: 0.25, weight: 60, region: "Scottsdale", state: "AZ" },
+  { lat: 33.4, lng: -111.8, spread: 0.25, weight: 50, region: "Mesa", state: "AZ" },
   { lat: 35.2, lng: -111.6, spread: 0.2, weight: 25, region: "Flagstaff", state: "AZ" },
   
-  // Texas
-  { lat: 29.8, lng: -95.4, spread: 0.5, weight: 200, region: "Houston", state: "TX" },
+  // Texas - Inland coordinates, avoid Gulf of Mexico for Corpus Christi
+  { lat: 29.8, lng: -95.4, spread: 0.4, weight: 200, region: "Houston", state: "TX" },
   { lat: 32.8, lng: -96.8, spread: 0.5, weight: 180, region: "Dallas", state: "TX" },
   { lat: 30.3, lng: -97.7, spread: 0.4, weight: 130, region: "Austin", state: "TX" },
   { lat: 29.4, lng: -98.5, spread: 0.4, weight: 100, region: "San Antonio", state: "TX" },
   { lat: 32.8, lng: -97.3, spread: 0.3, weight: 70, region: "Fort Worth", state: "TX" },
-  { lat: 31.8, lng: -106.5, spread: 0.3, weight: 45, region: "El Paso", state: "TX" },
-  { lat: 27.8, lng: -97.4, spread: 0.3, weight: 40, region: "Corpus Christi", state: "TX" },
+  { lat: 31.8, lng: -106.4, spread: 0.3, weight: 45, region: "El Paso", state: "TX" },
+  { lat: 27.9, lng: -97.5, spread: 0.2, weight: 40, region: "Corpus Christi", state: "TX" },
   
-  // Florida (Orlando area focus)
-  { lat: 28.5, lng: -81.4, spread: 0.5, weight: 200, region: "Orlando", state: "FL" },
-  { lat: 28.0, lng: -81.7, spread: 0.3, weight: 60, region: "Kissimmee", state: "FL" },
-  { lat: 28.8, lng: -81.3, spread: 0.3, weight: 50, region: "Sanford", state: "FL" },
-  { lat: 28.4, lng: -81.3, spread: 0.3, weight: 40, region: "Winter Park", state: "FL" },
+  // Florida (Orlando area) - Inland Florida, away from coasts
+  { lat: 28.5, lng: -81.4, spread: 0.4, weight: 200, region: "Orlando", state: "FL" },
+  { lat: 28.3, lng: -81.5, spread: 0.25, weight: 60, region: "Kissimmee", state: "FL" },
+  { lat: 28.8, lng: -81.3, spread: 0.25, weight: 50, region: "Sanford", state: "FL" },
+  { lat: 28.6, lng: -81.4, spread: 0.2, weight: 40, region: "Winter Park", state: "FL" },
   
-  // Georgia
-  { lat: 33.7, lng: -84.4, spread: 0.5, weight: 180, region: "Atlanta", state: "GA" },
-  { lat: 33.9, lng: -84.5, spread: 0.3, weight: 60, region: "Marietta", state: "GA" },
-  { lat: 33.4, lng: -84.2, spread: 0.3, weight: 50, region: "Stockbridge", state: "GA" },
-  { lat: 32.1, lng: -81.1, spread: 0.3, weight: 45, region: "Savannah", state: "GA" },
-  { lat: 32.5, lng: -84.0, spread: 0.3, weight: 40, region: "Macon", state: "GA" },
+  // Georgia - Savannah moved inland to avoid Atlantic
+  { lat: 33.8, lng: -84.4, spread: 0.4, weight: 180, region: "Atlanta", state: "GA" },
+  { lat: 33.9, lng: -84.5, spread: 0.25, weight: 60, region: "Marietta", state: "GA" },
+  { lat: 33.5, lng: -84.2, spread: 0.25, weight: 50, region: "Stockbridge", state: "GA" },
+  { lat: 32.1, lng: -81.2, spread: 0.2, weight: 45, region: "Savannah", state: "GA" },
+  { lat: 32.8, lng: -83.6, spread: 0.3, weight: 40, region: "Macon", state: "GA" },
   { lat: 33.1, lng: -83.2, spread: 0.2, weight: 30, region: "Milledgeville", state: "GA" },
   
-  // Virginia
-  { lat: 37.5, lng: -77.4, spread: 0.3, weight: 120, region: "Richmond", state: "VA" },
-  { lat: 36.9, lng: -76.3, spread: 0.4, weight: 100, region: "Norfolk", state: "VA" },
-  { lat: 38.8, lng: -77.1, spread: 0.3, weight: 80, region: "Arlington", state: "VA" },
-  { lat: 36.8, lng: -76.0, spread: 0.3, weight: 60, region: "Virginia Beach", state: "VA" },
+  // Virginia - Coastal areas moved inland to avoid Atlantic/Chesapeake Bay
+  { lat: 37.5, lng: -77.5, spread: 0.25, weight: 120, region: "Richmond", state: "VA" },
+  { lat: 36.9, lng: -76.4, spread: 0.2, weight: 100, region: "Norfolk", state: "VA" },
+  { lat: 38.9, lng: -77.2, spread: 0.2, weight: 80, region: "Arlington", state: "VA" },
+  { lat: 36.8, lng: -76.1, spread: 0.15, weight: 60, region: "Virginia Beach", state: "VA" },
   { lat: 37.3, lng: -79.9, spread: 0.2, weight: 40, region: "Roanoke", state: "VA" },
   { lat: 38.3, lng: -77.5, spread: 0.2, weight: 35, region: "Fredericksburg", state: "VA" },
   
-  // New York
-  { lat: 40.7, lng: -74.0, spread: 0.3, weight: 250, region: "NYC", state: "NY" },
-  { lat: 40.9, lng: -73.8, spread: 0.3, weight: 90, region: "Westchester", state: "NY" },
-  { lat: 41.0, lng: -73.6, spread: 0.2, weight: 70, region: "Long Island West", state: "NY" },
-  { lat: 40.8, lng: -73.2, spread: 0.3, weight: 60, region: "Long Island East", state: "NY" },
-  { lat: 42.9, lng: -78.9, spread: 0.3, weight: 55, region: "Buffalo", state: "NY" },
+  // New York - NYC/Long Island moved inland to avoid Atlantic Ocean
+  { lat: 40.8, lng: -73.9, spread: 0.15, weight: 250, region: "NYC", state: "NY" },
+  { lat: 41.0, lng: -73.8, spread: 0.2, weight: 90, region: "Westchester", state: "NY" },
+  { lat: 40.8, lng: -73.5, spread: 0.15, weight: 70, region: "Long Island West", state: "NY" },
+  { lat: 40.9, lng: -73.0, spread: 0.15, weight: 60, region: "Long Island East", state: "NY" },
+  { lat: 42.9, lng: -78.8, spread: 0.25, weight: 55, region: "Buffalo", state: "NY" },
   { lat: 43.2, lng: -77.6, spread: 0.2, weight: 45, region: "Rochester", state: "NY" },
   { lat: 43.0, lng: -76.1, spread: 0.2, weight: 40, region: "Syracuse", state: "NY" },
   { lat: 42.7, lng: -73.8, spread: 0.2, weight: 40, region: "Albany", state: "NY" },
   
-  // Illinois
-  { lat: 41.9, lng: -87.6, spread: 0.5, weight: 220, region: "Chicago", state: "IL" },
-  { lat: 41.8, lng: -88.0, spread: 0.3, weight: 70, region: "Naperville", state: "IL" },
-  { lat: 42.0, lng: -87.7, spread: 0.3, weight: 60, region: "Evanston", state: "IL" },
-  { lat: 41.5, lng: -87.6, spread: 0.3, weight: 50, region: "Orland Park", state: "IL" },
+  // Illinois - Chicago moved slightly west to avoid Lake Michigan
+  { lat: 41.9, lng: -87.8, spread: 0.35, weight: 220, region: "Chicago", state: "IL" },
+  { lat: 41.8, lng: -88.1, spread: 0.25, weight: 70, region: "Naperville", state: "IL" },
+  { lat: 42.0, lng: -87.9, spread: 0.2, weight: 60, region: "Evanston", state: "IL" },
+  { lat: 41.6, lng: -87.7, spread: 0.25, weight: 50, region: "Orland Park", state: "IL" },
   { lat: 39.8, lng: -89.6, spread: 0.3, weight: 45, region: "Springfield", state: "IL" },
   { lat: 40.7, lng: -89.6, spread: 0.2, weight: 35, region: "Peoria", state: "IL" },
 ];
