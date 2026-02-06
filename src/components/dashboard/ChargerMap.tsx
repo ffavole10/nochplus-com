@@ -134,15 +134,39 @@ export function ChargerMap({
       zoomToBoundsOnClick: true,
       iconCreateFunction: (cluster: any) => {
         const count = cluster.getChildCount();
-        let size = 'small';
+        const childMarkers = cluster.getAllChildMarkers();
+        
+        // Count status types in cluster
+        let criticalCount = 0;
+        let degradedCount = 0;
+        let optimalCount = 0;
+        
+        childMarkers.forEach((m: any) => {
+          const status = m.options.chargerStatus;
+          if (status === "Critical") criticalCount++;
+          else if (status === "Degraded") degradedCount++;
+          else optimalCount++;
+        });
+        
+        // Determine cluster class based on risk overlay toggle
         let className = 'marker-cluster-small';
         
-        if (count >= 100) {
-          size = 'large';
-          className = 'marker-cluster-large';
-        } else if (count >= 20) {
-          size = 'medium';
-          className = 'marker-cluster-medium';
+        if (showHeatmap) {
+          // Risk overlay on - color by predominant status
+          if (criticalCount > 0) {
+            className = 'marker-cluster-critical';
+          } else if (degradedCount > 0) {
+            className = 'marker-cluster-degraded';
+          } else {
+            className = 'marker-cluster-optimal';
+          }
+        } else {
+          // Risk overlay off - blue based on size
+          if (count >= 100) {
+            className = 'marker-cluster-large';
+          } else if (count >= 20) {
+            className = 'marker-cluster-medium';
+          }
         }
 
         return L.divIcon({
@@ -156,7 +180,7 @@ export function ChargerMap({
     chargers.forEach((charger) => {
       const color = getColor(charger.status, showHeatmap);
       
-      // Use CircleMarker for individual markers
+      // Use CircleMarker for individual markers with status attached for cluster coloring
       const marker = L.circleMarker([charger.lat, charger.lng], {
         radius: 6,
         fillColor: color,
@@ -164,6 +188,7 @@ export function ChargerMap({
         weight: 1,
         opacity: 0.9,
         fillOpacity: 0.8,
+        chargerStatus: charger.status, // Store status for cluster color calculation
       });
 
       marker.bindPopup(`

@@ -230,7 +230,7 @@
     border: none !important;
   }
   
-  /* Custom Marker Cluster Styles */
+  /* Custom Marker Cluster Styles - Blue by default */
   .marker-cluster {
     background-clip: padding-box;
     border-radius: 50%;
@@ -251,8 +251,9 @@
     color: white;
   }
   
+  /* Blue cluster variants (default) */
   .marker-cluster-small {
-    background-color: rgba(31, 157, 217, 0.6);
+    background-color: rgba(31, 157, 217, 0.5);
   }
   
   .marker-cluster-small div {
@@ -260,19 +261,52 @@
   }
   
   .marker-cluster-medium {
-    background-color: rgba(31, 78, 120, 0.6);
+    background-color: rgba(31, 120, 180, 0.5);
   }
   
   .marker-cluster-medium div {
-    background-color: rgba(31, 78, 120, 0.9);
+    background-color: rgba(31, 120, 180, 0.9);
   }
   
   .marker-cluster-large {
-    background-color: rgba(37, 179, 165, 0.6);
+    background-color: rgba(31, 78, 120, 0.5);
   }
   
   .marker-cluster-large div {
-    background-color: rgba(37, 179, 165, 0.9);
+    background-color: rgba(31, 78, 120, 0.9);
+  }
+  
+  /* Risk overlay cluster variants */
+  .marker-cluster-critical {
+    background-color: rgba(239, 68, 68, 0.5);
+  }
+  
+  .marker-cluster-critical div {
+    background-color: rgba(239, 68, 68, 0.9);
+  }
+  
+  .marker-cluster-degraded {
+    background-color: rgba(245, 158, 11, 0.5);
+  }
+  
+  .marker-cluster-degraded div {
+    background-color: rgba(245, 158, 11, 0.9);
+  }
+  
+  .marker-cluster-optimal {
+    background-color: rgba(16, 185, 129, 0.5);
+  }
+  
+  .marker-cluster-optimal div {
+    background-color: rgba(16, 185, 129, 0.9);
+  }
+  
+  .marker-cluster-mixed {
+    background-color: rgba(31, 78, 120, 0.5);
+  }
+  
+  .marker-cluster-mixed div {
+    background-color: rgba(31, 78, 120, 0.9);
   }
   
   /* Custom Scrollbar */
