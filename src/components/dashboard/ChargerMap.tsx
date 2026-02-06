@@ -26,7 +26,7 @@ export function ChargerMap({
   const [mapLoaded, setMapLoaded] = useState(false);
   const riskAreas = getGeographicRisk(chargers);
 
-  // Load Leaflet dynamically
+  // Load Leaflet and MarkerCluster dynamically
   useEffect(() => {
     const loadLeaflet = async () => {
       // Add Leaflet CSS
@@ -38,11 +38,38 @@ export function ChargerMap({
         document.head.appendChild(link);
       }
 
+      // Add MarkerCluster CSS
+      if (!document.getElementById("markercluster-css")) {
+        const link = document.createElement("link");
+        link.id = "markercluster-css";
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css";
+        document.head.appendChild(link);
+      }
+
+      if (!document.getElementById("markercluster-default-css")) {
+        const link = document.createElement("link");
+        link.id = "markercluster-default-css";
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css";
+        document.head.appendChild(link);
+      }
+
       // Load Leaflet JS
       if (!(window as any).L) {
         await new Promise<void>((resolve) => {
           const script = document.createElement("script");
           script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+          script.onload = () => resolve();
+          document.head.appendChild(script);
+        });
+      }
+
+      // Load MarkerCluster JS
+      if (!(window as any).L.markerClusterGroup) {
+        await new Promise<void>((resolve) => {
+          const script = document.createElement("script");
+          script.src = "https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js";
           script.onload = () => resolve();
           document.head.appendChild(script);
         });
@@ -74,7 +101,7 @@ export function ChargerMap({
     };
   }, [mapLoaded]);
 
-  // Update markers - use CircleMarkers for performance with 5000+ points
+  // Update markers - use MarkerCluster for performance with 5000+ points
   useEffect(() => {
     if (!mapLoaded || !leafletMap.current) return;
 
@@ -86,7 +113,7 @@ export function ChargerMap({
       leafletMap.current.removeLayer(layerGroupRef.current);
     }
 
-    console.log(`Rendering ${chargers.length} chargers on map`);
+    console.log(`Rendering ${chargers.length} chargers on map with clustering`);
 
     // Color function
     const getColor = (status: string, useRiskColors: boolean) => {
@@ -98,20 +125,45 @@ export function ChargerMap({
       }
     };
 
-    // Create a new layer group
-    layerGroupRef.current = L.layerGroup();
+    // Create marker cluster group with custom styling
+    layerGroupRef.current = L.markerClusterGroup({
+      chunkedLoading: true,
+      maxClusterRadius: 50,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      iconCreateFunction: (cluster: any) => {
+        const count = cluster.getChildCount();
+        let size = 'small';
+        let className = 'marker-cluster-small';
+        
+        if (count >= 100) {
+          size = 'large';
+          className = 'marker-cluster-large';
+        } else if (count >= 20) {
+          size = 'medium';
+          className = 'marker-cluster-medium';
+        }
+
+        return L.divIcon({
+          html: `<div><span>${count}</span></div>`,
+          className: `marker-cluster ${className}`,
+          iconSize: L.point(40, 40),
+        });
+      },
+    });
 
     chargers.forEach((charger) => {
       const color = getColor(charger.status, showHeatmap);
       
-      // Use CircleMarker for performance (renders as canvas/svg, much faster)
+      // Use CircleMarker for individual markers
       const marker = L.circleMarker([charger.lat, charger.lng], {
-        radius: 5,
+        radius: 6,
         fillColor: color,
         color: color,
         weight: 1,
         opacity: 0.9,
-        fillOpacity: 0.7,
+        fillOpacity: 0.8,
       });
 
       marker.bindPopup(`
@@ -149,8 +201,8 @@ export function ChargerMap({
       layerGroupRef.current.addLayer(marker);
     });
 
-    // Add layer group to map
-    layerGroupRef.current.addTo(leafletMap.current);
+    // Add cluster group to map
+    leafletMap.current.addLayer(layerGroupRef.current);
 
     // Center on continental US
     leafletMap.current.setView([39.0, -98.0], 4);
