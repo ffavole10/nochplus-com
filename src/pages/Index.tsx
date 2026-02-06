@@ -7,6 +7,8 @@ import { ChargerMap } from "@/components/dashboard/ChargerMap";
 import { ComponentAnalysis } from "@/components/dashboard/ComponentAnalysis";
 import { SitePerformanceTable } from "@/components/dashboard/SitePerformanceTable";
 import { ReportLibrary } from "@/components/dashboard/ReportLibrary";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const Index = () => {
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
@@ -22,7 +24,6 @@ const Index = () => {
 
   const handleShowOnMap = useCallback((charger: Charger) => {
     setSelectedCharger(charger);
-    // Scroll to map section
     document.getElementById("map-section")?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
@@ -32,7 +33,6 @@ const Index = () => {
       (c) => c.city === city && c.state === state
     );
     setFilteredChargers(filtered);
-    // Zoom map to first charger in location
     if (filtered.length > 0) {
       setSelectedCharger(filtered[0]);
     }
@@ -55,8 +55,8 @@ const Index = () => {
     }
   }, []);
 
-  const handleResetFilters = useCallback(() => {
-    setFilteredChargers(allChargers);
+  const handleFiltersChange = useCallback((chargers: Charger[]) => {
+    setFilteredChargers(chargers);
     setSelectedCharger(null);
   }, []);
 
@@ -69,36 +69,33 @@ const Index = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader lastUpdated={lastUpdated} />
-
-      <main className="container mx-auto px-4 py-6 space-y-8">
-        {/* Filter indicator */}
-        {filteredChargers.length !== allChargers.length && (
-          <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-secondary/30">
-            <span className="text-sm">
-              Showing <strong>{filteredChargers.length}</strong> of{" "}
-              <strong>{allChargers.length}</strong> chargers
-            </span>
-            <button
-              onClick={handleResetFilters}
-              className="text-sm text-secondary hover:underline"
-            >
-              Clear filters
-            </button>
-          </div>
-        )}
-
-        {/* Hero Metrics */}
-        <HeroMetrics
-          healthScore={stats.healthScore}
-          criticalCount={stats.critical}
-          totalServiced={stats.serviced}
-          totalChargers={stats.total}
-          optimalCount={stats.optimal}
-          degradedCount={stats.degraded}
-          onCriticalClick={handleCriticalClick}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <DashboardSidebar
+          onFiltersChange={handleFiltersChange}
+          filteredCount={filteredChargers.length}
+          totalCount={allChargers.length}
         />
+
+        <div className="flex-1 flex flex-col min-h-screen">
+          <DashboardHeader lastUpdated={lastUpdated} />
+
+          <main className="flex-1 container mx-auto px-4 py-6 space-y-8">
+            {/* Sidebar Toggle for Mobile */}
+            <div className="lg:hidden">
+              <SidebarTrigger className="mb-4" />
+            </div>
+
+            {/* Hero Metrics */}
+            <HeroMetrics
+              healthScore={filteredStats.healthScore}
+              criticalCount={filteredStats.critical}
+              totalServiced={filteredStats.serviced}
+              totalChargers={filteredStats.total}
+              optimalCount={filteredStats.optimal}
+              degradedCount={filteredStats.degraded}
+              onCriticalClick={handleCriticalClick}
+            />
 
         {/* Critical Findings */}
         <FindingsSection
@@ -129,20 +126,22 @@ const Index = () => {
           onSiteClick={handleSiteClick}
         />
 
-        {/* Report Library */}
-        <ReportLibrary chargers={filteredChargers} />
-      </main>
+            {/* Report Library */}
+            <ReportLibrary chargers={filteredChargers} />
+          </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 py-6 mt-12">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>
-            PM Campaign Dashboard • Powered by Noch Power •{" "}
-            {new Date().getFullYear()}
-          </p>
+          {/* Footer */}
+          <footer className="border-t border-border/50 py-6 mt-12">
+            <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+              <p>
+                PM Campaign Dashboard • Powered by Noch Power •{" "}
+                {new Date().getFullYear()}
+              </p>
+            </div>
+          </footer>
         </div>
-      </footer>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
