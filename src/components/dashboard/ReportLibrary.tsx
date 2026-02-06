@@ -301,7 +301,6 @@ export function ReportLibrary({ chargers }: ReportLibraryProps) {
                     Download PDF
                   </Button>
                 </div>
-                </div>
               </div>
             </>
           )}
