@@ -313,17 +313,17 @@ export const sampleChargers: Charger[] = [
 // US region data - Limited to specific states: CA, WA, AZ, TX, FL (Orlando), GA, VA, NY, IL
 // Coordinates adjusted to ensure all chargers remain on land (moved inland from coasts)
 const usRegions = [
-  // California - Coordinates moved slightly inland to avoid Pacific Ocean
-  { lat: 32.8, lng: -117.1, spread: 0.25, weight: 200, region: "San Diego", state: "CA" },
-  { lat: 34.0, lng: -118.1, spread: 0.4, weight: 280, region: "Los Angeles", state: "CA" },
-  { lat: 34.2, lng: -119.0, spread: 0.2, weight: 90, region: "Ventura", state: "CA" },
-  { lat: 34.5, lng: -119.8, spread: 0.15, weight: 50, region: "Santa Barbara", state: "CA" },
-  { lat: 35.3, lng: -120.5, spread: 0.2, weight: 40, region: "San Luis Obispo", state: "CA" },
-  { lat: 36.7, lng: -121.6, spread: 0.15, weight: 45, region: "Monterey", state: "CA" },
-  { lat: 37.4, lng: -121.9, spread: 0.3, weight: 220, region: "Bay Area South", state: "CA" },
-  { lat: 37.7, lng: -122.1, spread: 0.2, weight: 200, region: "San Francisco", state: "CA" },
-  { lat: 37.9, lng: -122.0, spread: 0.25, weight: 70, region: "East Bay North", state: "CA" },
-  { lat: 38.6, lng: -121.4, spread: 0.3, weight: 120, region: "Sacramento", state: "CA" },
+  // California - Coordinates shifted east to keep chargers away from Pacific Ocean
+  { lat: 32.9, lng: -117.0, spread: 0.2, weight: 200, region: "San Diego", state: "CA" },
+  { lat: 34.1, lng: -117.8, spread: 0.35, weight: 280, region: "Los Angeles", state: "CA" },
+  { lat: 34.3, lng: -119.1, spread: 0.15, weight: 90, region: "Ventura", state: "CA" },
+  { lat: 34.5, lng: -119.9, spread: 0.1, weight: 50, region: "Santa Barbara", state: "CA" },
+  { lat: 35.3, lng: -120.4, spread: 0.15, weight: 40, region: "San Luis Obispo", state: "CA" },
+  { lat: 36.7, lng: -121.4, spread: 0.1, weight: 45, region: "Monterey", state: "CA" },
+  { lat: 37.4, lng: -121.8, spread: 0.25, weight: 220, region: "Bay Area South", state: "CA" },
+  { lat: 37.6, lng: -121.9, spread: 0.15, weight: 200, region: "San Francisco", state: "CA" },
+  { lat: 37.9, lng: -121.9, spread: 0.2, weight: 70, region: "East Bay North", state: "CA" },
+  { lat: 38.6, lng: -121.3, spread: 0.3, weight: 120, region: "Sacramento", state: "CA" },
   { lat: 36.7, lng: -119.8, spread: 0.4, weight: 60, region: "Fresno", state: "CA" },
   { lat: 35.4, lng: -119.0, spread: 0.3, weight: 40, region: "Bakersfield", state: "CA" },
   { lat: 39.5, lng: -121.5, spread: 0.4, weight: 30, region: "Northern CA", state: "CA" },
