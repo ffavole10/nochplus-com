@@ -3,20 +3,24 @@ import { Charger, getGeographicRisk } from "@/data/chargerData";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { MapPin, AlertTriangle, Layers, Focus, ExternalLink } from "lucide-react";
+import { MapPin, AlertTriangle, Layers, Focus, X } from "lucide-react";
 
 interface ChargerMapProps {
   chargers: Charger[];
+  allChargers: Charger[];
   selectedCharger: Charger | null;
   onChargerSelect: (charger: Charger | null) => void;
-  onLocationFilter: (location: string) => void;
+  onLocationFilter: (location: string | null) => void;
+  focusedLocation: string | null;
 }
 
 export function ChargerMap({
   chargers,
+  allChargers,
   selectedCharger,
   onChargerSelect,
   onLocationFilter,
+  focusedLocation,
 }: ChargerMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<any>(null);
@@ -24,7 +28,8 @@ export function ChargerMap({
   const layerGroupRef = useRef<any>(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const riskAreas = getGeographicRisk(chargers);
+  // Always show all risk areas in sidebar, not just filtered ones
+  const riskAreas = getGeographicRisk(allChargers);
 
   // Load Leaflet and MarkerCluster dynamically
   useEffect(() => {
@@ -356,9 +361,22 @@ export function ChargerMap({
 
         {/* Risk Sidebar */}
         <div className="lg:w-80">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-5 h-5 text-critical" />
-            <h3 className="font-semibold">High Risk Areas</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-critical" />
+              <h3 className="font-semibold">High Risk Areas</h3>
+            </div>
+            {focusedLocation && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-xs"
+                onClick={() => onLocationFilter(null)}
+              >
+                <X className="w-3 h-3" />
+                Show All
+              </Button>
+            )}
           </div>
 
           <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
@@ -366,11 +384,14 @@ export function ChargerMap({
               .filter((area) => area.critical > 0 || area.degraded > 0)
               .map((area) => {
                 const isHighRisk = area.critical >= 2;
+                const isFocused = focusedLocation === area.location;
                 return (
                   <div
                     key={area.location}
                     className={`p-4 rounded-lg border-2 transition-colors ${
-                      isHighRisk
+                      isFocused
+                        ? "border-primary bg-primary/10 ring-2 ring-primary/30"
+                        : isHighRisk
                         ? "border-critical/40 bg-critical/5"
                         : "border-degraded/30 bg-degraded/5"
                     }`}
@@ -384,6 +405,11 @@ export function ChargerMap({
                         ></span>
                         <span className="font-medium">{area.location}</span>
                       </div>
+                      {isFocused && (
+                        <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                          Focused
+                        </span>
+                      )}
                     </div>
 
                     <div className="text-sm text-muted-foreground mb-2">
@@ -403,13 +429,22 @@ export function ChargerMap({
                     )}
 
                     <Button
-                      variant="outline"
+                      variant={isFocused ? "default" : "outline"}
                       size="sm"
                       className="w-full gap-2"
-                      onClick={() => onLocationFilter(area.location)}
+                      onClick={() => onLocationFilter(isFocused ? null : area.location)}
                     >
-                      <Focus className="w-4 h-4" />
-                      Focus Here
+                      {isFocused ? (
+                        <>
+                          <X className="w-4 h-4" />
+                          Show All Regions
+                        </>
+                      ) : (
+                        <>
+                          <Focus className="w-4 h-4" />
+                          Focus Here
+                        </>
+                      )}
                     </Button>
                   </div>
                 );
