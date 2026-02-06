@@ -310,164 +310,220 @@ export const sampleChargers: Charger[] = [
   },
 ];
 
-// Expanded dataset to reach 5487 chargers with nationwide distribution
-const additionalLocations = [
-  // California - Heavy concentration
-  { city: "San Diego", state: "CA", lat: 32.7157, lng: -117.1611, site: "Downtown SD Parking" },
-  { city: "San Diego", state: "CA", lat: 32.7089, lng: -117.1580, site: "Gaslamp Quarter Garage" },
-  { city: "San Diego", state: "CA", lat: 32.7499, lng: -117.2557, site: "Ocean Beach Plaza" },
-  { city: "Los Angeles", state: "CA", lat: 34.0522, lng: -118.2437, site: "DTLA Central Parking" },
-  { city: "Los Angeles", state: "CA", lat: 34.0195, lng: -118.4912, site: "Santa Monica Place" },
-  { city: "Los Angeles", state: "CA", lat: 33.9425, lng: -118.4081, site: "LAX Terminal" },
-  { city: "Los Angeles", state: "CA", lat: 34.1478, lng: -118.1445, site: "Pasadena Center" },
-  { city: "San Francisco", state: "CA", lat: 37.7749, lng: -122.4194, site: "Union Square Garage" },
-  { city: "San Francisco", state: "CA", lat: 37.7850, lng: -122.4057, site: "Embarcadero Center" },
-  { city: "San Jose", state: "CA", lat: 37.3382, lng: -121.8863, site: "Downtown San Jose" },
-  { city: "Oakland", state: "CA", lat: 37.8044, lng: -122.2712, site: "Jack London Square" },
-  { city: "Sacramento", state: "CA", lat: 38.5816, lng: -121.4944, site: "Capitol Mall" },
-  { city: "Fresno", state: "CA", lat: 36.7378, lng: -119.7871, site: "Fashion Fair Mall" },
-  { city: "Bakersfield", state: "CA", lat: 35.3733, lng: -119.0187, site: "Valley Plaza Mall" },
-  // Texas
-  { city: "Houston", state: "TX", lat: 29.7604, lng: -95.3698, site: "Downtown Houston" },
-  { city: "Houston", state: "TX", lat: 29.7545, lng: -95.3631, site: "George R. Brown" },
-  { city: "Dallas", state: "TX", lat: 32.7767, lng: -96.7970, site: "Downtown Dallas" },
-  { city: "Dallas", state: "TX", lat: 32.8998, lng: -96.9789, site: "DFW Airport" },
-  { city: "Austin", state: "TX", lat: 30.2672, lng: -97.7431, site: "Congress Avenue" },
-  { city: "San Antonio", state: "TX", lat: 29.4241, lng: -98.4936, site: "River Walk" },
-  { city: "Fort Worth", state: "TX", lat: 32.7555, lng: -97.3308, site: "Sundance Square" },
-  { city: "El Paso", state: "TX", lat: 31.7619, lng: -106.4850, site: "El Paso Airport" },
-  // Florida
-  { city: "Miami", state: "FL", lat: 25.7617, lng: -80.1918, site: "Downtown Miami" },
-  { city: "Miami", state: "FL", lat: 25.7959, lng: -80.2870, site: "MIA Airport" },
-  { city: "Orlando", state: "FL", lat: 28.5383, lng: -81.3792, site: "Downtown Orlando" },
-  { city: "Tampa", state: "FL", lat: 27.9506, lng: -82.4572, site: "Tampa Bay Center" },
-  { city: "Jacksonville", state: "FL", lat: 30.3322, lng: -81.6557, site: "Downtown Jacksonville" },
-  { city: "Fort Lauderdale", state: "FL", lat: 26.1224, lng: -80.1373, site: "Las Olas Blvd" },
-  // Northeast
-  { city: "New York", state: "NY", lat: 40.7128, lng: -74.0060, site: "Manhattan Downtown" },
-  { city: "New York", state: "NY", lat: 40.7580, lng: -73.9855, site: "Midtown Manhattan" },
-  { city: "New York", state: "NY", lat: 40.6892, lng: -74.0445, site: "Brooklyn Heights" },
-  { city: "Boston", state: "MA", lat: 42.3601, lng: -71.0589, site: "Downtown Boston" },
-  { city: "Boston", state: "MA", lat: 42.3656, lng: -71.0096, site: "Logan Airport" },
-  { city: "Philadelphia", state: "PA", lat: 39.9526, lng: -75.1652, site: "Center City" },
-  { city: "Newark", state: "NJ", lat: 40.7357, lng: -74.1724, site: "Newark Liberty" },
-  { city: "Baltimore", state: "MD", lat: 39.2904, lng: -76.6122, site: "Inner Harbor" },
-  { city: "Washington", state: "DC", lat: 38.9072, lng: -77.0369, site: "Capitol Hill" },
-  { city: "Richmond", state: "VA", lat: 37.5407, lng: -77.4360, site: "Downtown Richmond" },
-  // Midwest
-  { city: "Chicago", state: "IL", lat: 41.8781, lng: -87.6298, site: "The Loop" },
-  { city: "Chicago", state: "IL", lat: 41.9742, lng: -87.9073, site: "O'Hare Airport" },
-  { city: "Detroit", state: "MI", lat: 42.3314, lng: -83.0458, site: "Downtown Detroit" },
-  { city: "Minneapolis", state: "MN", lat: 44.9778, lng: -93.2650, site: "Downtown Minneapolis" },
-  { city: "St. Louis", state: "MO", lat: 38.6270, lng: -90.1994, site: "Gateway Arch" },
-  { city: "Kansas City", state: "MO", lat: 39.0997, lng: -94.5786, site: "Power & Light" },
-  { city: "Indianapolis", state: "IN", lat: 39.7684, lng: -86.1581, site: "Downtown Indy" },
-  { city: "Columbus", state: "OH", lat: 39.9612, lng: -82.9988, site: "Short North" },
-  { city: "Cleveland", state: "OH", lat: 41.4993, lng: -81.6944, site: "Downtown Cleveland" },
-  { city: "Cincinnati", state: "OH", lat: 39.1031, lng: -84.5120, site: "Over-the-Rhine" },
-  { city: "Milwaukee", state: "WI", lat: 43.0389, lng: -87.9065, site: "Third Ward" },
-  // Mountain/Southwest
-  { city: "Denver", state: "CO", lat: 39.7392, lng: -104.9903, site: "LoDo Denver" },
-  { city: "Denver", state: "CO", lat: 39.8561, lng: -104.6737, site: "DIA Airport" },
-  { city: "Phoenix", state: "AZ", lat: 33.4484, lng: -112.0740, site: "Downtown Phoenix" },
-  { city: "Phoenix", state: "AZ", lat: 33.4373, lng: -112.0078, site: "Sky Harbor" },
-  { city: "Tucson", state: "AZ", lat: 32.2226, lng: -110.9747, site: "Downtown Tucson" },
-  { city: "Albuquerque", state: "NM", lat: 35.0844, lng: -106.6504, site: "Old Town" },
-  { city: "Las Vegas", state: "NV", lat: 36.1699, lng: -115.1398, site: "The Strip" },
-  { city: "Salt Lake City", state: "UT", lat: 40.7608, lng: -111.8910, site: "Temple Square" },
-  // Pacific Northwest
-  { city: "Seattle", state: "WA", lat: 47.6062, lng: -122.3321, site: "Downtown Seattle" },
-  { city: "Seattle", state: "WA", lat: 47.4502, lng: -122.3088, site: "SeaTac Airport" },
-  { city: "Portland", state: "OR", lat: 45.5152, lng: -122.6784, site: "Pearl District" },
-  { city: "Portland", state: "OR", lat: 45.5898, lng: -122.5951, site: "PDX Airport" },
-  // Southeast
-  { city: "Atlanta", state: "GA", lat: 33.7490, lng: -84.3880, site: "Downtown Atlanta" },
-  { city: "Atlanta", state: "GA", lat: 33.6407, lng: -84.4277, site: "Hartsfield Jackson" },
-  { city: "Charlotte", state: "NC", lat: 35.2271, lng: -80.8431, site: "Uptown Charlotte" },
-  { city: "Raleigh", state: "NC", lat: 35.7796, lng: -78.6382, site: "Downtown Raleigh" },
-  { city: "Nashville", state: "TN", lat: 36.1627, lng: -86.7816, site: "Broadway District" },
-  { city: "Memphis", state: "TN", lat: 35.1495, lng: -90.0490, site: "Beale Street" },
-  { city: "New Orleans", state: "LA", lat: 29.9511, lng: -90.0715, site: "French Quarter" },
-  { city: "Birmingham", state: "AL", lat: 33.5186, lng: -86.8104, site: "Downtown Birmingham" },
-  // Additional coverage for sparse areas
-  { city: "Boise", state: "ID", lat: 43.6150, lng: -116.2023, site: "Downtown Boise" },
-  { city: "Spokane", state: "WA", lat: 47.6588, lng: -117.4260, site: "Downtown Spokane" },
-  { city: "Billings", state: "MT", lat: 45.7833, lng: -108.5007, site: "Downtown Billings" },
-  { city: "Fargo", state: "ND", lat: 46.8772, lng: -96.7898, site: "Downtown Fargo" },
-  { city: "Sioux Falls", state: "SD", lat: 43.5446, lng: -96.7311, site: "Downtown Sioux Falls" },
-  { city: "Omaha", state: "NE", lat: 41.2565, lng: -95.9345, site: "Old Market" },
-  { city: "Wichita", state: "KS", lat: 37.6872, lng: -97.3301, site: "Downtown Wichita" },
-  { city: "Oklahoma City", state: "OK", lat: 35.4676, lng: -97.5164, site: "Bricktown" },
-  { city: "Little Rock", state: "AR", lat: 34.7465, lng: -92.2896, site: "River Market" },
-  { city: "Des Moines", state: "IA", lat: 41.5868, lng: -93.6250, site: "East Village" },
-  { city: "Madison", state: "WI", lat: 43.0731, lng: -89.4012, site: "Capitol Square" },
-  { city: "Grand Rapids", state: "MI", lat: 42.9634, lng: -85.6681, site: "Downtown GR" },
-  { city: "Louisville", state: "KY", lat: 38.2527, lng: -85.7585, site: "NuLu District" },
-  { city: "Charleston", state: "SC", lat: 32.7765, lng: -79.9311, site: "Historic District" },
-  { city: "Savannah", state: "GA", lat: 32.0809, lng: -81.0912, site: "River Street" },
-  { city: "Greenville", state: "SC", lat: 34.8526, lng: -82.3940, site: "Downtown Greenville" },
-  { city: "Knoxville", state: "TN", lat: 35.9606, lng: -83.9207, site: "Market Square" },
-  { city: "Buffalo", state: "NY", lat: 42.8864, lng: -78.8784, site: "Canalside" },
-  { city: "Rochester", state: "NY", lat: 43.1566, lng: -77.6088, site: "Downtown Rochester" },
-  { city: "Syracuse", state: "NY", lat: 43.0481, lng: -76.1474, site: "Armory Square" },
-  { city: "Albany", state: "NY", lat: 42.6526, lng: -73.7562, site: "Downtown Albany" },
-  { city: "Hartford", state: "CT", lat: 41.7658, lng: -72.6734, site: "Downtown Hartford" },
-  { city: "Providence", state: "RI", lat: 41.8240, lng: -71.4128, site: "Downtown Providence" },
-  { city: "Portland", state: "ME", lat: 43.6591, lng: -70.2568, site: "Old Port" },
-  { city: "Burlington", state: "VT", lat: 44.4759, lng: -73.2121, site: "Church Street" },
-  { city: "Manchester", state: "NH", lat: 42.9956, lng: -71.4548, site: "Downtown Manchester" },
-  { city: "Anchorage", state: "AK", lat: 61.2181, lng: -149.9003, site: "Downtown Anchorage" },
-  { city: "Honolulu", state: "HI", lat: 21.3069, lng: -157.8583, site: "Waikiki" },
-  { city: "Honolulu", state: "HI", lat: 21.3329, lng: -157.9207, site: "HNL Airport" },
+// US region data with weighted distribution (higher weight = more chargers)
+// Following the reference map pattern: heavy coastal concentration, moderate interior
+const usRegions = [
+  // California - Very Heavy (like reference map showing dense coastal coverage)
+  { lat: 32.7, lng: -117.2, spread: 0.3, weight: 180, region: "San Diego", state: "CA" },
+  { lat: 33.9, lng: -118.2, spread: 0.5, weight: 250, region: "Los Angeles", state: "CA" },
+  { lat: 34.1, lng: -118.8, spread: 0.3, weight: 80, region: "Ventura", state: "CA" },
+  { lat: 34.4, lng: -119.7, spread: 0.2, weight: 40, region: "Santa Barbara", state: "CA" },
+  { lat: 35.3, lng: -120.6, spread: 0.3, weight: 30, region: "San Luis Obispo", state: "CA" },
+  { lat: 36.6, lng: -121.9, spread: 0.2, weight: 35, region: "Monterey", state: "CA" },
+  { lat: 37.4, lng: -122.2, spread: 0.4, weight: 200, region: "Bay Area South", state: "CA" },
+  { lat: 37.8, lng: -122.4, spread: 0.3, weight: 180, region: "San Francisco", state: "CA" },
+  { lat: 38.0, lng: -122.1, spread: 0.3, weight: 60, region: "East Bay North", state: "CA" },
+  { lat: 38.6, lng: -121.5, spread: 0.3, weight: 100, region: "Sacramento", state: "CA" },
+  { lat: 36.7, lng: -119.8, spread: 0.4, weight: 50, region: "Fresno", state: "CA" },
+  { lat: 35.4, lng: -119.0, spread: 0.3, weight: 30, region: "Bakersfield", state: "CA" },
+  { lat: 39.5, lng: -121.5, spread: 0.5, weight: 25, region: "Northern CA", state: "CA" },
+  { lat: 40.8, lng: -124.2, spread: 0.3, weight: 15, region: "Eureka", state: "CA" },
+  
+  // Pacific Northwest - Heavy
+  { lat: 47.6, lng: -122.3, spread: 0.4, weight: 150, region: "Seattle", state: "WA" },
+  { lat: 47.2, lng: -122.5, spread: 0.3, weight: 60, region: "Tacoma", state: "WA" },
+  { lat: 48.0, lng: -122.2, spread: 0.3, weight: 40, region: "Everett", state: "WA" },
+  { lat: 48.8, lng: -122.5, spread: 0.2, weight: 25, region: "Bellingham", state: "WA" },
+  { lat: 47.7, lng: -117.4, spread: 0.3, weight: 35, region: "Spokane", state: "WA" },
+  { lat: 45.5, lng: -122.7, spread: 0.4, weight: 120, region: "Portland", state: "OR" },
+  { lat: 44.9, lng: -123.0, spread: 0.3, weight: 40, region: "Salem", state: "OR" },
+  { lat: 44.0, lng: -123.1, spread: 0.3, weight: 45, region: "Eugene", state: "OR" },
+  { lat: 42.3, lng: -122.9, spread: 0.2, weight: 20, region: "Medford", state: "OR" },
+  
+  // Northeast Corridor - Very Heavy
+  { lat: 40.7, lng: -74.0, spread: 0.3, weight: 220, region: "NYC", state: "NY" },
+  { lat: 40.9, lng: -73.8, spread: 0.3, weight: 80, region: "Westchester", state: "NY" },
+  { lat: 41.0, lng: -73.6, spread: 0.2, weight: 60, region: "Long Island West", state: "NY" },
+  { lat: 40.8, lng: -73.2, spread: 0.3, weight: 50, region: "Long Island East", state: "NY" },
+  { lat: 40.7, lng: -74.2, spread: 0.2, weight: 70, region: "Newark", state: "NJ" },
+  { lat: 40.2, lng: -74.0, spread: 0.3, weight: 45, region: "Jersey Shore", state: "NJ" },
+  { lat: 40.0, lng: -75.1, spread: 0.3, weight: 120, region: "Philadelphia", state: "PA" },
+  { lat: 40.4, lng: -80.0, spread: 0.3, weight: 60, region: "Pittsburgh", state: "PA" },
+  { lat: 42.4, lng: -71.1, spread: 0.4, weight: 140, region: "Boston", state: "MA" },
+  { lat: 41.8, lng: -71.4, spread: 0.2, weight: 40, region: "Providence", state: "RI" },
+  { lat: 41.3, lng: -72.9, spread: 0.3, weight: 50, region: "New Haven", state: "CT" },
+  { lat: 41.8, lng: -72.7, spread: 0.2, weight: 35, region: "Hartford", state: "CT" },
+  { lat: 39.3, lng: -76.6, spread: 0.3, weight: 80, region: "Baltimore", state: "MD" },
+  { lat: 38.9, lng: -77.0, spread: 0.3, weight: 100, region: "Washington DC", state: "DC" },
+  { lat: 37.5, lng: -77.4, spread: 0.3, weight: 50, region: "Richmond", state: "VA" },
+  { lat: 36.9, lng: -76.3, spread: 0.3, weight: 55, region: "Norfolk", state: "VA" },
+  { lat: 42.9, lng: -78.9, spread: 0.3, weight: 45, region: "Buffalo", state: "NY" },
+  { lat: 43.2, lng: -77.6, spread: 0.2, weight: 35, region: "Rochester", state: "NY" },
+  { lat: 43.0, lng: -76.1, spread: 0.2, weight: 30, region: "Syracuse", state: "NY" },
+  { lat: 42.7, lng: -73.8, spread: 0.2, weight: 30, region: "Albany", state: "NY" },
+  { lat: 43.7, lng: -70.3, spread: 0.2, weight: 25, region: "Portland ME", state: "ME" },
+  { lat: 43.0, lng: -71.5, spread: 0.2, weight: 25, region: "Manchester", state: "NH" },
+  { lat: 44.5, lng: -73.2, spread: 0.2, weight: 20, region: "Burlington", state: "VT" },
+  
+  // Florida - Heavy
+  { lat: 25.8, lng: -80.2, spread: 0.4, weight: 140, region: "Miami", state: "FL" },
+  { lat: 26.1, lng: -80.1, spread: 0.3, weight: 60, region: "Fort Lauderdale", state: "FL" },
+  { lat: 26.7, lng: -80.1, spread: 0.3, weight: 50, region: "West Palm Beach", state: "FL" },
+  { lat: 28.5, lng: -81.4, spread: 0.4, weight: 100, region: "Orlando", state: "FL" },
+  { lat: 28.0, lng: -82.5, spread: 0.4, weight: 90, region: "Tampa", state: "FL" },
+  { lat: 30.3, lng: -81.7, spread: 0.3, weight: 60, region: "Jacksonville", state: "FL" },
+  { lat: 27.0, lng: -82.0, spread: 0.3, weight: 40, region: "Sarasota", state: "FL" },
+  { lat: 26.1, lng: -81.8, spread: 0.2, weight: 35, region: "Naples", state: "FL" },
+  { lat: 30.4, lng: -84.3, spread: 0.2, weight: 25, region: "Tallahassee", state: "FL" },
+  { lat: 30.4, lng: -87.2, spread: 0.2, weight: 25, region: "Pensacola", state: "FL" },
+  
+  // Texas - Heavy
+  { lat: 29.8, lng: -95.4, spread: 0.5, weight: 160, region: "Houston", state: "TX" },
+  { lat: 32.8, lng: -96.8, spread: 0.5, weight: 150, region: "Dallas", state: "TX" },
+  { lat: 30.3, lng: -97.7, spread: 0.4, weight: 100, region: "Austin", state: "TX" },
+  { lat: 29.4, lng: -98.5, spread: 0.4, weight: 80, region: "San Antonio", state: "TX" },
+  { lat: 32.8, lng: -97.3, spread: 0.3, weight: 50, region: "Fort Worth", state: "TX" },
+  { lat: 31.8, lng: -106.5, spread: 0.3, weight: 35, region: "El Paso", state: "TX" },
+  { lat: 27.5, lng: -99.5, spread: 0.3, weight: 25, region: "Laredo", state: "TX" },
+  { lat: 27.8, lng: -97.4, spread: 0.3, weight: 30, region: "Corpus Christi", state: "TX" },
+  { lat: 33.6, lng: -101.8, spread: 0.3, weight: 20, region: "Lubbock", state: "TX" },
+  { lat: 35.2, lng: -101.8, spread: 0.2, weight: 15, region: "Amarillo", state: "TX" },
+  
+  // Midwest - Moderate to Heavy
+  { lat: 41.9, lng: -87.6, spread: 0.5, weight: 160, region: "Chicago", state: "IL" },
+  { lat: 42.3, lng: -83.0, spread: 0.4, weight: 80, region: "Detroit", state: "MI" },
+  { lat: 42.7, lng: -84.5, spread: 0.2, weight: 30, region: "Lansing", state: "MI" },
+  { lat: 43.0, lng: -85.7, spread: 0.2, weight: 35, region: "Grand Rapids", state: "MI" },
+  { lat: 45.0, lng: -93.3, spread: 0.4, weight: 70, region: "Minneapolis", state: "MN" },
+  { lat: 43.1, lng: -89.4, spread: 0.3, weight: 45, region: "Madison", state: "WI" },
+  { lat: 43.0, lng: -87.9, spread: 0.3, weight: 50, region: "Milwaukee", state: "WI" },
+  { lat: 41.3, lng: -81.7, spread: 0.3, weight: 55, region: "Cleveland", state: "OH" },
+  { lat: 40.0, lng: -83.0, spread: 0.3, weight: 55, region: "Columbus", state: "OH" },
+  { lat: 39.1, lng: -84.5, spread: 0.3, weight: 50, region: "Cincinnati", state: "OH" },
+  { lat: 39.8, lng: -86.2, spread: 0.3, weight: 50, region: "Indianapolis", state: "IN" },
+  { lat: 38.6, lng: -90.2, spread: 0.3, weight: 55, region: "St. Louis", state: "MO" },
+  { lat: 39.1, lng: -94.6, spread: 0.3, weight: 45, region: "Kansas City", state: "MO" },
+  { lat: 41.3, lng: -96.0, spread: 0.3, weight: 35, region: "Omaha", state: "NE" },
+  { lat: 41.6, lng: -93.6, spread: 0.3, weight: 35, region: "Des Moines", state: "IA" },
+  { lat: 38.3, lng: -85.8, spread: 0.3, weight: 40, region: "Louisville", state: "KY" },
+  
+  // Southeast - Moderate to Heavy
+  { lat: 33.7, lng: -84.4, spread: 0.4, weight: 110, region: "Atlanta", state: "GA" },
+  { lat: 35.2, lng: -80.8, spread: 0.3, weight: 70, region: "Charlotte", state: "NC" },
+  { lat: 35.8, lng: -78.6, spread: 0.3, weight: 50, region: "Raleigh", state: "NC" },
+  { lat: 36.1, lng: -79.8, spread: 0.2, weight: 25, region: "Greensboro", state: "NC" },
+  { lat: 34.2, lng: -77.9, spread: 0.2, weight: 20, region: "Wilmington NC", state: "NC" },
+  { lat: 36.2, lng: -86.8, spread: 0.3, weight: 60, region: "Nashville", state: "TN" },
+  { lat: 35.1, lng: -90.0, spread: 0.3, weight: 40, region: "Memphis", state: "TN" },
+  { lat: 36.0, lng: -83.9, spread: 0.2, weight: 30, region: "Knoxville", state: "TN" },
+  { lat: 35.0, lng: -85.3, spread: 0.2, weight: 30, region: "Chattanooga", state: "TN" },
+  { lat: 33.5, lng: -86.8, spread: 0.3, weight: 40, region: "Birmingham", state: "AL" },
+  { lat: 30.7, lng: -88.0, spread: 0.2, weight: 20, region: "Mobile", state: "AL" },
+  { lat: 30.0, lng: -90.1, spread: 0.3, weight: 50, region: "New Orleans", state: "LA" },
+  { lat: 30.5, lng: -91.1, spread: 0.2, weight: 25, region: "Baton Rouge", state: "LA" },
+  { lat: 32.3, lng: -90.2, spread: 0.2, weight: 20, region: "Jackson MS", state: "MS" },
+  { lat: 32.8, lng: -79.9, spread: 0.3, weight: 45, region: "Charleston", state: "SC" },
+  { lat: 34.9, lng: -82.4, spread: 0.2, weight: 30, region: "Greenville SC", state: "SC" },
+  { lat: 34.0, lng: -81.0, spread: 0.2, weight: 25, region: "Columbia SC", state: "SC" },
+  { lat: 32.1, lng: -81.1, spread: 0.2, weight: 25, region: "Savannah", state: "GA" },
+  { lat: 34.7, lng: -92.3, spread: 0.3, weight: 25, region: "Little Rock", state: "AR" },
+  
+  // Mountain/Southwest - Moderate
+  { lat: 39.7, lng: -105.0, spread: 0.4, weight: 90, region: "Denver", state: "CO" },
+  { lat: 38.8, lng: -104.8, spread: 0.2, weight: 30, region: "Colorado Springs", state: "CO" },
+  { lat: 40.0, lng: -105.3, spread: 0.2, weight: 25, region: "Boulder", state: "CO" },
+  { lat: 40.6, lng: -105.1, spread: 0.2, weight: 20, region: "Fort Collins", state: "CO" },
+  { lat: 33.4, lng: -112.1, spread: 0.5, weight: 100, region: "Phoenix", state: "AZ" },
+  { lat: 32.2, lng: -111.0, spread: 0.3, weight: 40, region: "Tucson", state: "AZ" },
+  { lat: 35.1, lng: -106.6, spread: 0.3, weight: 40, region: "Albuquerque", state: "NM" },
+  { lat: 35.7, lng: -105.9, spread: 0.2, weight: 20, region: "Santa Fe", state: "NM" },
+  { lat: 36.2, lng: -115.1, spread: 0.4, weight: 80, region: "Las Vegas", state: "NV" },
+  { lat: 39.5, lng: -119.8, spread: 0.2, weight: 30, region: "Reno", state: "NV" },
+  { lat: 40.8, lng: -111.9, spread: 0.3, weight: 50, region: "Salt Lake City", state: "UT" },
+  { lat: 40.2, lng: -111.7, spread: 0.2, weight: 20, region: "Provo", state: "UT" },
+  { lat: 43.6, lng: -116.2, spread: 0.3, weight: 30, region: "Boise", state: "ID" },
+  { lat: 45.8, lng: -108.5, spread: 0.2, weight: 12, region: "Billings", state: "MT" },
+  { lat: 46.9, lng: -114.0, spread: 0.2, weight: 10, region: "Missoula", state: "MT" },
+  { lat: 41.1, lng: -104.8, spread: 0.2, weight: 12, region: "Cheyenne", state: "WY" },
+  
+  // Plains - Light
+  { lat: 35.5, lng: -97.5, spread: 0.3, weight: 40, region: "Oklahoma City", state: "OK" },
+  { lat: 36.2, lng: -95.9, spread: 0.3, weight: 35, region: "Tulsa", state: "OK" },
+  { lat: 37.7, lng: -97.3, spread: 0.3, weight: 25, region: "Wichita", state: "KS" },
+  { lat: 46.9, lng: -96.8, spread: 0.2, weight: 10, region: "Fargo", state: "ND" },
+  { lat: 43.5, lng: -96.7, spread: 0.2, weight: 12, region: "Sioux Falls", state: "SD" },
+  { lat: 44.0, lng: -103.2, spread: 0.2, weight: 8, region: "Rapid City", state: "SD" },
+  { lat: 40.8, lng: -96.7, spread: 0.2, weight: 15, region: "Lincoln", state: "NE" },
+  
+  // Hawaii & Alaska - Light
+  { lat: 21.3, lng: -157.8, spread: 0.3, weight: 35, region: "Honolulu", state: "HI" },
+  { lat: 20.8, lng: -156.3, spread: 0.2, weight: 12, region: "Maui", state: "HI" },
+  { lat: 61.2, lng: -149.9, spread: 0.3, weight: 15, region: "Anchorage", state: "AK" },
+  { lat: 64.8, lng: -147.7, spread: 0.2, weight: 5, region: "Fairbanks", state: "AK" },
 ];
 
-// Generate additional chargers to fill out the dataset
+// Generate chargers with proper US distribution
 function generateAdditionalChargers(): Charger[] {
   const additionalChargers: Charger[] = [];
   let idCounter = 8400;
   
-  // Generate 5475 additional chargers (5487 total - 12 sample chargers)
-  for (let i = 0; i < 5475; i++) {
-    const location = additionalLocations[i % additionalLocations.length];
-    const statusRoll = Math.random();
-    const status: ChargerStatus = statusRoll < 0.86 ? "Optimal" : statusRoll < 0.96 ? "Degraded" : "Critical";
+  // Calculate total weight
+  const totalWeight = usRegions.reduce((sum, r) => sum + r.weight, 0);
+  
+  // Distribute 5475 chargers according to weights (5487 total - 12 sample chargers)
+  const targetTotal = 5475;
+  let generated = 0;
+  
+  usRegions.forEach((region) => {
+    const count = Math.round((region.weight / totalWeight) * targetTotal);
     
-    const issues: string[] = [];
-    if (status === "Critical") {
-      issues.push(...["Power Supply Failure", "Screen Damage"].slice(0, 1 + Math.floor(Math.random() * 2)));
-    } else if (status === "Degraded") {
-      issues.push(...["RFID Slow", "Minor Cable Wear"].slice(0, 1 + Math.floor(Math.random() * 2)));
+    for (let i = 0; i < count && generated < targetTotal; i++) {
+      const statusRoll = Math.random();
+      const status: ChargerStatus = statusRoll < 0.86 ? "Optimal" : statusRoll < 0.96 ? "Degraded" : "Critical";
+      
+      const issues: string[] = [];
+      if (status === "Critical") {
+        issues.push(...["Power Supply Failure", "Screen Damage"].slice(0, 1 + Math.floor(Math.random() * 2)));
+      } else if (status === "Degraded") {
+        issues.push(...["RFID Slow", "Minor Cable Wear"].slice(0, 1 + Math.floor(Math.random() * 2)));
+      }
+      
+      // Add random offset within the region's spread
+      const latOffset = (Math.random() - 0.5) * 2 * region.spread;
+      const lngOffset = (Math.random() - 0.5) * 2 * region.spread;
+      
+      additionalChargers.push({
+        charger_id: `C${idCounter + generated}`,
+        station_number: `GEN${String(generated).padStart(4, "0")}`,
+        model: "EVPC-S-EVGO-012022-480-XXXX",
+        manufacturer: "BTC",
+        address: `${1000 + (generated % 9000)} Main Street`,
+        city: region.region,
+        state: region.state,
+        zip: "00000",
+        site_name: `${region.region} Station ${i + 1}`,
+        serviced: 1,
+        status,
+        summary: status === "Optimal" 
+          ? "All systems operational. No issues found during inspection."
+          : status === "Degraded"
+          ? "Minor issues detected. Charger functional but requires attention."
+          : "Significant issues requiring immediate attention.",
+        full_report_link: `https://drive.google.com/file/d/gen-${generated}`,
+        start_date: "1/1/2022",
+        max_power: 50,
+        lat: region.lat + latOffset,
+        lng: region.lng + lngOffset,
+        issues,
+        technician: ["Mike Johnson", "Sarah Chen", "James Wilson", "David Park", "Emily Rodriguez"][Math.floor(Math.random() * 5)],
+        estimated_cost: status === "Critical" ? 3000 + Math.floor(Math.random() * 2000) : status === "Degraded" ? 500 + Math.floor(Math.random() * 1000) : 0,
+        timeline: status === "Critical" ? "5-7 business days" : status === "Degraded" ? "2-3 business days" : undefined,
+        photos: ["/placeholder.svg"],
+      });
+      
+      generated++;
     }
-    
-    additionalChargers.push({
-      charger_id: `C${idCounter + i}`,
-      station_number: `GEN${String(i).padStart(4, "0")}`,
-      model: "EVPC-S-EVGO-012022-480-XXXX",
-      manufacturer: "BTC",
-      address: `${1000 + (i % 9000)} Main Street`,
-      city: location.city,
-      state: location.state,
-      zip: "00000",
-      site_name: location.site,
-      serviced: 1,
-      status,
-      summary: status === "Optimal" 
-        ? "All systems operational. No issues found during inspection."
-        : status === "Degraded"
-        ? "Minor issues detected. Charger functional but requires attention."
-        : "Significant issues requiring immediate attention.",
-      full_report_link: `https://drive.google.com/file/d/gen-${i}`,
-      start_date: "1/1/2022",
-      max_power: 50,
-      lat: location.lat + (Math.random() - 0.5) * 0.05,
-      lng: location.lng + (Math.random() - 0.5) * 0.05,
-      issues,
-      technician: ["Mike Johnson", "Sarah Chen", "James Wilson", "David Park", "Emily Rodriguez"][Math.floor(Math.random() * 5)],
-      estimated_cost: status === "Critical" ? 3000 + Math.floor(Math.random() * 2000) : status === "Degraded" ? 500 + Math.floor(Math.random() * 1000) : 0,
-      timeline: status === "Critical" ? "5-7 business days" : status === "Degraded" ? "2-3 business days" : undefined,
-      photos: ["/placeholder.svg"],
-    });
-  }
+  });
   
   return additionalChargers;
 }
