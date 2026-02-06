@@ -404,23 +404,30 @@ function generateAdditionalChargers(): Charger[] {
   const targetTotal = 5475;
   let generated = 0;
   
-  usRegions.forEach((region) => {
-    const count = Math.round((region.weight / totalWeight) * targetTotal);
+  // Use a seeded random for consistent results
+  const seededRandom = (seed: number) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  };
+  
+  usRegions.forEach((region, regionIndex) => {
+    const count = Math.max(1, Math.round((region.weight / totalWeight) * targetTotal));
     
     for (let i = 0; i < count && generated < targetTotal; i++) {
-      const statusRoll = Math.random();
+      const seed = regionIndex * 10000 + i;
+      const statusRoll = seededRandom(seed);
       const status: ChargerStatus = statusRoll < 0.86 ? "Optimal" : statusRoll < 0.96 ? "Degraded" : "Critical";
       
       const issues: string[] = [];
       if (status === "Critical") {
-        issues.push(...["Power Supply Failure", "Screen Damage"].slice(0, 1 + Math.floor(Math.random() * 2)));
+        issues.push(...["Power Supply Failure", "Screen Damage"].slice(0, 1 + Math.floor(seededRandom(seed + 1) * 2)));
       } else if (status === "Degraded") {
-        issues.push(...["RFID Slow", "Minor Cable Wear"].slice(0, 1 + Math.floor(Math.random() * 2)));
+        issues.push(...["RFID Slow", "Minor Cable Wear"].slice(0, 1 + Math.floor(seededRandom(seed + 2) * 2)));
       }
       
       // Add random offset within the region's spread
-      const latOffset = (Math.random() - 0.5) * 2 * region.spread;
-      const lngOffset = (Math.random() - 0.5) * 2 * region.spread;
+      const latOffset = (seededRandom(seed + 3) - 0.5) * 2 * region.spread;
+      const lngOffset = (seededRandom(seed + 4) - 0.5) * 2 * region.spread;
       
       additionalChargers.push({
         charger_id: `C${idCounter + generated}`,
@@ -445,8 +452,8 @@ function generateAdditionalChargers(): Charger[] {
         lat: region.lat + latOffset,
         lng: region.lng + lngOffset,
         issues,
-        technician: ["Mike Johnson", "Sarah Chen", "James Wilson", "David Park", "Emily Rodriguez"][Math.floor(Math.random() * 5)],
-        estimated_cost: status === "Critical" ? 3000 + Math.floor(Math.random() * 2000) : status === "Degraded" ? 500 + Math.floor(Math.random() * 1000) : 0,
+        technician: ["Mike Johnson", "Sarah Chen", "James Wilson", "David Park", "Emily Rodriguez"][Math.floor(seededRandom(seed + 5) * 5)],
+        estimated_cost: status === "Critical" ? 3000 + Math.floor(seededRandom(seed + 6) * 2000) : status === "Degraded" ? 500 + Math.floor(seededRandom(seed + 7) * 1000) : 0,
         timeline: status === "Critical" ? "5-7 business days" : status === "Degraded" ? "2-3 business days" : undefined,
         photos: ["/placeholder.svg"],
       });
@@ -454,6 +461,9 @@ function generateAdditionalChargers(): Charger[] {
       generated++;
     }
   });
+  
+  console.log(`Generated ${additionalChargers.length} chargers across ${new Set(additionalChargers.map(c => c.state)).size} states:`, 
+    [...new Set(additionalChargers.map(c => c.state))].sort());
   
   return additionalChargers;
 }
