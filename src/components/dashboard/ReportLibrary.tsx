@@ -86,7 +86,7 @@ export function ReportLibrary({ chargers }: ReportLibraryProps) {
             >
               <div className="aspect-video bg-muted relative overflow-hidden">
                 <img
-                  src={charger.photos?.[0] || reportCover}
+                  src={reportCover}
                   alt={`Charger ${charger.charger_id}`}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
