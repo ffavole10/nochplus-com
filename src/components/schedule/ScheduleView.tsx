@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen } from "lucide-react";
+import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2, Upload, Loader2 } from "lucide-react";
+import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
 
 interface ScheduleViewProps {
@@ -23,6 +24,9 @@ interface ScheduleViewProps {
   onUpdateChargerPhase: (id: string, phase: any) => void;
   onSelectCharger: (charger: AssessmentCharger) => void;
   onSelectCampaign?: (campaign: Campaign) => void;
+  onExport: () => void;
+  onClear: () => void;
+  onImport: (chargers: AssessmentCharger[]) => void;
 }
 
 export function ScheduleView({
@@ -37,6 +41,9 @@ export function ScheduleView({
   onUpdateChargerPhase,
   onSelectCharger,
   onSelectCampaign,
+  onExport,
+  onClear,
+  onImport,
 }: ScheduleViewProps) {
   const [config, setConfig] = useState<CampaignConfig>(() => {
     return { ...DEFAULT_CONFIG, name: campaignName || "" };
@@ -45,6 +52,23 @@ export function ScheduleView({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const chargers = await parseAssessmentExcel(file);
+      onImport(chargers);
+      toast.success(`✓ ${chargers.length} chargers imported successfully`);
+    } catch {
+      toast.error("Failed to parse file. Check the format.");
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
+  }, [onImport]);
 
   // Auto-generate preview whenever config changes and there are matching chargers
   const autoPreview = useMemo(() => {
@@ -144,6 +168,38 @@ export function ScheduleView({
         <div className="flex items-center gap-2">
           {!activeCampaign && (
             <>
+              {chargers.length > 0 && (
+                <>
+                  <Button variant="outline" size="sm" onClick={onExport}>
+                    <Download className="h-3.5 w-3.5 mr-1" /> Export
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={onClear}>
+                    <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear
+                  </Button>
+                </>
+              )}
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="schedule-upload"
+                  disabled={isUploading}
+                />
+                <label htmlFor="schedule-upload">
+                  <Button asChild variant="outline" size="sm" disabled={isUploading}>
+                    <span className="cursor-pointer">
+                      {isUploading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                      ) : (
+                        <Upload className="h-3.5 w-3.5 mr-1" />
+                      )}
+                      {isUploading ? "Parsing..." : "Upload File"}
+                    </span>
+                  </Button>
+                </label>
+              </div>
               <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={!autoPreview}>
                 <Save className="h-3.5 w-3.5 mr-1" /> Save Draft
               </Button>
