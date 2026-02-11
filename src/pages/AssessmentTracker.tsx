@@ -9,12 +9,17 @@ import { useAssessmentData } from "@/hooks/useAssessmentData";
 import { AssessmentCharger, ViewMode } from "@/types/assessment";
 import { Upload, FileSpreadsheet, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { geocodeChargers } from "@/lib/geocoder";
+import { toast } from "sonner";
 
 const AssessmentTracker = () => {
   const { chargers, importChargers, updateCharger, moveChargerToPhase, clearData } = useAssessmentData();
   const [view, setView] = useState<ViewMode>("dashboard");
   const [selectedCharger, setSelectedCharger] = useState<AssessmentCharger | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeProgress, setGeocodeProgress] = useState({ done: 0, total: 0 });
 
   const handleSelectCharger = useCallback((charger: AssessmentCharger) => {
     setSelectedCharger(charger);
@@ -64,7 +69,17 @@ const AssessmentTracker = () => {
                   try {
                     const data = await parseAssessmentExcel(file);
                     importChargers(data);
+                    // Start geocoding
+                    setGeocoding(true);
+                    toast.info("Geocoding charger locations...");
+                    const geocoded = await geocodeChargers(data, (done, total) => {
+                      setGeocodeProgress({ done, total });
+                    });
+                    importChargers(geocoded);
+                    setGeocoding(false);
+                    toast.success(`✓ Geocoded ${geocoded.filter(c => c.latitude).length} charger locations`);
                   } catch {
+                    setGeocoding(false);
                     // handled in parser
                   }
                 }}
@@ -97,11 +112,41 @@ const AssessmentTracker = () => {
         chargerCount={chargers.length}
       />
 
+      {geocoding && (
+        <div className="px-4 py-2 border-b border-border">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              Geocoding locations... {geocodeProgress.done}/{geocodeProgress.total}
+            </span>
+            <Progress value={geocodeProgress.total > 0 ? (geocodeProgress.done / geocodeProgress.total) * 100 : 0} className="flex-1 max-w-xs" />
+          </div>
+        </div>
+      )}
+
       {view === "dashboard" && (
         <AssessmentDashboard chargers={chargers} onSelectCharger={handleSelectCharger} />
       )}
       {view === "map" && (
-        <AssessmentMap chargers={chargers} onSelectCharger={handleSelectCharger} />
+        <AssessmentMap
+          chargers={chargers}
+          onSelectCharger={handleSelectCharger}
+          onGeocodeRequest={async () => {
+            const needsGeocode = chargers.some(c => !c.latitude || !c.longitude);
+            if (!needsGeocode) {
+              toast.info("All chargers already have coordinates");
+              return;
+            }
+            setGeocoding(true);
+            toast.info("Geocoding charger locations...");
+            const geocoded = await geocodeChargers(chargers, (done, total) => {
+              setGeocodeProgress({ done, total });
+            });
+            importChargers(geocoded);
+            setGeocoding(false);
+            toast.success(`✓ Geocoded ${geocoded.filter(c => c.latitude).length} charger locations`);
+          }}
+          isGeocoding={geocoding}
+        />
       )}
       {view === "kanban" && (
         <AssessmentKanban
