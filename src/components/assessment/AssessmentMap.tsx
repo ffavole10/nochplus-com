@@ -11,6 +11,8 @@ import { toast } from "sonner";
 interface AssessmentMapProps {
   chargers: AssessmentCharger[];
   onSelectCharger: (charger: AssessmentCharger) => void;
+  onGeocodeRequest?: () => void;
+  isGeocoding?: boolean;
 }
 
 const PHASES: Phase[] = ["Needs Assessment", "Scheduled", "In Progress", "Completed", "Deferred"];
@@ -56,7 +58,7 @@ function optimizeRoute(chargers: AssessmentCharger[]): AssessmentCharger[] {
   return route;
 }
 
-export function AssessmentMap({ chargers, onSelectCharger }: AssessmentMapProps) {
+export function AssessmentMap({ chargers, onSelectCharger, onGeocodeRequest, isGeocoding }: AssessmentMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<any>(null);
   const layerGroup = useRef<any>(null);
@@ -259,6 +261,13 @@ export function AssessmentMap({ chargers, onSelectCharger }: AssessmentMapProps)
           Showing {filtered.length} chargers{phaseFilter !== "all" ? ` in ${phaseFilter}` : ""}
           {withCoords.length < filtered.length && ` (${withCoords.length} with coordinates)`}
         </span>
+
+        {withCoords.length < filtered.length && onGeocodeRequest && (
+          <Button size="sm" onClick={onGeocodeRequest} disabled={isGeocoding} variant="secondary">
+            <MapIcon className="h-4 w-4 mr-1" />
+            {isGeocoding ? "Geocoding..." : "Geocode Locations"}
+          </Button>
+        )}
 
         {phaseFilter !== "all" && withCoords.length >= 2 && (
           <Button size="sm" onClick={showRoute ? clearRoute : generateRoute} variant={showRoute ? "outline" : "default"}>
