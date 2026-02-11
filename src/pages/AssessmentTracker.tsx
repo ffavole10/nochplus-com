@@ -103,8 +103,8 @@ const AssessmentTracker = () => {
                 <p className="text-sm text-muted-foreground mt-1">Supports .xlsx, .xls, .csv</p>
               </label>
             </div>
-            <Link to="/" className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-6">
-              <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+            <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-6">
+              <ArrowLeft className="h-4 w-4" /> Back to Campaigns
             </Link>
           </div>
         </div>
