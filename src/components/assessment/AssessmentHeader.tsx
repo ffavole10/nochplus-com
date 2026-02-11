@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Upload, FileSpreadsheet, Loader2, CheckCircle, LayoutDashboard, Map, Columns, Download, Trash2 } from "lucide-react";
+import { Upload, FileSpreadsheet, Loader2, CheckCircle, LayoutDashboard, Map, Columns, Download, Trash2, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AssessmentCharger, ViewMode } from "@/types/assessment";
@@ -66,6 +66,10 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
             <TabsTrigger value="kanban" className="gap-1.5">
               <Columns className="h-4 w-4" />
               <span className="hidden sm:inline">Kanban</span>
+            </TabsTrigger>
+            <TabsTrigger value="schedule" className="gap-1.5">
+              <CalendarDays className="h-4 w-4" />
+              <span className="hidden sm:inline">Schedule</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>

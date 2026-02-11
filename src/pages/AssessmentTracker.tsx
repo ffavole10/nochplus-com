@@ -5,7 +5,10 @@ import { AssessmentDashboard } from "@/components/assessment/AssessmentDashboard
 import { AssessmentMap } from "@/components/assessment/AssessmentMap";
 import { AssessmentKanban } from "@/components/assessment/AssessmentKanban";
 import { ChargerDetailModal } from "@/components/assessment/ChargerDetailModal";
+import { ScheduleView } from "@/components/schedule/ScheduleView";
+import { CampaignProgressBanner } from "@/components/schedule/CampaignProgressBanner";
 import { useAssessmentData } from "@/hooks/useAssessmentData";
+import { useCampaignManager } from "@/hooks/useCampaignManager";
 import { AssessmentCharger, ViewMode } from "@/types/assessment";
 import { Upload, FileSpreadsheet, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +18,16 @@ import { toast } from "sonner";
 
 const AssessmentTracker = () => {
   const { chargers, importChargers, updateCharger, moveChargerToPhase, clearData } = useAssessmentData();
+  const {
+    campaigns,
+    activeCampaign,
+    addCampaign,
+    startCampaign,
+    endCampaign,
+    updateChargerStatus,
+    rescheduleCharger,
+    deleteCampaign,
+  } = useCampaignManager();
   const [view, setView] = useState<ViewMode>("dashboard");
   const [selectedCharger, setSelectedCharger] = useState<AssessmentCharger | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -55,7 +68,7 @@ const AssessmentTracker = () => {
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-3">Upload Campaign Data</h2>
             <p className="text-muted-foreground mb-6">
-              Upload an Excel file (.xlsx, .xls) with your EV charger assessment data to get started. 
+              Upload an Excel file (.xlsx, .xls) with your EV charger assessment data to get started.
               The tracker will automatically calculate priority scores and organize chargers.
             </p>
             <div className="border-2 border-dashed border-border rounded-xl p-8 hover:border-primary/50 transition-colors">
@@ -69,7 +82,6 @@ const AssessmentTracker = () => {
                   try {
                     const data = await parseAssessmentExcel(file);
                     importChargers(data);
-                    // Start geocoding
                     setGeocoding(true);
                     toast.info("Geocoding charger locations...");
                     const geocoded = await geocodeChargers(data, (done, total) => {
@@ -80,7 +92,6 @@ const AssessmentTracker = () => {
                     toast.success(`✓ Geocoded ${geocoded.filter(c => c.latitude).length} charger locations`);
                   } catch {
                     setGeocoding(false);
-                    // handled in parser
                   }
                 }}
                 className="hidden"
@@ -123,6 +134,20 @@ const AssessmentTracker = () => {
         </div>
       )}
 
+      {/* Campaign Progress Banner on Dashboard */}
+      {view === "dashboard" && activeCampaign && (
+        <div className="px-6 pt-4">
+          <CampaignProgressBanner
+            campaign={activeCampaign}
+            onViewSchedule={() => setView("schedule")}
+            onEndCampaign={() => {
+              endCampaign(activeCampaign.id);
+              toast.success("Campaign ended");
+            }}
+          />
+        </div>
+      )}
+
       {view === "dashboard" && (
         <AssessmentDashboard chargers={chargers} onSelectCharger={handleSelectCharger} />
       )}
@@ -152,6 +177,21 @@ const AssessmentTracker = () => {
         <AssessmentKanban
           chargers={chargers}
           onMoveCharger={moveChargerToPhase}
+          onSelectCharger={handleSelectCharger}
+        />
+      )}
+      {view === "schedule" && (
+        <ScheduleView
+          chargers={chargers}
+          activeCampaign={activeCampaign}
+          onCreateCampaign={addCampaign}
+          onStartCampaign={startCampaign}
+          onEndCampaign={(id) => {
+            endCampaign(id);
+            toast.success("Campaign ended");
+          }}
+          onUpdateStatus={updateChargerStatus}
+          onUpdateChargerPhase={moveChargerToPhase}
           onSelectCharger={handleSelectCharger}
         />
       )}
