@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useMemo } from "react";
-import { allChargers, getNetworkStats, Charger } from "@/data/chargerData";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { allChargers, getNetworkStats, getChargersByCustomer, Charger } from "@/data/chargerData";
 import { HeroMetrics } from "@/components/dashboard/HeroMetrics";
 import { FindingsSection } from "@/components/dashboard/FindingsSection";
 import { ChargerMap } from "@/components/dashboard/ChargerMap";
@@ -15,12 +15,25 @@ interface MissionControlDashboardProps {
 }
 
 export function MissionControlDashboard({ campaign }: MissionControlDashboardProps) {
+  // Get campaign-specific chargers based on customer
+  const campaignChargers = useMemo(() => {
+    if (campaign) {
+      return getChargersByCustomer(campaign.customer);
+    }
+    return allChargers;
+  }, [campaign]);
+
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
-  const [filteredChargers, setFilteredChargers] = useState<Charger[]>(allChargers);
+  const [filteredChargers, setFilteredChargers] = useState<Charger[]>(campaignChargers);
   const [focusedLocation, setFocusedLocation] = useState<string | null>(null);
   const criticalRef = useRef<HTMLDivElement>(null);
 
-  
+  // Reset filtered chargers when campaign changes
+  useEffect(() => {
+    setFilteredChargers(campaignChargers);
+    setSelectedCharger(null);
+    setFocusedLocation(null);
+  }, [campaignChargers]);
 
   const handleCriticalClick = useCallback(() => {
     criticalRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -33,12 +46,12 @@ export function MissionControlDashboard({ campaign }: MissionControlDashboardPro
 
   const handleLocationFilter = useCallback((location: string | null) => {
     if (location === null) {
-      setFilteredChargers(allChargers);
+      setFilteredChargers(campaignChargers);
       setFocusedLocation(null);
       setSelectedCharger(null);
     } else {
       const [city, state] = location.split(", ");
-      const filtered = allChargers.filter(
+      const filtered = campaignChargers.filter(
         (c) => c.city === city && c.state === state
       );
       setFilteredChargers(filtered);
@@ -47,24 +60,24 @@ export function MissionControlDashboard({ campaign }: MissionControlDashboardPro
         setSelectedCharger(filtered[0]);
       }
     }
-  }, []);
+  }, [campaignChargers]);
 
   const handleComponentClick = useCallback((component: string) => {
     const keyword = component.toLowerCase().split("/")[0];
-    const filtered = allChargers.filter((c) =>
+    const filtered = campaignChargers.filter((c) =>
       c.issues?.some((i) => i.toLowerCase().includes(keyword))
     );
     setFilteredChargers(filtered);
-  }, []);
+  }, [campaignChargers]);
 
   const handleSiteClick = useCallback((siteName: string) => {
-    const filtered = allChargers.filter((c) => c.site_name === siteName);
+    const filtered = campaignChargers.filter((c) => c.site_name === siteName);
     setFilteredChargers(filtered);
     if (filtered.length > 0) {
       setSelectedCharger(filtered[0]);
       document.getElementById("mc-map-section")?.scrollIntoView({ behavior: "smooth" });
     }
-  }, []);
+  }, [campaignChargers]);
 
   const handleFiltersChange = useCallback((chargers: Charger[]) => {
     setFilteredChargers(chargers);
@@ -100,7 +113,7 @@ export function MissionControlDashboard({ campaign }: MissionControlDashboardPro
         <DashboardSidebar
           onFiltersChange={handleFiltersChange}
           filteredCount={filteredChargers.length}
-          totalCount={allChargers.length}
+          totalCount={campaignChargers.length}
         />
 
         <div className="flex-1 flex flex-col">
@@ -128,7 +141,7 @@ export function MissionControlDashboard({ campaign }: MissionControlDashboardPro
             <div id="mc-map-section">
               <ChargerMap
                 chargers={filteredChargers}
-                allChargers={allChargers}
+                allChargers={campaignChargers}
                 selectedCharger={selectedCharger}
                 onChargerSelect={setSelectedCharger}
                 onLocationFilter={handleLocationFilter}
