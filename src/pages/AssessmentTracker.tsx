@@ -1,17 +1,15 @@
 import { useState, useCallback } from "react";
-import { Link } from "react-router-dom";
 import { AssessmentHeader } from "@/components/assessment/AssessmentHeader";
 import { AssessmentDashboard } from "@/components/assessment/AssessmentDashboard";
 import { AssessmentMap } from "@/components/assessment/AssessmentMap";
 import { AssessmentKanban } from "@/components/assessment/AssessmentKanban";
 import { ChargerDetailModal } from "@/components/assessment/ChargerDetailModal";
+import { MissionControlLanding } from "@/components/assessment/MissionControlLanding";
 import { ScheduleView } from "@/components/schedule/ScheduleView";
 import { CampaignProgressBanner } from "@/components/schedule/CampaignProgressBanner";
 import { useAssessmentData } from "@/hooks/useAssessmentData";
 import { useCampaignManager } from "@/hooks/useCampaignManager";
 import { AssessmentCharger, ViewMode } from "@/types/assessment";
-import { Upload, FileSpreadsheet, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { geocodeChargers } from "@/lib/geocoder";
 import { toast } from "sonner";
@@ -33,6 +31,8 @@ const AssessmentTracker = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeProgress, setGeocodeProgress] = useState({ done: 0, total: 0 });
+  const [isLandingDismissed, setIsLandingDismissed] = useState(false);
+  const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
 
   const handleSelectCharger = useCallback((charger: AssessmentCharger) => {
     setSelectedCharger(charger);
@@ -49,66 +49,50 @@ const AssessmentTracker = () => {
     URL.revokeObjectURL(url);
   }, [chargers]);
 
-  // Empty state
-  if (chargers.length === 0 && view === "dashboard") {
+  const handleUploadFile = useCallback(async (file: File) => {
+    const { parseAssessmentExcel } = await import("@/lib/assessmentParser");
+    try {
+      const data = await parseAssessmentExcel(file);
+      importChargers(data);
+      setIsLandingDismissed(true);
+      setGeocoding(true);
+      toast.info("Geocoding charger locations...");
+      const geocoded = await geocodeChargers(data, (done, total) => {
+        setGeocodeProgress({ done, total });
+      });
+      importChargers(geocoded);
+      setGeocoding(false);
+      toast.success(`✓ Geocoded ${geocoded.filter(c => c.latitude).length} charger locations`);
+    } catch {
+      setGeocoding(false);
+      toast.error("Failed to parse file. Check the format.");
+    }
+  }, [importChargers]);
+
+  const handleSelectCampaigns = useCallback((ids: string[]) => {
+    setSelectedCampaignIds(ids);
+    setIsLandingDismissed(true);
+  }, []);
+
+  const handleCreateNew = useCallback(() => {
+    setIsLandingDismissed(true);
+    setView("schedule");
+  }, []);
+
+  const handleBackToLanding = useCallback(() => {
+    setIsLandingDismissed(false);
+    setSelectedCampaignIds([]);
+  }, []);
+
+  // Show landing page when not dismissed
+  if (!isLandingDismissed) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <AssessmentHeader
-          view={view}
-          onViewChange={setView}
-          onImport={importChargers}
-          onExport={handleExport}
-          onClear={clearData}
-          chargerCount={0}
-        />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto p-8">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-              <FileSpreadsheet className="h-10 w-10 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold text-foreground mb-3">Upload Campaign Data</h2>
-            <p className="text-muted-foreground mb-6">
-              Upload an Excel file (.xlsx, .xls) with your EV charger assessment data to get started.
-              The tracker will automatically calculate priority scores and organize chargers.
-            </p>
-            <div className="border-2 border-dashed border-border rounded-xl p-8 hover:border-primary/50 transition-colors">
-              <input
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  const { parseAssessmentExcel } = await import("@/lib/assessmentParser");
-                  try {
-                    const data = await parseAssessmentExcel(file);
-                    importChargers(data);
-                    setGeocoding(true);
-                    toast.info("Geocoding charger locations...");
-                    const geocoded = await geocodeChargers(data, (done, total) => {
-                      setGeocodeProgress({ done, total });
-                    });
-                    importChargers(geocoded);
-                    setGeocoding(false);
-                    toast.success(`✓ Geocoded ${geocoded.filter(c => c.latitude).length} charger locations`);
-                  } catch {
-                    setGeocoding(false);
-                  }
-                }}
-                className="hidden"
-                id="empty-upload"
-              />
-              <label htmlFor="empty-upload" className="cursor-pointer">
-                <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                <p className="font-medium text-foreground">Drop file here or click to upload</p>
-                <p className="text-sm text-muted-foreground mt-1">Supports .xlsx, .xls, .csv</p>
-              </label>
-            </div>
-            <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-6">
-              <ArrowLeft className="h-4 w-4" /> Back to Campaigns
-            </Link>
-          </div>
-        </div>
-      </div>
+      <MissionControlLanding
+        campaigns={campaigns}
+        onUploadFile={handleUploadFile}
+        onSelectCampaigns={handleSelectCampaigns}
+        onCreateNew={handleCreateNew}
+      />
     );
   }
 
@@ -121,6 +105,8 @@ const AssessmentTracker = () => {
         onExport={handleExport}
         onClear={clearData}
         chargerCount={chargers.length}
+        onBackToLanding={handleBackToLanding}
+        selectedCampaignCount={selectedCampaignIds.length}
       />
 
       {geocoding && (
