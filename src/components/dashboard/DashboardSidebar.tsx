@@ -13,6 +13,7 @@ import {
   ChevronRight,
   X,
   FolderOpen,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -428,6 +429,16 @@ export function DashboardSidebar({
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-3">
         {!isCollapsed && (
           <>
+            <Link to="/assessment">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent mb-2"
+              >
+                <ClipboardList className="w-4 h-4 mr-2" />
+                Assessment Tracker
+              </Button>
+            </Link>
             <Link to="/campaigns">
               <Button
                 variant="outline"
