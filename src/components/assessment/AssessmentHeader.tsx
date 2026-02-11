@@ -43,7 +43,7 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
         <div className="h-6 w-px bg-border" />
         <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <FileSpreadsheet className="h-5 w-5 text-primary" />
-          Assessment Tracker
+          Mission Control
         </h1>
         {chargerCount > 0 && (
           <span className="text-sm text-muted-foreground">
