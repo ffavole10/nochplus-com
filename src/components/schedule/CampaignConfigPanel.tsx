@@ -149,7 +149,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
           {/* Campaign Details */}
           <div>
             <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-              <Settings2 className="h-3.5 w-3.5" /> Campaign Details
+              <Settings2 className="h-3.5 w-3.5" /> Campaign Name
             </Label>
             <Input
               className="mt-1.5 h-9"
