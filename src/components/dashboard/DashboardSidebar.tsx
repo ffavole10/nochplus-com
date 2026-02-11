@@ -429,14 +429,14 @@ export function DashboardSidebar({
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-3">
         {!isCollapsed && (
           <>
-            <Link to="/assessment">
+            <Link to="/missioncontrol">
               <Button
                 variant="outline"
                 size="sm"
                 className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent mb-2"
               >
                 <ClipboardList className="w-4 h-4 mr-2" />
-                Assessment Tracker
+                Mission Control
               </Button>
             </Link>
             <Link to="/campaigns">
