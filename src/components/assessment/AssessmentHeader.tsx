@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Upload, FileSpreadsheet, Loader2, CheckCircle, LayoutDashboard, Map, Columns, Download, Trash2, CalendarDays, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AssessmentCharger, ViewMode } from "@/types/assessment";
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
@@ -15,9 +16,11 @@ interface AssessmentHeaderProps {
   onExport: () => void;
   onClear: () => void;
   chargerCount: number;
+  onBackToLanding?: () => void;
+  selectedCampaignCount?: number;
 }
 
-export function AssessmentHeader({ view, onViewChange, onImport, onExport, onClear, chargerCount }: AssessmentHeaderProps) {
+export function AssessmentHeader({ view, onViewChange, onImport, onExport, onClear, chargerCount, onBackToLanding, selectedCampaignCount }: AssessmentHeaderProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,11 +43,20 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
   return (
     <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
       <div className="flex items-center gap-4">
-        <Link to="/campaigns">
-          <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Campaigns
+        {onBackToLanding ? (
+          <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground" onClick={onBackToLanding}>
+            <ArrowLeft className="h-4 w-4" /> Campaign Select
+            {selectedCampaignCount && selectedCampaignCount > 0 ? (
+              <Badge variant="secondary" className="ml-1 text-[10px]">{selectedCampaignCount}</Badge>
+            ) : null}
           </Button>
-        </Link>
+        ) : (
+          <Link to="/campaigns">
+            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" /> Campaigns
+            </Button>
+          </Link>
+        )}
         <div className="h-6 w-px bg-border" />
         <img src={nochLogo} alt="Noch Power" className="h-8 brightness-0 dark:brightness-100" />
         <div className="h-6 w-px bg-border" />
