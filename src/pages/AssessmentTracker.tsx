@@ -193,6 +193,7 @@ const AssessmentTracker = () => {
           onUpdateStatus={updateChargerStatus}
           onUpdateChargerPhase={moveChargerToPhase}
           onSelectCharger={handleSelectCharger}
+          onBackToDashboard={() => setView("dashboard")}
         />
       )}
 
