@@ -105,8 +105,6 @@ const AssessmentTracker = () => {
         onExport={handleExport}
         onClear={clearData}
         chargerCount={chargers.length}
-        onBackToLanding={handleBackToLanding}
-        selectedCampaignCount={selectedCampaignIds.length}
       />
 
       {geocoding && (
