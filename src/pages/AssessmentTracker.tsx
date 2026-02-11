@@ -195,6 +195,9 @@ const AssessmentTracker = () => {
           onUpdateStatus={updateChargerStatus}
           onUpdateChargerPhase={moveChargerToPhase}
           onSelectCharger={handleSelectCharger}
+          onExport={handleExport}
+          onClear={clearData}
+          onImport={importChargers}
         />
       )}
 

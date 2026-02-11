@@ -82,41 +82,6 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
           </TabsList>
         </Tabs>
 
-        {chargerCount > 0 && (
-          <>
-            <Button variant="outline" size="sm" onClick={onExport}>
-              <Download className="h-4 w-4 mr-1" />
-              Export
-            </Button>
-            <Button variant="outline" size="sm" onClick={onClear} className="text-destructive hover:text-destructive">
-              <Trash2 className="h-4 w-4 mr-1" />
-              Clear
-            </Button>
-          </>
-        )}
-
-        <div className="relative">
-          <input
-            type="file"
-            accept=".xlsx,.xls,.csv"
-            onChange={handleFileChange}
-            className="hidden"
-            id="assessment-upload"
-            disabled={isLoading}
-          />
-          <label htmlFor="assessment-upload">
-            <Button asChild size="sm" disabled={isLoading}>
-              <span className="cursor-pointer">
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                ) : (
-                  <Upload className="h-4 w-4 mr-1" />
-                )}
-                {isLoading ? "Parsing..." : "Upload File"}
-              </span>
-            </Button>
-          </label>
-        </div>
       </div>
     </header>
   );
