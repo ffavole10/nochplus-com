@@ -7,31 +7,34 @@ import { CampaignCalendar } from "@/components/schedule/CampaignCalendar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Rocket, Save, ArrowLeft, CalendarDays, AlertTriangle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 
 interface ScheduleViewProps {
   chargers: AssessmentCharger[];
   activeCampaign: Campaign | null;
+  campaigns: Campaign[];
   onCreateCampaign: (campaign: Campaign) => void;
   onStartCampaign: (id: string) => void;
   onEndCampaign: (id: string) => void;
   onUpdateStatus: (campaignId: string, chargerId: string, status: any) => void;
   onUpdateChargerPhase: (id: string, phase: any) => void;
   onSelectCharger: (charger: AssessmentCharger) => void;
-  onBackToDashboard?: () => void;
+  onSelectCampaign?: (campaign: Campaign) => void;
 }
 
 export function ScheduleView({
   chargers,
   activeCampaign,
+  campaigns,
   onCreateCampaign,
   onStartCampaign,
   onEndCampaign,
   onUpdateStatus,
   onUpdateChargerPhase,
   onSelectCharger,
-  onBackToDashboard,
+  onSelectCampaign,
 }: ScheduleViewProps) {
   const [config, setConfig] = useState<CampaignConfig>({ ...DEFAULT_CONFIG });
   const [previewCampaign, setPreviewCampaign] = useState<Campaign | null>(null);
@@ -90,10 +93,7 @@ export function ScheduleView({
 
     setConfirmOpen(false);
     toast.success(`🚀 Campaign started! ${campaign.statistics.totalChargers} chargers scheduled.`);
-    if (onBackToDashboard) {
-      setTimeout(onBackToDashboard, 1500);
-    }
-  }, [autoPreview, config.name, onCreateCampaign, onStartCampaign, onUpdateChargerPhase, onBackToDashboard]);
+  }, [autoPreview, config.name, onCreateCampaign, onStartCampaign, onUpdateChargerPhase]);
 
   // If active campaign, show it in calendar mode
   const displayCampaign = activeCampaign || autoPreview;
@@ -111,13 +111,33 @@ export function ScheduleView({
           {!activeCampaign && autoPreview && (
             <Badge variant="secondary" className="text-[10px]">Preview</Badge>
           )}
+          {/* Campaign Selector */}
+          {campaigns.length > 0 && (
+            <Select
+              value=""
+              onValueChange={(val) => {
+                const found = campaigns.find(c => c.id === val);
+                if (found && onSelectCampaign) onSelectCampaign(found);
+              }}
+            >
+              <SelectTrigger className="h-7 w-[220px] text-xs">
+                <FolderOpen className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                <SelectValue placeholder="Switch campaign..." />
+              </SelectTrigger>
+              <SelectContent>
+                {campaigns.map(c => (
+                  <SelectItem key={c.id} value={c.id} className="text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className={`h-1.5 w-1.5 rounded-full ${c.status === "active" ? "bg-optimal" : c.status === "draft" ? "bg-muted-foreground" : "bg-primary"}`} />
+                      {c.name || `Campaign ${c.id.slice(0, 6)}`}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div className="flex items-center gap-2">
-          {onBackToDashboard && (
-            <Button variant="ghost" size="sm" onClick={onBackToDashboard}>
-              <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Dashboard
-            </Button>
-          )}
           {!activeCampaign && (
             <>
               <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={!autoPreview}>
