@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { AssessmentHeader } from "@/components/assessment/AssessmentHeader";
 import { AssessmentDashboard } from "@/components/assessment/AssessmentDashboard";
 import { AssessmentMap } from "@/components/assessment/AssessmentMap";
@@ -12,6 +12,7 @@ import { useCampaignManager } from "@/hooks/useCampaignManager";
 import { AssessmentCharger, ViewMode } from "@/types/assessment";
 import { Progress } from "@/components/ui/progress";
 import { geocodeChargers } from "@/lib/geocoder";
+import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import { toast } from "sonner";
 
 const AssessmentTracker = () => {
@@ -34,6 +35,21 @@ const AssessmentTracker = () => {
   const [isLandingDismissed, setIsLandingDismissed] = useState(false);
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
 
+  // Derive campaign name from selected campaigns
+  const selectedCampaignName = useMemo(() => {
+    if (selectedCampaignIds.length === 0) return "";
+    const names = selectedCampaignIds.map(id => {
+      // Check user campaigns
+      const userCampaign = campaigns.find(c => c.id === id);
+      if (userCampaign) return userCampaign.name;
+      // Check sample campaigns (prefixed with "sample-")
+      const sampleId = id.replace("sample-", "");
+      const sample = sampleCampaigns.find(c => c.id === sampleId);
+      if (sample) return sample.name;
+      return null;
+    }).filter(Boolean);
+    return names.join(" + ");
+  }, [selectedCampaignIds, campaigns]);
   const handleSelectCharger = useCallback((charger: AssessmentCharger) => {
     setSelectedCharger(charger);
     setModalOpen(true);
@@ -169,6 +185,7 @@ const AssessmentTracker = () => {
           chargers={chargers}
           activeCampaign={activeCampaign}
           campaigns={campaigns}
+          campaignName={selectedCampaignName}
           onCreateCampaign={addCampaign}
           onStartCampaign={startCampaign}
           onEndCampaign={(id) => {

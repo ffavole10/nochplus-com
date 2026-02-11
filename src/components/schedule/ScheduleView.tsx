@@ -15,6 +15,7 @@ interface ScheduleViewProps {
   chargers: AssessmentCharger[];
   activeCampaign: Campaign | null;
   campaigns: Campaign[];
+  campaignName?: string;
   onCreateCampaign: (campaign: Campaign) => void;
   onStartCampaign: (id: string) => void;
   onEndCampaign: (id: string) => void;
@@ -28,6 +29,7 @@ export function ScheduleView({
   chargers,
   activeCampaign,
   campaigns,
+  campaignName,
   onCreateCampaign,
   onStartCampaign,
   onEndCampaign,
@@ -37,9 +39,7 @@ export function ScheduleView({
   onSelectCampaign,
 }: ScheduleViewProps) {
   const [config, setConfig] = useState<CampaignConfig>(() => {
-    const today = new Date();
-    const defaultName = `Campaign ${today.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
-    return { ...DEFAULT_CONFIG, name: defaultName };
+    return { ...DEFAULT_CONFIG, name: campaignName || "" };
   });
   const [previewCampaign, setPreviewCampaign] = useState<Campaign | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
