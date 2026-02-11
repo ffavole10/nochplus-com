@@ -36,7 +36,11 @@ export function ScheduleView({
   onSelectCharger,
   onSelectCampaign,
 }: ScheduleViewProps) {
-  const [config, setConfig] = useState<CampaignConfig>({ ...DEFAULT_CONFIG });
+  const [config, setConfig] = useState<CampaignConfig>(() => {
+    const today = new Date();
+    const defaultName = `Campaign ${today.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    return { ...DEFAULT_CONFIG, name: defaultName };
+  });
   const [previewCampaign, setPreviewCampaign] = useState<Campaign | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
