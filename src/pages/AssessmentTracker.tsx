@@ -184,6 +184,7 @@ const AssessmentTracker = () => {
         <ScheduleView
           chargers={chargers}
           activeCampaign={activeCampaign}
+          campaigns={campaigns}
           onCreateCampaign={addCampaign}
           onStartCampaign={startCampaign}
           onEndCampaign={(id) => {
@@ -193,7 +194,6 @@ const AssessmentTracker = () => {
           onUpdateStatus={updateChargerStatus}
           onUpdateChargerPhase={moveChargerToPhase}
           onSelectCharger={handleSelectCharger}
-          onBackToDashboard={() => setView("dashboard")}
         />
       )}
 
