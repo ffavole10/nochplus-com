@@ -5,6 +5,7 @@ import { AssessmentMap } from "@/components/assessment/AssessmentMap";
 import { AssessmentKanban } from "@/components/assessment/AssessmentKanban";
 import { ChargerDetailModal } from "@/components/assessment/ChargerDetailModal";
 import { MissionControlLanding } from "@/components/assessment/MissionControlLanding";
+import { MissionControlDashboard } from "@/components/assessment/MissionControlDashboard";
 import { ScheduleView } from "@/components/schedule/ScheduleView";
 import { CampaignProgressBanner } from "@/components/schedule/CampaignProgressBanner";
 import { useAssessmentData } from "@/hooks/useAssessmentData";
@@ -27,7 +28,7 @@ const AssessmentTracker = () => {
     rescheduleCharger,
     deleteCampaign,
   } = useCampaignManager();
-  const [view, setView] = useState<ViewMode>("dashboard");
+  const [view, setView] = useState<ViewMode>("campaign-dashboard");
   const [selectedCharger, setSelectedCharger] = useState<AssessmentCharger | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
@@ -134,8 +135,8 @@ const AssessmentTracker = () => {
         </div>
       )}
 
-      {/* Campaign Progress Banner on Dashboard */}
-      {view === "dashboard" && activeCampaign && (
+      {/* Campaign Progress Banner on Dataset view */}
+      {view === "dataset" && activeCampaign && (
         <div className="px-6 pt-4">
           <CampaignProgressBanner
             campaign={activeCampaign}
@@ -148,7 +149,10 @@ const AssessmentTracker = () => {
         </div>
       )}
 
-      {view === "dashboard" && (
+      {view === "campaign-dashboard" && (
+        <MissionControlDashboard />
+      )}
+      {view === "dataset" && (
         <AssessmentDashboard chargers={chargers} onSelectCharger={handleSelectCharger} />
       )}
       {view === "map" && (

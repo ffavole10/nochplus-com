@@ -41,4 +41,4 @@ export interface AssessmentStats {
   hpcdCount: number;
 }
 
-export type ViewMode = "dashboard" | "map" | "kanban" | "schedule";
+export type ViewMode = "dataset" | "campaign-dashboard" | "map" | "kanban" | "schedule";
