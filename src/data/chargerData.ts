@@ -1,5 +1,7 @@
 export type ChargerStatus = "Critical" | "Degraded" | "Optimal";
 
+export type ChargerCustomer = "evgo" | "evconnect" | "electrify_america" | "chargepoint";
+
 export interface Charger {
   charger_id: string;
   station_number: string;
@@ -18,6 +20,7 @@ export interface Charger {
   max_power: number;
   lat: number;
   lng: number;
+  customer: ChargerCustomer;
   issues?: string[];
   technician?: string;
   estimated_cost?: number;
@@ -38,6 +41,7 @@ export const sampleChargers: Charger[] = [
     site_name: "Aladdin Airport Parking - W. Laurel Street",
     serviced: 1,
     status: "Critical",
+    customer: "evgo",
     summary: "Charger completely out of service. Multiple components missing including display screen, RFID reader housing, and cable connector cover. Evidence of vandalism - spray paint on housing and forced entry marks on cabinet door. Power supply board shows burn damage. Immediate replacement of major components required.",
     full_report_link: "https://drive.google.com/file/d/critical-1",
     start_date: "6/1/2020",
@@ -62,6 +66,7 @@ export const sampleChargers: Charger[] = [
     site_name: "Harbor View Parking Structure",
     serviced: 1,
     status: "Degraded",
+    customer: "evgo",
     summary: "Payment systems not functioning properly. RFID reader intermittently unresponsive - requires multiple tap attempts. Credit card reader accepts cards but fails to process 40% of transactions. Cloud connectivity drops every 2-3 hours requiring manual reset. Charging functionality operational when payment bypassed.",
     full_report_link: "https://drive.google.com/file/d/degraded-1",
     start_date: "8/15/2020",
@@ -86,6 +91,7 @@ export const sampleChargers: Charger[] = [
     site_name: "Aladdin Airport Parking - W. Laurel Street",
     serviced: 1,
     status: "Optimal",
+    customer: "evgo",
     summary: "Charger fully operational. All systems functioning within normal parameters. Display clear and responsive. RFID and credit card payments processing correctly. Cable and connector in excellent condition. Firmware up to date. No maintenance required at this time.",
     full_report_link: "https://drive.google.com/file/d/optimal-1",
     start_date: "6/1/2020",
@@ -108,6 +114,7 @@ export const sampleChargers: Charger[] = [
     site_name: "Richmond Airport Long-Term Parking",
     serviced: 1,
     status: "Critical",
+    customer: "evgo",
     summary: "CCS cable severely damaged - outer sheath cracked and inner conductors exposed near connector head. Safety hazard - charger locked out. Cable shows signs of repeated vehicle drive-over damage. Requires immediate cable replacement. Secondary issue: cooling fan making grinding noise.",
     full_report_link: "https://drive.google.com/file/d/critical-2",
     start_date: "2/15/2020",
@@ -132,6 +139,7 @@ export const sampleChargers: Charger[] = [
     site_name: "Richmond Airport Long-Term Parking",
     serviced: 1,
     status: "Degraded",
+    customer: "evgo",
     summary: "Screen display showing partial image only - right third of screen blank. RFID functioning but response time slow (3-4 seconds vs normal 1 second). All payment and charging functions operational. User experience degraded but serviceable.",
     full_report_link: "https://drive.google.com/file/d/degraded-2",
     start_date: "2/15/2020",
@@ -156,6 +164,7 @@ export const sampleChargers: Charger[] = [
     site_name: "LAX Economy Parking Lot C",
     serviced: 1,
     status: "Degraded",
+    customer: "evgo",
     summary: "Thermal management system underperforming. Charger throttling to 35kW on hot days (designed for 50kW). Internal temperature readings 15°C above normal. Dust accumulation in air intake vents. Recommend deep cleaning and possible fan replacement.",
     full_report_link: "https://drive.google.com/file/d/degraded-3",
     start_date: "3/20/2021",
@@ -180,6 +189,7 @@ export const sampleChargers: Charger[] = [
     site_name: "LAX Economy Parking Lot C",
     serviced: 1,
     status: "Optimal",
+    customer: "evgo",
     summary: "All systems nominal. Recent firmware update successfully applied. Cable wear within acceptable limits. Payment systems responsive. Scheduled for routine maintenance in 60 days.",
     full_report_link: "https://drive.google.com/file/d/optimal-2",
     start_date: "3/20/2021",
@@ -202,6 +212,7 @@ export const sampleChargers: Charger[] = [
     site_name: "Salesforce Transit Center Garage",
     serviced: 1,
     status: "Critical",
+    customer: "evgo",
     summary: "Complete power supply failure. No response to any inputs. Internal diagnostics show main power board failure. Suspected lightning surge damage based on scorch marks on internal components. Requires full power module replacement and electrical inspection.",
     full_report_link: "https://drive.google.com/file/d/critical-3",
     start_date: "6/10/2021",
@@ -226,6 +237,7 @@ export const sampleChargers: Charger[] = [
     site_name: "Salesforce Transit Center Garage",
     serviced: 1,
     status: "Optimal",
+    customer: "evgo",
     summary: "Fully operational. Minor cosmetic scuff on housing - does not affect operation. All electrical and mechanical systems within specifications.",
     full_report_link: "https://drive.google.com/file/d/optimal-3",
     start_date: "6/10/2021",
@@ -248,6 +260,7 @@ export const sampleChargers: Charger[] = [
     site_name: "Sports Arena Parking",
     serviced: 1,
     status: "Critical",
+    customer: "evgo",
     summary: "Screen completely shattered - appears to be intentional vandalism. RFID reader pried off and missing. Despite physical damage, internal charging systems still operational. Security camera footage requested. Requires full front panel replacement.",
     full_report_link: "https://drive.google.com/file/d/critical-4",
     start_date: "1/15/2019",
@@ -272,6 +285,7 @@ export const sampleChargers: Charger[] = [
     site_name: "Sports Arena Parking",
     serviced: 1,
     status: "Degraded",
+    customer: "evgo",
     summary: "Cloud connectivity board failing. Station drops offline 5-6 times daily. Local charging works but remote monitoring and payment history not syncing. Board replacement ordered.",
     full_report_link: "https://drive.google.com/file/d/degraded-4",
     start_date: "1/15/2019",
@@ -296,6 +310,7 @@ export const sampleChargers: Charger[] = [
     site_name: "Hazard Center Mall Parking",
     serviced: 1,
     status: "Degraded",
+    customer: "evgo",
     summary: "Cable connector showing wear - outer housing cracked but functional. RFID intermittent. Recommend proactive cable replacement to avoid future critical status.",
     full_report_link: "https://drive.google.com/file/d/degraded-5",
     start_date: "8/20/2019",
@@ -311,9 +326,22 @@ export const sampleChargers: Charger[] = [
 ];
 
 // US region data - Limited to specific states: CA, WA, AZ, TX, FL (Orlando), GA, VA, NY, IL
-// Coordinates adjusted to ensure all chargers remain on land (moved inland from coasts)
+// Each region is assigned to a customer for campaign-specific filtering
+// Customer mapping: CA/WA = evgo, AZ/TX = chargepoint, FL/GA/VA = electrify_america, NY/IL = evconnect
+const STATE_CUSTOMER_MAP: Record<string, ChargerCustomer> = {
+  CA: "evgo",
+  WA: "evgo",
+  AZ: "chargepoint",
+  TX: "chargepoint",
+  FL: "electrify_america",
+  GA: "electrify_america",
+  VA: "electrify_america",
+  NY: "evconnect",
+  IL: "evconnect",
+};
+
 const usRegions = [
-  // California - Coordinates shifted east to keep chargers away from Pacific Ocean
+  // California (evgo)
   { lat: 32.9, lng: -117.0, spread: 0.2, weight: 200, region: "San Diego", state: "CA" },
   { lat: 34.1, lng: -117.8, spread: 0.35, weight: 280, region: "Los Angeles", state: "CA" },
   { lat: 34.3, lng: -119.1, spread: 0.15, weight: 90, region: "Ventura", state: "CA" },
@@ -328,7 +356,7 @@ const usRegions = [
   { lat: 35.4, lng: -119.0, spread: 0.3, weight: 40, region: "Bakersfield", state: "CA" },
   { lat: 39.5, lng: -121.5, spread: 0.4, weight: 30, region: "Northern CA", state: "CA" },
   
-  // Washington - Coordinates adjusted to avoid Puget Sound
+  // Washington (evgo)
   { lat: 47.6, lng: -122.1, spread: 0.25, weight: 180, region: "Seattle", state: "WA" },
   { lat: 47.2, lng: -122.3, spread: 0.2, weight: 80, region: "Tacoma", state: "WA" },
   { lat: 47.9, lng: -122.1, spread: 0.2, weight: 50, region: "Everett", state: "WA" },
@@ -336,14 +364,14 @@ const usRegions = [
   { lat: 47.7, lng: -117.4, spread: 0.3, weight: 45, region: "Spokane", state: "WA" },
   { lat: 46.6, lng: -120.5, spread: 0.3, weight: 30, region: "Yakima", state: "WA" },
   
-  // Arizona - Inland state, no ocean concerns
+  // Arizona (chargepoint)
   { lat: 33.5, lng: -112.0, spread: 0.5, weight: 180, region: "Phoenix", state: "AZ" },
   { lat: 32.2, lng: -110.9, spread: 0.3, weight: 70, region: "Tucson", state: "AZ" },
   { lat: 33.5, lng: -111.9, spread: 0.25, weight: 60, region: "Scottsdale", state: "AZ" },
   { lat: 33.4, lng: -111.8, spread: 0.25, weight: 50, region: "Mesa", state: "AZ" },
   { lat: 35.2, lng: -111.6, spread: 0.2, weight: 25, region: "Flagstaff", state: "AZ" },
   
-  // Texas - Inland coordinates, avoid Gulf of Mexico for Corpus Christi
+  // Texas (chargepoint)
   { lat: 29.8, lng: -95.4, spread: 0.4, weight: 200, region: "Houston", state: "TX" },
   { lat: 32.8, lng: -96.8, spread: 0.5, weight: 180, region: "Dallas", state: "TX" },
   { lat: 30.3, lng: -97.7, spread: 0.4, weight: 130, region: "Austin", state: "TX" },
@@ -352,13 +380,13 @@ const usRegions = [
   { lat: 31.8, lng: -106.4, spread: 0.3, weight: 45, region: "El Paso", state: "TX" },
   { lat: 27.9, lng: -97.5, spread: 0.2, weight: 40, region: "Corpus Christi", state: "TX" },
   
-  // Florida (Orlando area) - Inland Florida, away from coasts
+  // Florida (electrify_america)
   { lat: 28.5, lng: -81.4, spread: 0.4, weight: 200, region: "Orlando", state: "FL" },
   { lat: 28.3, lng: -81.5, spread: 0.25, weight: 60, region: "Kissimmee", state: "FL" },
   { lat: 28.8, lng: -81.3, spread: 0.25, weight: 50, region: "Sanford", state: "FL" },
   { lat: 28.6, lng: -81.4, spread: 0.2, weight: 40, region: "Winter Park", state: "FL" },
   
-  // Georgia - Savannah moved inland to avoid Atlantic
+  // Georgia (electrify_america)
   { lat: 33.8, lng: -84.4, spread: 0.4, weight: 180, region: "Atlanta", state: "GA" },
   { lat: 33.9, lng: -84.5, spread: 0.25, weight: 60, region: "Marietta", state: "GA" },
   { lat: 33.5, lng: -84.2, spread: 0.25, weight: 50, region: "Stockbridge", state: "GA" },
@@ -366,7 +394,7 @@ const usRegions = [
   { lat: 32.8, lng: -83.6, spread: 0.3, weight: 40, region: "Macon", state: "GA" },
   { lat: 33.1, lng: -83.2, spread: 0.2, weight: 30, region: "Milledgeville", state: "GA" },
   
-  // Virginia - Coastal areas moved inland to avoid Atlantic/Chesapeake Bay
+  // Virginia (electrify_america)
   { lat: 37.5, lng: -77.5, spread: 0.25, weight: 120, region: "Richmond", state: "VA" },
   { lat: 36.9, lng: -76.4, spread: 0.2, weight: 100, region: "Norfolk", state: "VA" },
   { lat: 38.9, lng: -77.2, spread: 0.2, weight: 80, region: "Arlington", state: "VA" },
@@ -374,7 +402,7 @@ const usRegions = [
   { lat: 37.3, lng: -79.9, spread: 0.2, weight: 40, region: "Roanoke", state: "VA" },
   { lat: 38.3, lng: -77.5, spread: 0.2, weight: 35, region: "Fredericksburg", state: "VA" },
   
-  // New York - NYC/Long Island moved inland to avoid Atlantic Ocean
+  // New York (evconnect)
   { lat: 40.8, lng: -73.9, spread: 0.15, weight: 250, region: "NYC", state: "NY" },
   { lat: 41.0, lng: -73.8, spread: 0.2, weight: 90, region: "Westchester", state: "NY" },
   { lat: 40.8, lng: -73.5, spread: 0.15, weight: 70, region: "Long Island West", state: "NY" },
@@ -384,7 +412,7 @@ const usRegions = [
   { lat: 43.0, lng: -76.1, spread: 0.2, weight: 40, region: "Syracuse", state: "NY" },
   { lat: 42.7, lng: -73.8, spread: 0.2, weight: 40, region: "Albany", state: "NY" },
   
-  // Illinois - Chicago moved slightly west to avoid Lake Michigan
+  // Illinois (evconnect)
   { lat: 41.9, lng: -87.8, spread: 0.35, weight: 220, region: "Chicago", state: "IL" },
   { lat: 41.8, lng: -88.1, spread: 0.25, weight: 70, region: "Naperville", state: "IL" },
   { lat: 42.0, lng: -87.9, spread: 0.2, weight: 60, region: "Evanston", state: "IL" },
@@ -430,6 +458,7 @@ function generateAdditionalChargers(): Charger[] {
       const latOffset = (seededRandom(seed + 3) - 0.5) * 2 * region.spread;
       const lngOffset = (seededRandom(seed + 4) - 0.5) * 2 * region.spread;
       
+      const customer = STATE_CUSTOMER_MAP[region.state] || "evgo";
       additionalChargers.push({
         charger_id: `C${idCounter + generated}`,
         station_number: `GEN${String(generated).padStart(4, "0")}`,
@@ -442,6 +471,7 @@ function generateAdditionalChargers(): Charger[] {
         site_name: `${region.region} Station ${i + 1}`,
         serviced: 1,
         status,
+        customer,
         summary: status === "Optimal" 
           ? "All systems operational. No issues found during inspection."
           : status === "Degraded"
@@ -470,6 +500,11 @@ function generateAdditionalChargers(): Charger[] {
 }
 
 export const allChargers: Charger[] = [...sampleChargers, ...generateAdditionalChargers()];
+
+// Get chargers filtered by customer
+export function getChargersByCustomer(customer: string): Charger[] {
+  return allChargers.filter(c => c.customer === customer);
+}
 
 // Calculate network stats
 export function getNetworkStats(chargers: Charger[]) {
