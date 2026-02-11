@@ -3,10 +3,17 @@ import { Upload, FileSpreadsheet, Loader2, LayoutDashboard, Map, Columns, Calend
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AssessmentCharger, ViewMode } from "@/types/assessment";
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
 import nochLogo from "@/assets/noch-logo-white.png";
+import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
+
+interface CampaignOption {
+  id: string;
+  name: string;
+}
 
 interface AssessmentHeaderProps {
   view: ViewMode;
@@ -15,9 +22,12 @@ interface AssessmentHeaderProps {
   onExport: () => void;
   onClear: () => void;
   chargerCount: number;
+  campaignOptions?: CampaignOption[];
+  selectedCampaignId?: string;
+  onCampaignChange?: (id: string) => void;
 }
 
-export function AssessmentHeader({ view, onViewChange, onImport, onExport, onClear, chargerCount }: AssessmentHeaderProps) {
+export function AssessmentHeader({ view, onViewChange, onImport, onExport, onClear, chargerCount, campaignOptions = [], selectedCampaignId, onCampaignChange }: AssessmentHeaderProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,6 +89,23 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
           </TabsList>
         </Tabs>
 
+        {campaignOptions.length > 0 && onCampaignChange && (
+          <div className="h-6 w-px bg-border" />
+        )}
+        {campaignOptions.length > 0 && onCampaignChange && selectedCampaignId && (
+          <Select value={selectedCampaignId} onValueChange={onCampaignChange}>
+            <SelectTrigger className="w-[220px] h-8 text-sm bg-background border-border">
+              <SelectValue placeholder="Select Campaign" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+              {campaignOptions.map((c) => (
+                <SelectItem key={c.id} value={c.id} className="cursor-pointer text-sm">
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
     </header>
   );
