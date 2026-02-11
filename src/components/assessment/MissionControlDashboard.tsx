@@ -1,6 +1,5 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { allChargers, getNetworkStats, Charger } from "@/data/chargerData";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { HeroMetrics } from "@/components/dashboard/HeroMetrics";
 import { FindingsSection } from "@/components/dashboard/FindingsSection";
 import { ChargerMap } from "@/components/dashboard/ChargerMap";
@@ -9,15 +8,19 @@ import { SitePerformanceTable } from "@/components/dashboard/SitePerformanceTabl
 import { ReportLibrary } from "@/components/dashboard/ReportLibrary";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SampleCampaign } from "@/data/sampleCampaigns";
 
-export function MissionControlDashboard() {
+interface MissionControlDashboardProps {
+  campaign?: SampleCampaign | null;
+}
+
+export function MissionControlDashboard({ campaign }: MissionControlDashboardProps) {
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [filteredChargers, setFilteredChargers] = useState<Charger[]>(allChargers);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("evgo");
   const [focusedLocation, setFocusedLocation] = useState<string | null>(null);
   const criticalRef = useRef<HTMLDivElement>(null);
 
-  const filteredStats = getNetworkStats(filteredChargers);
+  
 
   const handleCriticalClick = useCallback(() => {
     criticalRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -68,13 +71,28 @@ export function MissionControlDashboard() {
     setSelectedCharger(null);
   }, []);
 
-  const lastUpdated = new Date().toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  // Use campaign stats if available, otherwise compute from filtered chargers
+  const displayStats = useMemo(() => {
+    if (campaign && campaign.totalServiced > 0) {
+      return {
+        healthScore: campaign.healthScore,
+        critical: campaign.criticalCount,
+        serviced: campaign.totalServiced,
+        total: campaign.totalChargers,
+        optimal: campaign.optimalCount,
+        degraded: campaign.degradedCount,
+      };
+    }
+    const stats = getNetworkStats(filteredChargers);
+    return {
+      healthScore: stats.healthScore,
+      critical: stats.critical,
+      serviced: stats.serviced,
+      total: stats.total,
+      optimal: stats.optimal,
+      degraded: stats.degraded,
+    };
+  }, [campaign, filteredChargers]);
 
   return (
     <SidebarProvider>
@@ -86,24 +104,18 @@ export function MissionControlDashboard() {
         />
 
         <div className="flex-1 flex flex-col">
-          <DashboardHeader
-            lastUpdated={lastUpdated}
-            selectedCustomer={selectedCustomer}
-            onCustomerChange={setSelectedCustomer}
-          />
-
           <main className="flex-1 container mx-auto px-4 py-6 space-y-8">
             <div className="lg:hidden">
               <SidebarTrigger className="mb-4" />
             </div>
 
             <HeroMetrics
-              healthScore={filteredStats.healthScore}
-              criticalCount={filteredStats.critical}
-              totalServiced={filteredStats.serviced}
-              totalChargers={filteredStats.total}
-              optimalCount={filteredStats.optimal}
-              degradedCount={filteredStats.degraded}
+              healthScore={displayStats.healthScore}
+              criticalCount={displayStats.critical}
+              totalServiced={displayStats.serviced}
+              totalChargers={displayStats.total}
+              optimalCount={displayStats.optimal}
+              degradedCount={displayStats.degraded}
               onCriticalClick={handleCriticalClick}
             />
 

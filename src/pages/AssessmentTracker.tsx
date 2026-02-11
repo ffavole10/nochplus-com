@@ -36,21 +36,44 @@ const AssessmentTracker = () => {
   const [isLandingDismissed, setIsLandingDismissed] = useState(false);
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
 
-  // Derive campaign name from selected campaigns
-  const selectedCampaignName = useMemo(() => {
-    if (selectedCampaignIds.length === 0) return "";
-    const names = selectedCampaignIds.map(id => {
-      // Check user campaigns
+  // Build campaign options for the header dropdown
+  const campaignOptions = useMemo(() => {
+    const opts: { id: string; name: string }[] = [];
+    selectedCampaignIds.forEach(id => {
       const userCampaign = campaigns.find(c => c.id === id);
-      if (userCampaign) return userCampaign.name;
-      // Check sample campaigns (prefixed with "sample-")
-      const sampleId = id.replace("sample-", "");
-      const sample = sampleCampaigns.find(c => c.id === sampleId);
-      if (sample) return sample.name;
-      return null;
-    }).filter(Boolean);
-    return names.join(" + ");
+      if (userCampaign) {
+        opts.push({ id, name: userCampaign.name });
+      } else {
+        const sampleId = id.replace("sample-", "");
+        const sample = sampleCampaigns.find(c => c.id === sampleId);
+        if (sample) opts.push({ id, name: sample.name });
+      }
+    });
+    return opts;
   }, [selectedCampaignIds, campaigns]);
+
+  // Active campaign ID for the header selector (single selection within selected campaigns)
+  const [activeCampaignViewId, setActiveCampaignViewId] = useState<string>("");
+
+  // When campaigns are selected from landing, default to the first one
+  const handleSelectCampaignsWrapped = useCallback((ids: string[]) => {
+    setSelectedCampaignIds(ids);
+    setActiveCampaignViewId(ids[0] || "");
+    setIsLandingDismissed(true);
+  }, []);
+
+  // Resolve the active sample campaign for the dashboard
+  const activeSampleCampaign = useMemo(() => {
+    if (!activeCampaignViewId) return null;
+    const sampleId = activeCampaignViewId.replace("sample-", "");
+    return sampleCampaigns.find(c => c.id === sampleId) || null;
+  }, [activeCampaignViewId]);
+
+  // Derive campaign name from active campaign
+  const selectedCampaignName = useMemo(() => {
+    const opt = campaignOptions.find(o => o.id === activeCampaignViewId);
+    return opt?.name || "";
+  }, [activeCampaignViewId, campaignOptions]);
   const handleSelectCharger = useCallback((charger: AssessmentCharger) => {
     setSelectedCharger(charger);
     setModalOpen(true);
@@ -86,10 +109,7 @@ const AssessmentTracker = () => {
     }
   }, [importChargers]);
 
-  const handleSelectCampaigns = useCallback((ids: string[]) => {
-    setSelectedCampaignIds(ids);
-    setIsLandingDismissed(true);
-  }, []);
+  // handleSelectCampaigns is now handleSelectCampaignsWrapped above
 
   const handleCreateNew = useCallback(() => {
     setIsLandingDismissed(true);
@@ -107,7 +127,7 @@ const AssessmentTracker = () => {
       <MissionControlLanding
         campaigns={campaigns}
         onUploadFile={handleUploadFile}
-        onSelectCampaigns={handleSelectCampaigns}
+        onSelectCampaigns={handleSelectCampaignsWrapped}
         onCreateNew={handleCreateNew}
       />
     );
@@ -122,6 +142,9 @@ const AssessmentTracker = () => {
         onExport={handleExport}
         onClear={clearData}
         chargerCount={chargers.length}
+        campaignOptions={campaignOptions}
+        selectedCampaignId={activeCampaignViewId}
+        onCampaignChange={setActiveCampaignViewId}
       />
 
       {geocoding && (
@@ -150,7 +173,7 @@ const AssessmentTracker = () => {
       )}
 
       {view === "campaign-dashboard" && (
-        <MissionControlDashboard />
+        <MissionControlDashboard campaign={activeSampleCampaign} />
       )}
       {view === "dataset" && (
         <AssessmentDashboard chargers={chargers} onSelectCharger={handleSelectCharger} />
