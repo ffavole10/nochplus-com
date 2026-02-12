@@ -160,9 +160,6 @@ const AssessmentTracker = () => {
         campaignOptions={campaignOptions}
         selectedCampaignId={activeCampaignViewId}
         onCampaignChange={setActiveCampaignViewId}
-        stateOptions={stateOptions}
-        selectedState={selectedState}
-        onStateChange={setSelectedState}
       />
 
       {geocoding && (
@@ -191,7 +188,7 @@ const AssessmentTracker = () => {
       )}
 
       {view === "dataset" && (
-        <AssessmentDashboard chargers={filteredChargers} onSelectCharger={handleSelectCharger} />
+        <AssessmentDashboard chargers={filteredChargers} onSelectCharger={handleSelectCharger} stateOptions={stateOptions} selectedState={selectedState} onStateChange={setSelectedState} />
       )}
       {view === "map" && (
         <AssessmentMap

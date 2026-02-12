@@ -10,6 +10,9 @@ import { getAssessmentStats, getPriorityColor } from "@/lib/assessmentParser";
 interface AssessmentDashboardProps {
   chargers: AssessmentCharger[];
   onSelectCharger: (charger: AssessmentCharger) => void;
+  stateOptions?: string[];
+  selectedState?: string;
+  onStateChange?: (state: string) => void;
 }
 
 const TYPE_COLORS: Record<ChargerType, string> = {
@@ -25,7 +28,7 @@ const PRIORITY_BADGE: Record<PriorityLevel, string> = {
   Low: "bg-optimal text-optimal-foreground",
 };
 
-export function AssessmentDashboard({ chargers, onSelectCharger }: AssessmentDashboardProps) {
+export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = [], selectedState, onStateChange }: AssessmentDashboardProps) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -99,9 +102,20 @@ export function AssessmentDashboard({ chargers, onSelectCharger }: AssessmentDas
             className="pl-9"
           />
         </div>
+        {stateOptions.length > 0 && onStateChange && (
+          <Select value={selectedState || "all"} onValueChange={(v) => onStateChange(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-[140px]"><SelectValue placeholder="State" /></SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all">All States</SelectItem>
+              {stateOptions.map(s => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-[130px]"><SelectValue placeholder="Type" /></SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-popover z-50">
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="DCFC">DCFC</SelectItem>
             <SelectItem value="L2">L2</SelectItem>
