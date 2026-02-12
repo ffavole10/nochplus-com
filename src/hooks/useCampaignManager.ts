@@ -2,11 +2,10 @@ import { useState, useCallback, useEffect } from "react";
 import { Campaign, ScheduleItemStatus } from "@/types/campaign";
 import { calculateStatistics } from "@/lib/scheduleGenerator";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import type { Session } from "@supabase/supabase-js";
 
-export function useCampaignManager() {
-  const { session } = useAuth();
+export function useCampaignManager(session: Session | null) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
 

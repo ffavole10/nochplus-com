@@ -10,6 +10,7 @@ import { ScheduleView } from "@/components/schedule/ScheduleView";
 import { CampaignProgressBanner } from "@/components/schedule/CampaignProgressBanner";
 import { useAssessmentData } from "@/hooks/useAssessmentData";
 import { useCampaignManager } from "@/hooks/useCampaignManager";
+import { useAuth } from "@/hooks/useAuth";
 import { AssessmentCharger, ViewMode } from "@/types/assessment";
 import { Progress } from "@/components/ui/progress";
 import { geocodeChargers } from "@/lib/geocoder";
@@ -18,6 +19,7 @@ import { toast } from "sonner";
 
 const AssessmentTracker = () => {
   const { chargers, importChargers, updateCharger, moveChargerToPhase, clearData } = useAssessmentData();
+  const { session } = useAuth();
   const {
     campaigns,
     activeCampaign,
@@ -27,7 +29,7 @@ const AssessmentTracker = () => {
     updateChargerStatus,
     rescheduleCharger,
     deleteCampaign,
-  } = useCampaignManager();
+  } = useCampaignManager(session);
   const [view, setView] = useState<ViewMode>("dataset");
   const [selectedCharger, setSelectedCharger] = useState<AssessmentCharger | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
