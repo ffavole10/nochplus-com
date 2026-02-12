@@ -90,9 +90,9 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
       {/* Header */}
       <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
         <div className="flex items-center gap-4">
-          <Link to="/campaigns">
+          <Link to="/">
             <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="h-4 w-4" /> Campaigns
+              <ArrowLeft className="h-4 w-4" /> Dashboard
             </Button>
           </Link>
           <div className="h-6 w-px bg-border" />
