@@ -48,23 +48,23 @@ const Login = () => {
       className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${loginBg})` }}
     >
-      <div className="w-full max-w-md mx-4 rounded-2xl backdrop-blur-md bg-foreground/80 p-10 shadow-2xl">
+      <div className="w-full max-w-md mx-4 rounded-2xl backdrop-blur-md bg-white/50 p-10 shadow-2xl">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <img src={nochLogo} alt="Noch Power" className="h-10" />
+          <img src={nochLogo} alt="Noch Power" className="h-[52px]" />
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl font-bold text-center text-white mb-1 tracking-tight">
+        <h1 className="text-3xl font-bold text-center text-foreground mb-1" style={{ fontFamily: "'Caveat', cursive" }}>
           Reliability Starts Here
         </h1>
-        <p className="text-center text-white/60 text-sm mb-8">
+        <p className="text-center text-foreground/60 text-sm mb-8">
           {isSignUp ? "Create your account" : "Sign in to your dashboard"}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-white/80 text-xs uppercase tracking-wider">
+            <Label htmlFor="email" className="text-foreground/80 text-xs uppercase tracking-wider">
               Email
             </Label>
             <Input
@@ -74,12 +74,12 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-primary"
+              className="bg-foreground/10 border-foreground/20 text-foreground placeholder:text-foreground/40 focus-visible:ring-primary"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-white/80 text-xs uppercase tracking-wider">
+            <Label htmlFor="password" className="text-foreground/80 text-xs uppercase tracking-wider">
               Password
             </Label>
             <Input
@@ -90,7 +90,7 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-primary"
+              className="bg-foreground/10 border-foreground/20 text-foreground placeholder:text-foreground/40 focus-visible:ring-primary"
             />
           </div>
 
@@ -98,7 +98,7 @@ const Login = () => {
             <div className="text-right">
               <button
                 type="button"
-                className="text-xs text-white/50 hover:text-white/80 transition-colors"
+                className="text-xs text-foreground/50 hover:text-foreground/80 transition-colors"
               >
                 Forgot password?
               </button>
@@ -118,7 +118,7 @@ const Login = () => {
           <button
             type="button"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-white/50 hover:text-white/80 transition-colors"
+            className="text-sm text-foreground/50 hover:text-foreground/80 transition-colors"
           >
             {isSignUp
               ? "Already have an account? Sign in"
