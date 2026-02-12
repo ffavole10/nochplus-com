@@ -10,7 +10,8 @@ import { ReportLibrary } from "@/components/dashboard/ReportLibrary";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2 } from "lucide-react";
+import { Building2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 
 const Index = () => {
@@ -94,7 +95,7 @@ const Index = () => {
         />
 
         <div className="flex-1 flex flex-col min-h-screen">
-          <DashboardHeader lastUpdated={lastUpdated} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+          <DashboardHeader lastUpdated={lastUpdated} />
 
           <main className="flex-1 container mx-auto px-4 py-6 space-y-8">
             {/* Sidebar Toggle for Mobile */}
@@ -102,28 +103,39 @@ const Index = () => {
               <SidebarTrigger className="mb-4" />
             </div>
 
-            {/* Campaign Selector */}
-            <div className="flex items-center gap-3">
-              <Building2 className="w-4 h-4 text-muted-foreground" />
-              <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-                <SelectTrigger className="w-[280px] bg-background border-primary/30 focus:ring-primary">
-                  <SelectValue placeholder="Select Campaign" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-                  {sampleCampaigns.map((campaign) => (
-                    <SelectItem key={campaign.id} value={campaign.id} className="cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <span>{campaign.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedCampaign && (
-                <span className="text-xs text-muted-foreground">
-                  {selectedCampaign.totalChargers} chargers · {CUSTOMER_LABELS[selectedCampaign.customer]}
-                </span>
-              )}
+            {/* Campaign Selector + Search */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Building2 className="w-4 h-4 text-muted-foreground" />
+                <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
+                  <SelectTrigger className="w-[280px] bg-background border-primary/30 focus:ring-primary">
+                    <SelectValue placeholder="Select Campaign" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+                    {sampleCampaigns.map((campaign) => (
+                      <SelectItem key={campaign.id} value={campaign.id} className="cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <span>{campaign.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedCampaign && (
+                  <span className="text-xs text-muted-foreground">
+                    {selectedCampaign.totalChargers} chargers · {CUSTOMER_LABELS[selectedCampaign.customer]}
+                  </span>
+                )}
+              </div>
+              <div className="relative hidden sm:flex items-center">
+                <Search className="absolute left-3 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search chargers..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 w-[240px] bg-background border-border"
+                />
+              </div>
             </div>
 
             {/* Hero Metrics */}
