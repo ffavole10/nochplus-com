@@ -14,8 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Building2, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Index = () => {
+  const { hasRole } = useUserRole();
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [filteredChargers, setFilteredChargers] = useState<Charger[]>(allChargers);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("1");
@@ -129,16 +131,18 @@ const Index = () => {
                   </span>
                 )}
               </div>
-              <Link to="/missioncontrol">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Rocket className="w-4 h-4" />
-                  Mission Control
-                </Button>
-              </Link>
+              {hasRole("super_admin", "admin", "manager") && (
+                <Link to="/missioncontrol">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Rocket className="w-4 h-4" />
+                    Mission Control
+                  </Button>
+                </Link>
+              )}
             </div>
 
             {/* Hero Metrics */}

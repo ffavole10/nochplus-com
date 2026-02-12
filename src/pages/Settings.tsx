@@ -29,15 +29,19 @@ type UserWithRole = {
 const ROLE_COLORS: Record<string, string> = {
   super_admin: "bg-destructive text-destructive-foreground",
   admin: "bg-primary text-primary-foreground",
+  manager: "bg-chart-4 text-primary-foreground",
   employee: "bg-secondary text-secondary-foreground",
   customer: "bg-muted text-muted-foreground",
+  partner: "bg-accent text-accent-foreground",
 };
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "Super Admin",
   admin: "Admin",
+  manager: "Manager",
   employee: "Employee",
   customer: "Customer",
+  partner: "Partner",
 };
 
 const Settings = () => {
@@ -175,8 +179,8 @@ const Settings = () => {
 
       <main className="container mx-auto px-4 py-8 max-w-5xl space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {["super_admin", "admin", "employee", "customer"].map((role) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {["super_admin", "admin", "manager", "employee", "customer", "partner"].map((role) => (
             <Card key={role}>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-foreground">
@@ -234,8 +238,10 @@ const Settings = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
                         <SelectItem value="employee">Employee</SelectItem>
                         <SelectItem value="customer">Customer</SelectItem>
+                        <SelectItem value="partner">Partner</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -297,8 +303,10 @@ const Settings = () => {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="manager">Manager</SelectItem>
                               <SelectItem value="employee">Employee</SelectItem>
                               <SelectItem value="customer">Customer</SelectItem>
+                              <SelectItem value="partner">Partner</SelectItem>
                             </SelectContent>
                           </Select>
                         )}
