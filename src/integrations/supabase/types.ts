@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           critical_count: number | null
           customer: string
+          data: Json | null
           degraded_count: number | null
           end_date: string | null
           health_score: number | null
@@ -27,15 +28,18 @@ export type Database = {
           optimal_count: number | null
           quarter: string | null
           start_date: string | null
+          status: string | null
           total_chargers: number | null
           total_serviced: number | null
           updated_at: string
+          user_id: string | null
           year: number | null
         }
         Insert: {
           created_at?: string
           critical_count?: number | null
           customer: string
+          data?: Json | null
           degraded_count?: number | null
           end_date?: string | null
           health_score?: number | null
@@ -44,15 +48,18 @@ export type Database = {
           optimal_count?: number | null
           quarter?: string | null
           start_date?: string | null
+          status?: string | null
           total_chargers?: number | null
           total_serviced?: number | null
           updated_at?: string
+          user_id?: string | null
           year?: number | null
         }
         Update: {
           created_at?: string
           critical_count?: number | null
           customer?: string
+          data?: Json | null
           degraded_count?: number | null
           end_date?: string | null
           health_score?: number | null
@@ -61,9 +68,11 @@ export type Database = {
           optimal_count?: number | null
           quarter?: string | null
           start_date?: string | null
+          status?: string | null
           total_chargers?: number | null
           total_serviced?: number | null
           updated_at?: string
+          user_id?: string | null
           year?: number | null
         }
         Relationships: []
