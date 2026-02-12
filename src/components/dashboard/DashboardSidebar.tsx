@@ -45,6 +45,7 @@ interface DashboardSidebarProps {
   filteredCount: number;
   totalCount: number;
   searchQuery: string;
+  onSearchChange?: (query: string) => void;
 }
 
 type StatusFilter = "Critical" | "Degraded" | "Optimal";
@@ -55,6 +56,7 @@ export function DashboardSidebar({
   filteredCount,
   totalCount,
   searchQuery,
+  onSearchChange,
 }: DashboardSidebarProps) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -184,30 +186,28 @@ export function DashboardSidebar({
   return (
     <Sidebar className="border-r border-border/50">
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        {/* Noch Logo - half sidebar width */}
+        {/* Noch Logo - left aligned, smaller */}
         {!isCollapsed && (
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-start mb-4">
             <img 
               src={nochLogo} 
               alt="Noch Power" 
-              className="w-1/2 h-auto"
+              className="w-[37.5%] h-auto"
             />
           </div>
         )}
-        {/* Mission Control Button */}
-        <Link to="/missioncontrol">
-          <Button
-            variant="outline"
-            size={isCollapsed ? "icon" : "sm"}
-            className={cn(
-              "w-full mb-3 bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent",
-              isCollapsed && "w-auto"
-            )}
-          >
-            <Rocket className="w-4 h-4" />
-            {!isCollapsed && <span className="ml-2">Mission Control</span>}
-          </Button>
-        </Link>
+        {/* Search Box */}
+        {!isCollapsed && (
+          <div className="relative mb-3">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sidebar-foreground/50" />
+            <Input
+              placeholder="Search chargers..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              className="pl-9 bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/40 text-sm"
+            />
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5" />
           {!isCollapsed && <span className="font-semibold">Filters</span>}

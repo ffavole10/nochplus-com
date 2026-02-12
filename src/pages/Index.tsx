@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { allChargers, getNetworkStats, Charger, getChargersByCustomer } from "@/data/chargerData";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { HeroMetrics } from "@/components/dashboard/HeroMetrics";
@@ -10,8 +11,8 @@ import { ReportLibrary } from "@/components/dashboard/ReportLibrary";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Building2, Rocket } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 
 const Index = () => {
@@ -92,6 +93,7 @@ const Index = () => {
           filteredCount={filteredChargers.length}
           totalCount={allChargers.length}
           searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
 
         <div className="flex-1 flex flex-col min-h-screen">
@@ -103,7 +105,7 @@ const Index = () => {
               <SidebarTrigger className="mb-4" />
             </div>
 
-            {/* Campaign Selector + Search */}
+            {/* Campaign Selector + Mission Control */}
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Building2 className="w-4 h-4 text-muted-foreground" />
@@ -127,15 +129,16 @@ const Index = () => {
                   </span>
                 )}
               </div>
-              <div className="relative hidden sm:flex items-center">
-                <Search className="absolute left-3 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search chargers..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-[240px] bg-background border-border"
-                />
-              </div>
+              <Link to="/missioncontrol">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Rocket className="w-4 h-4" />
+                  Mission Control
+                </Button>
+              </Link>
             </div>
 
             {/* Hero Metrics */}
