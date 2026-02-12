@@ -1,3 +1,4 @@
+import { Activity, AlertTriangle, CheckCircle2, Zap } from "lucide-react";
 import { HealthGauge } from "./HealthGauge";
 
 interface HeroMetricsProps {
@@ -22,13 +23,16 @@ export function HeroMetrics({
   const completionPercent = Math.round((totalServiced / totalChargers) * 100);
   const totalAll = optimalCount + degradedCount + criticalCount;
 
-  const titleClass = "text-sm font-semibold text-foreground";
+  const titleClass = "text-sm font-semibold text-foreground flex items-center gap-2";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Network Health */}
       <div className="metric-card flex flex-col items-center justify-center animate-fade-in">
-        <h3 className={`${titleClass} mb-3`}>Network Health</h3>
+        <h3 className={`${titleClass} mb-3`}>
+          <Activity className="w-4 h-4 text-primary" />
+          Network Health
+        </h3>
         <HealthGauge score={healthScore} />
       </div>
 
@@ -38,7 +42,10 @@ export function HeroMetrics({
         className="metric-card flex flex-col items-center justify-center animate-fade-in relative"
         style={{ animationDelay: "100ms" }}
       >
-        <h3 className={`${titleClass} mb-3`}>Critical Actions</h3>
+        <h3 className={`${titleClass} mb-3`}>
+          <AlertTriangle className="w-4 h-4 text-critical" />
+          Critical Actions
+        </h3>
         <div className="text-5xl font-bold text-critical">{criticalCount}</div>
         <div className="absolute top-3 right-3">
           <span className="relative flex h-3 w-3">
@@ -53,8 +60,11 @@ export function HeroMetrics({
         className="metric-card flex flex-col items-center justify-center animate-fade-in"
         style={{ animationDelay: "200ms" }}
       >
-        <h3 className={`${titleClass} mb-3`}>Campaign Progress</h3>
-        <HealthGauge score={completionPercent} />
+        <h3 className={`${titleClass} mb-3`}>
+          <CheckCircle2 className="w-4 h-4 text-optimal" />
+          Campaign Progress
+        </h3>
+        <HealthGauge score={completionPercent} suffix="%" />
       </div>
 
       {/* Network Status */}
@@ -62,7 +72,10 @@ export function HeroMetrics({
         className="metric-card flex flex-col items-center justify-center animate-fade-in"
         style={{ animationDelay: "300ms" }}
       >
-        <h3 className={`${titleClass} mb-3`}>Network Status</h3>
+        <h3 className={`${titleClass} mb-3`}>
+          <Zap className="w-4 h-4 text-secondary" />
+          Network Status
+        </h3>
         <div className="space-y-2 w-full px-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
