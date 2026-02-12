@@ -26,12 +26,9 @@ interface AssessmentHeaderProps {
   campaignOptions?: CampaignOption[];
   selectedCampaignId?: string;
   onCampaignChange?: (id: string) => void;
-  stateOptions?: string[];
-  selectedState?: string;
-  onStateChange?: (state: string) => void;
 }
 
-export function AssessmentHeader({ view, onViewChange, onImport, onExport, onClear, chargerCount, campaignOptions = [], selectedCampaignId, onCampaignChange, stateOptions = [], selectedState, onStateChange }: AssessmentHeaderProps) {
+export function AssessmentHeader({ view, onViewChange, onImport, onExport, onClear, chargerCount, campaignOptions = [], selectedCampaignId, onCampaignChange }: AssessmentHeaderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -69,20 +66,6 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
       </div>
 
       <div className="flex items-center gap-3">
-        {stateOptions.length > 0 && onStateChange && (
-          <Select value={selectedState || "all"} onValueChange={(v) => onStateChange(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-[140px] h-9 text-sm">
-              <SelectValue placeholder="All States" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
-              <SelectItem value="all">All States</SelectItem>
-              {stateOptions.map(s => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
         <Tabs value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
           <TabsList>
             <TabsTrigger value="dataset" className="gap-1.5">
