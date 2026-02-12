@@ -448,26 +448,12 @@ export function DashboardSidebar({
                 Clear All Filters
               </Button>
             )}
-            <div className="flex gap-2">
-              <Link to="/settings" className="flex-1">
-                <Button variant="outline" size="sm" className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  const { supabase } = await import("@/integrations/supabase/client");
-                  await supabase.auth.signOut();
-                  window.location.href = "/login";
-                }}
-                className="bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent"
-              >
-                <LogOut className="w-4 h-4" />
+            <Link to="/settings" className="w-full">
+              <Button variant="outline" size="sm" className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
               </Button>
-            </div>
+            </Link>
           </>
         )}
       </SidebarFooter>
