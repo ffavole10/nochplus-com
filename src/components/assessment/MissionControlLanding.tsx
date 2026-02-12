@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Upload, FileSpreadsheet, ArrowLeft, FolderOpen, CheckSquare, Rocket, Clock, CheckCircle2, CalendarClock } from "lucide-react";
+import { Upload, FileSpreadsheet, LayoutDashboard, FolderOpen, CheckSquare, Rocket, Clock, CheckCircle2, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -90,12 +90,6 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
       {/* Header */}
       <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
         <div className="flex items-center gap-4">
-          <Link to="/">
-            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="h-4 w-4" /> Dashboard
-            </Button>
-          </Link>
-          <div className="h-6 w-px bg-border" />
           <img src={nochLogo} alt="Noch Power" className="h-8 brightness-0 dark:brightness-100" />
           <div className="h-6 w-px bg-border" />
           <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
@@ -103,6 +97,11 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
             Mission Control
           </h1>
         </div>
+        <Link to="/">
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <LayoutDashboard className="h-4 w-4" /> Dashboard
+          </Button>
+        </Link>
       </header>
 
       {/* Main content */}
