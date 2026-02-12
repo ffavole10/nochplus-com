@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { RefreshCw, Bell, User } from "lucide-react";
+import { RefreshCw, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export function DashboardHeader() {
   const { session } = useAuth();
@@ -43,12 +44,7 @@ export function DashboardHeader() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" className="relative">
-              <Bell className="w-4 h-4" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-critical text-[10px] text-critical-foreground flex items-center justify-center">
-                5
-              </span>
-            </Button>
+            <NotificationBell />
             <Button variant="outline" size="icon">
               <RefreshCw className="w-4 h-4" />
             </Button>
