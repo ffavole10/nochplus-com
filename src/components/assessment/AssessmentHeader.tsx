@@ -87,23 +87,6 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
           </TabsList>
         </Tabs>
 
-        {campaignOptions.length > 0 && onCampaignChange && (
-          <div className="h-6 w-px bg-border" />
-        )}
-        {campaignOptions.length > 0 && onCampaignChange && selectedCampaignId && (
-          <Select value={selectedCampaignId} onValueChange={onCampaignChange}>
-            <SelectTrigger className="w-[220px] h-8 text-sm bg-background border-border">
-              <SelectValue placeholder="Select Campaign" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-              {campaignOptions.map((c) => (
-                <SelectItem key={c.id} value={c.id} className="cursor-pointer text-sm">
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
         <div className="h-6 w-px bg-border" />
         <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
           <LayoutDashboard className="h-4 w-4" />
