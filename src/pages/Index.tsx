@@ -149,13 +149,6 @@ const Index = () => {
               onCriticalClick={handleCriticalClick}
             />
 
-            {/* Critical Findings */}
-            <FindingsSection
-              chargers={filteredChargers}
-              onShowOnMap={handleShowOnMap}
-              criticalRef={criticalRef}
-            />
-
             <div id="map-section">
               <ChargerMap
                 chargers={filteredChargers}
@@ -166,6 +159,13 @@ const Index = () => {
                 focusedLocation={focusedLocation}
               />
             </div>
+
+            {/* Critical Findings */}
+            <FindingsSection
+              chargers={filteredChargers}
+              onShowOnMap={handleShowOnMap}
+              criticalRef={criticalRef}
+            />
 
             {/* Component Analysis */}
             <ComponentAnalysis

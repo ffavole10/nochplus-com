@@ -23,7 +23,7 @@ export function HeroMetrics({
   const completionPercent = Math.round((totalServiced / totalChargers) * 100);
   const totalAll = optimalCount + degradedCount + criticalCount;
 
-  const titleClass = "text-sm font-semibold text-foreground flex items-center gap-2";
+  const titleClass = "text-base font-semibold text-foreground flex items-center gap-2";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
