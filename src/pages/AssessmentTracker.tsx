@@ -37,6 +37,19 @@ const AssessmentTracker = () => {
   const [geocodeProgress, setGeocodeProgress] = useState({ done: 0, total: 0 });
   const [isLandingDismissed, setIsLandingDismissed] = useState(false);
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
+  const [selectedState, setSelectedState] = useState("");
+
+  // Derive unique states from chargers
+  const stateOptions = useMemo(() => {
+    const states = [...new Set(chargers.map(c => c.state).filter(Boolean))].sort();
+    return states;
+  }, [chargers]);
+
+  // Filter chargers by selected state
+  const filteredChargers = useMemo(() => {
+    if (!selectedState) return chargers;
+    return chargers.filter(c => c.state === selectedState);
+  }, [chargers, selectedState]);
 
   // Build campaign options for the header dropdown
   const campaignOptions = useMemo(() => {
@@ -143,10 +156,13 @@ const AssessmentTracker = () => {
         onImport={importChargers}
         onExport={handleExport}
         onClear={clearData}
-        chargerCount={chargers.length}
+        chargerCount={filteredChargers.length}
         campaignOptions={campaignOptions}
         selectedCampaignId={activeCampaignViewId}
         onCampaignChange={setActiveCampaignViewId}
+        stateOptions={stateOptions}
+        selectedState={selectedState}
+        onStateChange={setSelectedState}
       />
 
       {geocoding && (
@@ -175,11 +191,11 @@ const AssessmentTracker = () => {
       )}
 
       {view === "dataset" && (
-        <AssessmentDashboard chargers={chargers} onSelectCharger={handleSelectCharger} />
+        <AssessmentDashboard chargers={filteredChargers} onSelectCharger={handleSelectCharger} />
       )}
       {view === "map" && (
         <AssessmentMap
-          chargers={chargers}
+          chargers={filteredChargers}
           onSelectCharger={handleSelectCharger}
           onGeocodeRequest={async () => {
             const needsGeocode = chargers.some(c => !c.latitude || !c.longitude);
@@ -201,14 +217,14 @@ const AssessmentTracker = () => {
       )}
       {view === "kanban" && (
         <AssessmentKanban
-          chargers={chargers}
+          chargers={filteredChargers}
           onMoveCharger={moveChargerToPhase}
           onSelectCharger={handleSelectCharger}
         />
       )}
       {view === "schedule" && (
         <ScheduleView
-          chargers={chargers}
+          chargers={filteredChargers}
           activeCampaign={activeCampaign}
           campaigns={campaigns}
           campaignName={selectedCampaignName}
