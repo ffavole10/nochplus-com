@@ -13,7 +13,7 @@ import {
   ChevronRight,
   X,
   FolderOpen,
-  ClipboardList,
+  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -191,6 +191,16 @@ export function DashboardSidebar({
             />
           </div>
         )}
+        {/* Mission Control Link */}
+        <Link to="/missioncontrol">
+          <div className={cn(
+            "flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer hover:bg-sidebar-accent/50 text-sidebar-foreground mb-3 transition-colors",
+            isCollapsed && "justify-center"
+          )}>
+            <Rocket className="w-5 h-5 text-primary" />
+            {!isCollapsed && <span className="font-semibold text-sm">Mission Control</span>}
+          </div>
+        </Link>
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5" />
           {!isCollapsed && <span className="font-semibold">Filters</span>}
@@ -429,16 +439,6 @@ export function DashboardSidebar({
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-3">
         {!isCollapsed && (
           <>
-            <Link to="/missioncontrol">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent mb-2"
-              >
-                <ClipboardList className="w-4 h-4 mr-2" />
-                Mission Control
-              </Button>
-            </Link>
             <div className="text-sm text-sidebar-foreground/80">
               Showing <strong>{filteredCount}</strong> of{" "}
               <strong>{totalCount}</strong> chargers
