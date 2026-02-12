@@ -28,7 +28,7 @@ const AssessmentTracker = () => {
     rescheduleCharger,
     deleteCampaign,
   } = useCampaignManager();
-  const [view, setView] = useState<ViewMode>("campaign-dashboard");
+  const [view, setView] = useState<ViewMode>("dataset");
   const [selectedCharger, setSelectedCharger] = useState<AssessmentCharger | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
@@ -172,9 +172,6 @@ const AssessmentTracker = () => {
         </div>
       )}
 
-      {view === "campaign-dashboard" && (
-        <MissionControlDashboard campaign={activeSampleCampaign} />
-      )}
       {view === "dataset" && (
         <AssessmentDashboard chargers={chargers} onSelectCharger={handleSelectCharger} />
       )}
