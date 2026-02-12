@@ -48,8 +48,9 @@ export function HeroMetrics({
           <AlertTriangle className="w-4 h-4 text-critical" />
           Critical Actions
         </h3>
-        <div className="flex-1 flex items-center justify-center w-full">
+        <div className="flex-1 flex flex-col items-center justify-center w-full">
           <div className="text-5xl font-bold text-critical">{criticalCount}</div>
+          <div className="text-sm text-muted-foreground mt-1">{Math.round((criticalCount / totalChargers) * 100)}% of network</div>
         </div>
         <div className="absolute top-3 right-3">
           <span className="relative flex h-3 w-3">
