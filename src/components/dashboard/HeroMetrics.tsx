@@ -106,7 +106,10 @@ export function HeroMetrics({
           </div>
           <div className="border-t border-border pt-2 mt-2 flex items-center justify-between">
             <span className="text-sm font-medium">Total</span>
-            <span className="font-bold text-foreground">{totalAll}</span>
+            <div className="text-right">
+              <span className="font-bold text-foreground">{totalAll}</span>
+              <div className="text-xs text-muted-foreground">{Math.round((totalAll / totalChargers) * 100)}%</div>
+            </div>
           </div>
         </div>
       </div>
