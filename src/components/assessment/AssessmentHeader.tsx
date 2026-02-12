@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Upload, FileSpreadsheet, Loader2, LayoutDashboard, Map, Columns, CalendarDays, Database, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ interface AssessmentHeaderProps {
 
 export function AssessmentHeader({ view, onViewChange, onImport, onExport, onClear, chargerCount, campaignOptions = [], selectedCampaignId, onCampaignChange }: AssessmentHeaderProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,6 +63,11 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
             {chargerCount} chargers
           </span>
         )}
+        <div className="h-6 w-px bg-border" />
+        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
+          <LayoutDashboard className="h-4 w-4" />
+          Dashboard
+        </Button>
       </div>
 
       <div className="flex items-center gap-3">
