@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { CampaignConfig, DEFAULT_CONFIG, Campaign } from "@/types/campaign";
 import { AssessmentCharger } from "@/types/assessment";
 import { createCampaign, filterChargers } from "@/lib/scheduleGenerator";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2, Upload, Loader2 } from "lucide-react";
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
+import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 
 interface ScheduleViewProps {
   chargers: AssessmentCharger[];
@@ -140,7 +141,7 @@ export function ScheduleView({
             <Badge variant="secondary" className="text-[10px]">Preview</Badge>
           )}
           {/* Campaign Selector */}
-          {campaigns.length > 0 && (
+          {(campaigns.length > 0 || sampleCampaigns.length > 0) && (
             <Select
               value=""
               onValueChange={(val) => {
@@ -152,12 +153,25 @@ export function ScheduleView({
                 <FolderOpen className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
                 <SelectValue placeholder="Switch campaign..." />
               </SelectTrigger>
-              <SelectContent>
-                {campaigns.map(c => (
-                  <SelectItem key={c.id} value={c.id} className="text-xs">
+              <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+                {campaigns.length > 0 && (
+                  <>
+                    {campaigns.map(c => (
+                      <SelectItem key={c.id} value={c.id} className="text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-1.5 w-1.5 rounded-full ${c.status === "active" ? "bg-optimal" : c.status === "draft" ? "bg-muted-foreground" : "bg-primary"}`} />
+                          {c.name || `Campaign ${c.id.slice(0, 6)}`}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+                {sampleCampaigns.map(c => (
+                  <SelectItem key={`sample-${c.id}`} value={`sample-${c.id}`} className="text-xs">
                     <div className="flex items-center gap-2">
-                      <span className={`h-1.5 w-1.5 rounded-full ${c.status === "active" ? "bg-optimal" : c.status === "draft" ? "bg-muted-foreground" : "bg-primary"}`} />
-                      {c.name || `Campaign ${c.id.slice(0, 6)}`}
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      {c.name}
+                      <span className="text-muted-foreground text-[10px]">Demo</span>
                     </div>
                   </SelectItem>
                 ))}
