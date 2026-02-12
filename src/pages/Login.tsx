@@ -126,6 +126,10 @@ const Login = () => {
           </button>
         </div>
       </div>
+
+      <div className="absolute bottom-6 left-0 right-0 text-center text-sm text-white/70">
+        © 2026 Noch Power | <a href="https://www.nochpower.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors underline">www.nochpower.com</a>
+      </div>
     </div>
   );
 };
