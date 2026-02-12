@@ -1,42 +1,140 @@
 import { useState, useCallback, useEffect } from "react";
 import { Campaign, ScheduleItemStatus } from "@/types/campaign";
 import { calculateStatistics } from "@/lib/scheduleGenerator";
-
-const CAMPAIGN_STORAGE_KEY = "assessment-campaigns";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export function useCampaignManager() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
-    try {
-      const stored = localStorage.getItem(CAMPAIGN_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
+  const { session } = useAuth();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load campaigns from database
+  const loadCampaigns = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("campaigns")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Failed to load campaigns:", error);
+      return;
     }
-  });
+
+    const parsed: Campaign[] = (data || [])
+      .filter((row: any) => row.data)
+      .map((row: any) => ({
+        ...(row.data as Campaign),
+        id: row.id,
+        name: row.name,
+        status: row.status || row.data?.status || "draft",
+      }));
+
+    setCampaigns(parsed);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem(CAMPAIGN_STORAGE_KEY, JSON.stringify(campaigns));
-  }, [campaigns]);
+    if (session) loadCampaigns();
+    else setLoading(false);
+  }, [session, loadCampaigns]);
+
+  // Migrate any localStorage drafts to the database on first load
+  useEffect(() => {
+    if (!session || loading) return;
+    const STORAGE_KEY = "assessment-campaigns";
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return;
+      const localCampaigns: Campaign[] = JSON.parse(stored);
+      if (localCampaigns.length === 0) return;
+
+      // Migrate each to DB
+      const migrate = async () => {
+        for (const c of localCampaigns) {
+          await supabase.from("campaigns").insert({
+            name: c.name,
+            customer: c.configuration?.name || "Unknown",
+            status: c.status,
+            start_date: c.startDate || null,
+            end_date: c.endDate || null,
+            total_chargers: c.statistics?.totalChargers || 0,
+            user_id: session.user.id,
+            data: c as any,
+          });
+        }
+        localStorage.removeItem(STORAGE_KEY);
+        loadCampaigns();
+        toast.success(`Migrated ${localCampaigns.length} draft(s) to the cloud`);
+      };
+      migrate();
+    } catch {
+      // ignore parse errors
+    }
+  }, [session, loading, loadCampaigns]);
 
   const activeCampaign = campaigns.find(c => c.status === "active") || null;
 
-  const addCampaign = useCallback((campaign: Campaign) => {
+  const saveCampaignToDB = useCallback(async (campaign: Campaign) => {
+    const { error } = await supabase.from("campaigns").upsert({
+      id: campaign.id,
+      name: campaign.name,
+      customer: campaign.configuration?.name || "Unknown",
+      status: campaign.status,
+      start_date: campaign.startDate || null,
+      end_date: campaign.endDate || null,
+      total_chargers: campaign.statistics?.totalChargers || 0,
+      health_score: 0,
+      critical_count: 0,
+      optimal_count: 0,
+      degraded_count: 0,
+      total_serviced: campaign.statistics?.completedChargers || 0,
+      user_id: session?.user?.id || null,
+      data: campaign as any,
+    });
+    if (error) {
+      console.error("Failed to save campaign:", error);
+      toast.error("Failed to save campaign");
+    }
+  }, [session]);
+
+  const addCampaign = useCallback(async (campaign: Campaign) => {
     setCampaigns(prev => [campaign, ...prev]);
-  }, []);
+    await saveCampaignToDB(campaign);
+  }, [saveCampaignToDB]);
 
-  const startCampaign = useCallback((id: string) => {
-    setCampaigns(prev => prev.map(c =>
-      c.id === id ? { ...c, status: "active" as const } : c
-    ));
-  }, []);
+  const updateCampaignState = useCallback(async (updater: (prev: Campaign[]) => Campaign[]) => {
+    let updated: Campaign | null = null;
+    setCampaigns(prev => {
+      const next = updater(prev);
+      // Find the changed campaign
+      for (const c of next) {
+        const old = prev.find(p => p.id === c.id);
+        if (old !== c) updated = c;
+      }
+      return next;
+    });
+    // Save after state update
+    if (updated) {
+      await saveCampaignToDB(updated);
+    }
+  }, [saveCampaignToDB]);
 
-  const endCampaign = useCallback((id: string) => {
-    setCampaigns(prev => prev.map(c =>
-      c.id === id ? { ...c, status: "completed" as const } : c
-    ));
-  }, []);
+  const startCampaign = useCallback(async (id: string) => {
+    await updateCampaignState(prev =>
+      prev.map(c => c.id === id ? { ...c, status: "active" as const } : c)
+    );
+  }, [updateCampaignState]);
 
-  const updateChargerStatus = useCallback((campaignId: string, chargerId: string, status: ScheduleItemStatus, data?: { actualHours?: number; notes?: string }) => {
+  const endCampaign = useCallback(async (id: string) => {
+    await updateCampaignState(prev =>
+      prev.map(c => c.id === id ? { ...c, status: "completed" as const } : c)
+    );
+  }, [updateCampaignState]);
+
+  const updateChargerStatus = useCallback(async (campaignId: string, chargerId: string, status: ScheduleItemStatus, data?: { actualHours?: number; notes?: string }) => {
+    let updatedCampaign: Campaign | null = null;
     setCampaigns(prev => prev.map(c => {
       if (c.id !== campaignId) return c;
       const schedule = c.schedule.map(day => ({
@@ -52,14 +150,17 @@ export function useCampaignManager() {
           };
         }),
       }));
-      return { ...c, schedule, statistics: calculateStatistics(schedule) };
+      const updated = { ...c, schedule, statistics: calculateStatistics(schedule) };
+      updatedCampaign = updated;
+      return updated;
     }));
-  }, []);
+    if (updatedCampaign) await saveCampaignToDB(updatedCampaign);
+  }, [saveCampaignToDB]);
 
-  const rescheduleCharger = useCallback((campaignId: string, chargerId: string, newDate: string) => {
+  const rescheduleCharger = useCallback(async (campaignId: string, chargerId: string, newDate: string) => {
+    let updatedCampaign: Campaign | null = null;
     setCampaigns(prev => prev.map(c => {
       if (c.id !== campaignId) return c;
-      // Remove from current day
       let item: any = null;
       const schedule = c.schedule.map(day => {
         const found = day.chargers.find(ch => ch.chargerId === chargerId);
@@ -69,7 +170,6 @@ export function useCampaignManager() {
 
       if (!item) return c;
 
-      // Add to new date
       const existingDay = schedule.find(d => d.date === newDate);
       if (existingDay) {
         existingDay.chargers.push({ ...item, sequenceNumber: existingDay.chargers.length + 1 });
@@ -86,12 +186,16 @@ export function useCampaignManager() {
         schedule.sort((a, b) => a.date.localeCompare(b.date));
       }
 
-      return { ...c, schedule, statistics: calculateStatistics(schedule) };
+      const updated = { ...c, schedule, statistics: calculateStatistics(schedule) };
+      updatedCampaign = updated;
+      return updated;
     }));
-  }, []);
+    if (updatedCampaign) await saveCampaignToDB(updatedCampaign);
+  }, [saveCampaignToDB]);
 
-  const deleteCampaign = useCallback((id: string) => {
+  const deleteCampaign = useCallback(async (id: string) => {
     setCampaigns(prev => prev.filter(c => c.id !== id));
+    await supabase.from("campaigns").delete().eq("id", id);
   }, []);
 
   return {
@@ -103,5 +207,6 @@ export function useCampaignManager() {
     updateChargerStatus,
     rescheduleCharger,
     deleteCampaign,
+    loading,
   };
 }
