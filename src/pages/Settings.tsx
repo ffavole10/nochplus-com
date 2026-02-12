@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { ArrowLeft, Plus, Shield, Trash2, UserCog, Users } from "lucide-react";
 import { toast } from "sonner";
 import nochLogo from "@/assets/noch-logo-white.png";
+import { AvatarUpload } from "@/components/AvatarUpload";
 
 type UserWithRole = {
   id: string;
@@ -20,6 +21,7 @@ type UserWithRole = {
   email: string;
   display_name: string | null;
   company: string | null;
+  avatar_url: string | null;
   role: string;
   created_at: string;
 };
@@ -256,6 +258,7 @@ const Settings = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[60px]">Photo</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Company</TableHead>
@@ -266,6 +269,21 @@ const Settings = () => {
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id}>
+                      <TableCell>
+                        <AvatarUpload
+                          userId={user.user_id}
+                          avatarUrl={user.avatar_url}
+                          displayName={user.display_name}
+                          size="sm"
+                          onUploaded={(url) => {
+                            setUsers((prev) =>
+                              prev.map((u) =>
+                                u.user_id === user.user_id ? { ...u, avatar_url: url } : u
+                              )
+                            );
+                          }}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{user.email}</TableCell>
                       <TableCell>{user.display_name || "—"}</TableCell>
                       <TableCell>{user.company || "—"}</TableCell>
