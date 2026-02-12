@@ -51,11 +51,11 @@ const Login = () => {
       <div className="w-full max-w-md mx-4 rounded-2xl backdrop-blur-md bg-white/50 p-10 shadow-2xl">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <img src={nochLogo} alt="Noch Power" className="h-[52px]" />
+          <img src={nochLogo} alt="Noch Power" className="h-[73px] brightness-0" />
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl font-bold text-center text-foreground mb-1" style={{ fontFamily: "'Caveat', cursive" }}>
+        <h1 className="text-4xl font-bold text-center text-foreground mb-1" style={{ fontFamily: "'AntroVectra', cursive" }}>
           Reliability Starts Here
         </h1>
         <p className="text-center text-foreground/60 text-sm mb-8">
