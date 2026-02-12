@@ -68,10 +68,6 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
       <div className="flex items-center gap-3">
         <Tabs value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
           <TabsList>
-            <TabsTrigger value="campaign-dashboard" className="gap-1.5">
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
             <TabsTrigger value="dataset" className="gap-1.5">
               <Database className="h-4 w-4" />
               <span className="hidden sm:inline">Dataset</span>
