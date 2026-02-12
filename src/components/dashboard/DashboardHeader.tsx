@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RefreshCw, User } from "lucide-react";
+import { RefreshCw, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +54,17 @@ export function DashboardHeader() {
                 {initials || <User className="w-4 h-4" />}
               </AvatarFallback>
             </Avatar>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.href = "/login";
+              }}
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>
