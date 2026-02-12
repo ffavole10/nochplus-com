@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback } from "react";
-import { allChargers, getNetworkStats, Charger, ChargerStatus } from "@/data/chargerData";
+import { allChargers, getNetworkStats, Charger, getChargersByCustomer } from "@/data/chargerData";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { HeroMetrics } from "@/components/dashboard/HeroMetrics";
 import { FindingsSection } from "@/components/dashboard/FindingsSection";
@@ -9,11 +9,14 @@ import { SitePerformanceTable } from "@/components/dashboard/SitePerformanceTabl
 import { ReportLibrary } from "@/components/dashboard/ReportLibrary";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Building2 } from "lucide-react";
+import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 
 const Index = () => {
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [filteredChargers, setFilteredChargers] = useState<Charger[]>(allChargers);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("evgo");
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("1");
   const [focusedLocation, setFocusedLocation] = useState<string | null>(null);
   const criticalRef = useRef<HTMLDivElement>(null);
 
@@ -31,12 +34,10 @@ const Index = () => {
 
   const handleLocationFilter = useCallback((location: string | null) => {
     if (location === null) {
-      // Deselect - show all chargers
       setFilteredChargers(allChargers);
       setFocusedLocation(null);
       setSelectedCharger(null);
     } else {
-      // Focus on specific location
       const [city, state] = location.split(", ");
       const filtered = allChargers.filter(
         (c) => c.city === city && c.state === state
@@ -79,6 +80,8 @@ const Index = () => {
     minute: "2-digit",
   });
 
+  const selectedCampaign = sampleCampaigns.find(c => c.id === selectedCampaignId);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -89,16 +92,36 @@ const Index = () => {
         />
 
         <div className="flex-1 flex flex-col min-h-screen">
-          <DashboardHeader 
-            lastUpdated={lastUpdated} 
-            selectedCustomer={selectedCustomer}
-            onCustomerChange={setSelectedCustomer}
-          />
+          <DashboardHeader lastUpdated={lastUpdated} />
 
           <main className="flex-1 container mx-auto px-4 py-6 space-y-8">
             {/* Sidebar Toggle for Mobile */}
             <div className="lg:hidden">
               <SidebarTrigger className="mb-4" />
+            </div>
+
+            {/* Campaign Selector */}
+            <div className="flex items-center gap-3">
+              <Building2 className="w-4 h-4 text-muted-foreground" />
+              <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
+                <SelectTrigger className="w-[280px] bg-background border-primary/30 focus:ring-primary">
+                  <SelectValue placeholder="Select Campaign" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+                  {sampleCampaigns.map((campaign) => (
+                    <SelectItem key={campaign.id} value={campaign.id} className="cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <span>{campaign.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedCampaign && (
+                <span className="text-xs text-muted-foreground">
+                  {selectedCampaign.totalChargers} chargers · {CUSTOMER_LABELS[selectedCampaign.customer]}
+                </span>
+              )}
             </div>
 
             {/* Hero Metrics */}
