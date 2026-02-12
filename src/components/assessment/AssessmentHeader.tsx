@@ -63,11 +63,6 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
             {chargerCount} chargers
           </span>
         )}
-        <div className="h-6 w-px bg-border" />
-        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
-          <LayoutDashboard className="h-4 w-4" />
-          Dashboard
-        </Button>
       </div>
 
       <div className="flex items-center gap-3">
@@ -113,6 +108,11 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
             </SelectContent>
           </Select>
         )}
+        <div className="h-6 w-px bg-border" />
+        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
+          <LayoutDashboard className="h-4 w-4" />
+          Dashboard
+        </Button>
       </div>
     </header>
   );
