@@ -114,6 +114,7 @@ export function MissionControlDashboard({ campaign }: MissionControlDashboardPro
           onFiltersChange={handleFiltersChange}
           filteredCount={filteredChargers.length}
           totalCount={campaignChargers.length}
+          searchQuery=""
         />
 
         <div className="flex-1 flex flex-col">

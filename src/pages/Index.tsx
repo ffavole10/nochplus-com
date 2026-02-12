@@ -17,6 +17,7 @@ const Index = () => {
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [filteredChargers, setFilteredChargers] = useState<Charger[]>(allChargers);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("1");
+  const [searchQuery, setSearchQuery] = useState("");
   const [focusedLocation, setFocusedLocation] = useState<string | null>(null);
   const criticalRef = useRef<HTMLDivElement>(null);
 
@@ -89,10 +90,11 @@ const Index = () => {
           onFiltersChange={handleFiltersChange}
           filteredCount={filteredChargers.length}
           totalCount={allChargers.length}
+          searchQuery={searchQuery}
         />
 
         <div className="flex-1 flex flex-col min-h-screen">
-          <DashboardHeader lastUpdated={lastUpdated} />
+          <DashboardHeader lastUpdated={lastUpdated} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
           <main className="flex-1 container mx-auto px-4 py-6 space-y-8">
             {/* Sidebar Toggle for Mobile */}

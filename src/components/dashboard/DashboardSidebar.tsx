@@ -42,6 +42,7 @@ interface DashboardSidebarProps {
   onFiltersChange: (chargers: Charger[]) => void;
   filteredCount: number;
   totalCount: number;
+  searchQuery: string;
 }
 
 type StatusFilter = "Critical" | "Degraded" | "Optimal";
@@ -51,6 +52,7 @@ export function DashboardSidebar({
   onFiltersChange,
   filteredCount,
   totalCount,
+  searchQuery,
 }: DashboardSidebarProps) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -62,7 +64,6 @@ export function DashboardSidebar({
   ]);
   const [cityFilters, setCityFilters] = useState<string[]>([]);
   const [componentFilters, setComponentFilters] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -159,7 +160,7 @@ export function DashboardSidebar({
     setStatusFilters(["Critical", "Degraded", "Optimal"]);
     setCityFilters([]);
     setComponentFilters([]);
-    setSearchQuery("");
+    // searchQuery is cleared externally via prop
     setDateFrom("");
     setDateTo("");
     onFiltersChange(allChargers);
@@ -191,33 +192,24 @@ export function DashboardSidebar({
             />
           </div>
         )}
-        {/* Mission Control Link */}
+        {/* Mission Control Button */}
         <Link to="/missioncontrol">
-          <div className={cn(
-            "flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer hover:bg-sidebar-accent/50 text-sidebar-foreground mb-3 transition-colors",
-            isCollapsed && "justify-center"
-          )}>
-            <Rocket className="w-5 h-5 text-primary" />
-            {!isCollapsed && <span className="font-semibold text-sm">Mission Control</span>}
-          </div>
+          <Button
+            variant="outline"
+            size={isCollapsed ? "icon" : "sm"}
+            className={cn(
+              "w-full mb-3 bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent",
+              isCollapsed && "w-auto"
+            )}
+          >
+            <Rocket className="w-4 h-4" />
+            {!isCollapsed && <span className="ml-2">Mission Control</span>}
+          </Button>
         </Link>
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5" />
           {!isCollapsed && <span className="font-semibold">Filters</span>}
         </div>
-        {!isCollapsed && (
-          <div className="mt-3">
-            <Input
-              placeholder="Search chargers..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                handleFilterChange();
-              }}
-              className="bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/60"
-            />
-          </div>
-        )}
       </SidebarHeader>
 
       <SidebarContent className="custom-scrollbar">
