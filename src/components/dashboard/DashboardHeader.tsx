@@ -1,4 +1,5 @@
-import { Zap, RefreshCw, Download, Bell, Building2, ChevronDown } from "lucide-react";
+import { Zap, RefreshCw, Download, Bell, Building2, ChevronDown, Rocket } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -77,6 +78,12 @@ export function DashboardHeader({ lastUpdated, selectedCustomer, onCustomerChang
           </div>
 
           <div className="flex items-center gap-3">
+            <Link to="/missioncontrol">
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Rocket className="w-4 h-4" />
+                <span className="hidden sm:inline">Mission Control</span>
+              </Button>
+            </Link>
             <span className="text-xs text-muted-foreground hidden sm:inline">
               Last updated: {lastUpdated}
             </span>
