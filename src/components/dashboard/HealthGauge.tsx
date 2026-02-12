@@ -4,9 +4,10 @@ interface HealthGaugeProps {
   score: number;
   size?: number;
   strokeWidth?: number;
+  suffix?: string;
 }
 
-export function HealthGauge({ score, size = 120, strokeWidth = 12 }: HealthGaugeProps) {
+export function HealthGauge({ score, size = 120, strokeWidth = 12, suffix = "" }: HealthGaugeProps) {
   const { color, label } = useMemo(() => {
     if (score >= 85) return { color: "hsl(var(--optimal))", label: "Excellent" };
     if (score >= 70) return { color: "hsl(var(--degraded))", label: "Fair" };
@@ -54,7 +55,7 @@ export function HealthGauge({ score, size = 120, strokeWidth = 12 }: HealthGauge
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-3xl font-bold" style={{ color }}>
-          {score}
+          {score}{suffix}
         </span>
         <span className="text-xs text-muted-foreground">{label}</span>
       </div>
