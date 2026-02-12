@@ -28,25 +28,29 @@ export function HeroMetrics({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Network Health */}
-      <div className="metric-card flex flex-col items-center justify-center animate-fade-in">
+      <div className="metric-card flex flex-col animate-fade-in">
         <h3 className={`${titleClass} mb-3`}>
           <Activity className="w-4 h-4 text-primary" />
           Network Health
         </h3>
-        <HealthGauge score={healthScore} />
+        <div className="flex-1 flex items-center justify-center">
+          <HealthGauge score={healthScore} />
+        </div>
       </div>
 
       {/* Critical Actions */}
       <button
         onClick={onCriticalClick}
-        className="metric-card flex flex-col items-center justify-center animate-fade-in relative"
+        className="metric-card flex flex-col animate-fade-in relative text-left"
         style={{ animationDelay: "100ms" }}
       >
         <h3 className={`${titleClass} mb-3`}>
           <AlertTriangle className="w-4 h-4 text-critical" />
           Critical Actions
         </h3>
-        <div className="text-5xl font-bold text-critical">{criticalCount}</div>
+        <div className="flex-1 flex items-center justify-center w-full">
+          <div className="text-5xl font-bold text-critical">{criticalCount}</div>
+        </div>
         <div className="absolute top-3 right-3">
           <span className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-critical opacity-75"></span>
@@ -57,19 +61,21 @@ export function HeroMetrics({
 
       {/* Campaign Progress */}
       <div
-        className="metric-card flex flex-col items-center justify-center animate-fade-in"
+        className="metric-card flex flex-col animate-fade-in"
         style={{ animationDelay: "200ms" }}
       >
         <h3 className={`${titleClass} mb-3`}>
           <CheckCircle2 className="w-4 h-4 text-optimal" />
           Campaign Progress
         </h3>
-        <HealthGauge score={completionPercent} suffix="%" />
+        <div className="flex-1 flex items-center justify-center">
+          <HealthGauge score={completionPercent} suffix="%" />
+        </div>
       </div>
 
       {/* Network Status */}
       <div
-        className="metric-card flex flex-col items-center justify-center animate-fade-in"
+        className="metric-card flex flex-col animate-fade-in"
         style={{ animationDelay: "300ms" }}
       >
         <h3 className={`${titleClass} mb-3`}>
