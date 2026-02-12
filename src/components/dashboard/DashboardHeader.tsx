@@ -16,10 +16,10 @@ export function DashboardHeader({ lastUpdated }: DashboardHeaderProps) {
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">
-                PM Campaign Dashboard
+                Campaign Dashboard
               </h1>
               <p className="text-sm text-muted-foreground">
-                EV Charging Network Health & Maintenance
+                Network Health & Maintenance
               </p>
             </div>
           </div>
