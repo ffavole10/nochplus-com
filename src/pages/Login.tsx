@@ -48,7 +48,7 @@ const Login = () => {
       className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${loginBg})` }}
     >
-      <div className="w-full max-w-md mx-4 rounded-2xl backdrop-blur-md bg-white/50 p-10 shadow-2xl">
+      <div className="w-full max-w-md mx-4 rounded-2xl backdrop-blur-md bg-white/35 p-10 shadow-2xl">
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <img src={nochLogo} alt="Noch Power" className="h-[73px] brightness-0" />
