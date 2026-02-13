@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
-import { Search, Filter, MapPin, Calendar, AlertTriangle, Zap, Plug } from "lucide-react";
+import { Search, Filter, MapPin, Calendar, AlertTriangle, Zap, Plug, Ticket } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AssessmentCharger, PriorityLevel, Phase, ChargerType } from "@/types/assessment";
-import { getAssessmentStats, getPriorityColor } from "@/lib/assessmentParser";
+import { getAssessmentStats, getTicketStats, getPriorityColor } from "@/lib/assessmentParser";
 
 interface AssessmentDashboardProps {
   chargers: AssessmentCharger[];
@@ -35,6 +35,7 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
   const [phaseFilter, setPhaseFilter] = useState<string>("all");
 
   const stats = useMemo(() => getAssessmentStats(chargers), [chargers]);
+  const ticketStats = useMemo(() => getTicketStats(chargers), [chargers]);
 
   const filtered = useMemo(() => {
     let result = [...chargers];
@@ -57,7 +58,7 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
   return (
     <div className="space-y-6 p-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="metric-card">
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Total Chargers</p>
@@ -87,6 +88,20 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
             <p className="text-sm text-muted-foreground">Completion</p>
             <p className="text-3xl font-bold text-optimal">{stats.completionPercent}%</p>
             <p className="text-xs text-muted-foreground">{stats.completed} of {stats.total} complete</p>
+          </CardContent>
+        </Card>
+        {/* Ticket KPI */}
+        <Card className={`metric-card border-l-4 ${ticketStats.openTickets > 0 ? "border-l-critical bg-critical/5" : "border-l-muted"}`}>
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
+              <Ticket className="h-3.5 w-3.5" /> Tickets
+            </p>
+            <p className={`text-3xl font-bold ${ticketStats.openTickets > 0 ? "text-critical" : "text-foreground"}`}>
+              {ticketStats.openTickets}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Open of {ticketStats.totalWithTickets} total · {ticketStats.solvedTickets} solved
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -176,6 +191,11 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
                       {charger.priorityLevel} ({charger.priorityScore})
                     </Badge>
                     <Badge variant="outline">{charger.status}</Badge>
+                    {charger.hasOpenTicket && (
+                      <Badge className="bg-critical text-critical-foreground animate-pulse gap-1">
+                        <Ticket className="h-3 w-3" /> Open Ticket
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground flex-wrap">
                     <span className="flex items-center gap-1">

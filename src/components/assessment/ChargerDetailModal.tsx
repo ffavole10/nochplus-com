@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AssessmentCharger, Phase, PriorityLevel } from "@/types/assessment";
 import { getPriorityColor } from "@/lib/assessmentParser";
-import { MapPin, Wrench, CalendarDays, ClipboardList, AlertTriangle, Zap, Plug, Save } from "lucide-react";
+import { MapPin, Wrench, CalendarDays, ClipboardList, AlertTriangle, Zap, Plug, Save, Ticket, Database } from "lucide-react";
 import { toast } from "sonner";
 
 interface ChargerDetailModalProps {
@@ -76,7 +76,7 @@ export function ChargerDetailModal({ charger, open, onOpenChange, onUpdate }: Ch
         </DialogHeader>
 
         <Tabs defaultValue="location" className="mt-2">
-          <TabsList className="w-full">
+          <TabsList className="w-full flex-wrap">
             <TabsTrigger value="location" className="flex-1 gap-1">
               <MapPin className="h-3.5 w-3.5" /> Location
             </TabsTrigger>
@@ -86,6 +86,16 @@ export function ChargerDetailModal({ charger, open, onOpenChange, onUpdate }: Ch
             <TabsTrigger value="service" className="flex-1 gap-1">
               <CalendarDays className="h-3.5 w-3.5" /> Service
             </TabsTrigger>
+            {(charger.ticketId || charger.ticketCreatedDate) && (
+              <TabsTrigger value="ticket" className="flex-1 gap-1">
+                <Ticket className="h-3.5 w-3.5" /> Ticket
+              </TabsTrigger>
+            )}
+            {Object.keys(charger.extraFields || {}).length > 0 && (
+              <TabsTrigger value="extra" className="flex-1 gap-1">
+                <Database className="h-3.5 w-3.5" /> All Data
+              </TabsTrigger>
+            )}
             <TabsTrigger value="project" className="flex-1 gap-1">
               <ClipboardList className="h-3.5 w-3.5" /> Project
             </TabsTrigger>
@@ -161,6 +171,60 @@ export function ChargerDetailModal({ charger, open, onOpenChange, onUpdate }: Ch
               </div>
             </div>
           </TabsContent>
+
+          {/* Ticket Tab */}
+          {(charger.ticketId || charger.ticketCreatedDate) && (
+            <TabsContent value="ticket" className="space-y-3 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Ticket ID</Label>
+                  <p className="font-medium text-sm">{charger.ticketId || "—"}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Status</Label>
+                  <Badge className={charger.hasOpenTicket ? "bg-critical text-critical-foreground" : "bg-optimal text-optimal-foreground"}>
+                    {charger.hasOpenTicket ? "Open" : "Solved"}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Created Date</Label>
+                  <p className="font-medium text-sm">{charger.ticketCreatedDate || "—"}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Solved Date</Label>
+                  <p className="font-medium text-sm">{charger.ticketSolvedDate || "—"}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Ticket Group</Label>
+                  <p className="font-medium text-sm">{charger.ticketGroup || "—"}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Reporting Source</Label>
+                  <p className="font-medium text-sm">{charger.ticketReportingSource || "—"}</p>
+                </div>
+              </div>
+              {charger.ticketSubject && (
+                <div>
+                  <Label className="text-xs text-muted-foreground">Subject</Label>
+                  <p className="font-medium text-sm">{charger.ticketSubject}</p>
+                </div>
+              )}
+            </TabsContent>
+          )}
+
+          {/* Extra Fields Tab */}
+          {Object.keys(charger.extraFields || {}).length > 0 && (
+            <TabsContent value="extra" className="space-y-3 mt-4">
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(charger.extraFields).map(([key, value]) => (
+                  <div key={key}>
+                    <Label className="text-xs text-muted-foreground">{key}</Label>
+                    <p className="font-medium text-sm truncate">{value != null ? String(value) : "—"}</p>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+          )}
 
           <TabsContent value="project" className="space-y-4 mt-4">
             <div>

@@ -90,18 +90,38 @@ const COLUMN_MAP: Record<string, string> = {
   "asset record type": "assetRecordType",
   "address": "address",
   "address line 1": "address",
+  "full address": "address",
   "city": "city",
   "state": "state",
   "zip": "zip",
   "zip/postal code": "zip",
   "status": "status",
+  "online status": "status",
   "in-service date": "inServiceDate",
   "in service date": "inServiceDate",
   "parts warranty end date": "partsWarrantyEndDate",
+  "labor warranty": "partsWarrantyEndDate",
   "service contract end date": "serviceContractEndDate",
   "account name": "accountName",
+  "organization name": "accountName",
+  "organization": "accountName",
   "evse id": "evseId",
+  "charge box identity": "evseId",
+  "cbid": "evseId",
+  "latitude": "latitude",
+  "longitude": "longitude",
+  // Ticket mappings
+  "ticket id": "ticketId",
+  "pst ticket created date": "ticketCreatedDate",
+  "ticket created date": "ticketCreatedDate",
+  "ticket solved date": "ticketSolvedDate",
+  "ticket group": "ticketGroup",
+  "ticket subject": "ticketSubject",
+  "ticket reporting source": "ticketReportingSource",
 };
+
+// Known internal fields (not stored in extraFields)
+const KNOWN_FIELDS = new Set(Object.values(COLUMN_MAP));
 
 export function parseAssessmentExcel(file: File): Promise<AssessmentCharger[]> {
   return new Promise((resolve, reject) => {
@@ -116,10 +136,17 @@ export function parseAssessmentExcel(file: File): Promise<AssessmentCharger[]> {
         const chargers: AssessmentCharger[] = jsonData.map((row: any, idx: number) => {
           // Flexible column matching
           const mapped: Record<string, any> = {};
+          const extraFields: Record<string, string | number | boolean | null> = {};
+
           for (const [key, value] of Object.entries(row)) {
             const normalizedKey = key.toLowerCase().trim();
             const mappedKey = COLUMN_MAP[normalizedKey];
-            if (mappedKey) mapped[mappedKey] = value;
+            if (mappedKey) {
+              mapped[mappedKey] = value;
+            } else {
+              // Store unmapped columns in extraFields with original column name
+              extraFields[key.trim()] = value === "" ? null : (value as string | number | boolean);
+            }
           }
 
           const assetRecordType = normalizeType(String(mapped.assetRecordType || "L2"));
@@ -127,6 +154,10 @@ export function parseAssessmentExcel(file: File): Promise<AssessmentCharger[]> {
           const partsWarrantyEndDate = parseDate(mapped.partsWarrantyEndDate);
           const serviceContractEndDate = parseDate(mapped.serviceContractEndDate);
           const status = String(mapped.status || "Unknown");
+
+          const ticketCreatedDate = parseDate(mapped.ticketCreatedDate);
+          const ticketSolvedDate = parseDate(mapped.ticketSolvedDate);
+          const hasOpenTicket = !!ticketCreatedDate && !ticketSolvedDate;
 
           const priorityScore = calculatePriorityScore({
             assetRecordType,
@@ -136,9 +167,13 @@ export function parseAssessmentExcel(file: File): Promise<AssessmentCharger[]> {
             status,
           });
 
+          // Parse lat/lng if provided
+          const lat = mapped.latitude ? parseFloat(String(mapped.latitude)) : null;
+          const lng = mapped.longitude ? parseFloat(String(mapped.longitude)) : null;
+
           return {
             id: `charger-${idx + 1}`,
-            assetName: String(mapped.assetName || `Charger-${idx + 1}`),
+            assetName: String(mapped.assetName || mapped.evseId || `Charger-${idx + 1}`),
             assetRecordType,
             address: String(mapped.address || ""),
             city: String(mapped.city || ""),
@@ -157,8 +192,16 @@ export function parseAssessmentExcel(file: File): Promise<AssessmentCharger[]> {
             scheduledDate: null,
             notes: "",
             lastUpdated: new Date().toISOString(),
-            latitude: null,
-            longitude: null,
+            latitude: (lat && !isNaN(lat)) ? lat : null,
+            longitude: (lng && !isNaN(lng)) ? lng : null,
+            ticketId: mapped.ticketId ? String(mapped.ticketId) : null,
+            ticketCreatedDate,
+            ticketSolvedDate,
+            ticketGroup: mapped.ticketGroup ? String(mapped.ticketGroup) : null,
+            ticketSubject: mapped.ticketSubject ? String(mapped.ticketSubject) : null,
+            ticketReportingSource: mapped.ticketReportingSource ? String(mapped.ticketReportingSource) : null,
+            hasOpenTicket,
+            extraFields,
           };
         });
 
@@ -196,5 +239,14 @@ export function getAssessmentStats(chargers: AssessmentCharger[]) {
     dcfcCount: chargers.filter(c => c.assetRecordType === "DCFC").length,
     l2Count: chargers.filter(c => c.assetRecordType === "L2").length,
     hpcdCount: chargers.filter(c => c.assetRecordType === "HPCD").length,
+  };
+}
+
+export function getTicketStats(chargers: AssessmentCharger[]) {
+  const withTickets = chargers.filter(c => c.ticketId || c.ticketCreatedDate);
+  return {
+    totalWithTickets: withTickets.length,
+    openTickets: chargers.filter(c => c.hasOpenTicket).length,
+    solvedTickets: withTickets.filter(c => c.ticketSolvedDate).length,
   };
 }
