@@ -25,6 +25,16 @@ export interface AssessmentCharger {
   lastUpdated: string;
   latitude: number | null;
   longitude: number | null;
+  // Ticket fields
+  ticketId: string | null;
+  ticketCreatedDate: string | null;
+  ticketSolvedDate: string | null;
+  ticketGroup: string | null;
+  ticketSubject: string | null;
+  ticketReportingSource: string | null;
+  hasOpenTicket: boolean;
+  // Dynamic extra fields from uploaded file
+  extraFields: Record<string, string | number | boolean | null>;
 }
 
 export interface AssessmentStats {
@@ -39,6 +49,12 @@ export interface AssessmentStats {
   dcfcCount: number;
   l2Count: number;
   hpcdCount: number;
+}
+
+export interface AssessmentTicketStats {
+  totalWithTickets: number;
+  openTickets: number;
+  solvedTickets: number;
 }
 
 export type ViewMode = "dataset" | "campaign-dashboard" | "map" | "kanban" | "schedule";
