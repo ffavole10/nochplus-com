@@ -33,6 +33,7 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [phaseFilter, setPhaseFilter] = useState<string>("all");
+  const [ticketFilter, setTicketFilter] = useState<string>("all");
 
   const stats = useMemo(() => getAssessmentStats(chargers), [chargers]);
   const ticketStats = useMemo(() => getTicketStats(chargers), [chargers]);
@@ -52,8 +53,11 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
     if (typeFilter !== "all") result = result.filter(c => c.assetRecordType === typeFilter);
     if (priorityFilter !== "all") result = result.filter(c => c.priorityLevel === priorityFilter);
     if (phaseFilter !== "all") result = result.filter(c => c.phase === phaseFilter);
+    if (ticketFilter === "open") result = result.filter(c => c.hasOpenTicket);
+    else if (ticketFilter === "solved") result = result.filter(c => c.ticketSolvedDate !== null);
+    else if (ticketFilter === "any") result = result.filter(c => c.ticketId || c.ticketCreatedDate);
     return result;
-  }, [chargers, search, typeFilter, priorityFilter, phaseFilter]);
+  }, [chargers, search, typeFilter, priorityFilter, phaseFilter, ticketFilter]);
 
   return (
     <div className="space-y-6 p-6">
@@ -156,6 +160,15 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
             <SelectItem value="In Progress">In Progress</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
             <SelectItem value="Deferred">Deferred</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={ticketFilter} onValueChange={setTicketFilter}>
+          <SelectTrigger className="w-[160px]"><Ticket className="h-3.5 w-3.5 mr-1" /><SelectValue placeholder="Tickets" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tickets</SelectItem>
+            <SelectItem value="open">Open Tickets</SelectItem>
+            <SelectItem value="solved">Solved Tickets</SelectItem>
+            <SelectItem value="any">Has Ticket</SelectItem>
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground">
