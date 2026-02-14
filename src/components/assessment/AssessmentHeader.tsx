@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, FileSpreadsheet, Loader2, LayoutDashboard, Map, Columns, CalendarDays, Database, BarChart3, Ticket, LogOut, User } from "lucide-react";
+import { Upload, Loader2, LayoutDashboard, Map, Columns, CalendarDays, Database, BarChart3, Ticket, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,19 +40,19 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
 
   useEffect(() => {
     if (!session?.user?.id) return;
-    supabase
-      .from("profiles")
-      .select("avatar_url, display_name")
-      .eq("user_id", session.user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setAvatarUrl(data.avatar_url);
-          if (data.display_name) {
-            setInitials(data.display_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2));
-          }
+    supabase.
+    from("profiles").
+    select("avatar_url, display_name").
+    eq("user_id", session.user.id).
+    single().
+    then(({ data }) => {
+      if (data) {
+        setAvatarUrl(data.avatar_url);
+        if (data.display_name) {
+          setInitials(data.display_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2));
         }
-      });
+      }
+    });
   }, [session?.user?.id]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,14 +83,14 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
         </Button>
         <div className="h-6 w-px bg-border" />
         <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <FileSpreadsheet className="h-5 w-5 text-primary" />
+          
           Mission Control
         </h1>
-        {chargerCount > 0 && (
-          <span className="text-sm text-muted-foreground">
+        {chargerCount > 0 &&
+        <span className="text-sm text-muted-foreground">
             {chargerCount} chargers
           </span>
-        )}
+        }
       </div>
 
       <div className="flex items-center gap-3">
@@ -133,11 +133,11 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
           onClick={async () => {
             await supabase.auth.signOut();
             window.location.href = "/login";
-          }}
-        >
+          }}>
+
           <LogOut className="w-4 h-4" />
         </Button>
       </div>
-    </header>
-  );
+    </header>);
+
 }
