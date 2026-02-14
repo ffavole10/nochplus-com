@@ -6,6 +6,7 @@ import { AssessmentKanban } from "@/components/assessment/AssessmentKanban";
 import { ChargerDetailModal } from "@/components/assessment/ChargerDetailModal";
 import { MissionControlLanding } from "@/components/assessment/MissionControlLanding";
 import { MissionControlDashboard } from "@/components/assessment/MissionControlDashboard";
+import { TicketsView } from "@/components/assessment/TicketsView";
 import { ScheduleView } from "@/components/schedule/ScheduleView";
 import { CampaignProgressBanner } from "@/components/schedule/CampaignProgressBanner";
 import { useAssessmentData } from "@/hooks/useAssessmentData";
@@ -237,6 +238,12 @@ const AssessmentTracker = () => {
           onExport={handleExport}
           onClear={clearData}
           onImport={importChargers}
+        />
+      )}
+      {view === "tickets" && (
+        <TicketsView
+          chargers={filteredChargers}
+          onSelectCharger={handleSelectCharger}
         />
       )}
 
