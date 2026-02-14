@@ -1,15 +1,18 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, FileSpreadsheet, Loader2, LayoutDashboard, Map, Columns, CalendarDays, Database, BarChart3, Ticket } from "lucide-react";
+import { Upload, FileSpreadsheet, Loader2, LayoutDashboard, Map, Columns, CalendarDays, Database, BarChart3, Ticket, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AssessmentCharger, ViewMode } from "@/types/assessment";
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CampaignOption {
   id: string;
@@ -31,6 +34,26 @@ interface AssessmentHeaderProps {
 export function AssessmentHeader({ view, onViewChange, onImport, onExport, onClear, chargerCount, campaignOptions = [], selectedCampaignId, onCampaignChange }: AssessmentHeaderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [initials, setInitials] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url, display_name")
+      .eq("user_id", session.user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setAvatarUrl(data.avatar_url);
+          if (data.display_name) {
+            setInitials(data.display_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2));
+          }
+        }
+      });
+  }, [session?.user?.id]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,6 +76,11 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
     <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
       <div className="flex items-center gap-4">
         <img src={nochLogo} alt="Noch Power" className="h-8 brightness-0 dark:brightness-100" />
+        <div className="h-6 w-px bg-border" />
+        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
+          <LayoutDashboard className="h-4 w-4" />
+          Dashboard
+        </Button>
         <div className="h-6 w-px bg-border" />
         <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <FileSpreadsheet className="h-5 w-5 text-primary" />
@@ -92,9 +120,22 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
         </Tabs>
 
         <div className="h-6 w-px bg-border" />
-        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
-          <LayoutDashboard className="h-4 w-4" />
-          Dashboard
+        <Avatar className="h-9 w-9 cursor-pointer">
+          <AvatarImage src={avatarUrl || undefined} alt="Profile" />
+          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+            {initials || <User className="w-4 h-4" />}
+          </AvatarFallback>
+        </Avatar>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground"
+          onClick={async () => {
+            await supabase.auth.signOut();
+            window.location.href = "/login";
+          }}
+        >
+          <LogOut className="w-4 h-4" />
         </Button>
       </div>
     </header>
