@@ -77,20 +77,12 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
       <div className="flex items-center gap-4">
         <img src={nochLogo} alt="Noch Power" className="h-8 brightness-0 dark:brightness-100" />
         <div className="h-6 w-px bg-border" />
-        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
-          <LayoutDashboard className="h-4 w-4" />
-          Dashboard
-        </Button>
-        <div className="h-6 w-px bg-border" />
-        <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          
+        <h1 className="text-[1.35rem] font-semibold text-foreground">
           Mission Control
         </h1>
-        {chargerCount > 0
-
-
-
-        }
+        {chargerCount > 0 && (
+          <Badge variant="secondary" className="text-xs">{chargerCount} Chargers</Badge>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
@@ -120,6 +112,10 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
         </Tabs>
 
         <div className="h-6 w-px bg-border" />
+        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
+          <LayoutDashboard className="h-4 w-4" />
+          Dashboard
+        </Button>
         <Avatar className="h-9 w-9 cursor-pointer">
           <AvatarImage src={avatarUrl || undefined} alt="Profile" />
           <AvatarFallback className="bg-primary text-primary-foreground text-sm">
@@ -134,7 +130,6 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
             await supabase.auth.signOut();
             window.location.href = "/login";
           }}>
-
           <LogOut className="w-4 h-4" />
         </Button>
       </div>
