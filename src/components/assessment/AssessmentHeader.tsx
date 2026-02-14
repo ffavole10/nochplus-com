@@ -73,19 +73,44 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
   }, [onImport]);
 
   return (
-    <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
-      <div className="flex items-center gap-4">
-        <img src={nochLogo} alt="Noch Power" className="h-8 brightness-0 dark:brightness-100" />
-        <div className="h-6 w-px bg-border" />
-        <h1 className="text-[1.35rem] font-semibold text-foreground">
-          Mission Control
-        </h1>
-        {chargerCount > 0 && (
-          <Badge variant="secondary" className="text-xs">{chargerCount} Chargers</Badge>
-        )}
+    <header className="border-b border-border bg-card sticky top-0 z-30">
+      <div className="px-6 py-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <img src={nochLogo} alt="Noch Power" className="h-8 brightness-0 dark:brightness-100" />
+          <div className="h-6 w-px bg-border" />
+          <h1 className="text-[1.35rem] font-semibold text-foreground">
+            Mission Control
+          </h1>
+          {chargerCount > 0 && (
+            <Badge variant="secondary" className="text-xs">{chargerCount} Chargers</Badge>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </Button>
+          <Avatar className="h-9 w-9 cursor-pointer">
+            <AvatarImage src={avatarUrl || undefined} alt="Profile" />
+            <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+              {initials || <User className="w-4 h-4" />}
+            </AvatarFallback>
+          </Avatar>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              window.location.href = "/login";
+            }}>
+            <LogOut className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="px-6 pb-3">
         <Tabs value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
           <TabsList>
             <TabsTrigger value="dataset" className="gap-1.5">
@@ -110,28 +135,6 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
             </TabsTrigger>
           </TabsList>
         </Tabs>
-
-        <div className="h-6 w-px bg-border" />
-        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
-          <LayoutDashboard className="h-4 w-4" />
-          Dashboard
-        </Button>
-        <Avatar className="h-9 w-9 cursor-pointer">
-          <AvatarImage src={avatarUrl || undefined} alt="Profile" />
-          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-            {initials || <User className="w-4 h-4" />}
-          </AvatarFallback>
-        </Avatar>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground"
-          onClick={async () => {
-            await supabase.auth.signOut();
-            window.location.href = "/login";
-          }}>
-          <LogOut className="w-4 h-4" />
-        </Button>
       </div>
     </header>);
 
