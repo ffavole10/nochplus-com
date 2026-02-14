@@ -86,10 +86,10 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
           
           Mission Control
         </h1>
-        {chargerCount > 0 &&
-        <span className="text-sm text-muted-foreground">
-            {chargerCount} chargers
-          </span>
+        {chargerCount > 0
+
+
+
         }
       </div>
 
