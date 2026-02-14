@@ -57,4 +57,13 @@ export interface AssessmentTicketStats {
   solvedTickets: number;
 }
 
-export type ViewMode = "dataset" | "campaign-dashboard" | "map" | "kanban" | "schedule";
+export type ViewMode = "dataset" | "campaign-dashboard" | "map" | "kanban" | "schedule" | "tickets";
+
+export type TicketPriority = "P1-Critical" | "P2-High" | "P3-Medium" | "P4-Low";
+
+export interface TicketView {
+  charger: AssessmentCharger;
+  ticketPriority: TicketPriority;
+  ageDays: number;
+  recommendation: string;
+}
