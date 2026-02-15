@@ -94,6 +94,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const [estimateFilter, setEstimateFilter] = useState<string>("all");
   const [dispatchFilter, setDispatchFilter] = useState<string>("all");
   const [amFilter, setAmFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [estimateStatuses, setEstimateStatuses] = useState<Record<string, "none" | "draft" | "sent">>({});
   const [accountManagers, setAccountManagers] = useState<Record<string, string>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -162,6 +163,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
     });
     else if (statusFilter === "solved") result = result.filter(t => !!t.charger.ticketSolvedDate);
     if (priorityFilter !== "all") result = result.filter(t => t.ticketPriority === priorityFilter);
+    if (typeFilter !== "all") result = result.filter(t => t.charger.assetRecordType === typeFilter);
     if (stateFilter !== "all") result = result.filter(t => t.charger.state === stateFilter);
     if (swiFilter !== "all") {
       result = result.filter(t => {
@@ -195,7 +197,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
       );
     }
     return result;
-  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, swiFilter, estimateFilter, dispatchFilter, amFilter, getSWIMatch, estimateStatuses, accountManagers]);
+  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, typeFilter, swiFilter, estimateFilter, dispatchFilter, amFilter, getSWIMatch, estimateStatuses, accountManagers]);
 
   const stats = useMemo(() => {
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
@@ -309,6 +311,15 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
             <SelectItem value="P2-High">P2 — High</SelectItem>
             <SelectItem value="P3-Medium">P3 — Medium</SelectItem>
             <SelectItem value="P4-Low">P4 — Low</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-[130px]"><SelectValue placeholder="Type" /></SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="DCFC">DCFC</SelectItem>
+            <SelectItem value="L2">L2</SelectItem>
+            <SelectItem value="HPCD">HPCD</SelectItem>
           </SelectContent>
         </Select>
         <Select value={stateFilter} onValueChange={setStateFilter}>
