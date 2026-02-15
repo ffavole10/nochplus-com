@@ -53,8 +53,8 @@ function buildEmailHtml(est: EstimatePayload): string {
   <div style="max-width:680px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
     
     <!-- Header -->
-    <div style="background:#25b3a5;padding:28px 32px;text-align:center;">
-      <img src="https://qmlhfmqizxxafkuxxynr.supabase.co/storage/v1/object/public/email-assets/noch-power-logo-white.png" alt="Noch Power" style="height:40px;" />
+    <div style="background:#1e293b;padding:28px 32px;text-align:center;">
+      <img src="https://qmlhfmqizxxafkuxxynr.supabase.co/storage/v1/object/public/email-assets/noch-power-logo-white-2.png" alt="Noch Power" style="height:40px;" />
     </div>
     
     <!-- Title -->
