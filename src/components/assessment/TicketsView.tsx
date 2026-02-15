@@ -155,6 +155,11 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const filtered = useMemo(() => {
     let result = ticketChargers;
     if (statusFilter === "open") result = result.filter(t => t.charger.hasOpenTicket);
+    else if (statusFilter === "in_progress") result = result.filter(t => {
+      const hasSWI = !!getSWIMatch(t.charger.id);
+      const hasEst = (estimateStatuses[t.charger.id] || "none") !== "none";
+      return t.charger.hasOpenTicket && (hasSWI || hasEst);
+    });
     else if (statusFilter === "solved") result = result.filter(t => !!t.charger.ticketSolvedDate);
     if (priorityFilter !== "all") result = result.filter(t => t.ticketPriority === priorityFilter);
     if (stateFilter !== "all") result = result.filter(t => t.charger.state === stateFilter);
@@ -276,6 +281,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
           <SelectContent className="bg-popover z-50">
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="open">Open</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
             <SelectItem value="solved">Solved</SelectItem>
           </SelectContent>
         </Select>
