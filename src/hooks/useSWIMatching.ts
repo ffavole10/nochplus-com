@@ -9,19 +9,22 @@ export interface EnrichedSWIMatch extends SWIMatchResult {
   manual_override?: boolean;
 }
 
+export interface BatchProgress {
+  current: number;
+  total: number;
+  status: "idle" | "running" | "done";
+}
+
 export function useSWIMatching() {
   const [matches, setMatches] = useState<Record<string, EnrichedSWIMatch>>({});
   const [matchingIds, setMatchingIds] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [batchProgress, setBatchProgress] = useState<BatchProgress>({ current: 0, total: 0, status: "idle" });
 
   const matchTicket = useCallback(async (charger: AssessmentCharger) => {
     const id = charger.id;
     setMatchingIds((prev) => new Set(prev).add(id));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
+    setErrors((prev) => { const next = { ...prev }; delete next[id]; return next; });
 
     try {
       const ticket = {
@@ -48,14 +51,9 @@ export function useSWIMatching() {
         const swiDocument = result.matched_swi_id
           ? SWI_CATALOG.find((s) => s.id === result.matched_swi_id)
           : undefined;
-
         setMatches((prev) => ({
           ...prev,
-          [id]: {
-            ...result,
-            swiDocument,
-            matchedAt: new Date().toISOString(),
-          },
+          [id]: { ...result, swiDocument, matchedAt: new Date().toISOString() },
         }));
       }
     } catch (err) {
@@ -64,32 +62,32 @@ export function useSWIMatching() {
         [id]: err instanceof Error ? err.message : "Unknown error",
       }));
     } finally {
-      setMatchingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
+      setMatchingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
     }
   }, []);
 
+  const matchBatch = useCallback(async (chargers: AssessmentCharger[]) => {
+    setBatchProgress({ current: 0, total: chargers.length, status: "running" });
+    for (let i = 0; i < chargers.length; i++) {
+      await matchTicket(chargers[i]);
+      setBatchProgress({ current: i + 1, total: chargers.length, status: "running" });
+      if (i < chargers.length - 1) {
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    }
+    setBatchProgress((prev) => ({ ...prev, status: "done" }));
+  }, [matchTicket]);
+
+  const getSWIMatch = useCallback((id: string): EnrichedSWIMatch | undefined => matches[id], [matches]);
+
+  const isMatching = useCallback((id: string): boolean => matchingIds.has(id), [matchingIds]);
+
+  const getError = useCallback((id: string): string | undefined => errors[id], [errors]);
+
   const clearMatch = useCallback((id: string) => {
-    setMatches((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
+    setMatches((prev) => { const next = { ...prev }; delete next[id]; return next; });
+    setErrors((prev) => { const next = { ...prev }; delete next[id]; return next; });
   }, []);
 
-  return {
-    matches,
-    matchingIds,
-    errors,
-    matchTicket,
-    clearMatch,
-  };
+  return { matches, matchingIds, errors, matchTicket, matchBatch, getSWIMatch, isMatching, getError, clearMatch, batchProgress };
 }
