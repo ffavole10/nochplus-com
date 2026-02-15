@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Send, CheckCircle } from "lucide-react";
+import { FileText, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AssessmentCharger } from "@/types/assessment";
 import { EnrichedSWIMatch } from "@/hooks/useSWIMatching";
-import { DispatchModal } from "./DispatchModal";
+import { EstimateBuilder } from "./EstimateBuilder";
 
 interface DispatchButtonProps {
   ticket: AssessmentCharger;
@@ -18,7 +18,7 @@ export function DispatchButton({ ticket, swiMatch }: DispatchButtonProps) {
     return (
       <div className="flex items-center gap-2 text-sm text-optimal font-medium py-2">
         <CheckCircle className="h-4 w-4" />
-        <span>Sent to Jobber</span>
+        <span>Dispatched</span>
       </div>
     );
   }
@@ -31,10 +31,10 @@ export function DispatchButton({ ticket, swiMatch }: DispatchButtonProps) {
         onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
         className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
       >
-        <Send className="h-3.5 w-3.5" />
-        Dispatch to Jobber
+        <FileText className="h-3.5 w-3.5" />
+        Create Estimate
       </Button>
-      <DispatchModal
+      <EstimateBuilder
         open={isOpen}
         onOpenChange={setIsOpen}
         ticket={ticket}
