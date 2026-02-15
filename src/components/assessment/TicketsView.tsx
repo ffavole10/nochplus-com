@@ -102,7 +102,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
     try { const s = localStorage.getItem("ticket-account-managers"); return s ? JSON.parse(s) : {}; } catch { return {}; }
   });
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const { matchTicket, matchBatch, getSWIMatch, isMatching, getError, clearMatch, batchProgress } = useSWIMatching();
+  const { matchTicket, matchBatch, getSWIMatch, getSWIMatches, isMatching, getError, clearMatch, addManualMatch, removeMatch, batchProgress } = useSWIMatching();
 
   useEffect(() => {
     localStorage.setItem("ticket-estimate-statuses", JSON.stringify(estimateStatuses));
@@ -503,11 +503,12 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                       <div className="mt-3">
                         <SWIAttachment
                           ticket={charger}
-                          swiMatch={getSWIMatch(charger.id)}
+                          swiMatches={getSWIMatches(charger.id)}
                           isMatching={isMatching(charger.id)}
                           error={getError(charger.id)}
                           onMatch={matchTicket}
-                          onClear={clearMatch}
+                          onRemove={removeMatch}
+                          onAddManual={addManualMatch}
                         />
                         {(() => {
                           const swiMatch = getSWIMatch(charger.id);
