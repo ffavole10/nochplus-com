@@ -11,9 +11,10 @@ interface DispatchButtonProps {
   ticket: AssessmentCharger;
   swiMatch: EnrichedSWIMatch;
   onEstimateStatusChange?: (status: EstimateStatus) => void;
+  onAccountManagerChange?: (name: string) => void;
 }
 
-export function DispatchButton({ ticket, swiMatch, onEstimateStatusChange }: DispatchButtonProps) {
+export function DispatchButton({ ticket, swiMatch, onEstimateStatusChange, onAccountManagerChange }: DispatchButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dispatched, setDispatched] = useState(false);
   const [estimateStatus, setEstimateStatus] = useState<EstimateStatus>("none");
@@ -55,6 +56,7 @@ export function DispatchButton({ ticket, swiMatch, onEstimateStatusChange }: Dis
           swiMatch={swiMatch}
           onDispatched={() => { setDispatched(true); setIsOpen(false); onEstimateStatusChange?.("sent"); }}
           onStatusChange={handleEstimateStatusChange}
+          onAccountManagerChange={onAccountManagerChange}
           initialStatus="sent"
         />
       </div>
@@ -88,6 +90,7 @@ export function DispatchButton({ ticket, swiMatch, onEstimateStatusChange }: Dis
         swiMatch={swiMatch}
         onDispatched={() => { setDispatched(true); setIsOpen(false); onEstimateStatusChange?.("sent"); }}
         onStatusChange={handleEstimateStatusChange}
+        onAccountManagerChange={onAccountManagerChange}
       />
     </>
   );

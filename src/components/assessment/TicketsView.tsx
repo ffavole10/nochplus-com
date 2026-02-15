@@ -91,6 +91,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const [statusFilter, setStatusFilter] = useState<string>("open");
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [estimateStatuses, setEstimateStatuses] = useState<Record<string, "none" | "draft" | "sent">>({});
+  const [accountManagers, setAccountManagers] = useState<Record<string, string>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { matchTicket, matchBatch, getSWIMatch, isMatching, getError, clearMatch, batchProgress } = useSWIMatching();
 
@@ -337,6 +338,11 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                               </span>
                             ));
                           })()}
+                          {accountManagers[charger.id] && (
+                            <span className="text-xs text-muted-foreground font-medium ml-1 truncate max-w-[120px]">
+                              {accountManagers[charger.id]}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground flex-wrap">
@@ -403,6 +409,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                               ticket={charger}
                               swiMatch={swiMatch}
                               onEstimateStatusChange={(s) => setEstimateStatuses(prev => ({ ...prev, [charger.id]: s }))}
+                              onAccountManagerChange={(name) => setAccountManagers(prev => ({ ...prev, [charger.id]: name }))}
                             />
                           ) : null;
                         })()}

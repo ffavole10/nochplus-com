@@ -235,6 +235,7 @@ interface EstimateBuilderProps {
   swiMatch: EnrichedSWIMatch;
   onDispatched: () => void;
   onStatusChange?: (status: "none" | "draft" | "sent") => void;
+  onAccountManagerChange?: (name: string) => void;
   initialStatus?: "draft" | "sent";
 }
 
@@ -245,6 +246,7 @@ export function EstimateBuilder({
   swiMatch,
   onDispatched,
   onStatusChange,
+  onAccountManagerChange,
   initialStatus,
 }: EstimateBuilderProps) {
   const [lineItems, setLineItems] = useState<EstimateLineItem[]>(() =>
@@ -590,7 +592,11 @@ export function EstimateBuilder({
           {/* ── E. Account Manager ────────────────────────── */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-2">Account Manager</h3>
-            <Select value={accountManager} onValueChange={setAccountManager}>
+            <Select value={accountManager} onValueChange={(val) => {
+              setAccountManager(val);
+              const am = ACCOUNT_MANAGERS.find(a => a.email === val);
+              if (am) onAccountManagerChange?.(am.name);
+            }}>
               <SelectTrigger className="max-w-sm">
                 <SelectValue placeholder="Select Account Manager" />
               </SelectTrigger>
