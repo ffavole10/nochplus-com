@@ -17,20 +17,32 @@ export interface BatchProgress {
 }
 
 const SWI_MATCHES_KEY = "swi-matches";
-const ESTIMATE_STATUSES_KEY = "ticket-estimate-statuses";
-const ACCOUNT_MANAGERS_KEY = "ticket-account-managers";
 
 function loadFromStorage<T>(key: string, fallback: T): T {
   try {
     const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
+    if (!stored) return fallback;
+    const parsed = JSON.parse(stored);
+    // Migrate old single-match format to array format
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const migrated: Record<string, EnrichedSWIMatch[]> = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        if (Array.isArray(v)) {
+          migrated[k] = v as EnrichedSWIMatch[];
+        } else if (v && typeof v === "object" && "confidence" in (v as any)) {
+          migrated[k] = [v as EnrichedSWIMatch];
+        }
+      }
+      return migrated as T;
+    }
+    return parsed;
   } catch {
     return fallback;
   }
 }
 
 export function useSWIMatching() {
-  const [matches, setMatches] = useState<Record<string, EnrichedSWIMatch>>(() => loadFromStorage(SWI_MATCHES_KEY, {}));
+  const [matches, setMatches] = useState<Record<string, EnrichedSWIMatch[]>>(() => loadFromStorage(SWI_MATCHES_KEY, {}));
   const [matchingIds, setMatchingIds] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [batchProgress, setBatchProgress] = useState<BatchProgress>({ current: 0, total: 0, status: "idle", isRunning: false });
@@ -69,10 +81,15 @@ export function useSWIMatching() {
         const swiDocument = result.matched_swi_id
           ? SWI_CATALOG.find((s) => s.id === result.matched_swi_id)
           : undefined;
-        setMatches((prev) => ({
-          ...prev,
-          [id]: { ...result, swiDocument, matchedAt: new Date().toISOString() },
-        }));
+        const enriched: EnrichedSWIMatch = { ...result, swiDocument, matchedAt: new Date().toISOString() };
+        setMatches((prev) => {
+          const existing = prev[id] || [];
+          // Don't add duplicate SWI
+          if (enriched.matched_swi_id && existing.some(m => m.matched_swi_id === enriched.matched_swi_id)) {
+            return prev;
+          }
+          return { ...prev, [id]: [...existing, enriched] };
+        });
       }
     } catch (err) {
       setErrors((prev) => ({
@@ -96,7 +113,46 @@ export function useSWIMatching() {
     setBatchProgress((prev) => ({ ...prev, status: "done", isRunning: false }));
   }, [matchTicket]);
 
-  const getSWIMatch = useCallback((id: string): EnrichedSWIMatch | undefined => matches[id], [matches]);
+  const addManualMatch = useCallback((ticketId: string, swiDoc: SWIDocument) => {
+    const enriched: EnrichedSWIMatch = {
+      matched_swi_id: swiDoc.id,
+      confidence: 100,
+      reasoning: "Manually selected by user",
+      key_factors: ["Manual selection"],
+      estimated_service_time: swiDoc.estimatedTime,
+      required_parts: swiDoc.requiredParts,
+      alternative_swis: [],
+      warnings: [],
+      timestamp: new Date().toISOString(),
+      model_used: "manual",
+      swiDocument: swiDoc,
+      matchedAt: new Date().toISOString(),
+      manual_override: true,
+    };
+    setMatches((prev) => {
+      const existing = prev[ticketId] || [];
+      if (existing.some(m => m.matched_swi_id === swiDoc.id)) return prev;
+      return { ...prev, [ticketId]: [...existing, enriched] };
+    });
+  }, []);
+
+  const removeMatch = useCallback((ticketId: string, swiId: string) => {
+    setMatches((prev) => {
+      const existing = prev[ticketId] || [];
+      const filtered = existing.filter(m => m.matched_swi_id !== swiId);
+      if (filtered.length === 0) {
+        const next = { ...prev };
+        delete next[ticketId];
+        return next;
+      }
+      return { ...prev, [ticketId]: filtered };
+    });
+  }, []);
+
+  const getSWIMatches = useCallback((id: string): EnrichedSWIMatch[] => matches[id] || [], [matches]);
+
+  // Backward compat: return first match
+  const getSWIMatch = useCallback((id: string): EnrichedSWIMatch | undefined => (matches[id] || [])[0], [matches]);
 
   const isMatching = useCallback((id: string): boolean => matchingIds.has(id), [matchingIds]);
 
@@ -107,5 +163,5 @@ export function useSWIMatching() {
     setErrors((prev) => { const next = { ...prev }; delete next[id]; return next; });
   }, []);
 
-  return { matches, matchingIds, errors, matchTicket, matchBatch, getSWIMatch, isMatching, getError, clearMatch, batchProgress };
+  return { matches, matchingIds, errors, matchTicket, matchBatch, getSWIMatch, getSWIMatches, isMatching, getError, clearMatch, addManualMatch, removeMatch, batchProgress };
 }
