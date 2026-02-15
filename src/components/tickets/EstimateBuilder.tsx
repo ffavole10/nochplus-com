@@ -233,6 +233,7 @@ interface EstimateBuilderProps {
   ticket: AssessmentCharger;
   swiMatch: EnrichedSWIMatch;
   onDispatched: () => void;
+  onStatusChange?: (status: "none" | "draft" | "sent") => void;
 }
 
 export function EstimateBuilder({
@@ -241,6 +242,7 @@ export function EstimateBuilder({
   ticket,
   swiMatch,
   onDispatched,
+  onStatusChange,
 }: EstimateBuilderProps) {
   const [lineItems, setLineItems] = useState<EstimateLineItem[]>(() =>
     buildDefaultItems(ticket, swiMatch)
@@ -322,6 +324,7 @@ export function EstimateBuilder({
 
   const handleSaveDraft = () => {
     setStatus("draft");
+    onStatusChange?.("draft");
     toast.success("Estimate saved as draft");
   };
 
@@ -331,6 +334,7 @@ export function EstimateBuilder({
       return;
     }
     setStatus("sent");
+    onStatusChange?.("sent");
     toast.success(`Estimate sent to ${customerEmail}`);
   };
 

@@ -8,7 +8,7 @@ import { AssessmentCharger, TicketPriority } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
 import { useSWIMatching } from "@/hooks/useSWIMatching";
 import { SWIAttachment } from "@/components/assessment/SWIAttachment";
-import { DispatchButton } from "@/components/tickets/DispatchButton";
+import { DispatchButton, EstimateStatus } from "@/components/tickets/DispatchButton";
 
 interface TicketsViewProps {
   chargers: AssessmentCharger[];
@@ -90,6 +90,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("open");
   const [stateFilter, setStateFilter] = useState<string>("all");
+  const [estimateStatuses, setEstimateStatuses] = useState<Record<string, "none" | "draft" | "sent">>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { matchTicket, matchBatch, getSWIMatch, isMatching, getError, clearMatch, batchProgress } = useSWIMatching();
 
@@ -314,25 +315,25 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                         <div className="flex items-center gap-1 ml-1">
                           {(() => {
                             const hasSWI = !!getSWIMatch(charger.id);
-                            // For now estimate/dispatch are not persisted, so false
-                            const hasEstimate = false;
+                            const estStatus = estimateStatuses[charger.id] || "none";
+                            const hasEstimate = estStatus === "sent";
                             const hasDispatch = false;
                             const milestones = [
-                              { label: "SWI", done: hasSWI },
-                              { label: "EST", done: hasEstimate },
-                              { label: "DSP", done: hasDispatch },
+                              { label: "S", done: hasSWI },
+                              { label: "E", done: hasEstimate },
+                              { label: "D", done: hasDispatch },
                             ];
                             return milestones.map((m) => (
                               <span
                                 key={m.label}
-                                title={m.label}
+                                title={m.label === "S" ? "SWI" : m.label === "E" ? "Estimate" : "Dispatch"}
                                 className={`inline-flex items-center justify-center rounded-full text-[9px] font-bold w-5 h-5 border ${
                                   m.done
                                     ? "bg-optimal text-optimal-foreground border-optimal"
                                     : "bg-muted text-muted-foreground border-border"
                                 }`}
                               >
-                                {m.done ? "✓" : m.label.charAt(0)}
+                                {m.label}
                               </span>
                             ));
                           })()}
@@ -398,7 +399,11 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                         {(() => {
                           const swiMatch = getSWIMatch(charger.id);
                           return swiMatch && swiMatch.confidence >= 70 ? (
-                            <DispatchButton ticket={charger} swiMatch={swiMatch} />
+                            <DispatchButton
+                              ticket={charger}
+                              swiMatch={swiMatch}
+                              onEstimateStatusChange={(s) => setEstimateStatuses(prev => ({ ...prev, [charger.id]: s }))}
+                            />
                           ) : null;
                         })()}
                       </div>
