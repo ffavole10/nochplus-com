@@ -324,7 +324,9 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                         </span>
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          {[charger.city, charger.state].filter(Boolean).join(", ") || "No location"}
+                          {[charger.city, charger.state].filter(Boolean).length > 0
+                            ? [charger.city, charger.state].filter(Boolean).join(", ")
+                            : charger.address || "No location"}
                         </span>
                         {charger.ticketGroup && <span>Group: {charger.ticketGroup}</span>}
                       </div>

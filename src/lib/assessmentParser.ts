@@ -84,6 +84,31 @@ export function getPriorityColor(level: PriorityLevel): string {
   }
 }
 
+// Try to extract city, state, zip from a full address string
+// e.g. "5868 Approach Rd, Jacksonville, FL 32221"
+function parseAddressParts(address: string): { city: string; state: string; zip: string } {
+  const result = { city: "", state: "", zip: "" };
+  if (!address) return result;
+  const parts = address.split(",").map(p => p.trim());
+  if (parts.length >= 2) {
+    // Last part usually contains state and zip, e.g. "FL 32221"
+    const lastPart = parts[parts.length - 1].trim();
+    const stateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5}(-\d{4})?)$/);
+    if (stateZipMatch) {
+      result.state = stateZipMatch[1];
+      result.zip = stateZipMatch[2];
+      result.city = parts[parts.length - 2]?.trim() || "";
+    } else if (/^[A-Z]{2}$/.test(lastPart)) {
+      result.state = lastPart;
+      result.city = parts[parts.length - 2]?.trim() || "";
+    } else {
+      // Maybe "City, State ZIP" as last two parts
+      result.city = parts.length >= 3 ? parts[parts.length - 2]?.trim() : "";
+    }
+  }
+  return result;
+}
+
 // Column name mapping (flexible matching)
 const COLUMN_MAP: Record<string, string> = {
   "asset name": "assetName",
@@ -93,8 +118,10 @@ const COLUMN_MAP: Record<string, string> = {
   "full address": "address",
   "city": "city",
   "state": "state",
+  "state/province": "state",
   "zip": "zip",
   "zip/postal code": "zip",
+  "postal code": "zip",
   "status": "status",
   "online status": "status",
   "in-service date": "inServiceDate",
@@ -171,14 +198,30 @@ export function parseAssessmentExcel(file: File): Promise<AssessmentCharger[]> {
           const lat = mapped.latitude ? parseFloat(String(mapped.latitude)) : null;
           const lng = mapped.longitude ? parseFloat(String(mapped.longitude)) : null;
 
+          const rawAddress = String(mapped.address || "");
+          const rawCity = String(mapped.city || "");
+          const rawState = String(mapped.state || "");
+          const rawZip = String(mapped.zip || "");
+
+          // If city/state are missing, try to parse from address
+          let city = rawCity;
+          let state = rawState;
+          let zip = rawZip;
+          if (!city || !state) {
+            const parsed = parseAddressParts(rawAddress);
+            if (!city) city = parsed.city;
+            if (!state) state = parsed.state;
+            if (!zip) zip = parsed.zip;
+          }
+
           return {
             id: `charger-${idx + 1}`,
             assetName: String(mapped.assetName || mapped.evseId || `Charger-${idx + 1}`),
             assetRecordType,
-            address: String(mapped.address || ""),
-            city: String(mapped.city || ""),
-            state: String(mapped.state || ""),
-            zip: String(mapped.zip || ""),
+            address: rawAddress,
+            city,
+            state,
+            zip,
             status,
             inServiceDate,
             partsWarrantyEndDate,
