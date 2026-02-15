@@ -2,13 +2,14 @@ import { useState } from "react";
 import { FileText, Check, AlertCircle, Loader2, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { SWIMatchResult } from "@/services/swiScanner";
 import { SWIDocument } from "@/data/swiCatalog";
+import { AssessmentCharger } from "@/types/assessment";
 
 interface SWIAttachmentProps {
-  ticket: { id?: string; ticketId?: string | null };
+  ticket: AssessmentCharger;
   swiMatch?: (SWIMatchResult & { swiDocument?: SWIDocument; manual_override?: boolean; matchedAt?: string }) | null;
   isMatching?: boolean;
   error?: string | null;
-  onMatch: (ticket: SWIAttachmentProps["ticket"]) => void;
+  onMatch: (ticket: AssessmentCharger) => void;
   onClear: (ticketId: string) => void;
 }
 
