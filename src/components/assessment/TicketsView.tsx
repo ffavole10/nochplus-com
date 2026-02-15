@@ -90,6 +90,10 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("open");
   const [stateFilter, setStateFilter] = useState<string>("all");
+  const [swiFilter, setSwiFilter] = useState<string>("all");
+  const [estimateFilter, setEstimateFilter] = useState<string>("all");
+  const [dispatchFilter, setDispatchFilter] = useState<string>("all");
+  const [amFilter, setAmFilter] = useState<string>("all");
   const [estimateStatuses, setEstimateStatuses] = useState<Record<string, "none" | "draft" | "sent">>({});
   const [accountManagers, setAccountManagers] = useState<Record<string, string>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -143,12 +147,39 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
     return Array.from(states).sort();
   }, [ticketChargers]);
 
+  const uniqueAMs = useMemo(() => {
+    const names = new Set(Object.values(accountManagers).filter(Boolean));
+    return Array.from(names).sort();
+  }, [accountManagers]);
+
   const filtered = useMemo(() => {
     let result = ticketChargers;
     if (statusFilter === "open") result = result.filter(t => t.charger.hasOpenTicket);
     else if (statusFilter === "solved") result = result.filter(t => !!t.charger.ticketSolvedDate);
     if (priorityFilter !== "all") result = result.filter(t => t.ticketPriority === priorityFilter);
     if (stateFilter !== "all") result = result.filter(t => t.charger.state === stateFilter);
+    if (swiFilter !== "all") {
+      result = result.filter(t => {
+        const hasSWI = !!getSWIMatch(t.charger.id);
+        return swiFilter === "matched" ? hasSWI : !hasSWI;
+      });
+    }
+    if (estimateFilter !== "all") {
+      result = result.filter(t => {
+        const estStatus = estimateStatuses[t.charger.id] || "none";
+        return estimateFilter === estStatus;
+      });
+    }
+    if (dispatchFilter !== "all") {
+      // Currently dispatch is always false, but filter infrastructure is ready
+      result = result.filter(t => {
+        const dispatched = false; // placeholder
+        return dispatchFilter === "dispatched" ? dispatched : !dispatched;
+      });
+    }
+    if (amFilter !== "all") {
+      result = result.filter(t => accountManagers[t.charger.id] === amFilter);
+    }
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(t =>
@@ -159,7 +190,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
       );
     }
     return result;
-  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter]);
+  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, swiFilter, estimateFilter, dispatchFilter, amFilter, getSWIMatch, estimateStatuses, accountManagers]);
 
   const stats = useMemo(() => {
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
@@ -252,6 +283,40 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
             <SelectItem value="all">All States</SelectItem>
             {uniqueStates.map(s => (
               <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={swiFilter} onValueChange={setSwiFilter}>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder="SWI" /></SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="all">All SWI</SelectItem>
+            <SelectItem value="matched">Matched</SelectItem>
+            <SelectItem value="unmatched">Unmatched</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={estimateFilter} onValueChange={setEstimateFilter}>
+          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Estimate" /></SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="all">All Estimates</SelectItem>
+            <SelectItem value="none">No Estimate</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="sent">Sent</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={dispatchFilter} onValueChange={setDispatchFilter}>
+          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Dispatch" /></SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="all">All Dispatch</SelectItem>
+            <SelectItem value="dispatched">Dispatched</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={amFilter} onValueChange={setAmFilter}>
+          <SelectTrigger className="w-[170px]"><SelectValue placeholder="Acct Manager" /></SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="all">All Managers</SelectItem>
+            {uniqueAMs.map(am => (
+              <SelectItem key={am} value={am}>{am}</SelectItem>
             ))}
           </SelectContent>
         </Select>
