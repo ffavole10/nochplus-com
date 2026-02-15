@@ -34,9 +34,29 @@ export function DispatchButton({ ticket, swiMatch, onEstimateStatusChange }: Dis
 
   if (estimateStatus === "sent") {
     return (
-      <div className="flex items-center gap-2 text-sm text-optimal font-medium py-2">
-        <Send className="h-4 w-4" />
-        <span>Estimate Sent</span>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-sm text-optimal font-medium py-2">
+          <Send className="h-4 w-4" />
+          <span>Estimate Sent</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
+          className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+        >
+          <Edit className="h-3.5 w-3.5" />
+          Review / Edit
+        </Button>
+        <EstimateBuilder
+          open={isOpen}
+          onOpenChange={setIsOpen}
+          ticket={ticket}
+          swiMatch={swiMatch}
+          onDispatched={() => { setDispatched(true); setIsOpen(false); onEstimateStatusChange?.("sent"); }}
+          onStatusChange={handleEstimateStatusChange}
+          initialStatus="sent"
+        />
       </div>
     );
   }
