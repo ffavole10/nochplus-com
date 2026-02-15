@@ -194,25 +194,37 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
 
   const stats = useMemo(() => {
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
+    const inProgress = open.filter(t => {
+      const hasSWI = !!getSWIMatch(t.charger.id);
+      const hasEst = (estimateStatuses[t.charger.id] || "none") !== "none";
+      return hasSWI || hasEst;
+    });
     return {
       total: ticketChargers.length,
       open: open.length,
+      inProgress: inProgress.length,
       solved: ticketChargers.length - open.length,
       p1: open.filter(t => t.ticketPriority === "P1-Critical").length,
       p2: open.filter(t => t.ticketPriority === "P2-High").length,
       p3: open.filter(t => t.ticketPriority === "P3-Medium").length,
       p4: open.filter(t => t.ticketPriority === "P4-Low").length,
     };
-  }, [ticketChargers]);
+  }, [ticketChargers, getSWIMatch, estimateStatuses]);
 
   return (
     <div className="space-y-6 p-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         <Card className="metric-card border-l-4 border-l-critical">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Open Tickets</p>
             <p className="text-2xl font-bold text-critical">{stats.open}</p>
+          </CardContent>
+        </Card>
+        <Card className="metric-card border-l-4 border-l-secondary">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">In Progress</p>
+            <p className="text-2xl font-bold text-secondary">{stats.inProgress}</p>
           </CardContent>
         </Card>
         <Card className="metric-card border-l-4 border-l-optimal">
