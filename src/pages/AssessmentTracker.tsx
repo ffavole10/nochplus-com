@@ -167,6 +167,7 @@ const AssessmentTracker = () => {
         onUploadFile={handleUploadFile}
         onSelectCampaigns={handleSelectCampaignsWrapped}
         onCreateNew={handleCreateNew}
+        onDeleteCampaign={deleteCampaign}
       />
     );
   }

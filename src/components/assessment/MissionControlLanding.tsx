@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Upload, FileSpreadsheet, LayoutDashboard, FolderOpen, CheckSquare, Rocket, Clock, CheckCircle2, CalendarClock } from "lucide-react";
+import { Upload, FileSpreadsheet, LayoutDashboard, FolderOpen, CheckSquare, Rocket, Clock, CheckCircle2, CalendarClock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Campaign } from "@/types/campaign";
 import { SampleCampaign, sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import nochLogo from "@/assets/noch-logo-white.png";
@@ -15,6 +16,7 @@ interface MissionControlLandingProps {
   onUploadFile: (file: File) => void;
   onSelectCampaigns: (campaignIds: string[]) => void;
   onCreateNew: () => void;
+  onDeleteCampaign?: (id: string) => void;
 }
 
 function getStatusIcon(status: string) {
@@ -45,7 +47,7 @@ function getStatusBadge(status: string) {
   return variants[status] || "bg-muted text-muted-foreground";
 }
 
-export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaigns, onCreateNew }: MissionControlLandingProps) {
+export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaigns, onCreateNew, onDeleteCampaign }: MissionControlLandingProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Merge user campaigns + sample campaigns into a unified list
@@ -215,6 +217,40 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
                             <span>{campaign.startDate} → {campaign.endDate}</span>
                           </div>
                         </div>
+                        {campaign.source === "user" && onDeleteCampaign && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{campaign.name}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={() => {
+                                    setSelectedIds(prev => prev.filter(x => x !== campaign.id));
+                                    onDeleteCampaign(campaign.id);
+                                  }}
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                       </CardContent>
                     </Card>
                   );
