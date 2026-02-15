@@ -14,10 +14,14 @@ interface DispatchButtonProps {
 }
 
 const TECHNICIANS = [
-  { id: "tech-1", name: "John Martinez" },
-  { id: "tech-2", name: "Sarah Chen" },
-  { id: "tech-3", name: "Mike Thompson" },
-  { id: "tech-4", name: "Lisa Rodriguez" },
+  { id: "tech-1", name: "Andrew Scansen" },
+  { id: "tech-2", name: "Angelo DelleDonne" },
+  { id: "tech-3", name: "Ethan Melvin" },
+  { id: "tech-4", name: "Holden Evans" },
+  { id: "tech-5", name: "Josiah Wallace" },
+  { id: "tech-6", name: "Liam Stever" },
+  { id: "tech-7", name: "Soren Sheffer" },
+  { id: "tech-8", name: "Tyler Canzoneri" },
 ];
 
 export function DispatchButton({ ticket, swiMatch }: DispatchButtonProps) {
