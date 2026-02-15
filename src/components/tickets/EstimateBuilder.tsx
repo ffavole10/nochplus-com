@@ -439,8 +439,8 @@ export function EstimateBuilder({
               <FileText className="h-5 w-5 text-primary" />
               {status === "sent" ? "Review Estimate" : "Create Estimate"}
             </DialogTitle>
-            <div className="bg-foreground rounded-md px-3 py-1.5">
-              <img src="/images/noch-logo.png" alt="Noch" className="h-6 object-contain" />
+            <div className="bg-[#1e293b] rounded-md px-4 py-2">
+              <img src="/images/noch-power-logo-white-2.png" alt="Noch" className="h-6 object-contain" />
             </div>
           </div>
           <DialogDescription>
