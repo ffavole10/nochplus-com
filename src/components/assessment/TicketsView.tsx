@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp } from "lucide-react";
 import { AssessmentCharger, TicketPriority } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
+import { useSWIMatching } from "@/hooks/useSWIMatching";
+import { SWIAttachment } from "@/components/assessment/SWIAttachment";
 
 interface TicketsViewProps {
   chargers: AssessmentCharger[];
@@ -87,6 +89,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("open");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { matchTicket, matchBatch, getSWIMatch, isMatching, getError, clearMatch, batchProgress } = useSWIMatching();
 
   const ticketChargers = useMemo(() => {
     return chargers
@@ -212,6 +215,23 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground">{filtered.length} tickets</span>
+        <button
+          onClick={() => matchBatch(filtered.map(t => t.charger))}
+          disabled={batchProgress.isRunning}
+          className="px-4 py-2 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg hover:opacity-90 transition-all shadow-md font-medium flex items-center gap-2 text-sm"
+        >
+          {batchProgress.isRunning ? (
+            <>
+              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+              <span>Matching {batchProgress.current}/{batchProgress.total}...</span>
+            </>
+          ) : (
+            <>
+              <span>🤖</span>
+              <span>Match All SWIs</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Ticket List */}
@@ -298,6 +318,16 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                           <p className="text-muted-foreground text-xs">Reporting Source</p>
                           <p className="font-medium">{charger.ticketReportingSource || "—"}</p>
                         </div>
+                      </div>
+                      <div className="mt-3">
+                        <SWIAttachment
+                          ticket={charger}
+                          swiMatch={getSWIMatch(charger.id)}
+                          isMatching={isMatching(charger.id)}
+                          error={getError(charger.id)}
+                          onMatch={matchTicket}
+                          onClear={clearMatch}
+                        />
                       </div>
                       <button
                         className="text-sm text-primary hover:underline"
