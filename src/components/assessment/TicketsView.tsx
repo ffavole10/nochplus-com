@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, Brain } from "lucide-react";
 import { AssessmentCharger, TicketPriority } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
 import { useSWIMatching } from "@/hooks/useSWIMatching";
@@ -218,48 +218,73 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
 
   return (
     <div className="space-y-6 p-6">
+      {/* Search & Match All row */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search tickets..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <button
+          onClick={() => matchBatch(filtered.map(t => t.charger))}
+          disabled={batchProgress.isRunning}
+          className="px-4 py-2 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg hover:opacity-90 transition-all shadow-md font-medium flex items-center gap-2 text-sm ml-auto"
+        >
+          {batchProgress.isRunning ? (
+            <>
+              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+              <span>Matching {batchProgress.current}/{batchProgress.total}...</span>
+            </>
+          ) : (
+            <>
+              <Brain className="h-4 w-4" />
+              <span>Match All SWIs</span>
+            </>
+          )}
+        </button>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <Card className="metric-card border-l-4 border-l-critical">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Open Tickets</p>
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">Open Tickets</p>
             <p className="text-2xl font-bold text-critical">{stats.open}</p>
           </CardContent>
         </Card>
         <Card className="metric-card border-l-4 border-l-secondary">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">In Progress</p>
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">In Progress</p>
             <p className="text-2xl font-bold text-secondary">{stats.inProgress}</p>
           </CardContent>
         </Card>
         <Card className="metric-card border-l-4 border-l-optimal">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Solved</p>
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">Solved</p>
             <p className="text-2xl font-bold text-optimal">{stats.solved}</p>
-            <p className="text-xs text-muted-foreground text-center mt-1">of {stats.total}</p>
+            <p className="text-xs text-muted-foreground mt-1">of {stats.total}</p>
           </CardContent>
         </Card>
         <Card className={`metric-card border-l-4 border-l-critical ${stats.p1 > 0 ? "bg-critical/5" : ""}`}>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">P1 Critical</p>
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">P1 Critical</p>
             <p className="text-2xl font-bold text-critical">{stats.p1}</p>
           </CardContent>
         </Card>
         <Card className="metric-card border-l-4 border-l-orange-500">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">P2 High</p>
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">P2 High</p>
             <p className="text-2xl font-bold text-orange-500">{stats.p2}</p>
           </CardContent>
         </Card>
         <Card className="metric-card border-l-4 border-l-yellow-500">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">P3 Medium</p>
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">P3 Medium</p>
             <p className="text-2xl font-bold text-yellow-500">{stats.p3}</p>
           </CardContent>
         </Card>
         <Card className="metric-card border-l-4 border-l-optimal">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">P4 Low</p>
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">P4 Low</p>
             <p className="text-2xl font-bold text-optimal">{stats.p4}</p>
           </CardContent>
         </Card>
@@ -267,10 +292,6 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search tickets..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-        </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
           <SelectContent className="bg-popover z-50">
@@ -333,23 +354,6 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
             ))}
           </SelectContent>
         </Select>
-        <button
-          onClick={() => matchBatch(filtered.map(t => t.charger))}
-          disabled={batchProgress.isRunning}
-          className="px-4 py-2 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg hover:opacity-90 transition-all shadow-md font-medium flex items-center gap-2 text-sm"
-        >
-          {batchProgress.isRunning ? (
-            <>
-              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-              <span>Matching {batchProgress.current}/{batchProgress.total}...</span>
-            </>
-          ) : (
-            <>
-              <span>🤖</span>
-              <span>Match All SWIs</span>
-            </>
-          )}
-        </button>
       </div>
 
       {/* Ticket List */}
