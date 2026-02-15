@@ -13,13 +13,14 @@ export interface BatchProgress {
   current: number;
   total: number;
   status: "idle" | "running" | "done";
+  isRunning: boolean;
 }
 
 export function useSWIMatching() {
   const [matches, setMatches] = useState<Record<string, EnrichedSWIMatch>>({});
   const [matchingIds, setMatchingIds] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [batchProgress, setBatchProgress] = useState<BatchProgress>({ current: 0, total: 0, status: "idle" });
+  const [batchProgress, setBatchProgress] = useState<BatchProgress>({ current: 0, total: 0, status: "idle", isRunning: false });
 
   const matchTicket = useCallback(async (charger: AssessmentCharger) => {
     const id = charger.id;
@@ -67,15 +68,15 @@ export function useSWIMatching() {
   }, []);
 
   const matchBatch = useCallback(async (chargers: AssessmentCharger[]) => {
-    setBatchProgress({ current: 0, total: chargers.length, status: "running" });
+    setBatchProgress({ current: 0, total: chargers.length, status: "running", isRunning: true });
     for (let i = 0; i < chargers.length; i++) {
       await matchTicket(chargers[i]);
-      setBatchProgress({ current: i + 1, total: chargers.length, status: "running" });
+      setBatchProgress({ current: i + 1, total: chargers.length, status: "running", isRunning: true });
       if (i < chargers.length - 1) {
         await new Promise((r) => setTimeout(r, 500));
       }
     }
-    setBatchProgress((prev) => ({ ...prev, status: "done" }));
+    setBatchProgress((prev) => ({ ...prev, status: "done", isRunning: false }));
   }, [matchTicket]);
 
   const getSWIMatch = useCallback((id: string): EnrichedSWIMatch | undefined => matches[id], [matches]);
