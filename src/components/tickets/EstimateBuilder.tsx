@@ -34,6 +34,7 @@ import { AssessmentCharger } from "@/types/assessment";
 import { EnrichedSWIMatch } from "@/hooks/useSWIMatching";
 import { DispatchModal } from "./DispatchModal";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -259,6 +260,7 @@ export function EstimateBuilder({
   const [status, setStatus] = useState<Estimate["status"]>(initialStatus || "draft");
   const [newCategory, setNewCategory] = useState<EstimateLineItem["category"]>("labor");
   const [showDispatch, setShowDispatch] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   /* Derived totals */
   const subtotal = useMemo(
@@ -330,14 +332,53 @@ export function EstimateBuilder({
     toast.success("Estimate saved as draft");
   };
 
-  const handleSendEstimate = () => {
+  const handleSendEstimate = async () => {
     if (!customerEmail.trim()) {
       toast.error("Please enter a customer email address");
       return;
     }
-    setStatus("sent");
-    onStatusChange?.("sent");
-    toast.success(`Estimate sent to ${customerEmail}`);
+    setIsSending(true);
+    try {
+      const location = [ticket.address, ticket.city, ticket.state, ticket.zip]
+        .filter(Boolean)
+        .join(", ");
+
+      const { data, error } = await supabase.functions.invoke("send-estimate", {
+        body: {
+          to: customerEmail.trim(),
+          ticketId: ticket.ticketId || ticket.id,
+          accountName: ticket.accountName || "—",
+          chargerName: ticket.assetName,
+          chargerType: ticket.assetRecordType,
+          location: location || "—",
+          swiTitle: swiMatch.swiDocument?.title || swiMatch.matched_swi_id || "General Service",
+          lineItems: lineItems.map(li => ({
+            description: li.description,
+            qty: li.qty,
+            unit: li.unit,
+            rate: li.rate,
+            amount: li.amount,
+            category: li.category,
+          })),
+          subtotal,
+          tax,
+          total,
+          notes,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setStatus("sent");
+      onStatusChange?.("sent");
+      toast.success(`Estimate sent to ${customerEmail}`);
+    } catch (err: any) {
+      console.error("Send estimate error:", err);
+      toast.error(`Failed to send estimate: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleSkipDispatch = () => {
@@ -569,10 +610,15 @@ export function EstimateBuilder({
               variant="outline"
               size="sm"
               onClick={handleSendEstimate}
+              disabled={isSending}
               className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
             >
-              <Send className="h-3.5 w-3.5" />
-              {status === "sent" ? "Resend Estimate" : "Send Estimate"}
+              {isSending ? (
+                <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="h-3.5 w-3.5" />
+              )}
+              {isSending ? "Sending..." : status === "sent" ? "Resend Estimate" : "Send Estimate"}
             </Button>
             {status === "sent" ? (
               <Button
