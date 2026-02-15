@@ -234,6 +234,7 @@ interface EstimateBuilderProps {
   swiMatch: EnrichedSWIMatch;
   onDispatched: () => void;
   onStatusChange?: (status: "none" | "draft" | "sent") => void;
+  initialStatus?: "draft" | "sent";
 }
 
 export function EstimateBuilder({
@@ -243,6 +244,7 @@ export function EstimateBuilder({
   swiMatch,
   onDispatched,
   onStatusChange,
+  initialStatus,
 }: EstimateBuilderProps) {
   const [lineItems, setLineItems] = useState<EstimateLineItem[]>(() =>
     buildDefaultItems(ticket, swiMatch)
@@ -254,7 +256,7 @@ export function EstimateBuilder({
   );
   const [customerEmail, setCustomerEmail] = useState("");
   const [taxRate, setTaxRate] = useState(TAX_RATE);
-  const [status, setStatus] = useState<Estimate["status"]>("draft");
+  const [status, setStatus] = useState<Estimate["status"]>(initialStatus || "draft");
   const [newCategory, setNewCategory] = useState<EstimateLineItem["category"]>("labor");
   const [showDispatch, setShowDispatch] = useState(false);
 
@@ -374,10 +376,15 @@ export function EstimateBuilder({
       >
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-          <DialogTitle className="flex items-center gap-3 text-lg">
-            <FileText className="h-5 w-5 text-primary" />
-            Create Estimate
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-3 text-lg">
+              <FileText className="h-5 w-5 text-primary" />
+              {status === "sent" ? "Review Estimate" : "Create Estimate"}
+            </DialogTitle>
+            <div className="bg-foreground rounded-md px-3 py-1.5">
+              <img src="/images/noch-logo.png" alt="Noch" className="h-6 object-contain" />
+            </div>
+          </div>
           <DialogDescription>
             Build a service estimate for this ticket, then send or dispatch.
           </DialogDescription>
@@ -565,7 +572,7 @@ export function EstimateBuilder({
               className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
             >
               <Send className="h-3.5 w-3.5" />
-              Send Estimate
+              {status === "sent" ? "Resend Estimate" : "Send Estimate"}
             </Button>
             {status === "sent" ? (
               <Button
