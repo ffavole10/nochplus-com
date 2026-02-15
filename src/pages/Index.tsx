@@ -90,6 +90,13 @@ const Index = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
+        <DashboardSidebar
+          onFiltersChange={handleFiltersChange}
+          filteredCount={filteredChargers.length}
+          totalCount={allChargers.length}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
         <div className="flex-1 flex flex-col min-h-screen">
           <DashboardHeader />
 
@@ -192,13 +199,6 @@ const Index = () => {
             </div>
           </footer>
         </div>
-        <DashboardSidebar
-          onFiltersChange={handleFiltersChange}
-          filteredCount={filteredChargers.length}
-          totalCount={allChargers.length}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
       </div>
     </SidebarProvider>
   );
