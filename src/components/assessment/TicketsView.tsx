@@ -219,7 +219,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   return (
     <div className="space-y-6 p-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <Card className="metric-card border-l-4 border-l-critical">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Open Tickets</p>
@@ -236,12 +236,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Solved</p>
             <p className="text-2xl font-bold text-optimal">{stats.solved}</p>
-          </CardContent>
-        </Card>
-        <Card className="metric-card">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Total</p>
-            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+            <p className="text-xs text-muted-foreground text-center mt-1">of {stats.total}</p>
           </CardContent>
         </Card>
         <Card className={`metric-card border-l-4 border-l-critical ${stats.p1 > 0 ? "bg-critical/5" : ""}`}>
