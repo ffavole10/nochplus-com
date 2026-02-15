@@ -8,6 +8,7 @@ import { AssessmentCharger, TicketPriority } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
 import { useSWIMatching } from "@/hooks/useSWIMatching";
 import { SWIAttachment } from "@/components/assessment/SWIAttachment";
+import { DispatchButton } from "@/components/tickets/DispatchButton";
 
 interface TicketsViewProps {
   chargers: AssessmentCharger[];
@@ -328,6 +329,12 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                           onMatch={matchTicket}
                           onClear={clearMatch}
                         />
+                        {(() => {
+                          const swiMatch = getSWIMatch(charger.id);
+                          return swiMatch && swiMatch.confidence >= 70 ? (
+                            <DispatchButton ticket={charger} swiMatch={swiMatch} />
+                          ) : null;
+                        })()}
                       </div>
                       <button
                         className="text-sm text-primary hover:underline"
