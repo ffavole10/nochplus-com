@@ -115,7 +115,9 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   }, [chargers]);
 
   const uniqueStates = useMemo(() => {
-    const states = new Set(chargers.map(c => c.state).filter(Boolean));
+    const allStates = chargers.map(c => c.state);
+    console.log("[TicketsView] chargers count:", chargers.length, "sample states:", allStates.slice(0, 10), "sample addresses:", chargers.slice(0, 3).map(c => ({ city: c.city, state: c.state, address: c.address })));
+    const states = new Set(allStates.filter(Boolean));
     return Array.from(states).sort();
   }, [chargers]);
 
