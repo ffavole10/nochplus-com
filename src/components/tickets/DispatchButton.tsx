@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send, Clock, User, MapPin, Wrench, CheckCircle, X } from "lucide-react";
+import { Send, Clock, User, MapPin, Wrench, CheckCircle, X, ClipboardCopy, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,35 @@ export function DispatchButton({ ticket, swiMatch }: DispatchButtonProps) {
   const estimatedTime = swiMatch.swiDocument?.estimatedTime || swiMatch.estimated_service_time || "1-2 hours";
   const requiredParts = swiMatch.swiDocument?.requiredParts || swiMatch.required_parts || [];
   const swiTitle = swiMatch.swiDocument?.title || swiMatch.matched_swi_id || "General Service";
+
+  const buildDescription = () => {
+    const techName = TECHNICIANS.find((t) => t.id === selectedTech)?.name || "Unassigned";
+    const parts = requiredParts.length > 0 ? `Required Parts: ${requiredParts.join(", ")}` : "";
+    return [
+      `Service Work Order`,
+      `Asset: ${ticket.assetName}`,
+      `Location: ${ticket.city || "Unknown"}, ${ticket.state || ""}`,
+      `SWI: ${swiTitle}`,
+      `Est. Time: ${estimatedTime}`,
+      `Technician: ${techName}`,
+      parts,
+      notes ? `Notes: ${notes}` : "",
+    ].filter(Boolean).join("\n");
+  };
+
+  const handleCopyAndOpenJobber = async () => {
+    if (!selectedTech) {
+      toast.error("Please assign a technician");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(buildDescription());
+      toast.success("Description copied! Paste it into the Jobber form");
+      window.open("https://secure.getjobber.com/work_requests/new", "_blank");
+    } catch {
+      toast.error("Failed to copy to clipboard");
+    }
+  };
 
   const handleDispatch = async () => {
     if (!selectedTech) {
@@ -162,15 +191,28 @@ export function DispatchButton({ ticket, swiMatch }: DispatchButtonProps) {
         </div>
       </div>
 
+      {/* Instructions */}
+      <div className="border border-border rounded-md p-3 bg-muted/30 space-y-1 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground text-sm">How to dispatch:</p>
+        <p><span className="font-semibold text-foreground">Step 1:</span> Click "Copy & Open Jobber" to copy the description and open the form</p>
+        <p><span className="font-semibold text-foreground">Step 2:</span> Paste the description into the Jobber service request form</p>
+        <p><span className="font-semibold text-foreground">Step 3:</span> Submit the form in Jobber</p>
+      </div>
+
       <div className="flex justify-end gap-2 pt-1">
         <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>Cancel</Button>
+        <Button variant="outline" size="sm" onClick={handleCopyAndOpenJobber} className="gap-2">
+          <ClipboardCopy className="h-3.5 w-3.5" />
+          Copy & Open Jobber
+          <ExternalLink className="h-3 w-3" />
+        </Button>
         <Button size="sm" onClick={handleDispatch} disabled={isDispatching} className="gap-2">
           {isDispatching ? (
             <div className="w-3.5 h-3.5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
           ) : (
             <Send className="h-3.5 w-3.5" />
           )}
-          {isDispatching ? "Dispatching..." : "Dispatch"}
+          {isDispatching ? "Dispatching..." : "Confirm & Dispatch"}
         </Button>
       </div>
     </div>
