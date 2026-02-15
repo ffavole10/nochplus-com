@@ -89,6 +89,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const [search, setSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("open");
+  const [stateFilter, setStateFilter] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { matchTicket, matchBatch, getSWIMatch, isMatching, getError, clearMatch, batchProgress } = useSWIMatching();
 
@@ -113,11 +114,17 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
       });
   }, [chargers]);
 
+  const uniqueStates = useMemo(() => {
+    const states = new Set(ticketChargers.map(t => t.charger.state).filter(Boolean));
+    return Array.from(states).sort();
+  }, [ticketChargers]);
+
   const filtered = useMemo(() => {
     let result = ticketChargers;
     if (statusFilter === "open") result = result.filter(t => t.charger.hasOpenTicket);
     else if (statusFilter === "solved") result = result.filter(t => !!t.charger.ticketSolvedDate);
     if (priorityFilter !== "all") result = result.filter(t => t.ticketPriority === priorityFilter);
+    if (stateFilter !== "all") result = result.filter(t => t.charger.state === stateFilter);
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(t =>
@@ -128,7 +135,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
       );
     }
     return result;
-  }, [ticketChargers, search, priorityFilter, statusFilter]);
+  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter]);
 
   const stats = useMemo(() => {
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
@@ -215,7 +222,15 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
             <SelectItem value="P4-Low">P4 — Low</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-sm text-muted-foreground">{filtered.length} tickets</span>
+        <Select value={stateFilter} onValueChange={setStateFilter}>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder="State" /></SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="all">All States</SelectItem>
+            {uniqueStates.map(s => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <button
           onClick={() => matchBatch(filtered.map(t => t.charger))}
           disabled={batchProgress.isRunning}
