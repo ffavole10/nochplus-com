@@ -170,7 +170,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Noch Campaigns <onboarding@resend.dev>",
+        from: "Noch Campaigns <noreply@nochpower.com>",
         to: [payload.to],
         subject: `Service Estimate — Ticket #${payload.ticketId} | ${payload.chargerName}`,
         html,
