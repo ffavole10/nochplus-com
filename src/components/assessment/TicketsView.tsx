@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -93,17 +93,39 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { matchTicket, matchBatch, getSWIMatch, isMatching, getError, clearMatch, batchProgress } = useSWIMatching();
 
+  // Helper: extract city/state from address if not set
+  const enrichLocation = useCallback((c: AssessmentCharger) => {
+    if (c.city && c.state) return c;
+    // Try parsing from address: "123 Main St, Jacksonville, FL 32221"
+    const parts = c.address?.split(",").map(p => p.trim()) || [];
+    let city = c.city;
+    let state = c.state;
+    if (parts.length >= 2) {
+      const last = parts[parts.length - 1];
+      const match = last.match(/^([A-Z]{2})\s+\d{5}/);
+      if (match) {
+        if (!state) state = match[1];
+        if (!city) city = parts[parts.length - 2] || "";
+      } else if (/^[A-Z]{2}$/.test(last)) {
+        if (!state) state = last;
+        if (!city) city = parts[parts.length - 2] || "";
+      }
+    }
+    return { ...c, city, state };
+  }, []);
+
   const ticketChargers = useMemo(() => {
     return chargers
       .filter(c => c.ticketId || c.ticketCreatedDate)
       .map(c => {
-        const priority = classifyTicketPriority(c);
-        const ageDays = c.ticketCreatedDate ? differenceInDays(new Date(), new Date(c.ticketCreatedDate)) : 0;
+        const enriched = enrichLocation(c);
+        const priority = classifyTicketPriority(enriched);
+        const ageDays = enriched.ticketCreatedDate ? differenceInDays(new Date(), new Date(enriched.ticketCreatedDate)) : 0;
         return {
-          charger: c,
+          charger: enriched,
           ticketPriority: priority,
           ageDays,
-          recommendation: generateRecommendation(c, priority, ageDays),
+          recommendation: generateRecommendation(enriched, priority, ageDays),
         };
       })
       .sort((a, b) => {
@@ -112,14 +134,12 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
         if (pDiff !== 0) return pDiff;
         return b.ageDays - a.ageDays;
       });
-  }, [chargers]);
+  }, [chargers, enrichLocation]);
 
   const uniqueStates = useMemo(() => {
-    const allStates = chargers.map(c => c.state);
-    console.log("[TicketsView] chargers count:", chargers.length, "sample states:", allStates.slice(0, 10), "sample addresses:", chargers.slice(0, 3).map(c => ({ city: c.city, state: c.state, address: c.address })));
-    const states = new Set(allStates.filter(Boolean));
+    const states = new Set(ticketChargers.map(t => t.charger.state).filter(Boolean));
     return Array.from(states).sort();
-  }, [chargers]);
+  }, [ticketChargers]);
 
   const filtered = useMemo(() => {
     let result = ticketChargers;
