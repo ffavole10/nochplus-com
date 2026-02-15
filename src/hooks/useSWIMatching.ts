@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { AssessmentCharger } from "@/types/assessment";
 import { matchSWIWithClaude, SWIMatchResult } from "@/services/swiScanner";
 import { SWI_CATALOG, SWIDocument } from "@/data/swiCatalog";
@@ -16,11 +16,28 @@ export interface BatchProgress {
   isRunning: boolean;
 }
 
+const SWI_MATCHES_KEY = "swi-matches";
+const ESTIMATE_STATUSES_KEY = "ticket-estimate-statuses";
+const ACCOUNT_MANAGERS_KEY = "ticket-account-managers";
+
+function loadFromStorage<T>(key: string, fallback: T): T {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function useSWIMatching() {
-  const [matches, setMatches] = useState<Record<string, EnrichedSWIMatch>>({});
+  const [matches, setMatches] = useState<Record<string, EnrichedSWIMatch>>(() => loadFromStorage(SWI_MATCHES_KEY, {}));
   const [matchingIds, setMatchingIds] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [batchProgress, setBatchProgress] = useState<BatchProgress>({ current: 0, total: 0, status: "idle", isRunning: false });
+
+  useEffect(() => {
+    localStorage.setItem(SWI_MATCHES_KEY, JSON.stringify(matches));
+  }, [matches]);
 
   const matchTicket = useCallback(async (charger: AssessmentCharger) => {
     const id = charger.id;

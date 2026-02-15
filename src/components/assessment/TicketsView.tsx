@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -95,10 +95,22 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const [dispatchFilter, setDispatchFilter] = useState<string>("all");
   const [amFilter, setAmFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [estimateStatuses, setEstimateStatuses] = useState<Record<string, "none" | "draft" | "sent">>({});
-  const [accountManagers, setAccountManagers] = useState<Record<string, string>>({});
+  const [estimateStatuses, setEstimateStatuses] = useState<Record<string, "none" | "draft" | "sent">>(() => {
+    try { const s = localStorage.getItem("ticket-estimate-statuses"); return s ? JSON.parse(s) : {}; } catch { return {}; }
+  });
+  const [accountManagers, setAccountManagers] = useState<Record<string, string>>(() => {
+    try { const s = localStorage.getItem("ticket-account-managers"); return s ? JSON.parse(s) : {}; } catch { return {}; }
+  });
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { matchTicket, matchBatch, getSWIMatch, isMatching, getError, clearMatch, batchProgress } = useSWIMatching();
+
+  useEffect(() => {
+    localStorage.setItem("ticket-estimate-statuses", JSON.stringify(estimateStatuses));
+  }, [estimateStatuses]);
+
+  useEffect(() => {
+    localStorage.setItem("ticket-account-managers", JSON.stringify(accountManagers));
+  }, [accountManagers]);
 
   // Helper: extract city/state from address if not set
   const enrichLocation = useCallback((c: AssessmentCharger) => {
