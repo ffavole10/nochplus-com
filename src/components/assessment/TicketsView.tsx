@@ -115,9 +115,9 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   }, [chargers]);
 
   const uniqueStates = useMemo(() => {
-    const states = new Set(ticketChargers.map(t => t.charger.state).filter(Boolean));
+    const states = new Set(chargers.map(c => c.state).filter(Boolean));
     return Array.from(states).sort();
-  }, [ticketChargers]);
+  }, [chargers]);
 
   const filtered = useMemo(() => {
     let result = ticketChargers;
@@ -288,6 +288,33 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                         {charger.ticketId && (
                           <Badge variant="outline" className="text-xs">#{charger.ticketId}</Badge>
                         )}
+                        {/* Milestone tracker */}
+                        <div className="flex items-center gap-1 ml-1">
+                          {(() => {
+                            const hasSWI = !!getSWIMatch(charger.id);
+                            // For now estimate/dispatch are not persisted, so false
+                            const hasEstimate = false;
+                            const hasDispatch = false;
+                            const milestones = [
+                              { label: "SWI", done: hasSWI },
+                              { label: "EST", done: hasEstimate },
+                              { label: "DSP", done: hasDispatch },
+                            ];
+                            return milestones.map((m) => (
+                              <span
+                                key={m.label}
+                                title={m.label}
+                                className={`inline-flex items-center justify-center rounded-full text-[9px] font-bold w-5 h-5 border ${
+                                  m.done
+                                    ? "bg-optimal text-optimal-foreground border-optimal"
+                                    : "bg-muted text-muted-foreground border-border"
+                                }`}
+                              >
+                                {m.done ? "✓" : m.label.charAt(0)}
+                              </span>
+                            ));
+                          })()}
+                        </div>
                       </div>
                       <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground flex-wrap">
                         {charger.ticketSubject && <span className="truncate max-w-xs">{charger.ticketSubject}</span>}
@@ -297,7 +324,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                         </span>
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          {charger.city || "Unknown"}, {charger.state || ""}
+                          {[charger.city, charger.state].filter(Boolean).join(", ") || "No location"}
                         </span>
                         {charger.ticketGroup && <span>Group: {charger.ticketGroup}</span>}
                       </div>
