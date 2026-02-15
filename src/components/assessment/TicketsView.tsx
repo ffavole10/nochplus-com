@@ -227,7 +227,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
         <button
           onClick={() => matchBatch(filtered.map(t => t.charger))}
           disabled={batchProgress.isRunning}
-          className="px-4 py-2 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg hover:opacity-90 transition-all shadow-md font-medium flex items-center gap-2 text-sm ml-auto"
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all shadow-md font-medium flex items-center gap-2 text-sm ml-auto"
         >
           {batchProgress.isRunning ? (
             <>
