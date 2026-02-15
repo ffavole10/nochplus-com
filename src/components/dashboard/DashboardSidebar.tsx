@@ -184,7 +184,7 @@ export function DashboardSidebar({
   };
 
   return (
-    <Sidebar className="border-r border-border/50">
+    <Sidebar side="right" className="border-l border-border/50">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         {/* Noch Logo - left aligned, smaller */}
         {!isCollapsed && (
