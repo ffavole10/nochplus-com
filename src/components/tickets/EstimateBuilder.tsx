@@ -256,11 +256,20 @@ export function EstimateBuilder({
       ""
   );
   const [customerEmail, setCustomerEmail] = useState("");
+  const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
+  const [newAdditionalEmail, setNewAdditionalEmail] = useState("");
+  const [accountManager, setAccountManager] = useState("");
   const [taxRate, setTaxRate] = useState(TAX_RATE);
   const [status, setStatus] = useState<Estimate["status"]>(initialStatus || "draft");
   const [newCategory, setNewCategory] = useState<EstimateLineItem["category"]>("labor");
   const [showDispatch, setShowDispatch] = useState(false);
   const [isSending, setIsSending] = useState(false);
+
+  const ACCOUNT_MANAGERS = [
+    { name: "Joe Rose", email: "jrose@nochpower.com" },
+    { name: "Caitlin Romano", email: "cromano@nochpower.com" },
+    { name: "Fernando Favole", email: "ffavole@nochpower.com" },
+  ];
 
   /* Derived totals */
   const subtotal = useMemo(
@@ -343,9 +352,15 @@ export function EstimateBuilder({
         .filter(Boolean)
         .join(", ");
 
+      const ccEmails = [
+        ...(accountManager ? [accountManager] : []),
+        ...additionalEmails.filter((e) => e.includes("@")),
+      ];
+
       const { data, error } = await supabase.functions.invoke("send-estimate", {
         body: {
           to: customerEmail.trim(),
+          cc: ccEmails.length > 0 ? ccEmails : undefined,
           ticketId: ticket.ticketId || ticket.id,
           accountName: ticket.accountName || "—",
           chargerName: ticket.assetName,
@@ -572,7 +587,25 @@ export function EstimateBuilder({
             />
           </div>
 
-          {/* ── E. Customer Email ─────────────────────────── */}
+          {/* ── E. Account Manager ────────────────────────── */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-2">Account Manager</h3>
+            <Select value={accountManager} onValueChange={setAccountManager}>
+              <SelectTrigger className="max-w-sm">
+                <SelectValue placeholder="Select Account Manager" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                {ACCOUNT_MANAGERS.map((am) => (
+                  <SelectItem key={am.email} value={am.email}>
+                    {am.name} ({am.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">A copy of the estimate will be sent to the selected manager.</p>
+          </div>
+
+          {/* ── F. Customer Email ─────────────────────────── */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-2">Customer Email</h3>
             <div className="flex items-center gap-3">
@@ -589,6 +622,54 @@ export function EstimateBuilder({
                 </span>
               )}
             </div>
+          </div>
+
+          {/* ── G. Additional Recipients ──────────────────── */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-2">Additional Recipients</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <Input
+                type="email"
+                placeholder="other@company.com"
+                value={newAdditionalEmail}
+                onChange={(e) => setNewAdditionalEmail(e.target.value)}
+                className="max-w-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newAdditionalEmail.includes("@")) {
+                    e.preventDefault();
+                    setAdditionalEmails((prev) => [...prev, newAdditionalEmail.trim()]);
+                    setNewAdditionalEmail("");
+                  }
+                }}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!newAdditionalEmail.includes("@")}
+                onClick={() => {
+                  setAdditionalEmails((prev) => [...prev, newAdditionalEmail.trim()]);
+                  setNewAdditionalEmail("");
+                }}
+                className="gap-1.5"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add
+              </Button>
+            </div>
+            {additionalEmails.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {additionalEmails.map((email, idx) => (
+                  <Badge key={idx} variant="secondary" className="gap-1 text-xs">
+                    {email}
+                    <button
+                      onClick={() => setAdditionalEmails((prev) => prev.filter((_, i) => i !== idx))}
+                      className="ml-1 hover:text-destructive"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

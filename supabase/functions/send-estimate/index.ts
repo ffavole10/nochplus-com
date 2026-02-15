@@ -17,6 +17,7 @@ interface LineItem {
 
 interface EstimatePayload {
   to: string;
+  cc?: string[];
   ticketId: string;
   accountName: string;
   chargerName: string;
@@ -53,8 +54,7 @@ function buildEmailHtml(est: EstimatePayload): string {
     
     <!-- Header -->
     <div style="background:#1a1a2e;padding:28px 32px;text-align:center;">
-      <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;letter-spacing:0.5px;">NOCH</h1>
-      <p style="color:#94a3b8;margin:6px 0 0;font-size:13px;">EV Charging Maintenance & Service</p>
+      <img src="https://qmlhfmqizxxafkuxxynr.supabase.co/storage/v1/object/public/email-assets/noch-power-logo.png" alt="Noch Power" style="height:40px;" />
     </div>
     
     <!-- Title -->
@@ -163,18 +163,24 @@ serve(async (req) => {
 
     const html = buildEmailHtml(payload);
 
+    const emailPayload: Record<string, unknown> = {
+      from: "Noch Campaigns <noreply@nochcampaigns.com>",
+      to: [payload.to],
+      subject: `Service Estimate — Ticket #${payload.ticketId} | ${payload.chargerName}`,
+      html,
+    };
+
+    if (payload.cc && payload.cc.length > 0) {
+      emailPayload.cc = payload.cc;
+    }
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: "Noch Campaigns <noreply@nochcampaigns.com>",
-        to: [payload.to],
-        subject: `Service Estimate — Ticket #${payload.ticketId} | ${payload.chargerName}`,
-        html,
-      }),
+      body: JSON.stringify(emailPayload),
     });
 
     const data = await res.json();
