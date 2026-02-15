@@ -452,7 +452,9 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                       </div>
                       <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground flex-wrap">
                         {charger.ticketSubject && <span className="truncate max-w-xs">{charger.ticketSubject}</span>}
-                        <span className="flex items-center gap-1">
+                        <span className={`flex items-center gap-1 font-medium ${
+                          ageDays <= 30 ? "text-optimal" : ageDays <= 45 ? "text-degraded" : "text-critical"
+                        }`}>
                           <Clock className="h-3 w-3" />
                           {ageDays}d old
                         </span>
