@@ -39,6 +39,11 @@ const AssessmentTracker = () => {
   const [isLandingDismissed, setIsLandingDismissed] = useState(false);
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
   const [selectedState, setSelectedState] = useState("");
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [phaseFilter, setPhaseFilter] = useState<string>("all");
+  const [ticketFilter, setTicketFilter] = useState<string>("all");
 
   // Derive unique states from chargers
   const stateOptions = useMemo(() => {
@@ -46,11 +51,28 @@ const AssessmentTracker = () => {
     return states;
   }, [chargers]);
 
-  // Filter chargers by selected state
+  // Filter chargers by all shared filters
   const filteredChargers = useMemo(() => {
-    if (!selectedState) return chargers;
-    return chargers.filter(c => c.state === selectedState);
-  }, [chargers, selectedState]);
+    let result = [...chargers];
+    if (selectedState) result = result.filter(c => c.state === selectedState);
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(c =>
+        c.assetName.toLowerCase().includes(q) ||
+        c.accountName.toLowerCase().includes(q) ||
+        c.address.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q) ||
+        c.evseId.toLowerCase().includes(q)
+      );
+    }
+    if (typeFilter !== "all") result = result.filter(c => c.assetRecordType === typeFilter);
+    if (priorityFilter !== "all") result = result.filter(c => c.priorityLevel === priorityFilter);
+    if (phaseFilter !== "all") result = result.filter(c => c.phase === phaseFilter);
+    if (ticketFilter === "open") result = result.filter(c => c.hasOpenTicket);
+    else if (ticketFilter === "solved") result = result.filter(c => c.ticketSolvedDate !== null);
+    else if (ticketFilter === "any") result = result.filter(c => c.ticketId || c.ticketCreatedDate);
+    return result;
+  }, [chargers, selectedState, search, typeFilter, priorityFilter, phaseFilter, ticketFilter]);
 
   // Build campaign options for the header dropdown
   const campaignOptions = useMemo(() => {
@@ -189,7 +211,23 @@ const AssessmentTracker = () => {
       )}
 
       {view === "dataset" && (
-        <AssessmentDashboard chargers={filteredChargers} onSelectCharger={handleSelectCharger} stateOptions={stateOptions} selectedState={selectedState} onStateChange={setSelectedState} />
+        <AssessmentDashboard
+          chargers={filteredChargers}
+          onSelectCharger={handleSelectCharger}
+          stateOptions={stateOptions}
+          selectedState={selectedState}
+          onStateChange={setSelectedState}
+          search={search}
+          onSearchChange={setSearch}
+          typeFilter={typeFilter}
+          onTypeFilterChange={setTypeFilter}
+          priorityFilter={priorityFilter}
+          onPriorityFilterChange={setPriorityFilter}
+          phaseFilter={phaseFilter}
+          onPhaseFilterChange={setPhaseFilter}
+          ticketFilter={ticketFilter}
+          onTicketFilterChange={setTicketFilter}
+        />
       )}
       {view === "map" && (
         <AssessmentMap

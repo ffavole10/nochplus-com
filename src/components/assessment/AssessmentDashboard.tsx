@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Search, Filter, MapPin, Calendar, AlertTriangle, Zap, Plug, Ticket } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +13,16 @@ interface AssessmentDashboardProps {
   stateOptions?: string[];
   selectedState?: string;
   onStateChange?: (state: string) => void;
+  search: string;
+  onSearchChange: (value: string) => void;
+  typeFilter: string;
+  onTypeFilterChange: (value: string) => void;
+  priorityFilter: string;
+  onPriorityFilterChange: (value: string) => void;
+  phaseFilter: string;
+  onPhaseFilterChange: (value: string) => void;
+  ticketFilter: string;
+  onTicketFilterChange: (value: string) => void;
 }
 
 const TYPE_COLORS: Record<ChargerType, string> = {
@@ -28,36 +38,25 @@ const PRIORITY_BADGE: Record<PriorityLevel, string> = {
   Low: "bg-optimal text-optimal-foreground",
 };
 
-export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = [], selectedState, onStateChange }: AssessmentDashboardProps) {
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [phaseFilter, setPhaseFilter] = useState<string>("all");
-  const [ticketFilter, setTicketFilter] = useState<string>("all");
-
+export function AssessmentDashboard({
+  chargers,
+  onSelectCharger,
+  stateOptions = [],
+  selectedState,
+  onStateChange,
+  search,
+  onSearchChange,
+  typeFilter,
+  onTypeFilterChange,
+  priorityFilter,
+  onPriorityFilterChange,
+  phaseFilter,
+  onPhaseFilterChange,
+  ticketFilter,
+  onTicketFilterChange,
+}: AssessmentDashboardProps) {
   const stats = useMemo(() => getAssessmentStats(chargers), [chargers]);
   const ticketStats = useMemo(() => getTicketStats(chargers), [chargers]);
-
-  const filtered = useMemo(() => {
-    let result = [...chargers];
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(c =>
-        c.assetName.toLowerCase().includes(q) ||
-        c.accountName.toLowerCase().includes(q) ||
-        c.address.toLowerCase().includes(q) ||
-        c.city.toLowerCase().includes(q) ||
-        c.evseId.toLowerCase().includes(q)
-      );
-    }
-    if (typeFilter !== "all") result = result.filter(c => c.assetRecordType === typeFilter);
-    if (priorityFilter !== "all") result = result.filter(c => c.priorityLevel === priorityFilter);
-    if (phaseFilter !== "all") result = result.filter(c => c.phase === phaseFilter);
-    if (ticketFilter === "open") result = result.filter(c => c.hasOpenTicket);
-    else if (ticketFilter === "solved") result = result.filter(c => c.ticketSolvedDate !== null);
-    else if (ticketFilter === "any") result = result.filter(c => c.ticketId || c.ticketCreatedDate);
-    return result;
-  }, [chargers, search, typeFilter, priorityFilter, phaseFilter, ticketFilter]);
 
   return (
     <div className="space-y-6 p-6">
@@ -117,7 +116,7 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
           <Input
             placeholder="Search chargers..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -132,7 +131,7 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
             </SelectContent>
           </Select>
         )}
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
+        <Select value={typeFilter} onValueChange={onTypeFilterChange}>
           <SelectTrigger className="w-[130px]"><SelectValue placeholder="Type" /></SelectTrigger>
           <SelectContent className="bg-popover z-50">
             <SelectItem value="all">All Types</SelectItem>
@@ -141,7 +140,7 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
             <SelectItem value="HPCD">HPCD</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+        <Select value={priorityFilter} onValueChange={onPriorityFilterChange}>
           <SelectTrigger className="w-[140px]"><SelectValue placeholder="Priority" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Priorities</SelectItem>
@@ -151,7 +150,7 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
             <SelectItem value="Low">Low</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={phaseFilter} onValueChange={setPhaseFilter}>
+        <Select value={phaseFilter} onValueChange={onPhaseFilterChange}>
           <SelectTrigger className="w-[170px]"><SelectValue placeholder="Phase" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Phases</SelectItem>
@@ -162,7 +161,7 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
             <SelectItem value="Deferred">Deferred</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={ticketFilter} onValueChange={setTicketFilter}>
+        <Select value={ticketFilter} onValueChange={onTicketFilterChange}>
           <SelectTrigger className="w-[160px]"><Ticket className="h-3.5 w-3.5 mr-1" /><SelectValue placeholder="Tickets" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Tickets</SelectItem>
@@ -172,12 +171,12 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground">
-          {filtered.length} results
+          {chargers.length} results
         </span>
       </div>
 
       {/* Charger Cards */}
-      {filtered.length === 0 ? (
+      {chargers.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <AlertTriangle className="h-10 w-10 mx-auto mb-3 opacity-50" />
           <p className="font-medium">No chargers match your filters</p>
@@ -185,7 +184,7 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
         </div>
       ) : (
         <div className="grid gap-3">
-          {filtered.slice(0, 100).map(charger => (
+          {chargers.slice(0, 100).map(charger => (
             <Card
               key={charger.id}
               className="cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 group"
@@ -229,9 +228,9 @@ export function AssessmentDashboard({ chargers, onSelectCharger, stateOptions = 
               </CardContent>
             </Card>
           ))}
-          {filtered.length > 100 && (
+          {chargers.length > 100 && (
             <p className="text-center text-sm text-muted-foreground py-4">
-              Showing first 100 of {filtered.length} chargers. Use filters to narrow results.
+              Showing first 100 of {chargers.length} chargers. Use filters to narrow results.
             </p>
           )}
         </div>
