@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { User, LogOut, Pencil, Check, X, Search } from "lucide-react";
+import { User, LogOut, Pencil, Check, X, Search, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -24,6 +25,8 @@ export function PlatformHeader() {
   const location = useLocation();
   const { selectedCampaignName, setSelectedCampaignName } = useCampaignContext();
   const { filters, updateFilter } = useFilters();
+  const { state, toggleSidebar } = useSidebar();
+  const sidebarCollapsed = state === "collapsed";
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [initials, setInitials] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -72,6 +75,15 @@ export function PlatformHeader() {
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/50">
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
+          {sidebarCollapsed && (
+            <button
+              onClick={toggleSidebar}
+              className="h-6 w-6 rounded-full border border-border bg-background shadow-sm flex items-center justify-center hover:bg-accent transition-colors shrink-0"
+              aria-label="Open sidebar"
+            >
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          )}
           <h1 className="text-lg font-semibold text-foreground whitespace-nowrap">{pageTitle}</h1>
           {selectedCampaignName && (
             <>
