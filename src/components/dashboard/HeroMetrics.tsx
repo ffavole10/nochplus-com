@@ -24,7 +24,7 @@ export function HeroMetrics({
   ticketStats,
   onCriticalClick,
 }: HeroMetricsProps) {
-  const completionPercent = Math.round((totalServiced / totalChargers) * 100);
+  const completionPercent = totalChargers > 0 ? Math.round((totalServiced / totalChargers) * 100) : 0;
   
   const displayCritical = ticketStats ? ticketStats.p1 : criticalCount;
   const displayHigh = ticketStats ? ticketStats.p2 : highCount;
