@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Ticket, CalendarDays, Settings,
+  LayoutDashboard, Ticket, CalendarDays, Settings, Plus,
   AlertTriangle, ChevronDown, ChevronRight,
   MapPin, Zap, FileCheck, UserCog, Database } from
 "lucide-react";
+import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NavLink } from "@/components/NavLink";
@@ -52,7 +54,7 @@ const ACCOUNT_MANAGERS = [
 { value: "jrose", label: "Joe Rose" },
 { value: "cromano", label: "Caitlin Romano" },
 { value: "ffavole", label: "Fernando Favole" }];
-
+  const [newCampaignOpen, setNewCampaignOpen] = useState(false);
 
 const US_STATES = ["AZ", "CA", "FL", "GA", "IL", "NY", "TX", "VA", "WA"];
 
@@ -153,6 +155,21 @@ export function PlatformSidebar() {
               )}
               </SelectContent>
             </Select>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent gap-1.5"
+              onClick={() => setNewCampaignOpen(true)}>
+              <Plus className="h-4 w-4" />
+              New Campaign
+            </Button>
+            <NewCampaignModal
+              open={newCampaignOpen}
+              onOpenChange={setNewCampaignOpen}
+              onComplete={(data) => {
+                toast.success(`Campaign "${data.name}" created with ${data.chargers.length} chargers`);
+              }} />
 
 
           </div>
