@@ -96,7 +96,7 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
           <div className="h-6 w-px bg-border" />
           <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-primary" />
-            Mission Control
+            Tickets
           </h1>
         </div>
         <Link to="/">
