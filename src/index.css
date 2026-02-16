@@ -35,14 +35,27 @@
     --accent: 210 20% 96%;
     --accent-foreground: 222 47% 11%;
     
-    /* Status Colors - Critical, Degraded, Optimal */
+    /* Status Colors - 4 Levels: Critical, High, Medium, Low */
     --critical: 0 84% 60%;
     --critical-foreground: 0 0% 100%;
     --critical-muted: 0 84% 95%;
     
-    --degraded: 38 92% 50%;
+    --high: 25 95% 53%;
+    --high-foreground: 0 0% 100%;
+    --high-muted: 25 95% 95%;
+    
+    --medium: 45 93% 47%;
+    --medium-foreground: 0 0% 10%;
+    --medium-muted: 45 93% 95%;
+    
+    --low: 160 84% 39%;
+    --low-foreground: 0 0% 100%;
+    --low-muted: 160 84% 95%;
+    
+    /* Legacy aliases */
+    --degraded: 25 95% 53%;
     --degraded-foreground: 0 0% 100%;
-    --degraded-muted: 38 92% 95%;
+    --degraded-muted: 25 95% 95%;
     
     --optimal: 160 84% 39%;
     --optimal-foreground: 0 0% 100%;
@@ -104,9 +117,21 @@
     --critical-foreground: 0 0% 100%;
     --critical-muted: 0 60% 20%;
     
-    --degraded: 38 92% 50%;
+    --high: 25 95% 53%;
+    --high-foreground: 0 0% 100%;
+    --high-muted: 25 60% 20%;
+    
+    --medium: 45 93% 47%;
+    --medium-foreground: 0 0% 10%;
+    --medium-muted: 45 60% 20%;
+    
+    --low: 160 84% 39%;
+    --low-foreground: 0 0% 100%;
+    --low-muted: 160 60% 15%;
+    
+    --degraded: 25 95% 53%;
     --degraded-foreground: 0 0% 100%;
-    --degraded-muted: 38 60% 20%;
+    --degraded-muted: 25 60% 20%;
     
     --optimal: 160 84% 39%;
     --optimal-foreground: 0 0% 100%;

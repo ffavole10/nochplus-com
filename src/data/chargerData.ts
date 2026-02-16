@@ -1,4 +1,4 @@
-export type ChargerStatus = "Critical" | "Degraded" | "Optimal";
+export type ChargerStatus = "Critical" | "High" | "Medium" | "Low";
 
 export type ChargerCustomer = "evgo" | "evconnect" | "electrify_america" | "chargepoint";
 
@@ -65,7 +65,7 @@ export const sampleChargers: Charger[] = [
     zip: "92101",
     site_name: "Harbor View Parking Structure",
     serviced: 1,
-    status: "Degraded",
+    status: "High",
     customer: "evgo",
     summary: "Payment systems not functioning properly. RFID reader intermittently unresponsive - requires multiple tap attempts. Credit card reader accepts cards but fails to process 40% of transactions. Cloud connectivity drops every 2-3 hours requiring manual reset. Charging functionality operational when payment bypassed.",
     full_report_link: "https://drive.google.com/file/d/degraded-1",
@@ -90,7 +90,7 @@ export const sampleChargers: Charger[] = [
     zip: "92101",
     site_name: "Aladdin Airport Parking - W. Laurel Street",
     serviced: 1,
-    status: "Optimal",
+    status: "Low",
     customer: "evgo",
     summary: "Charger fully operational. All systems functioning within normal parameters. Display clear and responsive. RFID and credit card payments processing correctly. Cable and connector in excellent condition. Firmware up to date. No maintenance required at this time.",
     full_report_link: "https://drive.google.com/file/d/optimal-1",
@@ -138,7 +138,7 @@ export const sampleChargers: Charger[] = [
     zip: "23231",
     site_name: "Richmond Airport Long-Term Parking",
     serviced: 1,
-    status: "Degraded",
+    status: "Medium",
     customer: "evgo",
     summary: "Screen display showing partial image only - right third of screen blank. RFID functioning but response time slow (3-4 seconds vs normal 1 second). All payment and charging functions operational. User experience degraded but serviceable.",
     full_report_link: "https://drive.google.com/file/d/degraded-2",
@@ -163,7 +163,7 @@ export const sampleChargers: Charger[] = [
     zip: "90045",
     site_name: "LAX Economy Parking Lot C",
     serviced: 1,
-    status: "Degraded",
+    status: "High",
     customer: "evgo",
     summary: "Thermal management system underperforming. Charger throttling to 35kW on hot days (designed for 50kW). Internal temperature readings 15°C above normal. Dust accumulation in air intake vents. Recommend deep cleaning and possible fan replacement.",
     full_report_link: "https://drive.google.com/file/d/degraded-3",
@@ -188,7 +188,7 @@ export const sampleChargers: Charger[] = [
     zip: "90045",
     site_name: "LAX Economy Parking Lot C",
     serviced: 1,
-    status: "Optimal",
+    status: "Low",
     customer: "evgo",
     summary: "All systems nominal. Recent firmware update successfully applied. Cable wear within acceptable limits. Payment systems responsive. Scheduled for routine maintenance in 60 days.",
     full_report_link: "https://drive.google.com/file/d/optimal-2",
@@ -236,7 +236,7 @@ export const sampleChargers: Charger[] = [
     zip: "94105",
     site_name: "Salesforce Transit Center Garage",
     serviced: 1,
-    status: "Optimal",
+    status: "Low",
     customer: "evgo",
     summary: "Fully operational. Minor cosmetic scuff on housing - does not affect operation. All electrical and mechanical systems within specifications.",
     full_report_link: "https://drive.google.com/file/d/optimal-3",
@@ -284,7 +284,7 @@ export const sampleChargers: Charger[] = [
     zip: "92110",
     site_name: "Sports Arena Parking",
     serviced: 1,
-    status: "Degraded",
+    status: "High",
     customer: "evgo",
     summary: "Cloud connectivity board failing. Station drops offline 5-6 times daily. Local charging works but remote monitoring and payment history not syncing. Board replacement ordered.",
     full_report_link: "https://drive.google.com/file/d/degraded-4",
@@ -309,7 +309,7 @@ export const sampleChargers: Charger[] = [
     zip: "92108",
     site_name: "Hazard Center Mall Parking",
     serviced: 1,
-    status: "Degraded",
+    status: "Medium",
     customer: "evgo",
     summary: "Cable connector showing wear - outer housing cracked but functional. RFID intermittent. Recommend proactive cable replacement to avoid future critical status.",
     full_report_link: "https://drive.google.com/file/d/degraded-5",
@@ -445,12 +445,14 @@ function generateAdditionalChargers(): Charger[] {
     for (let i = 0; i < count && generated < targetTotal; i++) {
       const seed = regionIndex * 10000 + i;
       const statusRoll = seededRandom(seed);
-      const status: ChargerStatus = statusRoll < 0.86 ? "Optimal" : statusRoll < 0.96 ? "Degraded" : "Critical";
+      const status: ChargerStatus = statusRoll < 0.70 ? "Low" : statusRoll < 0.82 ? "Medium" : statusRoll < 0.93 ? "High" : "Critical";
       
       const issues: string[] = [];
       if (status === "Critical") {
         issues.push(...["Power Supply Failure", "Screen Damage"].slice(0, 1 + Math.floor(seededRandom(seed + 1) * 2)));
-      } else if (status === "Degraded") {
+      } else if (status === "High") {
+        issues.push(...["RFID Malfunction", "Cable Damage"].slice(0, 1 + Math.floor(seededRandom(seed + 2) * 2)));
+      } else if (status === "Medium") {
         issues.push(...["RFID Slow", "Minor Cable Wear"].slice(0, 1 + Math.floor(seededRandom(seed + 2) * 2)));
       }
       
@@ -472,10 +474,12 @@ function generateAdditionalChargers(): Charger[] {
         serviced: 1,
         status,
         customer,
-        summary: status === "Optimal" 
+        summary: status === "Low" 
           ? "All systems operational. No issues found during inspection."
-          : status === "Degraded"
+          : status === "Medium"
           ? "Minor issues detected. Charger functional but requires attention."
+          : status === "High"
+          ? "Multiple issues detected requiring scheduled repair."
           : "Significant issues requiring immediate attention.",
         full_report_link: `https://drive.google.com/file/d/gen-${generated}`,
         start_date: "1/1/2022",
@@ -484,8 +488,8 @@ function generateAdditionalChargers(): Charger[] {
         lng: region.lng + lngOffset,
         issues,
         technician: ["Mike Johnson", "Sarah Chen", "James Wilson", "David Park", "Emily Rodriguez"][Math.floor(seededRandom(seed + 5) * 5)],
-        estimated_cost: status === "Critical" ? 3000 + Math.floor(seededRandom(seed + 6) * 2000) : status === "Degraded" ? 500 + Math.floor(seededRandom(seed + 7) * 1000) : 0,
-        timeline: status === "Critical" ? "5-7 business days" : status === "Degraded" ? "2-3 business days" : undefined,
+        estimated_cost: status === "Critical" ? 3000 + Math.floor(seededRandom(seed + 6) * 2000) : (status === "High" || status === "Medium") ? 500 + Math.floor(seededRandom(seed + 7) * 1000) : 0,
+        timeline: status === "Critical" ? "5-7 business days" : (status === "High" || status === "Medium") ? "2-3 business days" : undefined,
         photos: ["/placeholder.svg"],
       });
       
@@ -509,26 +513,31 @@ export function getChargersByCustomer(customer: string): Charger[] {
 // Calculate network stats
 export function getNetworkStats(chargers: Charger[]) {
   const total = chargers.length;
-  const optimal = chargers.filter(c => c.status === "Optimal").length;
-  const degraded = chargers.filter(c => c.status === "Degraded").length;
+  const low = chargers.filter(c => c.status === "Low").length;
+  const medium = chargers.filter(c => c.status === "Medium").length;
+  const high = chargers.filter(c => c.status === "High").length;
   const critical = chargers.filter(c => c.status === "Critical").length;
   
-  const percentOptimal = (optimal / total) * 100;
+  const percentLow = (low / total) * 100;
   const percentCritical = (critical / total) * 100;
   const percentComplete = 100; // All serviced in this campaign
   
-  // Health Score Formula: (% Optimal × 50) + ((100 - % Critical) × 30) + (% Complete × 20)
+  // Health Score Formula: (% Low × 50) + ((100 - % Critical) × 30) + (% Complete × 20)
   const healthScore = Math.round(
-    (percentOptimal * 0.5) + ((100 - percentCritical) * 0.3) + (percentComplete * 0.2)
+    (percentLow * 0.5) + ((100 - percentCritical) * 0.3) + (percentComplete * 0.2)
   );
   
   return {
     total,
-    optimal,
-    degraded,
+    low,
+    medium,
+    high,
     critical,
     healthScore,
     serviced: total,
+    // Legacy aliases
+    optimal: low,
+    degraded: high + medium,
   };
 }
 
@@ -574,17 +583,18 @@ export function getComponentBreakdown(chargers: Charger[]) {
 
 // Get geographic risk areas
 export function getGeographicRisk(chargers: Charger[]) {
-  const locationMap: Record<string, { critical: number; degraded: number; optimal: number; issues: string[] }> = {};
+  const locationMap: Record<string, { critical: number; high: number; medium: number; low: number; issues: string[] }> = {};
   
   chargers.forEach(charger => {
     const key = `${charger.city}, ${charger.state}`;
     if (!locationMap[key]) {
-      locationMap[key] = { critical: 0, degraded: 0, optimal: 0, issues: [] };
+      locationMap[key] = { critical: 0, high: 0, medium: 0, low: 0, issues: [] };
     }
     
     if (charger.status === "Critical") locationMap[key].critical++;
-    else if (charger.status === "Degraded") locationMap[key].degraded++;
-    else locationMap[key].optimal++;
+    else if (charger.status === "High") locationMap[key].high++;
+    else if (charger.status === "Medium") locationMap[key].medium++;
+    else locationMap[key].low++;
     
     charger.issues?.forEach(issue => {
       if (!locationMap[key].issues.includes(issue)) {
@@ -597,7 +607,7 @@ export function getGeographicRisk(chargers: Charger[]) {
     .map(([location, data]) => ({
       location,
       ...data,
-      riskScore: data.critical * 3 + data.degraded * 1,
+      riskScore: data.critical * 4 + data.high * 2 + data.medium * 1,
     }))
     .sort((a, b) => b.riskScore - a.riskScore);
 }
@@ -615,8 +625,9 @@ export function getSitePerformance(chargers: Charger[]) {
   
   return Object.entries(siteMap).map(([siteName, siteChargers]) => {
     const total = siteChargers.length;
-    const optimal = siteChargers.filter(c => c.status === "Optimal").length;
-    const degraded = siteChargers.filter(c => c.status === "Degraded").length;
+    const low = siteChargers.filter(c => c.status === "Low").length;
+    const medium = siteChargers.filter(c => c.status === "Medium").length;
+    const high = siteChargers.filter(c => c.status === "High").length;
     const critical = siteChargers.filter(c => c.status === "Critical").length;
     
     const primaryIssues = siteChargers
@@ -634,10 +645,14 @@ export function getSitePerformance(chargers: Charger[]) {
       city: siteChargers[0].city,
       state: siteChargers[0].state,
       totalChargers: total,
-      optimal,
-      degraded,
+      low,
+      medium,
+      high,
       critical,
-      healthScore: Math.round((optimal / total) * 100),
+      // Legacy
+      optimal: low,
+      degraded: high + medium,
+      healthScore: Math.round((low / total) * 100),
       lastServiced: siteChargers[0].start_date,
       primaryIssue: topIssue,
     };
