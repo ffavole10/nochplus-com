@@ -7,6 +7,7 @@ import {
 "lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
+import { usePartners } from "@/hooks/usePartners";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NavLink } from "@/components/NavLink";
@@ -73,11 +74,11 @@ export function PlatformSidebar() {
   const [swiOpen, setSwiOpen] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
 
-  // Derive unique partners from campaigns
+  // Fetch all partners from the database
+  const { data: dbPartners = [] } = usePartners();
   const partners = useMemo(() => {
-    const keys = [...new Set(sampleCampaigns.map((c) => c.customer))];
-    return keys.map((k) => ({ value: k, label: CUSTOMER_LABELS[k] || k }));
-  }, []);
+    return dbPartners.map((p) => ({ value: p.value, label: p.label }));
+  }, [dbPartners]);
 
   // Filter campaigns by selected partner
   const filteredCampaigns = useMemo(() => {
