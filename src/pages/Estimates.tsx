@@ -2,15 +2,15 @@ import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, DollarSign, Send, Clock, Database } from "lucide-react";
+import { FileText, DollarSign, Send, Clock, Database, CheckCircle } from "lucide-react";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useEstimates } from "@/hooks/useEstimates";
 import { format } from "date-fns";
 
-const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
-  draft: { label: "Draft", variant: "secondary" },
-  sent: { label: "Sent", variant: "default" },
-  approved: { label: "Approved", variant: "outline" },
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  draft: { label: "Draft", className: "bg-muted text-muted-foreground border-muted" },
+  sent: { label: "Sent", className: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800" },
+  approved: { label: "Approved", className: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" },
 };
 
 const Estimates = () => {
@@ -42,23 +42,29 @@ const Estimates = () => {
   return (
     <div className="container mx-auto px-4 py-4 space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="metric-card">
           <CardContent className="p-4 text-center">
             <p className="text-sm text-muted-foreground">Total Estimates</p>
             <p className="text-3xl font-bold text-foreground">{stats.total}</p>
           </CardContent>
         </Card>
-        <Card className="metric-card border-l-4 border-l-secondary">
+        <Card className="metric-card border-l-4 border-l-muted-foreground/30">
           <CardContent className="p-4 text-center">
             <p className="text-sm text-muted-foreground">Drafts</p>
-            <p className="text-3xl font-bold text-secondary">{stats.drafts}</p>
+            <p className="text-3xl font-bold text-muted-foreground">{stats.drafts}</p>
           </CardContent>
         </Card>
-        <Card className="metric-card border-l-4 border-l-primary">
+        <Card className="metric-card border-l-4 border-l-blue-500">
           <CardContent className="p-4 text-center">
             <p className="text-sm text-muted-foreground">Sent</p>
-            <p className="text-3xl font-bold text-primary">{stats.sent}</p>
+            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.sent}</p>
+          </CardContent>
+        </Card>
+        <Card className="metric-card border-l-4 border-l-green-500">
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">Approved</p>
+            <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.approved}</p>
           </CardContent>
         </Card>
         <Card className="metric-card border-l-4 border-l-optimal">
@@ -120,7 +126,7 @@ const Estimates = () => {
                         ${Number(est.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={config.variant}>{config.label}</Badge>
+                        <Badge variant="outline" className={config.className}>{config.label}</Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(est.created_at), "MMM d, yyyy")}
