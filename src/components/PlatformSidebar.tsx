@@ -11,8 +11,7 @@ import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Sidebar,
@@ -26,11 +25,12 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
+import { PARTNER_CATEGORIES, PARTNER_LABELS } from "@/data/partners";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
 import { useCampaignContext } from "@/contexts/CampaignContext";
+import { useCampaigns } from "@/hooks/useCampaigns";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -58,7 +58,6 @@ const ACCOUNT_MANAGERS = [
 const US_STATES = ["AZ", "CA", "FL", "GA", "IL", "NY", "TX", "VA", "WA"];
 
 export function PlatformSidebar() {
-  
   const { hasRole } = useUserRole();
   const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
   const { setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer } = useCampaignContext();
@@ -72,23 +71,19 @@ export function PlatformSidebar() {
   const [swiOpen, setSwiOpen] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
 
-  // Derive unique partners from campaigns
-  const partners = useMemo(() => {
-    const keys = [...new Set(sampleCampaigns.map(c => c.customer))];
-    return keys.map(k => ({ value: k, label: CUSTOMER_LABELS[k] || k }));
-  }, []);
+  // Fetch real campaigns from DB
+  const { data: dbCampaigns = [] } = useCampaigns();
 
   // Filter campaigns by selected partner
   const filteredCampaigns = useMemo(() => {
     if (!selectedPartner) return [];
-    return sampleCampaigns.filter(c => c.customer === selectedPartner);
-  }, [selectedPartner]);
+    return dbCampaigns.filter(c => c.customer === selectedPartner);
+  }, [selectedPartner, dbCampaigns]);
 
-  // Reset campaign when partner changes
   const handlePartnerChange = (value: string) => {
     setSelectedPartner(value);
     setSelectedCustomer(value);
-    const partnerCampaigns = sampleCampaigns.filter(c => c.customer === value);
+    const partnerCampaigns = dbCampaigns.filter(c => c.customer === value);
     if (partnerCampaigns.length === 1) {
       setSelectedCampaignId(partnerCampaigns[0].id);
       setContextCampaignId(partnerCampaigns[0].id);
@@ -103,7 +98,7 @@ export function PlatformSidebar() {
   const handleCampaignChange = (value: string) => {
     setSelectedCampaignId(value);
     setContextCampaignId(value);
-    const campaign = sampleCampaigns.find(c => c.id === value);
+    const campaign = dbCampaigns.find(c => c.id === value);
     setSelectedCampaignName(campaign?.name || "");
     setSelectedCustomer(campaign?.customer || "");
   };
@@ -117,55 +112,62 @@ export function PlatformSidebar() {
 
         {/* Partner → Campaign Selectors */}
         <div className="space-y-2">
-            {/* Partner Selector */}
-            <Select value={selectedPartner} onValueChange={handlePartnerChange}>
-              <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-sm">
-                <SelectValue placeholder="Select Partner" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-                {partners.map((p) => (
-                  <SelectItem key={p.value} value={p.value} className="cursor-pointer">
-                    {p.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Partner Selector with categories */}
+          <Select value={selectedPartner} onValueChange={handlePartnerChange}>
+            <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-sm">
+              <SelectValue placeholder="Select Partner" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+              {PARTNER_CATEGORIES.map((cat) => (
+                <SelectGroup key={cat.label}>
+                  <SelectLabel className="text-xs font-semibold text-muted-foreground">{cat.label}</SelectLabel>
+                  {cat.partners.map((p) => (
+                    <SelectItem key={p.value} value={p.value} className="cursor-pointer">
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
 
-            {/* Campaign Selector (filtered by partner) */}
-            <Select
-              value={selectedCampaignId}
-              onValueChange={handleCampaignChange}
-              disabled={!selectedPartner}
-            >
-              <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-sm">
-                <SelectValue placeholder={selectedPartner ? "Select Campaign" : "Select a partner first"} />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-                {filteredCampaigns.map((campaign) => (
+          {/* Campaign Selector (filtered by partner) */}
+          <Select
+            value={selectedCampaignId}
+            onValueChange={handleCampaignChange}
+            disabled={!selectedPartner}
+          >
+            <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-sm">
+              <SelectValue placeholder={selectedPartner ? "Select Campaign" : "Select a partner first"} />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+              {filteredCampaigns.length === 0 ? (
+                <div className="px-3 py-2 text-xs text-muted-foreground">No campaigns yet</div>
+              ) : (
+                filteredCampaigns.map((campaign) => (
                   <SelectItem key={campaign.id} value={campaign.id} className="cursor-pointer max-w-[220px]">
                     <span className="truncate block">{campaign.name}</span>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                ))
+              )}
+            </SelectContent>
+          </Select>
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent gap-1.5"
-              onClick={() => setNewCampaignOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-              New Campaign
-            </Button>
-            <NewCampaignModal
-              open={newCampaignOpen}
-              onOpenChange={setNewCampaignOpen}
-              onComplete={(data) => {
-                toast.success(`Campaign "${data.name}" created with ${data.chargers.length} chargers`);
-              }}
-            />
-          </div>
+          <button
+            onClick={() => setNewCampaignOpen(true)}
+            className="flex items-center gap-1.5 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors px-1"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Campaign
+          </button>
+          <NewCampaignModal
+            open={newCampaignOpen}
+            onOpenChange={setNewCampaignOpen}
+            onComplete={(data) => {
+              toast.success(`Campaign "${data.name}" created with ${data.chargers.length} chargers`);
+            }}
+          />
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="custom-scrollbar">
@@ -195,172 +197,172 @@ export function PlatformSidebar() {
 
         {/* Filters Section */}
         <>
-            <SidebarGroup>
-              <SidebarGroupLabel className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                Filters
-                {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="h-5 px-1.5 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground ml-auto"
-                  >
-                    <X className="w-3 h-3 mr-1" />
-                    Clear
-                  </Button>
-                )}
-              </SidebarGroupLabel>
-            </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel className="flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Filters
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="h-5 px-1.5 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground ml-auto"
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  Clear
+                </Button>
+              )}
+            </SidebarGroupLabel>
+          </SidebarGroup>
 
-            {/* Status Filter - 4 levels */}
-            <SidebarGroup>
-              <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span>Status</span>
+          {/* Status Filter */}
+          <SidebarGroup>
+            <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Status</span>
+                  </div>
+                  {statusOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent className="px-2 py-2 space-y-2">
+                  {STATUS_LEVELS.map((s) => (
+                    <div key={s.value} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`status-${s.value}`}
+                        checked={filters.status.includes(s.value)}
+                        onCheckedChange={() => toggleArrayFilter("status", s.value)}
+                        className={`border-${s.value.toLowerCase()} data-[state=checked]:bg-${s.value.toLowerCase()}`}
+                      />
+                      <Label htmlFor={`status-${s.value}`} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <span className={`w-2 h-2 rounded-full ${s.colorClass}`} />
+                        {s.label}
+                      </Label>
                     </div>
-                    {statusOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </SidebarGroupLabel>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarGroupContent className="px-2 py-2 space-y-2">
-                    {STATUS_LEVELS.map((s) => (
-                      <div key={s.value} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`status-${s.value}`}
-                          checked={filters.status.includes(s.value)}
-                          onCheckedChange={() => toggleArrayFilter("status", s.value)}
-                          className={`border-${s.value.toLowerCase()} data-[state=checked]:bg-${s.value.toLowerCase()}`}
-                        />
-                        <Label htmlFor={`status-${s.value}`} className="flex items-center gap-2 text-sm cursor-pointer">
-                          <span className={`w-2 h-2 rounded-full ${s.colorClass}`} />
-                          {s.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </SidebarGroup>
+                  ))}
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
 
-            {/* State Filter */}
-            <SidebarGroup>
-              <Collapsible open={stateOpen} onOpenChange={setStateOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>State</span>
+          {/* State Filter */}
+          <SidebarGroup>
+            <Collapsible open={stateOpen} onOpenChange={setStateOpen}>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    <span>State</span>
+                  </div>
+                  {stateOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent className="px-2 py-2 space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                  {US_STATES.map((st) => (
+                    <div key={st} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`state-${st}`}
+                        checked={filters.states.includes(st)}
+                        onCheckedChange={() => toggleArrayFilter("states", st)}
+                      />
+                      <Label htmlFor={`state-${st}`} className="text-sm cursor-pointer">{st}</Label>
                     </div>
-                    {stateOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </SidebarGroupLabel>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarGroupContent className="px-2 py-2 space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-                    {US_STATES.map((st) => (
-                      <div key={st} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`state-${st}`}
-                          checked={filters.states.includes(st)}
-                          onCheckedChange={() => toggleArrayFilter("states", st)}
-                        />
-                        <Label htmlFor={`state-${st}`} className="text-sm cursor-pointer">{st}</Label>
-                      </div>
-                    ))}
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </SidebarGroup>
+                  ))}
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
 
-            {/* Charger Type Filter */}
-            <SidebarGroup>
-              <Collapsible open={typeOpen} onOpenChange={setTypeOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
-                    <div className="flex items-center gap-2">
-                      <Zap className="w-4 h-4" />
-                      <span>Charger Type</span>
+          {/* Charger Type Filter */}
+          <SidebarGroup>
+            <Collapsible open={typeOpen} onOpenChange={setTypeOpen}>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    <span>Charger Type</span>
+                  </div>
+                  {typeOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent className="px-2 py-2 space-y-2">
+                  {CHARGER_TYPES.map((type) => (
+                    <div key={type} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`type-${type}`}
+                        checked={filters.chargerTypes.includes(type)}
+                        onCheckedChange={() => toggleArrayFilter("chargerTypes", type)}
+                      />
+                      <Label htmlFor={`type-${type}`} className="text-sm cursor-pointer">{type}</Label>
                     </div>
-                    {typeOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </SidebarGroupLabel>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarGroupContent className="px-2 py-2 space-y-2">
-                    {CHARGER_TYPES.map((type) => (
-                      <div key={type} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`type-${type}`}
-                          checked={filters.chargerTypes.includes(type)}
-                          onCheckedChange={() => toggleArrayFilter("chargerTypes", type)}
-                        />
-                        <Label htmlFor={`type-${type}`} className="text-sm cursor-pointer">{type}</Label>
-                      </div>
-                    ))}
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </SidebarGroup>
+                  ))}
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
 
-            {/* SWI Status Filter */}
-            <SidebarGroup>
-              <Collapsible open={swiOpen} onOpenChange={setSwiOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
-                    <div className="flex items-center gap-2">
-                      <FileCheck className="w-4 h-4" />
-                      <span>SWI Status</span>
+          {/* SWI Status Filter */}
+          <SidebarGroup>
+            <Collapsible open={swiOpen} onOpenChange={setSwiOpen}>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
+                  <div className="flex items-center gap-2">
+                    <FileCheck className="w-4 h-4" />
+                    <span>SWI Status</span>
+                  </div>
+                  {swiOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent className="px-2 py-2 space-y-2">
+                  {SWI_OPTIONS.map((opt) => (
+                    <div key={opt} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`swi-${opt}`}
+                        checked={filters.swiStatus.includes(opt)}
+                        onCheckedChange={() => toggleArrayFilter("swiStatus", opt)}
+                      />
+                      <Label htmlFor={`swi-${opt}`} className="text-sm cursor-pointer">{opt}</Label>
                     </div>
-                    {swiOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </SidebarGroupLabel>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarGroupContent className="px-2 py-2 space-y-2">
-                    {SWI_OPTIONS.map((opt) => (
-                      <div key={opt} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`swi-${opt}`}
-                          checked={filters.swiStatus.includes(opt)}
-                          onCheckedChange={() => toggleArrayFilter("swiStatus", opt)}
-                        />
-                        <Label htmlFor={`swi-${opt}`} className="text-sm cursor-pointer">{opt}</Label>
-                      </div>
-                    ))}
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </SidebarGroup>
+                  ))}
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
 
-            {/* Account Manager Filter */}
-            <SidebarGroup>
-              <Collapsible open={managerOpen} onOpenChange={setManagerOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
-                    <div className="flex items-center gap-2">
-                      <UserCog className="w-4 h-4" />
-                      <span>Account Manager</span>
+          {/* Account Manager Filter */}
+          <SidebarGroup>
+            <Collapsible open={managerOpen} onOpenChange={setManagerOpen}>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
+                  <div className="flex items-center gap-2">
+                    <UserCog className="w-4 h-4" />
+                    <span>Account Manager</span>
+                  </div>
+                  {managerOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent className="px-2 py-2 space-y-2">
+                  {ACCOUNT_MANAGERS.map((mgr) => (
+                    <div key={mgr.value} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`mgr-${mgr.value}`}
+                        checked={filters.accountManagers.includes(mgr.value)}
+                        onCheckedChange={() => toggleArrayFilter("accountManagers", mgr.value)}
+                      />
+                      <Label htmlFor={`mgr-${mgr.value}`} className="text-sm cursor-pointer">{mgr.label}</Label>
                     </div>
-                    {managerOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </SidebarGroupLabel>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarGroupContent className="px-2 py-2 space-y-2">
-                    {ACCOUNT_MANAGERS.map((mgr) => (
-                      <div key={mgr.value} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`mgr-${mgr.value}`}
-                          checked={filters.accountManagers.includes(mgr.value)}
-                          onCheckedChange={() => toggleArrayFilter("accountManagers", mgr.value)}
-                        />
-                        <Label htmlFor={`mgr-${mgr.value}`} className="text-sm cursor-pointer">{mgr.label}</Label>
-                      </div>
-                    ))}
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </SidebarGroup>
+                  ))}
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
         </>
       </SidebarContent>
 
@@ -382,7 +384,6 @@ export function PlatformSidebar() {
           </SidebarMenu>
         )}
       </SidebarFooter>
-
     </Sidebar>
   );
 }

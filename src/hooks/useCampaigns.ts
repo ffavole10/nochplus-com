@@ -5,6 +5,7 @@ export interface Campaign {
   id: string;
   name: string;
   customer: string;
+  status: string | null;
   quarter: string | null;
   year: number | null;
   start_date: string | null;
@@ -144,6 +145,27 @@ export function useCreateChargerRecords() {
       if (variables.length > 0) {
         queryClient.invalidateQueries({ queryKey: ["charger_records", variables[0].campaign_id] });
       }
+    },
+  });
+}
+
+export function useUpdateCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string } & Partial<Omit<Campaign, "id" | "created_at" | "updated_at">>) => {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Campaign;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
   });
 }

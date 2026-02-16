@@ -5,9 +5,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Upload, FileSpreadsheet, Loader2, CheckCircle, ChevronLeft, ChevronRight,
   Wrench, AlertTriangle, RefreshCw, Rocket,
@@ -15,6 +14,7 @@ import {
 import { parseAssessmentExcel, getAssessmentStats } from "@/lib/assessmentParser";
 import { AssessmentCharger } from "@/types/assessment";
 import { CampaignType, CAMPAIGN_TYPE_CONFIG } from "@/types/campaign";
+import { PARTNER_CATEGORIES } from "@/data/partners";
 import { toast } from "sonner";
 
 interface NewCampaignModalProps {
@@ -28,15 +28,6 @@ interface NewCampaignModalProps {
   }) => void;
 }
 
-const CUSTOMERS = [
-  { value: "evgo", label: "EVgo" },
-  { value: "evconnect", label: "EVConnect" },
-  { value: "electrify_america", label: "Electrify America" },
-  { value: "chargepoint", label: "ChargePoint" },
-  { value: "tesla", label: "Tesla" },
-  { value: "other", label: "Other" },
-];
-
 const STEPS = [
   { number: 1, label: "Upload" },
   { number: 2, label: "Preview" },
@@ -49,10 +40,9 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
   const [chargers, setChargers] = useState<AssessmentCharger[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Step 3: Configure
   const [campaignName, setCampaignName] = useState("");
   const [campaignType, setCampaignType] = useState<CampaignType>("preventive_maintenance");
-  const [customer, setCustomer] = useState("evgo");
+  const [customer, setCustomer] = useState("");
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -79,6 +69,10 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
       toast.error("Please enter a campaign name");
       return;
     }
+    if (!customer) {
+      toast.error("Please select a partner");
+      return;
+    }
     onComplete({ name: campaignName, type: campaignType, customer, chargers });
     handleClose();
   }, [campaignName, campaignType, customer, chargers, onComplete]);
@@ -89,7 +83,7 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
     setChargers([]);
     setCampaignName("");
     setCampaignType("preventive_maintenance");
-    setCustomer("evgo");
+    setCustomer("");
     onOpenChange(false);
   };
 
@@ -257,14 +251,19 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
             </div>
 
             <div className="space-y-2">
-              <Label>Customer</Label>
+              <Label>Partner</Label>
               <Select value={customer} onValueChange={setCustomer}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select partner" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CUSTOMERS.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  {PARTNER_CATEGORIES.map((cat) => (
+                    <SelectGroup key={cat.label}>
+                      <SelectLabel className="text-xs font-semibold text-muted-foreground">{cat.label}</SelectLabel>
+                      {cat.partners.map((p) => (
+                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
@@ -289,7 +288,7 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
               </Button>
             )}
             {step === 3 && (
-              <Button onClick={handleComplete} disabled={!campaignName.trim()}>
+              <Button onClick={handleComplete} disabled={!campaignName.trim() || !customer}>
                 <Rocket className="h-4 w-4 mr-1" /> Create Campaign
               </Button>
             )}

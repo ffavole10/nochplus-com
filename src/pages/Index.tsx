@@ -7,24 +7,27 @@ import { ComponentAnalysis } from "@/components/dashboard/ComponentAnalysis";
 import { SitePerformanceTable } from "@/components/dashboard/SitePerformanceTable";
 import { ReportLibrary } from "@/components/dashboard/ReportLibrary";
 import { useCampaignContext } from "@/contexts/CampaignContext";
+import { Database } from "lucide-react";
 
 const Index = () => {
-  const { selectedCustomer } = useCampaignContext();
+  const { selectedCampaignId, selectedCustomer } = useCampaignContext();
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [focusedLocation, setFocusedLocation] = useState<string | null>(null);
   const criticalRef = useRef<HTMLDivElement>(null);
 
-  // Base chargers filtered by selected customer/partner
+  // No data until a campaign is selected
+  const hasCampaign = !!selectedCampaignId;
+
   const baseChargers = useMemo(() => {
+    if (!hasCampaign) return [];
     if (selectedCustomer) {
       return getChargersByCustomer(selectedCustomer);
     }
     return allChargers;
-  }, [selectedCustomer]);
+  }, [selectedCustomer, hasCampaign]);
 
-  const [filteredChargers, setFilteredChargers] = useState<Charger[]>(allChargers);
+  const [filteredChargers, setFilteredChargers] = useState<Charger[]>([]);
 
-  // Re-sync filtered chargers when base changes
   useEffect(() => {
     setFilteredChargers(baseChargers);
     setSelectedCharger(null);
@@ -76,6 +79,20 @@ const Index = () => {
       document.getElementById("map-section")?.scrollIntoView({ behavior: "smooth" });
     }
   }, [baseChargers]);
+
+  if (!hasCampaign) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <Database className="h-12 w-12 text-muted-foreground/40 mx-auto" />
+          <h2 className="text-lg font-medium text-muted-foreground">No Campaign Selected</h2>
+          <p className="text-sm text-muted-foreground/70 max-w-xs">
+            Select a partner and campaign from the sidebar to view dashboard data.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-4 space-y-8">

@@ -14,6 +14,7 @@ import { ArrowLeft, Plus, Shield, Trash2, UserCog, Users } from "lucide-react";
 import { toast } from "sonner";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { AvatarUpload } from "@/components/AvatarUpload";
+import { CampaignManagement } from "@/components/settings/CampaignManagement";
 
 type UserWithRole = {
   id: string;
@@ -178,6 +179,8 @@ const Settings = () => {
       </div>
 
       <main className="container mx-auto px-4 py-8 max-w-5xl space-y-6">
+        {/* Campaign Management */}
+        <CampaignManagement />
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {["super_admin", "admin", "manager", "employee", "customer", "partner"].map((role) => (
