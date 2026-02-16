@@ -108,7 +108,7 @@ export function PlatformSidebar() {
   const { toggleSidebar } = useSidebar();
 
   return (
-    <Sidebar side="left" className="border-r border-border/50 relative h-screen">
+    <Sidebar side="left" collapsible="none" className="border-r border-border/50 relative">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         {!isCollapsed && (
           <div className="flex justify-start">
