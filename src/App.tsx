@@ -11,6 +11,7 @@ import Dataset from "./pages/Dataset";
 import Estimates from "./pages/Estimates";
 import Schedule from "./pages/Schedule";
 import NotFound from "./pages/NotFound";
+import EstimateStatus from "./pages/EstimateStatus";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MainPlatformLayout from "./layouts/MainPlatformLayout";
 
@@ -34,6 +35,7 @@ const App = () => (
           </Route>
           {/* Legacy redirect */}
           <Route path="/missioncontrol" element={<ProtectedRoute><AssessmentTracker /></ProtectedRoute>} />
+          <Route path="/estimate-status" element={<EstimateStatus />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
