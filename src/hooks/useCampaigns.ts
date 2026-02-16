@@ -96,13 +96,31 @@ export function useChargerRecords(campaignId: string | null) {
     queryKey: ["charger_records", campaignId],
     queryFn: async () => {
       if (!campaignId) return [];
-      const { data, error } = await supabase
-        .from("charger_records")
-        .select("*")
-        .eq("campaign_id", campaignId);
+      // Fetch all records in batches to bypass the 1000-row default limit
+      const allRecords: ChargerRecord[] = [];
+      const PAGE_SIZE = 1000;
+      let from = 0;
+      let keepFetching = true;
 
-      if (error) throw error;
-      return data as ChargerRecord[];
+      while (keepFetching) {
+        const { data, error } = await supabase
+          .from("charger_records")
+          .select("*")
+          .eq("campaign_id", campaignId)
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (error) throw error;
+        if (data) {
+          allRecords.push(...(data as ChargerRecord[]));
+        }
+        if (!data || data.length < PAGE_SIZE) {
+          keepFetching = false;
+        } else {
+          from += PAGE_SIZE;
+        }
+      }
+
+      return allRecords;
     },
     enabled: !!campaignId,
   });
