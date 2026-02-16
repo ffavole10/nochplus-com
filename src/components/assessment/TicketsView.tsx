@@ -324,22 +324,25 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                           {(() => {
                             const hasSWI = !!getSWIMatch(charger.id);
                             const estStatus = estimateStatuses[charger.id] || "none";
-                            const hasEstimate = estStatus === "sent";
                             const hasDispatch = false;
+
+                            // E milestone: yellow for draft/sent, green for approved
+                            const eColor = estStatus === "approved"
+                              ? "bg-optimal text-optimal-foreground border-optimal"
+                              : estStatus === "draft" || estStatus === "sent"
+                                ? "bg-medium text-medium-foreground border-medium"
+                                : "bg-muted text-muted-foreground border-border";
+
                             const milestones = [
-                              { label: "S", done: hasSWI },
-                              { label: "E", done: hasEstimate },
-                              { label: "D", done: hasDispatch },
+                              { label: "S", className: hasSWI ? "bg-optimal text-optimal-foreground border-optimal" : "bg-muted text-muted-foreground border-border" },
+                              { label: "E", className: eColor },
+                              { label: "D", className: hasDispatch ? "bg-optimal text-optimal-foreground border-optimal" : "bg-muted text-muted-foreground border-border" },
                             ];
                             return milestones.map((m) => (
                               <span
                                 key={m.label}
                                 title={m.label === "S" ? "SWI" : m.label === "E" ? "Estimate" : "Dispatch"}
-                                className={`inline-flex items-center justify-center rounded-full text-[9px] font-bold w-5 h-5 border ${
-                                  m.done
-                                    ? "bg-optimal text-optimal-foreground border-optimal"
-                                    : "bg-muted text-muted-foreground border-border"
-                                }`}
+                                className={`inline-flex items-center justify-center rounded-full text-[9px] font-bold w-5 h-5 border ${m.className}`}
                               >
                                 {m.label}
                               </span>
