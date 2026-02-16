@@ -146,22 +146,6 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
     <div className="w-full lg:w-[360px] border-r border-border flex flex-col bg-card">
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
-          {/* Campaign Details */}
-          <div>
-            <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-              <Settings2 className="h-3.5 w-3.5" /> Campaign Name
-            </Label>
-            <Input
-              className="mt-1.5 h-9"
-              placeholder="Enter campaign name"
-              value={config.name}
-              onChange={e => update({ name: e.target.value.slice(0, 100) })}
-              maxLength={100}
-            />
-          </div>
-
-          <Separator />
-
           {/* Schedule Configuration */}
           <div>
             <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
