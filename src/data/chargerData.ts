@@ -63,6 +63,9 @@ export function chargerRecordToCharger(r: {
   power_cabinet_status: string | null;
   power_cabinet_summary: string | null;
   service_required: number | null;
+  ticket_id?: string | null;
+  ticket_created_date?: string | null;
+  ticket_solved_date?: string | null;
 }, customer: string): Charger {
   // Map DB status to 4-level system
   let status: ChargerStatus = "Low";
@@ -71,6 +74,19 @@ export function chargerRecordToCharger(r: {
   else if (r.status === "Optimal") status = "Low";
   else if (r.status === "High") status = "High";
   else if (r.status === "Medium") status = "Medium";
+  else if (!r.status) {
+    // Derive from ticket data when no explicit status
+    const hasOpenTicket = !!(r.ticket_id && !r.ticket_solved_date);
+    if (hasOpenTicket) {
+      // Use issue flags to distinguish Critical vs High
+      const issueCount = [r.ccs_cable_issue, r.chademo_cable_issue, r.screen_damage, r.cc_reader_issue,
+        r.rfid_reader_issue, r.app_issue, r.holster_issue, r.power_supply_issue, r.circuit_board_issue, r.other_issue]
+        .filter(Boolean).length;
+      status = issueCount >= 3 ? "Critical" : "High";
+    } else if (r.ticket_id && r.ticket_solved_date) {
+      status = "Low";
+    }
+  }
 
   // Build issues array from boolean flags
   const issues: string[] = [];
