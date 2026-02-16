@@ -7,8 +7,10 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import AssessmentTracker from "./pages/AssessmentTracker";
+import Schedule from "./pages/Schedule";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import MainPlatformLayout from "./layouts/MainPlatformLayout";
 
 const queryClient = new QueryClient();
 
@@ -20,9 +22,14 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
+            <Route path="/" element={<Index />} />
+            <Route path="/tickets" element={<AssessmentTracker />} />
+            <Route path="/schedule" element={<Schedule />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+          {/* Legacy redirect */}
           <Route path="/missioncontrol" element={<ProtectedRoute><AssessmentTracker /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

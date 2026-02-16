@@ -104,7 +104,7 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
       {/* Sub-header: title left, tabs right */}
       <div className="bg-background px-6 py-3 flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-3">
-          <h1 className="text-[1.35rem] font-semibold text-foreground">Mission Control</h1>
+          <h1 className="text-[1.35rem] font-semibold text-foreground">Tickets</h1>
           {chargerCount > 0 && (
             <Badge variant="secondary" className="text-xs">{chargerCount} Chargers</Badge>
           )}
