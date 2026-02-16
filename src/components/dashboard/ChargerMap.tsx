@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Charger, getGeographicRisk } from "@/data/chargerData";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -370,7 +370,7 @@ export function ChargerMap({
           </div>
         </div>
 
-        {/* Risk Sidebar */}
+        {/* High Risk Chargers Sidebar */}
         <div className="lg:w-80">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -390,84 +390,72 @@ export function ChargerMap({
             )}
           </div>
 
-          <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
-            {riskAreas
-              .filter((area) => area.critical > 0 || area.high > 0)
-              .map((area) => {
-                const isHighRisk = area.critical >= 2;
-                const isFocused = focusedLocation === area.location;
-                return (
-                  <div
-                    key={area.location}
-                    className={`p-4 rounded-lg border-2 transition-colors ${
-                      isFocused
-                        ? "border-primary bg-primary/10 ring-2 ring-primary/30"
-                        : isHighRisk
-                        ? "border-critical/40 bg-critical/5"
-                        : "border-high/30 bg-high/5"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`w-3 h-3 rounded-full ${
-                            isHighRisk ? "bg-critical" : "bg-high"
+          {(() => {
+            const riskChargers = allChargers
+              .filter(c => c.status === "Critical" || c.status === "High")
+              .sort((a, b) => {
+                if (a.status === "Critical" && b.status !== "Critical") return -1;
+                if (a.status !== "Critical" && b.status === "Critical") return 1;
+                return 0;
+              });
+
+            return (
+              <>
+                <p className="text-sm text-muted-foreground mb-3">
+                  {riskChargers.length} chargers need attention
+                </p>
+                <div className="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                  {riskChargers.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      No high-risk chargers detected
+                    </p>
+                  ) : (
+                    riskChargers.slice(0, 10).map((charger) => {
+                      const isCritical = charger.status === "Critical";
+                      const isSelected = selectedCharger?.charger_id === charger.charger_id;
+                      return (
+                        <div
+                          key={charger.charger_id}
+                          className={`p-3 rounded-lg border transition-colors cursor-pointer ${
+                            isSelected
+                              ? "border-primary bg-primary/10 ring-2 ring-primary/30"
+                              : isCritical
+                              ? "border-critical/40 bg-critical/5 hover:bg-critical/10"
+                              : "border-high/30 bg-high/5 hover:bg-high/10"
                           }`}
-                        ></span>
-                        <span className="font-medium">{area.location}</span>
-                      </div>
-                      {isFocused && (
-                        <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                          Focused
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-sm text-muted-foreground mb-2">
-                      <span className="text-critical font-medium">
-                        {area.critical} Critical
-                      </span>
-                       {", "}
-                      <span className="text-high font-medium">
-                        {area.high} High
-                      </span>
-                    </div>
-
-                    {area.issues.length > 0 && (
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Primary: {area.issues.slice(0, 2).join(", ")}
-                      </p>
-                    )}
-
-                    <Button
-                      variant={isFocused ? "default" : "outline"}
-                      size="sm"
-                      className="w-full gap-2"
-                      onClick={() => onLocationFilter(isFocused ? null : area.location)}
-                    >
-                      {isFocused ? (
-                        <>
-                          <X className="w-4 h-4" />
-                          Show All Regions
-                        </>
-                      ) : (
-                        <>
-                          <Focus className="w-4 h-4" />
-                          Focus Here
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                );
-              })}
-
-            {riskAreas.filter((a) => a.critical > 0 || a.high > 0)
-              .length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                No high-risk areas detected
-              </p>
-            )}
-          </div>
+                          onClick={() => onChargerSelect(charger)}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span
+                              className={`w-2.5 h-2.5 rounded-full ${
+                                isCritical ? "bg-critical" : "bg-high"
+                              }`}
+                            ></span>
+                            <span className="font-medium text-sm truncate">
+                              {charger.site_name || charger.station_number}
+                            </span>
+                            <span className={`text-xs ml-auto px-1.5 py-0.5 rounded ${
+                              isCritical ? "bg-critical/20 text-critical" : "bg-high/20 text-high"
+                            }`}>
+                              {charger.status}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {charger.city}{charger.state ? `, ${charger.state}` : ""}
+                          </div>
+                          {charger.issues && charger.issues.length > 0 && (
+                            <div className="text-xs text-muted-foreground mt-1 truncate">
+                              {charger.issues.slice(0, 2).join(", ")}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
     </div>
