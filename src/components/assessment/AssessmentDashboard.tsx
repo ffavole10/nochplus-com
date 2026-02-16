@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Search, Filter, MapPin, Calendar, AlertTriangle, Zap, Plug, Ticket } from "lucide-react";
+import { Search, MapPin, Calendar, AlertTriangle, Zap, Plug, Ticket } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
@@ -60,55 +60,6 @@ export function AssessmentDashboard({
 
   return (
     <div className="space-y-6 p-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card className="metric-card">
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Total Chargers</p>
-            <p className="text-3xl font-bold text-foreground">{stats.total}</p>
-            <div className="flex gap-2 mt-1">
-              <span className="text-xs text-muted-foreground">DCFC: {stats.dcfcCount}</span>
-              <span className="text-xs text-muted-foreground">L2: {stats.l2Count}</span>
-              <span className="text-xs text-muted-foreground">HPCD: {stats.hpcdCount}</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="metric-card border-l-4 border-l-critical">
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">High Priority</p>
-            <p className="text-3xl font-bold text-critical">{stats.critical + stats.high}</p>
-            <p className="text-xs text-muted-foreground">{stats.critical} Critical, {stats.high} High</p>
-          </CardContent>
-        </Card>
-        <Card className="metric-card border-l-4 border-l-secondary">
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">In Progress</p>
-            <p className="text-3xl font-bold text-secondary">{stats.inProgress}</p>
-          </CardContent>
-        </Card>
-        <Card className="metric-card border-l-4 border-l-optimal">
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Completion</p>
-            <p className="text-3xl font-bold text-optimal">{stats.completionPercent}%</p>
-            <p className="text-xs text-muted-foreground">{stats.completed} of {stats.total} complete</p>
-          </CardContent>
-        </Card>
-        {/* Ticket KPI */}
-        <Card className={`metric-card border-l-4 ${ticketStats.openTickets > 0 ? "border-l-critical bg-critical/5" : "border-l-muted"}`}>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <Ticket className="h-3.5 w-3.5" /> Tickets
-            </p>
-            <p className={`text-3xl font-bold ${ticketStats.openTickets > 0 ? "text-critical" : "text-foreground"}`}>
-              {ticketStats.openTickets}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Open of {ticketStats.totalWithTickets} total · {ticketStats.solvedTickets} solved
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Filter Bar */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px]">
@@ -162,7 +113,7 @@ export function AssessmentDashboard({
           </SelectContent>
         </Select>
         <Select value={ticketFilter} onValueChange={onTicketFilterChange}>
-          <SelectTrigger className="w-[160px]"><Ticket className="h-3.5 w-3.5 mr-1" /><SelectValue placeholder="Tickets" /></SelectTrigger>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Tickets" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Tickets</SelectItem>
             <SelectItem value="open">Open Tickets</SelectItem>
