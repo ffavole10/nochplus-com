@@ -1,11 +1,11 @@
 import { useState, useCallback, useMemo } from "react";
+import { AssessmentKanban } from "@/components/assessment/AssessmentKanban";
 import { ChargerDetailModal } from "@/components/assessment/ChargerDetailModal";
-import { TicketsView } from "@/components/assessment/TicketsView";
 import { useAssessmentData } from "@/hooks/useAssessmentData";
 import { AssessmentCharger } from "@/types/assessment";
 
-const AssessmentTracker = () => {
-  const { chargers, updateCharger } = useAssessmentData();
+const Kanban = () => {
+  const { chargers, updateCharger, moveChargerToPhase } = useAssessmentData();
   const [selectedCharger, setSelectedCharger] = useState<AssessmentCharger | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -16,8 +16,9 @@ const AssessmentTracker = () => {
 
   return (
     <div className="flex flex-col flex-1">
-      <TicketsView
+      <AssessmentKanban
         chargers={chargers}
+        onMoveCharger={moveChargerToPhase}
         onSelectCharger={handleSelectCharger}
       />
 
@@ -31,4 +32,4 @@ const AssessmentTracker = () => {
   );
 };
 
-export default AssessmentTracker;
+export default Kanban;
