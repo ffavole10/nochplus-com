@@ -75,15 +75,9 @@ export function PlatformSidebar() {
   const { data: dbCampaigns = [] } = useCampaigns();
   const { data: dbPartners = [] } = usePartners();
 
-  // Group partners by category
-  const partnerCategories = useMemo(() => {
-    const cats = ["CPOs", "OEMs", "CSMS"];
-    return cats
-      .map((cat) => ({
-        label: cat,
-        partners: dbPartners.filter((p) => p.category === cat),
-      }))
-      .filter((g) => g.partners.length > 0);
+  // Sort partners A-Z (flat list, no categories)
+  const sortedPartners = useMemo(() => {
+    return [...dbPartners].sort((a, b) => a.label.localeCompare(b.label));
   }, [dbPartners]);
 
   // Filter campaigns by selected partner
@@ -130,15 +124,10 @@ export function PlatformSidebar() {
               <SelectValue placeholder="Select Partner" />
             </SelectTrigger>
             <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-              {partnerCategories.map((cat) => (
-                <SelectGroup key={cat.label}>
-                  <SelectLabel className="text-xs font-semibold text-muted-foreground">{cat.label}</SelectLabel>
-                  {cat.partners.map((p) => (
-                    <SelectItem key={p.value} value={p.value} className="cursor-pointer">
-                      {p.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
+              {sortedPartners.map((p) => (
+                <SelectItem key={p.value} value={p.value} className="cursor-pointer">
+                  {p.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
