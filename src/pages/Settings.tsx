@@ -16,6 +16,7 @@ import nochLogo from "@/assets/noch-logo-white.png";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { CampaignManagement } from "@/components/settings/CampaignManagement";
 import { PartnerManagement } from "@/components/settings/PartnerManagement";
+import { DataManagement } from "@/components/settings/DataManagement";
 
 type UserWithRole = {
   id: string;
@@ -181,6 +182,7 @@ const Settings = () => {
 
       <main className="container mx-auto px-4 py-8 max-w-5xl space-y-6">
         <CampaignManagement />
+        <DataManagement />
 
         {/* Partner Management */}
         <PartnerManagement />
