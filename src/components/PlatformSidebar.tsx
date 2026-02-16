@@ -110,11 +110,18 @@ export function PlatformSidebar() {
   return (
     <Sidebar side="left" className="border-r border-border/50 relative group/sidebar-collapse">
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        {!isCollapsed && (
-          <div className="flex justify-start mb-4">
+        <div className="flex items-center justify-between">
+          {!isCollapsed && (
             <img src={nochLogo} alt="Noch Power" className="w-[37.5%] h-auto" />
-          </div>
-        )}
+          )}
+          <button
+            onClick={toggleSidebar}
+            className="h-6 w-6 rounded-full border border-border bg-background shadow-sm flex items-center justify-center hover:bg-accent transition-colors shrink-0 ml-auto"
+            aria-label="Toggle sidebar"
+          >
+            <ChevronLeft className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
+          </button>
+        </div>
 
         {/* Partner → Campaign Selectors */}
         {!isCollapsed && (
@@ -388,14 +395,6 @@ export function PlatformSidebar() {
         )}
       </SidebarFooter>
 
-      {/* Collapse toggle on sidebar border */}
-      <button
-        onClick={toggleSidebar}
-        className="absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-6 w-6 rounded-full border border-border bg-background shadow-sm flex items-center justify-center hover:bg-accent transition-colors"
-        aria-label="Toggle sidebar"
-      >
-        <ChevronLeft className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
-      </button>
     </Sidebar>
   );
 }
