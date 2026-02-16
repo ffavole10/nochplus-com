@@ -34,6 +34,7 @@ export function PlatformHeader() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const pageTitle = PAGE_TITLES[location.pathname] || "Dashboard";
+  const isSettingsPage = location.pathname === "/settings";
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -85,7 +86,7 @@ export function PlatformHeader() {
             </button>
           }
           <h1 className="font-semibold whitespace-nowrap text-3xl text-muted-foreground">{pageTitle}</h1>
-          {selectedCampaignName &&
+          {selectedCampaignName && !isSettingsPage &&
           <>
               <span className="text-lg text-muted-foreground font-light">|</span>
               {isEditing ?
@@ -123,15 +124,16 @@ export function PlatformHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search chargers..."
-              value={filters.search}
-              onChange={(e) => updateFilter("search", e.target.value)}
-              className="pl-8 h-9 w-[200px] text-sm" />
-
-          </div>
+          {!isSettingsPage && (
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search chargers..."
+                value={filters.search}
+                onChange={(e) => updateFilter("search", e.target.value)}
+                className="pl-8 h-9 w-[200px] text-sm" />
+            </div>
+          )}
           <NotificationBell />
           <Avatar className="h-9 w-9 cursor-pointer">
             <AvatarImage src={avatarUrl || undefined} alt="Profile" />
