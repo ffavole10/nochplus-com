@@ -63,10 +63,10 @@ export function PlatformSidebar() {
   const isCollapsed = state === "collapsed";
   const { hasRole } = useUserRole();
   const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
-  const { setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer } = useCampaignContext();
+  const { selectedCampaignName, selectedCampaignId: contextCampaignId, selectedCustomer, setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer } = useCampaignContext();
   const [newCampaignOpen, setNewCampaignOpen] = useState(false);
-  const [selectedPartner, setSelectedPartner] = useState<string>("");
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
+  const [selectedPartner, setSelectedPartner] = useState<string>(selectedCustomer || "");
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>(contextCampaignId || "");
 
   const [statusOpen, setStatusOpen] = useState(true);
   const [stateOpen, setStateOpen] = useState(false);
