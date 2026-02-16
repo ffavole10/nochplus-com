@@ -1,0 +1,1 @@
+ALTER TABLE public.charger_records DROP CONSTRAINT charger_records_status_check;
