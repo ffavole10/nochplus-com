@@ -116,7 +116,7 @@ export function PlatformSidebar() {
     <Sidebar side="left" collapsible="none" className="border-r border-border/50 relative h-screen sticky top-0">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         {!isCollapsed &&
-        <div className="flex justify-start">
+        <div className="flex justify-start mb-4">
             <img src={nochLogo} alt="Noch Power" className="w-[37.5%] h-auto" />
           </div>
         }
@@ -156,14 +156,12 @@ export function PlatformSidebar() {
               </SelectContent>
             </Select>
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent gap-1.5"
-              onClick={() => setNewCampaignOpen(true)}>
-              <Plus className="h-4 w-4" />
+            <button
+              onClick={() => setNewCampaignOpen(true)}
+              className="flex items-center gap-1.5 text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors pl-1">
+              <Plus className="h-3.5 w-3.5" />
               New Campaign
-            </Button>
+            </button>
             <NewCampaignModal
               open={newCampaignOpen}
               onOpenChange={setNewCampaignOpen}
