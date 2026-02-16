@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Ticket, CalendarDays, Settings, Plus,
@@ -61,12 +61,37 @@ export function PlatformSidebar() {
   const { hasRole } = useUserRole();
   const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
   const [newCampaignOpen, setNewCampaignOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<string>("");
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
 
   const [statusOpen, setStatusOpen] = useState(true);
   const [stateOpen, setStateOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
   const [swiOpen, setSwiOpen] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
+
+  // Derive unique partners from campaigns
+  const partners = useMemo(() => {
+    const keys = [...new Set(sampleCampaigns.map(c => c.customer))];
+    return keys.map(k => ({ value: k, label: CUSTOMER_LABELS[k] || k }));
+  }, []);
+
+  // Filter campaigns by selected partner
+  const filteredCampaigns = useMemo(() => {
+    if (!selectedPartner) return [];
+    return sampleCampaigns.filter(c => c.customer === selectedPartner);
+  }, [selectedPartner]);
+
+  // Reset campaign when partner changes
+  const handlePartnerChange = (value: string) => {
+    setSelectedPartner(value);
+    const partnerCampaigns = sampleCampaigns.filter(c => c.customer === value);
+    if (partnerCampaigns.length === 1) {
+      setSelectedCampaignId(partnerCampaigns[0].id);
+    } else {
+      setSelectedCampaignId("");
+    }
+  };
 
   return (
     <Sidebar side="left" className="border-r border-border/50">
@@ -77,26 +102,41 @@ export function PlatformSidebar() {
           </div>
         )}
 
-        {/* Campaign Selector */}
+        {/* Partner → Campaign Selectors */}
         {!isCollapsed && (
           <div className="space-y-2">
-            <Select defaultValue="2">
+            {/* Partner Selector */}
+            <Select value={selectedPartner} onValueChange={handlePartnerChange}>
               <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-sm">
-                <SelectValue placeholder="Select Campaign" />
+                <SelectValue placeholder="Select Partner" />
               </SelectTrigger>
               <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-                {sampleCampaigns.map((campaign) => (
-                  <SelectItem key={campaign.id} value={campaign.id} className="cursor-pointer">
-                    <div className="flex flex-col">
-                      <span className="text-sm">{campaign.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {CUSTOMER_LABELS[campaign.customer]} · {campaign.totalChargers} chargers
-                      </span>
-                    </div>
+                {partners.map((p) => (
+                  <SelectItem key={p.value} value={p.value} className="cursor-pointer">
+                    {p.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Campaign Selector (filtered by partner) */}
+            <Select
+              value={selectedCampaignId}
+              onValueChange={setSelectedCampaignId}
+              disabled={!selectedPartner}
+            >
+              <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-sm">
+                <SelectValue placeholder={selectedPartner ? "Select Campaign" : "Select a partner first"} />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+                {filteredCampaigns.map((campaign) => (
+                  <SelectItem key={campaign.id} value={campaign.id} className="cursor-pointer max-w-[220px]">
+                    <span className="truncate block">{campaign.name}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Button
               variant="outline"
               size="sm"
@@ -110,7 +150,6 @@ export function PlatformSidebar() {
               open={newCampaignOpen}
               onOpenChange={setNewCampaignOpen}
               onComplete={(data) => {
-                // TODO: wire to campaign manager
                 toast.success(`Campaign "${data.name}" created with ${data.chargers.length} chargers`);
               }}
             />
