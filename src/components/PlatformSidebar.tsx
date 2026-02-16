@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Ticket, CalendarDays, Settings, Plus,
-  Filter, AlertTriangle, ChevronDown, ChevronRight, X, ChevronLeft,
+  Filter, AlertTriangle, ChevronDown, ChevronRight, X,
   MapPin, Zap, FileCheck, UserCog, Database, Columns,
 } from "lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
@@ -25,7 +25,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import nochLogo from "@/assets/noch-logo-white.png";
@@ -59,8 +58,7 @@ const ACCOUNT_MANAGERS = [
 const US_STATES = ["AZ", "CA", "FL", "GA", "IL", "NY", "TX", "VA", "WA"];
 
 export function PlatformSidebar() {
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
+  
   const { hasRole } = useUserRole();
   const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
   const { setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer } = useCampaignContext();
@@ -110,20 +108,15 @@ export function PlatformSidebar() {
     setSelectedCustomer(campaign?.customer || "");
   };
 
-  const { toggleSidebar } = useSidebar();
-
   return (
     <Sidebar side="left" collapsible="none" className="border-r border-border/50 relative h-screen sticky top-0">
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        {!isCollapsed && (
-          <div className="flex justify-start">
-            <img src={nochLogo} alt="Noch Power" className="w-[37.5%] h-auto" />
-          </div>
-        )}
+        <div className="flex justify-start">
+          <img src={nochLogo} alt="Noch Power" className="w-[37.5%] h-auto" />
+        </div>
 
         {/* Partner → Campaign Selectors */}
-        {!isCollapsed && (
-          <div className="space-y-2">
+        <div className="space-y-2">
             {/* Partner Selector */}
             <Select value={selectedPartner} onValueChange={handlePartnerChange}>
               <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-sm">
@@ -173,7 +166,6 @@ export function PlatformSidebar() {
               }}
             />
           </div>
-        )}
       </SidebarHeader>
 
       <SidebarContent className="custom-scrollbar">
@@ -192,7 +184,7 @@ export function PlatformSidebar() {
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
+                      <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -202,8 +194,7 @@ export function PlatformSidebar() {
         </SidebarGroup>
 
         {/* Filters Section */}
-        {!isCollapsed && (
-          <>
+        <>
             <SidebarGroup>
               <SidebarGroupLabel className="flex items-center gap-2">
                 <Filter className="w-4 h-4" />
@@ -370,12 +361,11 @@ export function PlatformSidebar() {
                 </CollapsibleContent>
               </Collapsible>
             </SidebarGroup>
-          </>
-        )}
+        </>
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-4">
-        {!isCollapsed && hasRole("super_admin") && (
+        {hasRole("super_admin") && (
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
@@ -392,19 +382,6 @@ export function PlatformSidebar() {
           </SidebarMenu>
         )}
       </SidebarFooter>
-
-      {/* Collapse toggle - half in sidebar, half out */}
-      <button
-        onClick={toggleSidebar}
-        className="absolute -right-3 top-6 z-20 h-7 w-7 rounded-full flex items-center justify-center shadow-md transition-colors"
-        style={{ backgroundColor: 'hsl(174, 66%, 32%)', }}
-        aria-label="Toggle sidebar"
-      >
-        <ChevronLeft
-          className={`h-4 w-4 transition-transform ${isCollapsed ? "rotate-180" : ""}`}
-          style={{ color: 'hsl(174, 66%, 65%)' }}
-        />
-      </button>
 
     </Sidebar>
   );
