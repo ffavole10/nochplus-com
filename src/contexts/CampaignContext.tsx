@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
 interface CampaignContextType {
   selectedCampaignName: string;
@@ -7,6 +7,17 @@ interface CampaignContextType {
   setSelectedCampaignId: (id: string) => void;
   selectedCustomer: string;
   setSelectedCustomer: (customer: string) => void;
+}
+
+const STORAGE_KEY = "selected-campaign";
+
+function loadStored() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
 }
 
 const CampaignContext = createContext<CampaignContextType>({
@@ -19,9 +30,18 @@ const CampaignContext = createContext<CampaignContextType>({
 });
 
 export function CampaignProvider({ children }: { children: ReactNode }) {
-  const [selectedCampaignName, setSelectedCampaignName] = useState("");
-  const [selectedCampaignId, setSelectedCampaignId] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const stored = loadStored();
+  const [selectedCampaignName, setSelectedCampaignName] = useState(stored.name || "");
+  const [selectedCampaignId, setSelectedCampaignId] = useState(stored.id || "");
+  const [selectedCustomer, setSelectedCustomer] = useState(stored.customer || "");
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      name: selectedCampaignName,
+      id: selectedCampaignId,
+      customer: selectedCustomer,
+    }));
+  }, [selectedCampaignName, selectedCampaignId, selectedCustomer]);
 
   return (
     <CampaignContext.Provider value={{
