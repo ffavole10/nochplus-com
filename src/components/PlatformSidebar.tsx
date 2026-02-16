@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Ticket, CalendarDays, Settings, Plus,
-  Filter, AlertTriangle, ChevronDown, ChevronRight, X,
+  Filter, AlertTriangle, ChevronDown, ChevronRight, X, ChevronLeft,
   MapPin, Zap, FileCheck, UserCog, Database, Columns,
 } from "lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
@@ -105,8 +105,10 @@ export function PlatformSidebar() {
     setSelectedCampaignName(campaign?.name || "");
   };
 
+  const { toggleSidebar } = useSidebar();
+
   return (
-    <Sidebar side="left" className="border-r border-border/50">
+    <Sidebar side="left" className="border-r border-border/50 relative group/sidebar-collapse">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         {!isCollapsed && (
           <div className="flex justify-start mb-4">
@@ -213,18 +215,6 @@ export function PlatformSidebar() {
                   </Button>
                 )}
               </SidebarGroupLabel>
-            </SidebarGroup>
-
-            {/* Search */}
-            <SidebarGroup>
-              <SidebarGroupContent className="px-2">
-                <Input
-                  placeholder="Search chargers..."
-                  value={filters.search}
-                  onChange={(e) => updateFilter("search", e.target.value)}
-                  className="bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/40 text-sm"
-                />
-              </SidebarGroupContent>
             </SidebarGroup>
 
             {/* Status Filter - 4 levels */}
@@ -397,6 +387,15 @@ export function PlatformSidebar() {
           </SidebarMenu>
         )}
       </SidebarFooter>
+
+      {/* Collapse toggle on sidebar border */}
+      <button
+        onClick={toggleSidebar}
+        className="absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-6 w-6 rounded-full border border-border bg-background shadow-sm flex items-center justify-center hover:bg-accent transition-colors"
+        aria-label="Toggle sidebar"
+      >
+        <ChevronLeft className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
+      </button>
     </Sidebar>
   );
 }
