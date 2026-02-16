@@ -217,31 +217,6 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Search & Match All row */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search tickets..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <button
-          onClick={() => matchBatch(filtered.map(t => t.charger))}
-          disabled={batchProgress.isRunning}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all shadow-md font-medium flex items-center gap-2 text-sm ml-auto"
-        >
-          {batchProgress.isRunning ? (
-            <>
-              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-              <span>Matching {batchProgress.current}/{batchProgress.total}...</span>
-            </>
-          ) : (
-            <>
-              <Brain className="h-4 w-4" />
-              <span>Match All SWIs</span>
-            </>
-          )}
-        </button>
-      </div>
-
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <Card className="metric-card border-l-4 border-l-critical">
@@ -287,6 +262,27 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
             <p className="text-2xl font-bold text-optimal">{stats.p4}</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Match All SWIs */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => matchBatch(filtered.map(t => t.charger))}
+          disabled={batchProgress.isRunning}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all shadow-md font-medium flex items-center gap-2 text-sm"
+        >
+          {batchProgress.isRunning ? (
+            <>
+              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+              <span>Matching {batchProgress.current}/{batchProgress.total}...</span>
+            </>
+          ) : (
+            <>
+              <Brain className="h-4 w-4" />
+              <span>Match All SWIs</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Ticket List */}
