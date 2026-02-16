@@ -16,6 +16,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dataset": "Dataset",
   "/kanban": "Kanban",
   "/tickets": "Tickets",
+  "/estimates": "Estimates",
   "/schedule": "Schedule",
   "/settings": "Settings"
 };
