@@ -142,10 +142,12 @@ function LineItemRow({
   item,
   onChange,
   onDelete,
+  readOnly,
 }: {
   item: EstimateLineItem;
   onChange: (updated: EstimateLineItem) => void;
   onDelete: () => void;
+  readOnly?: boolean;
 }) {
   const update = (patch: Partial<EstimateLineItem>) => {
     const next = { ...item, ...patch };
@@ -168,6 +170,7 @@ function LineItemRow({
           value={item.description}
           onChange={(e) => update({ description: e.target.value })}
           className="h-8 text-sm"
+          disabled={readOnly}
         />
       </td>
       <td className="py-2 pr-2">
@@ -178,12 +181,14 @@ function LineItemRow({
           value={item.qty}
           onChange={(e) => update({ qty: parseFloat(e.target.value) || 0 })}
           className="h-8 w-16 text-sm text-right"
+          disabled={readOnly}
         />
       </td>
       <td className="py-2 pr-2">
         <Select
           value={item.unit}
           onValueChange={(v) => update({ unit: v as EstimateLineItem["unit"] })}
+          disabled={readOnly}
         >
           <SelectTrigger className="h-8 w-20 text-xs">
             <SelectValue />
@@ -205,22 +210,25 @@ function LineItemRow({
             value={item.rate}
             onChange={(e) => update({ rate: parseFloat(e.target.value) || 0 })}
             className="h-8 w-24 text-sm text-right pl-5"
+            disabled={readOnly}
           />
         </div>
       </td>
       <td className="py-2 pr-2 text-right text-sm font-semibold whitespace-nowrap tabular-nums">
         ${item.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
       </td>
-      <td className="py-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={onDelete}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      </td>
+      {!readOnly && (
+        <td className="py-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </td>
+      )}
     </tr>
   );
 }
@@ -235,9 +243,9 @@ interface EstimateBuilderProps {
   ticket: AssessmentCharger;
   swiMatch: EnrichedSWIMatch;
   onDispatched: () => void;
-  onStatusChange?: (status: "none" | "draft" | "sent") => void;
+  onStatusChange?: (status: "none" | "draft" | "sent" | "approved") => void;
   onAccountManagerChange?: (name: string) => void;
-  initialStatus?: "draft" | "sent";
+  initialStatus?: "draft" | "sent" | "approved";
 }
 
 export function EstimateBuilder({
@@ -265,6 +273,7 @@ export function EstimateBuilder({
   const [accountManager, setAccountManager] = useState("");
   const [taxRate, setTaxRate] = useState(TAX_RATE);
   const [status, setStatus] = useState<Estimate["status"]>(initialStatus || "draft");
+  const isReadOnly = status === "approved";
   const [newCategory, setNewCategory] = useState<EstimateLineItem["category"]>("labor");
   const [showDispatch, setShowDispatch] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -472,14 +481,14 @@ export function EstimateBuilder({
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-3 text-lg">
               <FileText className="h-5 w-5 text-primary" />
-              {status === "sent" ? "Review Estimate" : "Create Estimate"}
+              {isReadOnly ? "View Estimate" : status === "sent" ? "Review Estimate" : "Create Estimate"}
             </DialogTitle>
             <div className="bg-[#1e293b] rounded-md px-4 py-2">
               <img src="/images/noch-power-logo-white-2.png" alt="Noch" className="h-6 object-contain" />
             </div>
           </div>
           <DialogDescription>
-            Build a service estimate for this ticket, then send or dispatch.
+            {isReadOnly ? "This estimate has been approved and cannot be modified." : "Build a service estimate for this ticket, then send or dispatch."}
           </DialogDescription>
         </DialogHeader>
 
@@ -546,6 +555,7 @@ export function EstimateBuilder({
                         item={item}
                         onChange={(u) => updateItem(item.id, u)}
                         onDelete={() => deleteItem(item.id)}
+                        readOnly={isReadOnly}
                       />
                     ))}
                   </tbody>
@@ -553,28 +563,30 @@ export function EstimateBuilder({
               </div>
 
               {/* Add Line Item */}
-              <div className="flex items-center gap-2 px-3 py-2 border-t border-border bg-muted/20">
-                <Select
-                  value={newCategory}
-                  onValueChange={(v) =>
-                    setNewCategory(v as EstimateLineItem["category"])
-                  }
-                >
-                  <SelectTrigger className="h-8 w-28 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    <SelectItem value="labor">Labor</SelectItem>
-                    <SelectItem value="parts">Parts</SelectItem>
-                    <SelectItem value="travel">Travel</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="sm" onClick={addItem} className="h-8 gap-1.5 text-xs">
-                  <Plus className="h-3.5 w-3.5" />
-                  Add Line Item
-                </Button>
-              </div>
+              {!isReadOnly && (
+                <div className="flex items-center gap-2 px-3 py-2 border-t border-border bg-muted/20">
+                  <Select
+                    value={newCategory}
+                    onValueChange={(v) =>
+                      setNewCategory(v as EstimateLineItem["category"])
+                    }
+                  >
+                    <SelectTrigger className="h-8 w-28 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="labor">Labor</SelectItem>
+                      <SelectItem value="parts">Parts</SelectItem>
+                      <SelectItem value="travel">Travel</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={addItem} className="h-8 gap-1.5 text-xs">
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Line Item
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -621,13 +633,14 @@ export function EstimateBuilder({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Additional notes, safety warnings, special instructions…"
               className="min-h-[80px] text-sm"
+              disabled={isReadOnly}
             />
           </div>
 
           {/* ── E. Account Manager ────────────────────────── */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-2">Account Manager</h3>
-            <Select value={accountManager} onValueChange={(val) => {
+            <Select value={accountManager} disabled={isReadOnly} onValueChange={(val) => {
               setAccountManager(val);
               const am = ACCOUNT_MANAGERS.find(a => a.email === val);
               if (am) onAccountManagerChange?.(am.name);
@@ -656,6 +669,7 @@ export function EstimateBuilder({
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
                 className="max-w-sm"
+                disabled={isReadOnly}
               />
               {customerEmail && !customerEmail.includes("@") && (
                 <span className="text-xs text-destructive flex items-center gap-1">
@@ -666,104 +680,113 @@ export function EstimateBuilder({
           </div>
 
           {/* ── G. Additional Recipients ──────────────────── */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-2">Additional Recipients</h3>
-            <div className="flex items-center gap-2 mb-2">
-              <Input
-                type="email"
-                placeholder="other@company.com"
-                value={newAdditionalEmail}
-                onChange={(e) => setNewAdditionalEmail(e.target.value)}
-                className="max-w-sm"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && newAdditionalEmail.includes("@")) {
-                    e.preventDefault();
+          {!isReadOnly && (
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-2">Additional Recipients</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <Input
+                  type="email"
+                  placeholder="other@company.com"
+                  value={newAdditionalEmail}
+                  onChange={(e) => setNewAdditionalEmail(e.target.value)}
+                  className="max-w-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newAdditionalEmail.includes("@")) {
+                      e.preventDefault();
+                      setAdditionalEmails((prev) => [...prev, newAdditionalEmail.trim()]);
+                      setNewAdditionalEmail("");
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!newAdditionalEmail.includes("@")}
+                  onClick={() => {
                     setAdditionalEmails((prev) => [...prev, newAdditionalEmail.trim()]);
                     setNewAdditionalEmail("");
-                  }
-                }}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!newAdditionalEmail.includes("@")}
-                onClick={() => {
-                  setAdditionalEmails((prev) => [...prev, newAdditionalEmail.trim()]);
-                  setNewAdditionalEmail("");
-                }}
-                className="gap-1.5"
-              >
-                <Plus className="h-3.5 w-3.5" /> Add
-              </Button>
-            </div>
-            {additionalEmails.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {additionalEmails.map((email, idx) => (
-                  <Badge key={idx} variant="secondary" className="gap-1 text-xs">
-                    {email}
-                    <button
-                      onClick={() => setAdditionalEmails((prev) => prev.filter((_, i) => i !== idx))}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                ))}
+                  }}
+                  className="gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add
+                </Button>
               </div>
-            )}
-          </div>
+              {additionalEmails.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {additionalEmails.map((email, idx) => (
+                    <Badge key={idx} variant="secondary" className="gap-1 text-xs">
+                      {email}
+                      <button
+                        onClick={() => setAdditionalEmails((prev) => prev.filter((_, i) => i !== idx))}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        ×
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── Bottom Actions ──────────────────────────────── */}
         <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            {status === "sent" && (
+            {isReadOnly && (
+              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 gap-1 border border-green-200 dark:border-green-800">
+                <CheckCircle className="h-3 w-3" /> Approved
+              </Badge>
+            )}
+            {!isReadOnly && status === "sent" && (
               <Badge className="bg-optimal text-optimal-foreground gap-1">
                 <CheckCircle className="h-3 w-3" /> Estimate Sent
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-1.5">
-              <Save className="h-3.5 w-3.5" />
-              Save Draft
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSendEstimate}
-              disabled={isSending}
-              className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
-            >
-              {isSending ? (
-                <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          {!isReadOnly && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-1.5">
+                <Save className="h-3.5 w-3.5" />
+                Save Draft
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSendEstimate}
+                disabled={isSending}
+                className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+              >
+                {isSending ? (
+                  <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Send className="h-3.5 w-3.5" />
+                )}
+                {isSending ? "Sending..." : status === "sent" ? "Resend Estimate" : "Send Estimate"}
+              </Button>
+              {status === "sent" ? (
+                <Button
+                  size="sm"
+                  onClick={() => setShowDispatch(true)}
+                  className="gap-1.5"
+                >
+                  <ClipboardCopy className="h-3.5 w-3.5" />
+                  Dispatch to Jobber
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
               ) : (
-                <Send className="h-3.5 w-3.5" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSkipDispatch}
+                  className="gap-1.5 text-muted-foreground"
+                >
+                  Skip & Dispatch to Jobber
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
               )}
-              {isSending ? "Sending..." : status === "sent" ? "Resend Estimate" : "Send Estimate"}
-            </Button>
-            {status === "sent" ? (
-              <Button
-                size="sm"
-                onClick={() => setShowDispatch(true)}
-                className="gap-1.5"
-              >
-                <ClipboardCopy className="h-3.5 w-3.5" />
-                Dispatch to Jobber
-                <ExternalLink className="h-3 w-3" />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSkipDispatch}
-                className="gap-1.5 text-muted-foreground"
-              >
-                Skip & Dispatch to Jobber
-                <ExternalLink className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
