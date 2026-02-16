@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
+import { useChargerRecords } from "@/hooks/useCampaigns";
+import { chargerRecordToAssessment } from "@/lib/assessmentParser";
 import {
   LayoutDashboard, Ticket, CalendarDays, Settings, Plus,
   Filter, AlertTriangle, ChevronDown, ChevronRight, X,
@@ -59,10 +61,19 @@ const US_STATES = ["AZ", "CA", "FL", "GA", "IL", "NY", "TX", "VA", "WA"];
 export function PlatformSidebar() {
   const { hasRole } = useUserRole();
   const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
-  const { setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer } = useCampaignContext();
+  const { selectedCampaignId: contextCampaignId, setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer } = useCampaignContext();
   const [newCampaignOpen, setNewCampaignOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string>("");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
+
+  // Compute ticket count for sidebar badge
+  const { data: sidebarChargerRecords = [] } = useChargerRecords(contextCampaignId || null);
+  const ticketCount = useMemo(() => {
+    if (sidebarChargerRecords.length === 0) return 0;
+    return sidebarChargerRecords
+      .map(r => chargerRecordToAssessment(r))
+      .filter(c => c.ticketId || c.ticketCreatedDate).length;
+  }, [sidebarChargerRecords]);
 
   const [statusOpen, setStatusOpen] = useState(true);
   const [stateOpen, setStateOpen] = useState(false);
@@ -186,7 +197,12 @@ export function PlatformSidebar() {
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span className="flex-1">{item.title}</span>
+                      {item.title === "Tickets" && ticketCount > 0 && (
+                        <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-bold rounded-full bg-critical text-critical-foreground">
+                          {ticketCount}
+                        </span>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

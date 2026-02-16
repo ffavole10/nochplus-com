@@ -9,6 +9,7 @@ interface HeroMetricsProps {
   lowCount: number;
   totalServiced: number;
   totalChargers: number;
+  ticketStats?: { total: number; p1: number; p2: number; p3: number; p4: number };
   onCriticalClick: () => void;
 }
 
@@ -20,10 +21,17 @@ export function HeroMetrics({
   lowCount,
   totalServiced,
   totalChargers,
+  ticketStats,
   onCriticalClick,
 }: HeroMetricsProps) {
   const completionPercent = Math.round((totalServiced / totalChargers) * 100);
-  const totalAll = criticalCount + highCount + mediumCount + lowCount;
+  
+  // Use ticket priority stats if available, otherwise fall back to charger status counts
+  const displayCritical = ticketStats ? ticketStats.p1 : criticalCount;
+  const displayHigh = ticketStats ? ticketStats.p2 : highCount;
+  const displayMedium = ticketStats ? ticketStats.p3 : mediumCount;
+  const displayLow = ticketStats ? ticketStats.p4 : lowCount;
+  const totalAll = displayCritical + displayHigh + displayMedium + displayLow;
 
   const titleClass = "text-base font-semibold text-foreground flex items-center gap-2";
 
@@ -91,28 +99,28 @@ export function HeroMetrics({
               <span className="w-3 h-3 rounded-full bg-critical"></span>
               <span className="text-sm">Critical</span>
             </div>
-            <span className="font-semibold text-critical">{criticalCount}</span>
+            <span className="font-semibold text-critical">{displayCritical}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-high"></span>
               <span className="text-sm">High</span>
             </div>
-            <span className="font-semibold text-high">{highCount}</span>
+            <span className="font-semibold text-high">{displayHigh}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-medium"></span>
               <span className="text-sm">Medium</span>
             </div>
-            <span className="font-semibold text-medium">{mediumCount}</span>
+            <span className="font-semibold text-medium">{displayMedium}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-low"></span>
               <span className="text-sm">Low</span>
             </div>
-            <span className="font-semibold text-low">{lowCount}</span>
+            <span className="font-semibold text-low">{displayLow}</span>
           </div>
           <div className="border-t border-border pt-2 mt-2 flex items-center justify-between">
             <span className="text-sm font-medium">Total</span>

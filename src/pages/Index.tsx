@@ -1,5 +1,7 @@
 import { useRef, useState, useCallback, useMemo, useEffect } from "react";
 import { getNetworkStats, Charger, chargerRecordToCharger } from "@/data/chargerData";
+import { chargerRecordToAssessment } from "@/lib/assessmentParser";
+import { getTicketPriorityStats } from "@/lib/ticketPriority";
 import { HeroMetrics } from "@/components/dashboard/HeroMetrics";
 import { FindingsSection } from "@/components/dashboard/FindingsSection";
 import { ChargerMap } from "@/components/dashboard/ChargerMap";
@@ -42,6 +44,13 @@ const Index = () => {
   }, [baseChargers, chargerRecords]);
 
   const filteredStats = getNetworkStats(filteredChargers);
+
+  // Compute ticket priority stats from assessment chargers
+  const ticketStats = useMemo(() => {
+    if (!hasCampaign || chargerRecords.length === 0) return undefined;
+    const assessmentChargers = chargerRecords.map(r => chargerRecordToAssessment(r));
+    return getTicketPriorityStats(assessmentChargers);
+  }, [hasCampaign, chargerRecords]);
 
   const handleCriticalClick = useCallback(() => {
     criticalRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -111,6 +120,7 @@ const Index = () => {
         lowCount={filteredStats.low}
         totalServiced={filteredStats.serviced}
         totalChargers={filteredStats.total}
+        ticketStats={ticketStats}
         onCriticalClick={handleCriticalClick}
       />
 
