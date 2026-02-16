@@ -1,16 +1,26 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
 
+const PAGE_TITLES: Record<string, string> = {
+  "/": "Dashboard",
+  "/tickets": "Tickets",
+  "/schedule": "Schedule",
+  "/settings": "Settings",
+};
+
 export function PlatformHeader() {
   const { session } = useAuth();
+  const location = useLocation();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [initials, setInitials] = useState<string | null>(null);
+
+  const pageTitle = PAGE_TITLES[location.pathname] || "Dashboard";
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -34,9 +44,7 @@ export function PlatformHeader() {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/50">
       <div className="px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger />
-        </div>
+        <h1 className="text-lg font-semibold text-foreground">{pageTitle}</h1>
 
         <div className="flex items-center gap-3">
           <NotificationBell />
