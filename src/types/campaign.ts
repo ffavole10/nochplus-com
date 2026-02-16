@@ -5,6 +5,34 @@ export type ScheduleItemStatus = "not_started" | "in_progress" | "completed" | "
 
 export type SortMethod = "priority" | "type" | "location" | "age" | "warranty";
 
+export type CampaignType = "preventive_maintenance" | "reactive_repair" | "hybrid";
+
+export const CAMPAIGN_TYPE_CONFIG: Record<CampaignType, {
+  label: string;
+  icon: string;
+  className: string;
+  description: string;
+}> = {
+  preventive_maintenance: {
+    label: "Preventive",
+    icon: "🔧",
+    className: "bg-primary/10 text-primary border-primary/20",
+    description: "Scheduled maintenance visits to prevent issues. Tickets are created as issues are found.",
+  },
+  reactive_repair: {
+    label: "Reactive",
+    icon: "⚠️",
+    className: "bg-critical/10 text-critical border-critical/20",
+    description: "Respond to reported issues and outages. Tickets drive the workflow.",
+  },
+  hybrid: {
+    label: "Hybrid",
+    icon: "🔄",
+    className: "bg-secondary/10 text-secondary border-secondary/20",
+    description: "Combination of scheduled maintenance and reactive repairs.",
+  },
+};
+
 export interface CampaignConfig {
   name: string;
   startDate: string;
