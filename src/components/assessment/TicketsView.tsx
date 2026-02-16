@@ -80,7 +80,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const [dispatchFilter, setDispatchFilter] = useState<string>("all");
   const [amFilter, setAmFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [estimateStatuses, setEstimateStatuses] = useState<Record<string, "none" | "draft" | "sent">>(() => {
+  const [estimateStatuses, setEstimateStatuses] = useState<Record<string, "none" | "draft" | "sent" | "approved">>(() => {
     try { const s = localStorage.getItem("ticket-estimate-statuses"); return s ? JSON.parse(s) : {}; } catch { return {}; }
   });
   const [accountManagers, setAccountManagers] = useState<Record<string, string>>(() => {

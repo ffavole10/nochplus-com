@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { FileText, CheckCircle, Send, Edit } from "lucide-react";
+import { FileText, CheckCircle, Send, Edit, Eye, ClipboardCopy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AssessmentCharger } from "@/types/assessment";
 import { EnrichedSWIMatch } from "@/hooks/useSWIMatching";
 import { EstimateBuilder } from "./EstimateBuilder";
+import { DispatchModal } from "./DispatchModal";
 
-export type EstimateStatus = "none" | "draft" | "sent";
+export type EstimateStatus = "none" | "draft" | "sent" | "approved";
 
 interface DispatchButtonProps {
   ticket: AssessmentCharger;
@@ -18,6 +19,7 @@ export function DispatchButton({ ticket, swiMatch, onEstimateStatusChange, onAcc
   const [isOpen, setIsOpen] = useState(false);
   const [dispatched, setDispatched] = useState(false);
   const [estimateStatus, setEstimateStatus] = useState<EstimateStatus>("none");
+  const [showDispatch, setShowDispatch] = useState(false);
 
   const handleEstimateStatusChange = (status: EstimateStatus) => {
     setEstimateStatus(status);
@@ -33,6 +35,50 @@ export function DispatchButton({ ticket, swiMatch, onEstimateStatusChange, onAcc
     );
   }
 
+  // Approved state: View Estimate (read-only) + blinking Jobber button
+  if (estimateStatus === "approved") {
+    return (
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
+          className="gap-2 border-green-500/30 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          View Estimate
+        </Button>
+        <Button
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); setShowDispatch(true); }}
+          className="gap-1.5 animate-pulse"
+        >
+          <ClipboardCopy className="h-3.5 w-3.5" />
+          Dispatch to Jobber
+          <ExternalLink className="h-3 w-3" />
+        </Button>
+        <EstimateBuilder
+          open={isOpen}
+          onOpenChange={setIsOpen}
+          ticket={ticket}
+          swiMatch={swiMatch}
+          onDispatched={() => { setDispatched(true); setIsOpen(false); }}
+          onStatusChange={handleEstimateStatusChange}
+          onAccountManagerChange={onAccountManagerChange}
+          initialStatus="approved"
+        />
+        <DispatchModal
+          open={showDispatch}
+          onOpenChange={setShowDispatch}
+          ticket={ticket}
+          swiMatch={swiMatch}
+          onDispatched={() => { setDispatched(true); setShowDispatch(false); }}
+        />
+      </div>
+    );
+  }
+
+  // Sent state: Edit Estimate
   if (estimateStatus === "sent") {
     return (
       <div className="flex items-center gap-2">
@@ -47,7 +93,7 @@ export function DispatchButton({ ticket, swiMatch, onEstimateStatusChange, onAcc
           className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
         >
           <Edit className="h-3.5 w-3.5" />
-          Review / Edit
+          Edit Estimate
         </Button>
         <EstimateBuilder
           open={isOpen}
