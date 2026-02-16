@@ -142,10 +142,32 @@ export function DataManagement() {
       };
 
       const mapped = jsonData.map((row: any) => {
+        // Normalize key for flexible matching
+        const normalizeKey = (k: string) => k.toLowerCase().replace(/[\n\r_\s]+/g, " ").trim();
+        
+        // Build a normalized lookup from row keys
+        const normalizedRow: Record<string, any> = {};
+        for (const [key, val] of Object.entries(row)) {
+          normalizedRow[normalizeKey(key)] = val;
+        }
+
         const get = (keys: string[]) => {
           for (const k of keys) {
-            const val = row[k] ?? row[k.toLowerCase()] ?? row[k.toUpperCase()];
-            if (val !== undefined && val !== "") return val;
+            // Try exact key first
+            if (row[k] !== undefined && row[k] !== "") return row[k];
+            // Try normalized
+            const norm = normalizeKey(k);
+            if (normalizedRow[norm] !== undefined && normalizedRow[norm] !== "") return normalizedRow[norm];
+          }
+          // Fallback: "contains" match for longer keys
+          for (const k of keys) {
+            const norm = normalizeKey(k);
+            if (norm.length < 4) continue;
+            for (const [rowKey, val] of Object.entries(normalizedRow)) {
+              if (rowKey.includes(norm) || norm.includes(rowKey)) {
+                if (val !== undefined && val !== "") return val;
+              }
+            }
           }
           return null;
         };
@@ -159,38 +181,38 @@ export function DataManagement() {
 
         return {
           campaign_id: selectedCampaignId,
-          station_id: String(get(["Station ID", "station_id", "EVSE ID", "evse_id"]) || `STA-${Math.random().toString(36).slice(2, 8)}`),
-          station_name: get(["Station Name", "station_name", "Asset Name"]) as string | null,
-          serial_number: get(["Serial Number", "serial_number"]) as string | null,
-          model: get(["Model", "model"]) as string | null,
-          site_name: get(["Site Name", "site_name", "Account Name"]) as string | null,
-          address: get(["Address", "address"]) as string | null,
-          city: get(["City", "city"]) as string | null,
-          state: get(["State", "state"]) as string | null,
-          zip: get(["ZIP", "zip", "Zip"]) as string | null,
+          station_id: String(get(["Station ID", "station_id", "EVSE ID", "evse_id", "Charger ID", "Asset ID", "Charge Box Identity", "CBID"]) || `STA-${Math.random().toString(36).slice(2, 8)}`),
+          station_name: get(["Station Name", "station_name", "Asset Name", "Charger Name", "Device Name"]) as string | null,
+          serial_number: get(["Serial Number", "serial_number", "Serial"]) as string | null,
+          model: get(["Model", "model", "Asset Record Type", "Charger Model"]) as string | null,
+          site_name: get(["Site Name", "site_name", "Account Name", "Organization", "Organization Name", "Location Name"]) as string | null,
+          address: get(["Address", "address", "Street Address", "Address Line 1", "Full Address", "Location Address", "Street", "Location"]) as string | null,
+          city: get(["City", "city", "Town"]) as string | null,
+          state: get(["State", "state", "State/Province", "Province"]) as string | null,
+          zip: get(["ZIP", "zip", "Zip", "Zip Code", "Zip/Postal Code", "Postal Code", "Zipcode"]) as string | null,
           latitude: get(["Latitude", "latitude"]) ? Number(get(["Latitude", "latitude"])) : null,
           longitude: get(["Longitude", "longitude"]) ? Number(get(["Longitude", "longitude"])) : null,
-          status: (get(["Status", "status"]) as "Optimal" | "Degraded" | "Critical" | null),
-          start_date: parseDate(get(["Start Date", "start_date"])),
-          service_date: parseDate(get(["Service Date", "service_date"])),
-          max_power: get(["Max Power", "max_power"]) ? Number(get(["Max Power", "max_power"])) : null,
-          serviced_qty: Number(get(["Serviced Qty", "serviced_qty"]) || 0),
+          status: (get(["Status", "status", "Online Status", "Condition"]) as "Optimal" | "Degraded" | "Critical" | null),
+          start_date: parseDate(get(["Start Date", "start_date", "In-Service Date", "In Service Date", "Install Date"])),
+          service_date: parseDate(get(["Service Date", "service_date", "DATE"])),
+          max_power: get(["Max Power", "max_power", "Max. Power", "Power", "kW"]) ? Number(get(["Max Power", "max_power", "Max. Power"])) : null,
+          serviced_qty: Number(get(["Serviced Qty", "serviced_qty", "QTY", "Quantity"]) || 0),
           service_required: Number(get(["Service Required", "service_required"]) || 0),
-          summary: get(["Summary", "summary"]) as string | null,
-          report_url: get(["Report URL", "report_url"]) as string | null,
-          ccs_cable_issue: boolField(["CCS Cable Issue", "ccs_cable_issue"]),
-          chademo_cable_issue: boolField(["CHAdeMO Cable Issue", "chademo_cable_issue"]),
-          screen_damage: boolField(["Screen Damage", "screen_damage"]),
-          cc_reader_issue: boolField(["CC Reader Issue", "cc_reader_issue"]),
-          rfid_reader_issue: boolField(["RFID Reader Issue", "rfid_reader_issue"]),
-          app_issue: boolField(["App Issue", "app_issue"]),
-          holster_issue: boolField(["Holster Issue", "holster_issue"]),
-          power_supply_issue: boolField(["Power Supply Issue", "power_supply_issue"]),
-          circuit_board_issue: boolField(["Circuit Board Issue", "circuit_board_issue"]),
-          other_issue: boolField(["Other Issue", "other_issue"]),
-          power_cabinet_status: get(["Power Cabinet Status", "power_cabinet_status"]) as string | null,
-          power_cabinet_summary: get(["Power Cabinet Summary", "power_cabinet_summary"]) as string | null,
-          power_cabinet_report_url: get(["Power Cabinet Report URL", "power_cabinet_report_url"]) as string | null,
+          summary: get(["Summary", "summary", "Notes", "Description"]) as string | null,
+          report_url: get(["Report URL", "report_url", "FULL Report", "Full Report"]) as string | null,
+          ccs_cable_issue: boolField(["CCS Cable Issue", "ccs_cable_issue", "CCS Cable", "CCS"]),
+          chademo_cable_issue: boolField(["CHAdeMO Cable Issue", "chademo_cable_issue", "CHAdeMo Cable", "CHAdeMO"]),
+          screen_damage: boolField(["Screen Damage", "screen_damage", "Screen"]),
+          cc_reader_issue: boolField(["CC Reader Issue", "cc_reader_issue", "CC Reader"]),
+          rfid_reader_issue: boolField(["RFID Reader Issue", "rfid_reader_issue", "RFID Reader", "RFID"]),
+          app_issue: boolField(["App Issue", "app_issue", "App"]),
+          holster_issue: boolField(["Holster Issue", "holster_issue", "Holster"]),
+          power_supply_issue: boolField(["Power Supply Issue", "power_supply_issue", "Power Supply"]),
+          circuit_board_issue: boolField(["Circuit Board Issue", "circuit_board_issue", "Circuit Board"]),
+          other_issue: boolField(["Other Issue", "other_issue", "Other"]),
+          power_cabinet_status: get(["Power Cabinet Status", "power_cabinet_status", "Cabinet Status"]) as string | null,
+          power_cabinet_summary: get(["Power Cabinet Summary", "power_cabinet_summary", "Cabinet Summary"]) as string | null,
+          power_cabinet_report_url: get(["Power Cabinet Report URL", "power_cabinet_report_url", "Report"]) as string | null,
           ticket_id: get(["Ticket ID", "ticket_id"]) as string | null,
           ticket_created_date: parseDate(get(["Ticket Created Date", "ticket_created_date", "PST Ticket Created Date"])),
           ticket_solved_date: parseDate(get(["Ticket Solved Date", "ticket_solved_date"])),

@@ -335,29 +335,41 @@ export function chargerRecordToAssessment(r: {
   if ((r.serviced_qty ?? 0) > 0) phase = "Completed";
   else if (r.service_date) phase = "Scheduled";
 
-  // Extract charger name and account from ticket_subject when station_name/site_name are missing
-  // Format: "BTC0329 - Connectors Issue - Baxalta Los Angeles - (Location)"
-  // or: "BTC2018 - Station Offline EV Charger warranty ... "
+  // Extract charger name, account, and address from ticket_subject when DB fields are missing
+  // Patterns seen:
+  //   "BTC0329 - Connectors Issue - Baxalta Los Angeles"
+  //   "BTC2018 - Station Offline ... - Boeing (5868 Approach RD)"
+  //   "EV0141 - Station Offline - Pure Power Contractors - (Pure Power Contractors)"
   let derivedName = r.station_name || "";
   let derivedAccount = r.site_name || "";
   let derivedAddress = r.address || "";
 
   if (r.ticket_subject) {
     const parts = r.ticket_subject.split(" - ").map(p => p.trim());
-    // First part is typically the charger ID (e.g., "BTC0329", "EVC1076", "109920")
+    // First part is typically the charger ID (e.g., "BTC0329", "EVC1076")
     if (!derivedName && parts.length >= 1) {
       derivedName = parts[0];
     }
-    // Third part is often the account/organization name
-    if (!derivedAccount && parts.length >= 3) {
-      // Remove parentheses wrapper if present e.g. "(Pure Power Contractors)"
-      derivedAccount = parts[2].replace(/^\(|\)$/g, "");
-    }
-    // Fourth part (in parentheses) is often the location/address
-    if (!derivedAddress && parts.length >= 4) {
-      const locationPart = parts[3].replace(/^\(|\)$/g, "");
-      if (locationPart && locationPart.length > 3) {
-        derivedAddress = locationPart;
+
+    // Look through remaining parts for account and address
+    // Account often contains address in parentheses: "Boeing (5868 Approach RD)"
+    // Or the last part is a standalone parenthesized location: "(Pure Power Contractors)"
+    if (parts.length >= 3) {
+      for (let i = 2; i < parts.length; i++) {
+        const part = parts[i];
+        // Check for "Account (Address)" pattern
+        const parenMatch = part.match(/^(.+?)\s*\((.+?)\)\s*$/);
+        if (parenMatch) {
+          if (!derivedAccount) derivedAccount = parenMatch[1].trim();
+          if (!derivedAddress) derivedAddress = parenMatch[2].trim();
+        } else if (part.startsWith("(") && part.endsWith(")")) {
+          // Standalone parenthesized part — could be location or account
+          const inner = part.slice(1, -1).trim();
+          if (!derivedAddress && inner.length > 3) derivedAddress = inner;
+        } else if (!derivedAccount && i === 2) {
+          // Third part without parens is usually the account
+          derivedAccount = part;
+        }
       }
     }
   }
