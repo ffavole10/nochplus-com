@@ -326,12 +326,14 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                             const estStatus = estimateStatuses[charger.id] || "none";
                             const hasDispatch = false;
 
-                            // E milestone: yellow for draft/sent, green for approved
+                            // E milestone: blue for draft, yellow for sent, green for approved
                             const eColor = estStatus === "approved"
                               ? "bg-optimal text-optimal-foreground border-optimal"
-                              : estStatus === "draft" || estStatus === "sent"
+                              : estStatus === "sent"
                                 ? "bg-medium text-medium-foreground border-medium"
-                                : "bg-muted text-muted-foreground border-border";
+                                : estStatus === "draft"
+                                  ? "bg-secondary text-secondary-foreground border-secondary"
+                                  : "bg-muted text-muted-foreground border-border";
 
                             const milestones = [
                               { label: "S", className: hasSWI ? "bg-optimal text-optimal-foreground border-optimal" : "bg-muted text-muted-foreground border-border" },
