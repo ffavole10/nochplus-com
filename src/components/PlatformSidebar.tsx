@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Ticket, CalendarDays, Settings, Plus,
   Filter, AlertTriangle, ChevronDown, ChevronRight, X,
-  MapPin, Zap, FileCheck, UserCog, Database, Columns,
+  MapPin, Zap, FileCheck, UserCog, Database,
 } from "lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
@@ -35,7 +35,6 @@ import { useCampaigns } from "@/hooks/useCampaigns";
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Dataset", url: "/dataset", icon: Database },
-  { title: "Kanban", url: "/kanban", icon: Columns },
   { title: "Tickets", url: "/tickets", icon: Ticket },
   { title: "Schedule", url: "/schedule", icon: CalendarDays },
 ];
