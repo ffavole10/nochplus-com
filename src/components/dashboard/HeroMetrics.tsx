@@ -26,12 +26,13 @@ export function HeroMetrics({
 }: HeroMetricsProps) {
   const completionPercent = Math.round((totalServiced / totalChargers) * 100);
   
-  // Use ticket priority stats if available, otherwise fall back to charger status counts
   const displayCritical = ticketStats ? ticketStats.p1 : criticalCount;
   const displayHigh = ticketStats ? ticketStats.p2 : highCount;
   const displayMedium = ticketStats ? ticketStats.p3 : mediumCount;
   const displayLow = ticketStats ? ticketStats.p4 : lowCount;
-  const totalAll = displayCritical + displayHigh + displayMedium + displayLow;
+  const totalTickets = displayCritical + displayHigh + displayMedium + displayLow;
+  const okCount = totalChargers - totalTickets;
+  const networkHealthPercent = totalChargers > 0 ? Math.round((okCount / totalChargers) * 100) : 0;
 
   const titleClass = "text-base font-semibold text-foreground flex items-center gap-2";
 
@@ -44,11 +45,11 @@ export function HeroMetrics({
           Network Health
         </h3>
         <div className="flex-1 flex items-center justify-center">
-          <HealthGauge score={healthScore} />
+          <HealthGauge score={networkHealthPercent} suffix="%" />
         </div>
       </div>
 
-      {/* Critical Actions */}
+      {/* Action Required */}
       <button
         onClick={onCriticalClick}
         className="metric-card flex flex-col animate-fade-in relative text-left"
@@ -56,11 +57,11 @@ export function HeroMetrics({
       >
         <h3 className={`${titleClass} mb-3`}>
           <AlertTriangle className="w-4 h-4 text-critical" />
-          Critical Actions
+          Action Required
         </h3>
         <div className="flex-1 flex flex-col items-center justify-center w-full">
-          <div className="text-5xl font-bold text-critical">{criticalCount}</div>
-          <div className="text-sm text-muted-foreground mt-1">{Math.round((criticalCount / totalChargers) * 100)}% of network</div>
+          <div className="text-5xl font-bold text-critical">{totalTickets}</div>
+          <div className="text-sm text-muted-foreground mt-1">tickets</div>
         </div>
         <div className="absolute top-3 right-3">
           <span className="relative flex h-3 w-3">
@@ -123,11 +124,11 @@ export function HeroMetrics({
             <span className="font-semibold text-low">{displayLow}</span>
           </div>
           <div className="border-t border-border pt-2 mt-2 flex items-center justify-between">
-            <span className="text-sm font-medium">Total</span>
-            <div className="text-right">
-              <span className="font-bold text-foreground">{totalAll}</span>
-              <div className="text-xs text-muted-foreground">{Math.round((totalAll / totalChargers) * 100)}%</div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-optimal"></span>
+              <span className="text-sm font-medium">OK</span>
             </div>
+            <span className="font-bold text-optimal">{okCount.toLocaleString()}</span>
           </div>
         </div>
       </div>
