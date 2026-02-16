@@ -8,6 +8,7 @@ import {
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
 import { usePartners } from "@/hooks/usePartners";
+import { useCampaigns } from "@/hooks/useCampaigns";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NavLink } from "@/components/NavLink";
@@ -28,7 +29,6 @@ import {
   SidebarMenuButton,
   useSidebar } from
 "@/components/ui/sidebar";
-import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
@@ -80,17 +80,20 @@ export function PlatformSidebar() {
     return dbPartners.map((p) => ({ value: p.value, label: p.label }));
   }, [dbPartners]);
 
+  // Fetch campaigns from the database
+  const { data: dbCampaigns = [] } = useCampaigns();
+
   // Filter campaigns by selected partner
   const filteredCampaigns = useMemo(() => {
     if (!selectedPartner) return [];
-    return sampleCampaigns.filter((c) => c.customer === selectedPartner);
-  }, [selectedPartner]);
+    return dbCampaigns.filter((c) => c.customer === selectedPartner);
+  }, [selectedPartner, dbCampaigns]);
 
   // Reset campaign when partner changes
   const handlePartnerChange = (value: string) => {
     setSelectedPartner(value);
     setSelectedCustomer(value);
-    const partnerCampaigns = sampleCampaigns.filter((c) => c.customer === value);
+    const partnerCampaigns = dbCampaigns.filter((c) => c.customer === value);
     if (partnerCampaigns.length === 1) {
       setSelectedCampaignId(partnerCampaigns[0].id);
       setContextCampaignId(partnerCampaigns[0].id);
@@ -105,7 +108,7 @@ export function PlatformSidebar() {
   const handleCampaignChange = (value: string) => {
     setSelectedCampaignId(value);
     setContextCampaignId(value);
-    const campaign = sampleCampaigns.find((c) => c.id === value);
+    const campaign = dbCampaigns.find((c) => c.id === value);
     setSelectedCampaignName(campaign?.name || "");
     setSelectedCustomer(campaign?.customer || "");
   };
