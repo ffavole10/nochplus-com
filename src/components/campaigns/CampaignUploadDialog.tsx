@@ -92,6 +92,7 @@ export function CampaignUploadDialog({ open, onOpenChange, onSuccess }: Campaign
       const campaign = await createCampaign.mutateAsync({
         name: campaignName,
         customer,
+        status: "draft",
         quarter,
         year: parseInt(year),
         start_date: null,
