@@ -106,10 +106,11 @@ const Index = () => {
       <HeroMetrics
         healthScore={filteredStats.healthScore}
         criticalCount={filteredStats.critical}
+        highCount={filteredStats.high}
+        mediumCount={filteredStats.medium}
+        lowCount={filteredStats.low}
         totalServiced={filteredStats.serviced}
         totalChargers={filteredStats.total}
-        optimalCount={filteredStats.optimal}
-        degradedCount={filteredStats.degraded}
         onCriticalClick={handleCriticalClick}
       />
 
