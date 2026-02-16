@@ -41,43 +41,78 @@ export interface ParsedCampaign {
   chargers: ParsedChargerRow[];
 }
 
-// Column mapping based on the Excel template
-const COLUMN_MAPPING: Record<string, keyof ParsedChargerRow | null> = {
-  "Station ID": "station_id",
-  "Station Name": "station_name",
-  "Serial Number": "serial_number",
-  "Model": "model",
-  "Address": "address",
-  "City": "city",
-  "State": "state",
-  "Zip": "zip",
-  "Start Date": "start_date",
-  "Max. Power": "max_power",
-  "Site Name": "site_name",
-  "QTY": "serviced_qty",
-  "DATE": "service_date",
-  "FULL Report": "report_url",
-  "Status": "status",
-  "Summary": "summary",
-  "Report": "power_cabinet_report_url",
-  "Service\nRequired": "service_required",
-  "Service Required": "service_required",
-  "CCS\nCable": "ccs_cable_issue",
-  "CCS Cable": "ccs_cable_issue",
-  "CHAdeMo\nCable": "chademo_cable_issue",
-  "CHAdeMo Cable": "chademo_cable_issue",
-  "Screen\nDamage": "screen_damage",
-  "Screen Damage": "screen_damage",
-  "CC\nReader": "cc_reader_issue",
-  "CC Reader": "cc_reader_issue",
-  "RFID\nReader": "rfid_reader_issue",
-  "RFID Reader": "rfid_reader_issue",
-  "App": "app_issue",
-  "Holster": "holster_issue",
-  "Other": "other_issue",
-  "Power Supply": "power_supply_issue",
-  "Circuit Board": "circuit_board_issue",
+function normalizeColumnName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\n\r_\s]+/g, " ")
+    .trim();
+}
+
+// Each field maps to an array of possible header names (normalized)
+const FIELD_ALIASES: Record<keyof ParsedChargerRow, string[]> = {
+  station_id: ["station id", "stationid", "charger id", "evse id", "charge box identity", "cbid", "asset id"],
+  station_name: ["station name", "charger name", "asset name", "name"],
+  serial_number: ["serial number", "serial", "serial no"],
+  model: ["model", "charger model", "asset record type", "type"],
+  address: ["address", "street address", "address line 1", "full address", "location address", "street", "location"],
+  city: ["city", "town"],
+  state: ["state", "state/province", "province", "st"],
+  zip: ["zip", "zip code", "zip/postal code", "postal code", "zipcode"],
+  start_date: ["start date", "in-service date", "in service date", "install date"],
+  max_power: ["max. power", "max power", "power", "kw"],
+  site_name: ["site name", "site", "location name", "account name", "organization"],
+  serviced_qty: ["qty", "quantity", "serviced qty"],
+  service_date: ["date", "service date"],
+  report_url: ["full report", "report url"],
+  status: ["status", "online status", "condition"],
+  summary: ["summary", "notes", "description"],
+  power_cabinet_report_url: ["report"],
+  power_cabinet_status: ["power cabinet status", "cabinet status"],
+  power_cabinet_summary: ["power cabinet summary", "cabinet summary"],
+  service_required: ["service required", "service req"],
+  ccs_cable_issue: ["ccs cable", "ccs"],
+  chademo_cable_issue: ["chademo cable", "chademo"],
+  screen_damage: ["screen damage", "screen"],
+  cc_reader_issue: ["cc reader"],
+  rfid_reader_issue: ["rfid reader", "rfid"],
+  app_issue: ["app", "app issue"],
+  holster_issue: ["holster", "holster issue"],
+  other_issue: ["other", "other issue"],
+  power_supply_issue: ["power supply"],
+  circuit_board_issue: ["circuit board"],
 };
+
+function matchHeaderToField(header: string): keyof ParsedChargerRow | null {
+  const normalized = normalizeColumnName(header);
+  if (!normalized) return null;
+
+  // Priority 1: Exact match
+  for (const [field, aliases] of Object.entries(FIELD_ALIASES)) {
+    if (aliases.includes(normalized)) return field as keyof ParsedChargerRow;
+  }
+
+  // Priority 2: Starts with
+  for (const [field, aliases] of Object.entries(FIELD_ALIASES)) {
+    for (const alias of aliases) {
+      if (normalized.startsWith(alias) || alias.startsWith(normalized)) {
+        return field as keyof ParsedChargerRow;
+      }
+    }
+  }
+
+  // Priority 3: Contains (only for longer aliases to avoid false positives)
+  for (const [field, aliases] of Object.entries(FIELD_ALIASES)) {
+    for (const alias of aliases) {
+      if (alias.length >= 4 && normalized.includes(alias)) {
+        return field as keyof ParsedChargerRow;
+      }
+    }
+  }
+
+  return null;
+}
 
 function extractLink(cell: XLSX.CellObject | undefined): string | null {
   if (!cell) return null;
@@ -182,7 +217,7 @@ export function parseExcelFile(file: File): Promise<ParsedCampaign> {
           const cellAddress = XLSX.utils.encode_cell({ r: headerRowIndex, c: col });
           const cell = sheet[cellAddress];
           const headerValue = cell?.v?.toString().trim() || "";
-          headerMap[col] = COLUMN_MAPPING[headerValue] || null;
+          headerMap[col] = matchHeaderToField(headerValue);
         }
 
         // Find the column indices for report URLs (need special handling for links)
