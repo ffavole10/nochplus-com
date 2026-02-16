@@ -1,11 +1,21 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileText, DollarSign, Send, Clock, Database, CheckCircle } from "lucide-react";
 import { useCampaignContext } from "@/contexts/CampaignContext";
-import { useEstimates } from "@/hooks/useEstimates";
+import { useEstimates, EstimateRecord } from "@/hooks/useEstimates";
 import { format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { MapPin } from "lucide-react";
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground border-muted" },
@@ -13,9 +23,115 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   approved: { label: "Approved", className: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" },
 };
 
+/* ── Estimate Detail Modal ─────────────────────── */
+function EstimateDetailModal({ estimate, open, onOpenChange }: { estimate: EstimateRecord | null; open: boolean; onOpenChange: (o: boolean) => void }) {
+  if (!estimate) return null;
+  const isReadOnly = estimate.status === "approved";
+  const lineItems = (estimate.line_items || []) as any[];
+  const config = STATUS_CONFIG[estimate.status] || STATUS_CONFIG.draft;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl w-[85vw] max-h-[85vh] overflow-y-auto p-0" onClick={(e) => e.stopPropagation()}>
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-3 text-lg">
+              <FileText className="h-5 w-5 text-primary" />
+              {isReadOnly ? "View Estimate" : "Review Estimate"}
+            </DialogTitle>
+            <Badge variant="outline" className={config.className}>{config.label}</Badge>
+          </div>
+          <DialogDescription>
+            {isReadOnly ? "This estimate has been approved." : "Review estimate details."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="px-6 py-5 space-y-6">
+          {/* Header Info */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-muted/30 rounded-lg p-4 border border-border/50">
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Ticket</p>
+              <p className="text-sm font-semibold text-foreground">#{estimate.ticket_id || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Site</p>
+              <p className="text-sm font-semibold text-foreground">{estimate.site_name || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Customer Email</p>
+              <p className="text-sm font-semibold text-foreground">{estimate.customer_email || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Account Manager</p>
+              <p className="text-sm font-semibold text-foreground">{estimate.account_manager || "—"}</p>
+            </div>
+          </div>
+
+          {/* Line Items */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Line Items</h3>
+            <div className="border border-border rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/50 text-xs text-muted-foreground uppercase tracking-wider">
+                    <th className="py-2 px-3 text-left">Description</th>
+                    <th className="py-2 px-3 text-right">Qty</th>
+                    <th className="py-2 px-3 text-left">Unit</th>
+                    <th className="py-2 px-3 text-right">Rate</th>
+                    <th className="py-2 px-3 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lineItems.map((item: any, idx: number) => (
+                    <tr key={idx} className="border-b border-border/50 last:border-0">
+                      <td className="py-2 px-3">{item.description}</td>
+                      <td className="py-2 px-3 text-right tabular-nums">{item.qty}</td>
+                      <td className="py-2 px-3">{item.unit}</td>
+                      <td className="py-2 px-3 text-right tabular-nums">${Number(item.rate).toFixed(2)}</td>
+                      <td className="py-2 px-3 text-right font-semibold tabular-nums">${Number(item.amount).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Totals */}
+          <div className="flex justify-end">
+            <div className="w-72 space-y-2 bg-muted/30 rounded-lg p-4 border border-border/50">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-medium tabular-nums">${Number(estimate.subtotal).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Tax ({(Number(estimate.tax_rate) * 100).toFixed(0)}%)</span>
+                <span className="tabular-nums">${Number(estimate.tax).toFixed(2)}</span>
+              </div>
+              <div className="border-t border-border pt-2 flex justify-between text-base font-bold">
+                <span>Total</span>
+                <span className="text-primary tabular-nums">${Number(estimate.total).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Notes */}
+          {estimate.notes && (
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-2">Notes</h3>
+              <p className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 border border-border/50">{estimate.notes}</p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ── Main Page ─────────────────────────────────── */
 const Estimates = () => {
   const { selectedCampaignId } = useCampaignContext();
   const { data: estimates = [], isLoading } = useEstimates(selectedCampaignId || null);
+  const [selectedEstimate, setSelectedEstimate] = useState<EstimateRecord | null>(null);
 
   const stats = useMemo(() => {
     const drafts = estimates.filter(e => e.status === "draft").length;
@@ -109,7 +225,11 @@ const Estimates = () => {
                 {estimates.map((est) => {
                   const config = STATUS_CONFIG[est.status] || STATUS_CONFIG.draft;
                   return (
-                    <TableRow key={est.id}>
+                    <TableRow
+                      key={est.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSelectedEstimate(est)}
+                    >
                       <TableCell>
                         <div className="font-medium">{est.site_name || est.station_id || "—"}</div>
                       </TableCell>
@@ -139,6 +259,13 @@ const Estimates = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Detail Modal */}
+      <EstimateDetailModal
+        estimate={selectedEstimate}
+        open={!!selectedEstimate}
+        onOpenChange={(o) => { if (!o) setSelectedEstimate(null); }}
+      />
     </div>
   );
 };
