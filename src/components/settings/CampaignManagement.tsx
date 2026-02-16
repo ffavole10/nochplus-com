@@ -83,8 +83,8 @@ export function CampaignManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
                 <TableHead>Partner</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Chargers</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -93,17 +93,6 @@ export function CampaignManagement() {
             <TableBody>
               {campaigns.map((c) => (
                 <TableRow key={c.id}>
-                  <TableCell>
-                    {editingId === c.id ? (
-                      <Input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    ) : (
-                      <span className="font-medium">{c.name}</span>
-                    )}
-                  </TableCell>
                   <TableCell>
                     {editingId === c.id ? (
                       <Select value={editCustomer} onValueChange={setEditCustomer}>
@@ -123,6 +112,17 @@ export function CampaignManagement() {
                       </Select>
                     ) : (
                       partnerLabels[c.customer] || c.customer
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === c.id ? (
+                      <Input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                    ) : (
+                      <span className="font-medium">{c.name}</span>
                     )}
                   </TableCell>
                   <TableCell>{c.total_chargers}</TableCell>
