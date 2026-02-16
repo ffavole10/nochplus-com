@@ -1,6 +1,6 @@
 export type ChargerStatus = "Critical" | "High" | "Medium" | "Low";
 
-export type ChargerCustomer = "evgo" | "evconnect" | "electrify_america" | "chargepoint";
+export type ChargerCustomer = "evgo" | "evconnect" | "electrify_america" | "chargepoint" | string;
 
 export interface Charger {
   charger_id: string;
@@ -26,6 +26,86 @@ export interface Charger {
   estimated_cost?: number;
   timeline?: string;
   photos?: string[];
+}
+
+/** Map a DB ChargerRecord to the Charger type used by dashboard components */
+export function chargerRecordToCharger(r: {
+  id: string;
+  station_id: string;
+  station_name: string | null;
+  serial_number: string | null;
+  model: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  site_name: string | null;
+  serviced_qty: number | null;
+  service_date: string | null;
+  report_url: string | null;
+  status: string | null;
+  summary: string | null;
+  start_date: string | null;
+  max_power: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  ccs_cable_issue: boolean | null;
+  chademo_cable_issue: boolean | null;
+  screen_damage: boolean | null;
+  cc_reader_issue: boolean | null;
+  rfid_reader_issue: boolean | null;
+  app_issue: boolean | null;
+  holster_issue: boolean | null;
+  other_issue: boolean | null;
+  power_supply_issue: boolean | null;
+  circuit_board_issue: boolean | null;
+  power_cabinet_report_url: string | null;
+  power_cabinet_status: string | null;
+  power_cabinet_summary: string | null;
+  service_required: number | null;
+}, customer: string): Charger {
+  // Map DB status to 4-level system
+  let status: ChargerStatus = "Low";
+  if (r.status === "Critical") status = "Critical";
+  else if (r.status === "Degraded") status = "High";
+  else if (r.status === "Optimal") status = "Low";
+  else if (r.status === "High") status = "High";
+  else if (r.status === "Medium") status = "Medium";
+
+  // Build issues array from boolean flags
+  const issues: string[] = [];
+  if (r.ccs_cable_issue) issues.push("CCS Cable");
+  if (r.chademo_cable_issue) issues.push("CHAdeMO Cable");
+  if (r.screen_damage) issues.push("Screen/Display Damage");
+  if (r.cc_reader_issue) issues.push("CC Reader");
+  if (r.rfid_reader_issue) issues.push("RFID Reader");
+  if (r.app_issue) issues.push("App Connectivity");
+  if (r.holster_issue) issues.push("Holster");
+  if (r.power_supply_issue) issues.push("Power Supply");
+  if (r.circuit_board_issue) issues.push("Circuit Board");
+  if (r.other_issue) issues.push("Other");
+
+  return {
+    charger_id: r.id,
+    station_number: r.station_id,
+    model: r.model || "Unknown",
+    manufacturer: "",
+    address: r.address || "",
+    city: r.city || "",
+    state: r.state || "",
+    zip: r.zip || "",
+    site_name: r.site_name || "",
+    serviced: r.serviced_qty ?? 0,
+    status,
+    summary: r.summary || "",
+    full_report_link: r.report_url || "",
+    start_date: r.start_date || "",
+    max_power: r.max_power ?? 0,
+    lat: Number(r.latitude) || 0,
+    lng: Number(r.longitude) || 0,
+    customer: customer as ChargerCustomer,
+    issues: issues.length > 0 ? issues : undefined,
+  };
 }
 
 export const sampleChargers: Charger[] = [
