@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useContext } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +35,7 @@ import { EnrichedSWIMatch } from "@/hooks/useSWIMatching";
 import { DispatchModal } from "./DispatchModal";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useCampaignContext } from "@/contexts/CampaignContext";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -249,6 +250,7 @@ export function EstimateBuilder({
   onAccountManagerChange,
   initialStatus,
 }: EstimateBuilderProps) {
+  const { selectedCampaignId } = useCampaignContext();
   const [lineItems, setLineItems] = useState<EstimateLineItem[]>(() =>
     buildDefaultItems(ticket, swiMatch)
   );
@@ -359,10 +361,43 @@ export function EstimateBuilder({
         ...additionalEmails.filter((e) => e.includes("@")),
       ];
 
+      // Save estimate to DB first to get an ID for the approval link
+      const { data: savedEstimate, error: saveErr } = await supabase
+        .from("estimates")
+        .insert({
+          campaign_id: selectedCampaignId,
+          charger_record_id: null,
+          ticket_id: ticket.ticketId || null,
+          station_id: ticket.id || null,
+          site_name: ticket.accountName || null,
+          customer_email: customerEmail.trim(),
+          account_manager: accountManager || null,
+          line_items: lineItems.map(li => ({
+            description: li.description,
+            qty: li.qty,
+            unit: li.unit,
+            rate: li.rate,
+            amount: li.amount,
+            category: li.category,
+          })),
+          subtotal,
+          tax_rate: taxRate,
+          tax,
+          total,
+          notes: notes || null,
+          status: "sent",
+          sent_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (saveErr) throw saveErr;
+
       const { data, error } = await supabase.functions.invoke("send-estimate", {
         body: {
           to: customerEmail.trim(),
           cc: ccEmails.length > 0 ? ccEmails : undefined,
+          estimateId: savedEstimate.id,
           ticketId: ticket.ticketId || ticket.id,
           accountName: ticket.accountName || "—",
           chargerName: ticket.assetName,
