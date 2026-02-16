@@ -29,8 +29,9 @@ export function FindingsSection({ chargers, onShowOnMap, criticalRef }: Findings
   const [sortBy, setSortBy] = useState<SortOption>("severity");
   const [filterCity, setFilterCity] = useState<string>("all");
   const [criticalOpen, setCriticalOpen] = useState(true);
-  const [degradedOpen, setDegradedOpen] = useState(true);
-  const [optimalOpen, setOptimalOpen] = useState(false);
+  const [highOpen, setHighOpen] = useState(true);
+  const [mediumOpen, setMediumOpen] = useState(false);
+  const [lowOpen, setLowOpen] = useState(false);
 
   const cities = [...new Set(chargers.map((c) => `${c.city}, ${c.state}`))].sort();
 
@@ -42,8 +43,8 @@ export function FindingsSection({ chargers, onShowOnMap, criticalRef }: Findings
   const sortedChargers = [...filteredChargers].sort((a, b) => {
     switch (sortBy) {
       case "severity":
-        const severityOrder = { Critical: 0, Degraded: 1, Optimal: 2 };
-        return severityOrder[a.status] - severityOrder[b.status];
+        const severityOrder: Record<string, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+        return (severityOrder[a.status] ?? 4) - (severityOrder[b.status] ?? 4);
       case "date":
         return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
       case "location":
@@ -54,8 +55,9 @@ export function FindingsSection({ chargers, onShowOnMap, criticalRef }: Findings
   });
 
   const critical = sortedChargers.filter((c) => c.status === "Critical");
-  const degraded = sortedChargers.filter((c) => c.status === "Degraded");
-  const optimal = sortedChargers.filter((c) => c.status === "Optimal");
+  const high = sortedChargers.filter((c) => c.status === "High");
+  const medium = sortedChargers.filter((c) => c.status === "Medium");
+  const low = sortedChargers.filter((c) => c.status === "Low");
 
   return (
     <div className="dashboard-section">
@@ -136,83 +138,80 @@ export function FindingsSection({ chargers, onShowOnMap, criticalRef }: Findings
         </Collapsible>
       </div>
 
-      {/* Degraded Section */}
-      <Collapsible open={degradedOpen} onOpenChange={setDegradedOpen} className="mt-4">
+      {/* High Section */}
+      <Collapsible open={highOpen} onOpenChange={setHighOpen} className="mt-4">
         <CollapsibleTrigger className="w-full">
-          <div className="flex items-center justify-between p-4 bg-degraded/10 rounded-t-xl border-2 border-degraded/30 hover:bg-degraded/15 transition-colors">
+          <div className="flex items-center justify-between p-4 bg-high/10 rounded-t-xl border-2 border-high/30 hover:bg-high/15 transition-colors">
             <div className="flex items-center gap-3">
-              {degradedOpen ? (
-                <ChevronDown className="w-5 h-5 text-degraded" />
-              ) : (
-                <ChevronRight className="w-5 h-5 text-degraded" />
-              )}
-              <span className="w-3 h-3 rounded-full bg-degraded"></span>
-              <h3 className="font-semibold text-degraded">
-                Degraded ({degraded.length})
-              </h3>
+              {highOpen ? <ChevronDown className="w-5 h-5 text-high" /> : <ChevronRight className="w-5 h-5 text-high" />}
+              <span className="w-3 h-3 rounded-full bg-high"></span>
+              <h3 className="font-semibold text-high">High ({high.length})</h3>
             </div>
-            <span className="text-sm text-degraded font-medium">
-              Monitor and schedule
-            </span>
+            <span className="text-sm text-high font-medium">Schedule repair</span>
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="border-2 border-t-0 border-degraded/30 rounded-b-xl p-4 space-y-3 bg-degraded/5">
-            {degraded.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                No degraded chargers
-              </p>
+          <div className="border-2 border-t-0 border-high/30 rounded-b-xl p-4 space-y-3 bg-high/5">
+            {high.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No high priority chargers</p>
             ) : (
-              degraded.map((charger) => (
-                <FindingsCard
-                  key={charger.charger_id}
-                  charger={charger}
-                  onShowOnMap={onShowOnMap}
-                />
+              high.map((charger) => (
+                <FindingsCard key={charger.charger_id} charger={charger} onShowOnMap={onShowOnMap} />
               ))
             )}
           </div>
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Optimal Section */}
-      <Collapsible open={optimalOpen} onOpenChange={setOptimalOpen} className="mt-4">
+      {/* Medium Section */}
+      <Collapsible open={mediumOpen} onOpenChange={setMediumOpen} className="mt-4">
         <CollapsibleTrigger className="w-full">
-          <div className="flex items-center justify-between p-4 bg-optimal/10 rounded-t-xl border-2 border-optimal/30 hover:bg-optimal/15 transition-colors">
+          <div className="flex items-center justify-between p-4 bg-medium/10 rounded-t-xl border-2 border-medium/30 hover:bg-medium/15 transition-colors">
             <div className="flex items-center gap-3">
-              {optimalOpen ? (
-                <ChevronDown className="w-5 h-5 text-optimal" />
-              ) : (
-                <ChevronRight className="w-5 h-5 text-optimal" />
-              )}
-              <span className="w-3 h-3 rounded-full bg-optimal"></span>
-              <h3 className="font-semibold text-optimal">
-                Optimal ({optimal.length})
-              </h3>
+              {mediumOpen ? <ChevronDown className="w-5 h-5 text-medium" /> : <ChevronRight className="w-5 h-5 text-medium" />}
+              <span className="w-3 h-3 rounded-full bg-medium"></span>
+              <h3 className="font-semibold text-medium">Medium ({medium.length})</h3>
             </div>
-            <span className="text-sm text-optimal font-medium">
-              Operating normally
-            </span>
+            <span className="text-sm text-medium font-medium">Monitor and schedule</span>
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="border-2 border-t-0 border-optimal/30 rounded-b-xl p-4 space-y-3 bg-optimal/5 max-h-96 overflow-y-auto custom-scrollbar">
-            {optimal.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                No optimal chargers in selection
-              </p>
+          <div className="border-2 border-t-0 border-medium/30 rounded-b-xl p-4 space-y-3 bg-medium/5">
+            {medium.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No medium priority chargers</p>
             ) : (
-              optimal.slice(0, 10).map((charger) => (
-                <FindingsCard
-                  key={charger.charger_id}
-                  charger={charger}
-                  onShowOnMap={onShowOnMap}
-                />
+              medium.map((charger) => (
+                <FindingsCard key={charger.charger_id} charger={charger} onShowOnMap={onShowOnMap} />
               ))
             )}
-            {optimal.length > 10 && (
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Low Section */}
+      <Collapsible open={lowOpen} onOpenChange={setLowOpen} className="mt-4">
+        <CollapsibleTrigger className="w-full">
+          <div className="flex items-center justify-between p-4 bg-low/10 rounded-t-xl border-2 border-low/30 hover:bg-low/15 transition-colors">
+            <div className="flex items-center gap-3">
+              {lowOpen ? <ChevronDown className="w-5 h-5 text-low" /> : <ChevronRight className="w-5 h-5 text-low" />}
+              <span className="w-3 h-3 rounded-full bg-low"></span>
+              <h3 className="font-semibold text-low">Low ({low.length})</h3>
+            </div>
+            <span className="text-sm text-low font-medium">Operating normally</span>
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="border-2 border-t-0 border-low/30 rounded-b-xl p-4 space-y-3 bg-low/5 max-h-96 overflow-y-auto custom-scrollbar">
+            {low.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No low priority chargers in selection</p>
+            ) : (
+              low.slice(0, 10).map((charger) => (
+                <FindingsCard key={charger.charger_id} charger={charger} onShowOnMap={onShowOnMap} />
+              ))
+            )}
+            {low.length > 10 && (
               <p className="text-center text-sm text-muted-foreground py-2">
-                + {optimal.length - 10} more optimal chargers
+                + {low.length - 10} more low priority chargers
               </p>
             )}
           </div>

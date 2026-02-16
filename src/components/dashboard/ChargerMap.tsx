@@ -207,8 +207,10 @@ export function ChargerMap({
             <span style="padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; ${
               charger.status === "Critical" 
                 ? "background: #EF4444; color: white;" 
-                : charger.status === "Degraded" 
-                ? "background: #F59E0B; color: white;" 
+                : charger.status === "High" 
+                ? "background: #F97316; color: white;" 
+                : charger.status === "Medium"
+                ? "background: #EAB308; color: #1a1a1a;"
                 : "background: #10B981; color: white;"
             }">
               ${charger.status}
@@ -262,23 +264,23 @@ export function ChargerMap({
     if (!showHeatmap) return;
 
     // Group chargers by location and calculate center points
-    const locationGroups = new Map<string, { lat: number; lng: number; critical: number; degraded: number }>();
+    const locationGroups = new Map<string, { lat: number; lng: number; critical: number; high: number }>();
     
     chargers.forEach((charger) => {
       const key = `${charger.city}, ${charger.state}`;
       if (!locationGroups.has(key)) {
-        locationGroups.set(key, { lat: charger.lat, lng: charger.lng, critical: 0, degraded: 0 });
+        locationGroups.set(key, { lat: charger.lat, lng: charger.lng, critical: 0, high: 0 });
       }
       const group = locationGroups.get(key)!;
       if (charger.status === "Critical") group.critical++;
-      if (charger.status === "Degraded") group.degraded++;
+      if (charger.status === "High") group.high++;
     });
 
     locationGroups.forEach((data, location) => {
-      if (data.critical === 0 && data.degraded === 0) return;
+      if (data.critical === 0 && data.high === 0) return;
 
       const isHighRisk = data.critical >= 2;
-      const riskLevel = data.critical * 2 + data.degraded;
+      const riskLevel = data.critical * 2 + data.high;
       const radius = Math.min(50000, 15000 + riskLevel * 3000); // Scale radius by risk
 
       const circle = L.circle([data.lat, data.lng], {
@@ -290,7 +292,7 @@ export function ChargerMap({
         fillOpacity: 0.15,
       }).addTo(leafletMap.current);
 
-      circle.bindTooltip(`${location}: ${data.critical} Critical, ${data.degraded} Degraded`, {
+      circle.bindTooltip(`${location}: ${data.critical} Critical, ${data.high} High`, {
         permanent: false,
         direction: "top",
       });
@@ -390,7 +392,7 @@ export function ChargerMap({
 
           <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
             {riskAreas
-              .filter((area) => area.critical > 0 || area.degraded > 0)
+              .filter((area) => area.critical > 0 || area.high > 0)
               .map((area) => {
                 const isHighRisk = area.critical >= 2;
                 const isFocused = focusedLocation === area.location;
@@ -402,14 +404,14 @@ export function ChargerMap({
                         ? "border-primary bg-primary/10 ring-2 ring-primary/30"
                         : isHighRisk
                         ? "border-critical/40 bg-critical/5"
-                        : "border-degraded/30 bg-degraded/5"
+                        : "border-high/30 bg-high/5"
                     }`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span
                           className={`w-3 h-3 rounded-full ${
-                            isHighRisk ? "bg-critical" : "bg-degraded"
+                            isHighRisk ? "bg-critical" : "bg-high"
                           }`}
                         ></span>
                         <span className="font-medium">{area.location}</span>
@@ -425,9 +427,9 @@ export function ChargerMap({
                       <span className="text-critical font-medium">
                         {area.critical} Critical
                       </span>
-                      {", "}
-                      <span className="text-degraded font-medium">
-                        {area.degraded} Degraded
+                       {", "}
+                      <span className="text-high font-medium">
+                        {area.high} High
                       </span>
                     </div>
 
@@ -459,7 +461,7 @@ export function ChargerMap({
                 );
               })}
 
-            {riskAreas.filter((a) => a.critical > 0 || a.degraded > 0)
+            {riskAreas.filter((a) => a.critical > 0 || a.high > 0)
               .length === 0 && (
               <p className="text-center text-muted-foreground py-8">
                 No high-risk areas detected

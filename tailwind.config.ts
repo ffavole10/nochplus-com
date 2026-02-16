@@ -47,12 +47,28 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Status colors
+        // Status colors - 4 levels
         critical: {
           DEFAULT: "hsl(var(--critical))",
           foreground: "hsl(var(--critical-foreground))",
           muted: "hsl(var(--critical-muted))",
         },
+        high: {
+          DEFAULT: "hsl(var(--high))",
+          foreground: "hsl(var(--high-foreground))",
+          muted: "hsl(var(--high-muted))",
+        },
+        medium: {
+          DEFAULT: "hsl(var(--medium))",
+          foreground: "hsl(var(--medium-foreground))",
+          muted: "hsl(var(--medium-muted))",
+        },
+        low: {
+          DEFAULT: "hsl(var(--low))",
+          foreground: "hsl(var(--low-foreground))",
+          muted: "hsl(var(--low-muted))",
+        },
+        // Legacy aliases
         degraded: {
           DEFAULT: "hsl(var(--degraded))",
           foreground: "hsl(var(--degraded-foreground))",

@@ -1,8 +1,17 @@
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { LayoutDashboard, Ticket, CalendarDays, Settings, Plus } from "lucide-react";
+import {
+  LayoutDashboard, Ticket, CalendarDays, Settings, Plus,
+  Filter, AlertTriangle, ChevronDown, ChevronRight, X,
+  MapPin, Zap, FileCheck, UserCog,
+} from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +28,7 @@ import {
 import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -26,22 +36,41 @@ const navItems = [
   { title: "Schedule", url: "/schedule", icon: CalendarDays },
 ];
 
+const STATUS_LEVELS: { value: StatusLevel; label: string; colorClass: string }[] = [
+  { value: "Critical", label: "Critical", colorClass: "bg-critical" },
+  { value: "High", label: "High", colorClass: "bg-high" },
+  { value: "Medium", label: "Medium", colorClass: "bg-medium" },
+  { value: "Low", label: "Low", colorClass: "bg-low" },
+];
+
+const CHARGER_TYPES = ["DCFC", "L2", "HPCD"];
+const SWI_OPTIONS = ["With SWI", "Without SWI"];
+const ACCOUNT_MANAGERS = [
+  { value: "jrose", label: "Joe Rose" },
+  { value: "cromano", label: "Caitlin Romano" },
+  { value: "ffavole", label: "Fernando Favole" },
+];
+
+const US_STATES = ["AZ", "CA", "FL", "GA", "IL", "NY", "TX", "VA", "WA"];
+
 export function PlatformSidebar() {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const location = useLocation();
   const { hasRole } = useUserRole();
+  const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
+
+  const [statusOpen, setStatusOpen] = useState(true);
+  const [stateOpen, setStateOpen] = useState(false);
+  const [typeOpen, setTypeOpen] = useState(false);
+  const [swiOpen, setSwiOpen] = useState(false);
+  const [managerOpen, setManagerOpen] = useState(false);
 
   return (
     <Sidebar side="left" className="border-r border-border/50">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         {!isCollapsed && (
           <div className="flex justify-start mb-4">
-            <img
-              src={nochLogo}
-              alt="Noch Power"
-              className="w-[37.5%] h-auto"
-            />
+            <img src={nochLogo} alt="Noch Power" className="w-[37.5%] h-auto" />
           </div>
         )}
 
@@ -77,7 +106,7 @@ export function PlatformSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="custom-scrollbar">
         {/* Navigation */}
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
@@ -101,6 +130,190 @@ export function PlatformSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Filters Section */}
+        {!isCollapsed && (
+          <>
+            <SidebarGroup>
+              <SidebarGroupLabel className="flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                Filters
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-5 px-1.5 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground ml-auto"
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    Clear
+                  </Button>
+                )}
+              </SidebarGroupLabel>
+            </SidebarGroup>
+
+            {/* Search */}
+            <SidebarGroup>
+              <SidebarGroupContent className="px-2">
+                <Input
+                  placeholder="Search chargers..."
+                  value={filters.search}
+                  onChange={(e) => updateFilter("search", e.target.value)}
+                  className="bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/40 text-sm"
+                />
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Status Filter - 4 levels */}
+            <SidebarGroup>
+              <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
+                <CollapsibleTrigger className="w-full">
+                  <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      <span>Status</span>
+                    </div>
+                    {statusOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarGroupContent className="px-2 py-2 space-y-2">
+                    {STATUS_LEVELS.map((s) => (
+                      <div key={s.value} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`status-${s.value}`}
+                          checked={filters.status.includes(s.value)}
+                          onCheckedChange={() => toggleArrayFilter("status", s.value)}
+                          className={`border-${s.value.toLowerCase()} data-[state=checked]:bg-${s.value.toLowerCase()}`}
+                        />
+                        <Label htmlFor={`status-${s.value}`} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <span className={`w-2 h-2 rounded-full ${s.colorClass}`} />
+                          {s.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarGroup>
+
+            {/* State Filter */}
+            <SidebarGroup>
+              <Collapsible open={stateOpen} onOpenChange={setStateOpen}>
+                <CollapsibleTrigger className="w-full">
+                  <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      <span>State</span>
+                    </div>
+                    {stateOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarGroupContent className="px-2 py-2 space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                    {US_STATES.map((st) => (
+                      <div key={st} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`state-${st}`}
+                          checked={filters.states.includes(st)}
+                          onCheckedChange={() => toggleArrayFilter("states", st)}
+                        />
+                        <Label htmlFor={`state-${st}`} className="text-sm cursor-pointer">{st}</Label>
+                      </div>
+                    ))}
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarGroup>
+
+            {/* Charger Type Filter */}
+            <SidebarGroup>
+              <Collapsible open={typeOpen} onOpenChange={setTypeOpen}>
+                <CollapsibleTrigger className="w-full">
+                  <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4" />
+                      <span>Charger Type</span>
+                    </div>
+                    {typeOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarGroupContent className="px-2 py-2 space-y-2">
+                    {CHARGER_TYPES.map((type) => (
+                      <div key={type} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`type-${type}`}
+                          checked={filters.chargerTypes.includes(type)}
+                          onCheckedChange={() => toggleArrayFilter("chargerTypes", type)}
+                        />
+                        <Label htmlFor={`type-${type}`} className="text-sm cursor-pointer">{type}</Label>
+                      </div>
+                    ))}
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarGroup>
+
+            {/* SWI Status Filter */}
+            <SidebarGroup>
+              <Collapsible open={swiOpen} onOpenChange={setSwiOpen}>
+                <CollapsibleTrigger className="w-full">
+                  <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
+                    <div className="flex items-center gap-2">
+                      <FileCheck className="w-4 h-4" />
+                      <span>SWI Status</span>
+                    </div>
+                    {swiOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarGroupContent className="px-2 py-2 space-y-2">
+                    {SWI_OPTIONS.map((opt) => (
+                      <div key={opt} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`swi-${opt}`}
+                          checked={filters.swiStatus.includes(opt)}
+                          onCheckedChange={() => toggleArrayFilter("swiStatus", opt)}
+                        />
+                        <Label htmlFor={`swi-${opt}`} className="text-sm cursor-pointer">{opt}</Label>
+                      </div>
+                    ))}
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarGroup>
+
+            {/* Account Manager Filter */}
+            <SidebarGroup>
+              <Collapsible open={managerOpen} onOpenChange={setManagerOpen}>
+                <CollapsibleTrigger className="w-full">
+                  <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
+                    <div className="flex items-center gap-2">
+                      <UserCog className="w-4 h-4" />
+                      <span>Account Manager</span>
+                    </div>
+                    {managerOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarGroupContent className="px-2 py-2 space-y-2">
+                    {ACCOUNT_MANAGERS.map((mgr) => (
+                      <div key={mgr.value} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`mgr-${mgr.value}`}
+                          checked={filters.accountManagers.includes(mgr.value)}
+                          onCheckedChange={() => toggleArrayFilter("accountManagers", mgr.value)}
+                        />
+                        <Label htmlFor={`mgr-${mgr.value}`} className="text-sm cursor-pointer">{mgr.label}</Label>
+                      </div>
+                    ))}
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-4">

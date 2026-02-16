@@ -34,15 +34,21 @@ export function SitePerformanceTable({ chargers, onSiteClick }: SitePerformanceT
               city: "",
               state: site.state,
               totalChargers: 0,
+              low: 0,
+              medium: 0,
+              high: 0,
+              critical: 0,
               optimal: 0,
               degraded: 0,
-              critical: 0,
               healthScore: 0,
               lastServiced: site.lastServiced,
               primaryIssue: site.primaryIssue,
             };
           }
           acc[key].totalChargers += site.totalChargers;
+          acc[key].low += site.low;
+          acc[key].medium += site.medium;
+          acc[key].high += site.high;
           acc[key].optimal += site.optimal;
           acc[key].degraded += site.degraded;
           acc[key].critical += site.critical;

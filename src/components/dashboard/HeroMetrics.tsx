@@ -86,17 +86,24 @@ export function HeroMetrics({
         <div className="space-y-2 w-full px-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-optimal"></span>
-              <span className="text-sm">Optimal</span>
+              <span className="w-3 h-3 rounded-full bg-low"></span>
+              <span className="text-sm">Low</span>
             </div>
-            <span className="font-semibold text-optimal">{optimalCount}</span>
+            <span className="font-semibold text-low">{optimalCount}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-degraded"></span>
-              <span className="text-sm">Degraded</span>
+              <span className="w-3 h-3 rounded-full bg-medium"></span>
+              <span className="text-sm">Medium</span>
             </div>
-            <span className="font-semibold text-degraded">{degradedCount}</span>
+            <span className="font-semibold text-medium">{Math.round(degradedCount * 0.5)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-high"></span>
+              <span className="text-sm">High</span>
+            </div>
+            <span className="font-semibold text-high">{Math.round(degradedCount * 0.5)}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
