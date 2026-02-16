@@ -9,6 +9,7 @@ import { differenceInDays } from "date-fns";
 import { useSWIMatching } from "@/hooks/useSWIMatching";
 import { SWIAttachment } from "@/components/assessment/SWIAttachment";
 import { DispatchButton, EstimateStatus } from "@/components/tickets/DispatchButton";
+import { TicketsEmptyState } from "@/components/empty-states/TicketsEmptyState";
 
 interface TicketsViewProps {
   chargers: AssessmentCharger[];
@@ -381,11 +382,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
 
       {/* Ticket List */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <Ticket className="h-10 w-10 mx-auto mb-3 opacity-50" />
-          <p className="font-medium">No tickets found</p>
-          <p className="text-sm">Upload data with ticket columns or adjust filters.</p>
-        </div>
+        <TicketsEmptyState />
       ) : (
         <div className="grid gap-3">
           {filtered.map(({ charger, ticketPriority, ageDays, recommendation }) => {

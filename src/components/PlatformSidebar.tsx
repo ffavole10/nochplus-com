@@ -5,6 +5,8 @@ import {
   Filter, AlertTriangle, ChevronDown, ChevronRight, X,
   MapPin, Zap, FileCheck, UserCog,
 } from "lucide-react";
+import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
+import { toast } from "sonner";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,6 +60,7 @@ export function PlatformSidebar() {
   const isCollapsed = state === "collapsed";
   const { hasRole } = useUserRole();
   const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
+  const [newCampaignOpen, setNewCampaignOpen] = useState(false);
 
   const [statusOpen, setStatusOpen] = useState(true);
   const [stateOpen, setStateOpen] = useState(false);
@@ -98,10 +101,19 @@ export function PlatformSidebar() {
               variant="outline"
               size="sm"
               className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent gap-1.5"
+              onClick={() => setNewCampaignOpen(true)}
             >
               <Plus className="h-4 w-4" />
               New Campaign
             </Button>
+            <NewCampaignModal
+              open={newCampaignOpen}
+              onOpenChange={setNewCampaignOpen}
+              onComplete={(data) => {
+                // TODO: wire to campaign manager
+                toast.success(`Campaign "${data.name}" created with ${data.chargers.length} chargers`);
+              }}
+            />
           </div>
         )}
       </SidebarHeader>
