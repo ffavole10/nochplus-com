@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,24 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Pencil, Trash2, Check, X, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns, useUpdateCampaign, useDeleteCampaign } from "@/hooks/useCampaigns";
-import { PARTNER_CATEGORIES, PARTNER_LABELS } from "@/data/partners";
+import { usePartners } from "@/hooks/usePartners";
 
 export function CampaignManagement() {
   const { data: campaigns = [], isLoading } = useCampaigns();
   const updateCampaign = useUpdateCampaign();
   const deleteCampaign = useDeleteCampaign();
+  const { data: dbPartners = [] } = usePartners();
+
+  const partnerCategories = useMemo(() => {
+    const cats = ["CPOs", "OEMs", "CSMS"];
+    return cats
+      .map((cat) => ({ label: cat, partners: dbPartners.filter((p) => p.category === cat) }))
+      .filter((g) => g.partners.length > 0);
+  }, [dbPartners]);
+
+  const partnerLabels = useMemo(() => {
+    return Object.fromEntries(dbPartners.map((p) => [p.value, p.label]));
+  }, [dbPartners]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -99,7 +111,7 @@ export function CampaignManagement() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {PARTNER_CATEGORIES.map((cat) => (
+                          {partnerCategories.map((cat) => (
                             <SelectGroup key={cat.label}>
                               <SelectLabel className="text-xs">{cat.label}</SelectLabel>
                               {cat.partners.map((p) => (
@@ -110,7 +122,7 @@ export function CampaignManagement() {
                         </SelectContent>
                       </Select>
                     ) : (
-                      PARTNER_LABELS[c.customer] || c.customer
+                      partnerLabels[c.customer] || c.customer
                     )}
                   </TableCell>
                   <TableCell>{c.total_chargers}</TableCell>
