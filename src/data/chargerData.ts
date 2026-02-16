@@ -70,11 +70,17 @@ export function chargerRecordToCharger(r: {
 }, customer: string): Charger {
   // Map DB status to 4-level system
   let status: ChargerStatus = "Low";
+  const rawStatus = (r.status || "").toLowerCase();
   if (r.status === "Critical") status = "Critical";
   else if (r.status === "Degraded") status = "High";
-  else if (r.status === "Optimal") status = "Low";
+  else if (r.status === "Optimal" || rawStatus.includes("online")) status = "Low";
   else if (r.status === "High") status = "High";
   else if (r.status === "Medium") status = "Medium";
+  // Map "XX - Offline ..." duration statuses to priority levels
+  else if (rawStatus.includes("offline 3+ years") || rawStatus.includes("offline 2+ years") || rawStatus.includes("offline 1+ year")) status = "Critical";
+  else if (rawStatus.includes("offline 6 months") || rawStatus.includes("offline 3–6 months") || rawStatus.includes("offline 3-6 months")) status = "High";
+  else if (rawStatus.includes("offline 1–3 months") || rawStatus.includes("offline 1-3 months") || rawStatus.includes("offline 1–29 days") || rawStatus.includes("offline 1-29 days")) status = "Medium";
+  else if (rawStatus.includes("offline") || rawStatus.includes("no comms")) status = "Low";
   else if (!r.status) {
     const hasOpenTicket = !!(r.ticket_id && !r.ticket_solved_date);
     if (hasOpenTicket && r.ticket_created_date) {
