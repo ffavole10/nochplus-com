@@ -335,19 +335,60 @@ export function chargerRecordToAssessment(r: {
   if ((r.serviced_qty ?? 0) > 0) phase = "Completed";
   else if (r.service_date) phase = "Scheduled";
 
+  // Extract charger name and account from ticket_subject when station_name/site_name are missing
+  // Format: "BTC0329 - Connectors Issue - Baxalta Los Angeles - (Location)"
+  // or: "BTC2018 - Station Offline EV Charger warranty ... "
+  let derivedName = r.station_name || "";
+  let derivedAccount = r.site_name || "";
+  let derivedAddress = r.address || "";
+
+  if (r.ticket_subject) {
+    const parts = r.ticket_subject.split(" - ").map(p => p.trim());
+    // First part is typically the charger ID (e.g., "BTC0329", "EVC1076", "109920")
+    if (!derivedName && parts.length >= 1) {
+      derivedName = parts[0];
+    }
+    // Third part is often the account/organization name
+    if (!derivedAccount && parts.length >= 3) {
+      // Remove parentheses wrapper if present e.g. "(Pure Power Contractors)"
+      derivedAccount = parts[2].replace(/^\(|\)$/g, "");
+    }
+    // Fourth part (in parentheses) is often the location/address
+    if (!derivedAddress && parts.length >= 4) {
+      const locationPart = parts[3].replace(/^\(|\)$/g, "");
+      if (locationPart && locationPart.length > 3) {
+        derivedAddress = locationPart;
+      }
+    }
+  }
+
+  // Fall back to station_id if still no name
+  if (!derivedName) derivedName = r.station_id;
+
+  // Try to parse city/state from derived address
+  let city = r.city || "";
+  let state = r.state || "";
+  let zip = r.zip || "";
+  if (derivedAddress && (!city || !state)) {
+    const parsed = parseAddressParts(derivedAddress);
+    if (!city) city = parsed.city;
+    if (!state) state = parsed.state;
+    if (!zip) zip = parsed.zip;
+  }
+
   const charger: AssessmentCharger = {
     id: r.id,
-    assetName: r.station_name || r.station_id,
+    assetName: derivedName,
     assetRecordType,
-    address: r.address || "",
-    city: r.city || "",
-    state: r.state || "",
-    zip: r.zip || "",
+    address: derivedAddress,
+    city,
+    state,
+    zip,
     status: r.status || "Unknown",
     inServiceDate: r.start_date,
     partsWarrantyEndDate: null,
     serviceContractEndDate: null,
-    accountName: r.site_name || "",
+    accountName: derivedAccount,
     evseId: r.station_id,
     priorityScore: 0,
     priorityLevel,
