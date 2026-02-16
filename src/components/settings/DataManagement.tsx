@@ -124,6 +124,23 @@ export function DataManagement() {
       }
 
       // Map spreadsheet rows to charger_records
+      const parseDate = (val: unknown): string | null => {
+        if (!val || val === "") return null;
+        if (typeof val === "number") {
+          // Excel serial date number — convert to ISO date
+          const epoch = new Date(Date.UTC(1899, 11, 30));
+          const date = new Date(epoch.getTime() + val * 86400000);
+          if (!isNaN(date.getTime())) {
+            return date.toISOString().split("T")[0];
+          }
+        }
+        if (typeof val === "string") {
+          const d = new Date(val);
+          if (!isNaN(d.getTime())) return d.toISOString().split("T")[0];
+        }
+        return null;
+      };
+
       const mapped = jsonData.map((row: any) => {
         const get = (keys: string[]) => {
           for (const k of keys) {
@@ -154,8 +171,8 @@ export function DataManagement() {
           latitude: get(["Latitude", "latitude"]) ? Number(get(["Latitude", "latitude"])) : null,
           longitude: get(["Longitude", "longitude"]) ? Number(get(["Longitude", "longitude"])) : null,
           status: (get(["Status", "status"]) as "Optimal" | "Degraded" | "Critical" | null),
-          start_date: get(["Start Date", "start_date"]) as string | null,
-          service_date: get(["Service Date", "service_date"]) as string | null,
+          start_date: parseDate(get(["Start Date", "start_date"])),
+          service_date: parseDate(get(["Service Date", "service_date"])),
           max_power: get(["Max Power", "max_power"]) ? Number(get(["Max Power", "max_power"])) : null,
           serviced_qty: Number(get(["Serviced Qty", "serviced_qty"]) || 0),
           service_required: Number(get(["Service Required", "service_required"]) || 0),
@@ -175,8 +192,8 @@ export function DataManagement() {
           power_cabinet_summary: get(["Power Cabinet Summary", "power_cabinet_summary"]) as string | null,
           power_cabinet_report_url: get(["Power Cabinet Report URL", "power_cabinet_report_url"]) as string | null,
           ticket_id: get(["Ticket ID", "ticket_id"]) as string | null,
-          ticket_created_date: get(["Ticket Created Date", "ticket_created_date", "PST Ticket Created Date"]) as string | null,
-          ticket_solved_date: get(["Ticket Solved Date", "ticket_solved_date"]) as string | null,
+          ticket_created_date: parseDate(get(["Ticket Created Date", "ticket_created_date", "PST Ticket Created Date"])),
+          ticket_solved_date: parseDate(get(["Ticket Solved Date", "ticket_solved_date"])),
           ticket_group: get(["Ticket Group", "ticket_group"]) as string | null,
           ticket_subject: get(["Ticket Subject", "ticket_subject"]) as string | null,
           ticket_reporting_source: get(["Ticket Reporting Source", "ticket_reporting_source"]) as string | null,
