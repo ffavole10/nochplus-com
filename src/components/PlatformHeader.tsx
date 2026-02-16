@@ -73,7 +73,7 @@ export function PlatformHeader() {
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/50">
-      <div className="px-4 py-3 flex items-center justify-between">
+      <div className="px-4 py-3 flex items-center justify-center relative">
         <div className="flex items-center gap-2 min-w-0">
           {sidebarCollapsed &&
           <button
@@ -122,7 +122,7 @@ export function PlatformHeader() {
           }
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="absolute right-4 flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
