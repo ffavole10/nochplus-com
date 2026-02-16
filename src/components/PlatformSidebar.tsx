@@ -63,7 +63,7 @@ export function PlatformSidebar() {
   const isCollapsed = state === "collapsed";
   const { hasRole } = useUserRole();
   const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
-  const { setSelectedCampaignName } = useCampaignContext();
+  const { setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer } = useCampaignContext();
   const [newCampaignOpen, setNewCampaignOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string>("");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
@@ -89,26 +89,31 @@ export function PlatformSidebar() {
   // Reset campaign when partner changes
   const handlePartnerChange = (value: string) => {
     setSelectedPartner(value);
+    setSelectedCustomer(value);
     const partnerCampaigns = sampleCampaigns.filter(c => c.customer === value);
     if (partnerCampaigns.length === 1) {
       setSelectedCampaignId(partnerCampaigns[0].id);
+      setContextCampaignId(partnerCampaigns[0].id);
       setSelectedCampaignName(partnerCampaigns[0].name);
     } else {
       setSelectedCampaignId("");
+      setContextCampaignId("");
       setSelectedCampaignName("");
     }
   };
 
   const handleCampaignChange = (value: string) => {
     setSelectedCampaignId(value);
+    setContextCampaignId(value);
     const campaign = sampleCampaigns.find(c => c.id === value);
     setSelectedCampaignName(campaign?.name || "");
+    setSelectedCustomer(campaign?.customer || "");
   };
 
   const { toggleSidebar } = useSidebar();
 
   return (
-    <Sidebar side="left" collapsible="none" className="border-r border-border/50 relative">
+    <Sidebar side="left" collapsible="none" className="border-r border-border/50 relative h-screen sticky top-0">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         {!isCollapsed && (
           <div className="flex justify-start">
