@@ -600,7 +600,8 @@ export function getNetworkStats(chargers: Charger[]) {
   
   const percentLow = (low / total) * 100;
   const percentCritical = (critical / total) * 100;
-  const percentComplete = 100; // All serviced in this campaign
+  const serviced = chargers.filter(c => c.serviced > 0).length;
+  const percentComplete = total > 0 ? (serviced / total) * 100 : 0;
   
   // Health Score Formula: (% Low × 50) + ((100 - % Critical) × 30) + (% Complete × 20)
   const healthScore = Math.round(
@@ -614,7 +615,7 @@ export function getNetworkStats(chargers: Charger[]) {
     high,
     critical,
     healthScore,
-    serviced: total,
+    serviced,
     // Legacy aliases
     optimal: low,
     degraded: high + medium,
