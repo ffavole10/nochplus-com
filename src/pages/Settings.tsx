@@ -10,9 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Shield, Trash2, UserCog, Users } from "lucide-react";
+import { Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
-import nochLogo from "@/assets/noch-logo-white.png";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { CampaignManagement } from "@/components/settings/CampaignManagement";
 import { PartnerManagement } from "@/components/settings/PartnerManagement";
@@ -47,9 +46,19 @@ const ROLE_LABELS: Record<string, string> = {
   partner: "Partner",
 };
 
+type SettingsTab = "campaigns" | "data" | "partners" | "users";
+
+const TABS: { value: SettingsTab; label: string }[] = [
+  { value: "campaigns", label: "Campaigns" },
+  { value: "data", label: "Data Management" },
+  { value: "partners", label: "Partners" },
+  { value: "users", label: "All Users" },
+];
+
 const Settings = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const [activeTab, setActiveTab] = useState<SettingsTab>("campaigns");
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -166,173 +175,182 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-primary text-primary-foreground px-6 py-4 flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-primary-foreground hover:bg-primary/80">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex items-center gap-3">
-          <Shield className="h-6 w-6" />
-          <div>
-            <h1 className="text-lg font-semibold">User Management</h1>
-            <p className="text-xs text-primary-foreground/70">Manage employees & customer access</p>
+      {/* Tab Toggle */}
+      <div className="border-b border-border bg-muted/30">
+        <div className="container mx-auto max-w-5xl px-4">
+          <div className="flex gap-1 py-2">
+            {TABS.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === tab.value
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
       <main className="container mx-auto px-4 py-8 max-w-5xl space-y-6">
-        <CampaignManagement />
-        <DataManagement />
+        {activeTab === "campaigns" && <CampaignManagement />}
+        {activeTab === "data" && <DataManagement />}
+        {activeTab === "partners" && <PartnerManagement />}
+        {activeTab === "users" && (
+          <>
+            {/* Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {["super_admin", "admin", "manager", "employee", "customer", "partner"].map((role) => (
+                <Card key={role}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-foreground">
+                      {users.filter((u) => u.role === role).length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{ROLE_LABELS[role]}s</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
-        {/* Partner Management */}
-        <PartnerManagement />
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {["super_admin", "admin", "manager", "employee", "customer", "partner"].map((role) => (
-            <Card key={role}>
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-foreground">
-                  {users.filter((u) => u.role === role).length}
-                </p>
-                <p className="text-xs text-muted-foreground">{ROLE_LABELS[role]}s</p>
+            {/* Users Table */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    All Users
+                  </CardTitle>
+                  <CardDescription>{users.length} total users</CardDescription>
+                </div>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add User
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New User</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Email *</Label>
+                        <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="user@company.com" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Password *</Label>
+                        <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Minimum 6 characters" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Display Name</Label>
+                        <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="John Doe" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Company</Label>
+                        <Input value={newCompany} onChange={(e) => setNewCompany(e.target.value)} placeholder="Company name" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Role</Label>
+                        <Select value={newRole} onValueChange={setNewRole}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="manager">Manager</SelectItem>
+                            <SelectItem value="employee">Employee</SelectItem>
+                            <SelectItem value="customer">Customer</SelectItem>
+                            <SelectItem value="partner">Partner</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                      <Button onClick={handleCreateUser} disabled={creating}>
+                        {creating ? "Creating..." : "Create User"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[60px]">Photo</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Company</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            <AvatarUpload
+                              userId={user.user_id}
+                              avatarUrl={user.avatar_url}
+                              displayName={user.display_name}
+                              size="sm"
+                              onUploaded={(url) => {
+                                setUsers((prev) =>
+                                  prev.map((u) =>
+                                    u.user_id === user.user_id ? { ...u, avatar_url: url } : u
+                                  )
+                                );
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">{user.email}</TableCell>
+                          <TableCell>{user.display_name || "—"}</TableCell>
+                          <TableCell>{user.company || "—"}</TableCell>
+                          <TableCell>
+                            {user.user_id === session?.user.id ? (
+                              <Badge className={ROLE_COLORS[user.role]}>{ROLE_LABELS[user.role]}</Badge>
+                            ) : (
+                              <Select value={user.role} onValueChange={(val) => handleUpdateRole(user.user_id, val)}>
+                                <SelectTrigger className="w-[140px] h-8">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="manager">Manager</SelectItem>
+                                  <SelectItem value="employee">Employee</SelectItem>
+                                  <SelectItem value="customer">Customer</SelectItem>
+                                  <SelectItem value="partner">Partner</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {user.user_id !== session?.user.id && (
+                              <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user.user_id, user.email)} className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
-          ))}
-        </div>
-
-        {/* Users Table */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                All Users
-              </CardTitle>
-              <CardDescription>{users.length} total users</CardDescription>
-            </div>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add User
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New User</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Email *</Label>
-                    <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="user@company.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Password *</Label>
-                    <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Minimum 6 characters" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Display Name</Label>
-                    <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="John Doe" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Company</Label>
-                    <Input value={newCompany} onChange={(e) => setNewCompany(e.target.value)} placeholder="Company name" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Role</Label>
-                    <Select value={newRole} onValueChange={setNewRole}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="employee">Employee</SelectItem>
-                        <SelectItem value="customer">Customer</SelectItem>
-                        <SelectItem value="partner">Partner</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                  <Button onClick={handleCreateUser} disabled={creating}>
-                    {creating ? "Creating..." : "Create User"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[60px]">Photo</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <AvatarUpload
-                          userId={user.user_id}
-                          avatarUrl={user.avatar_url}
-                          displayName={user.display_name}
-                          size="sm"
-                          onUploaded={(url) => {
-                            setUsers((prev) =>
-                              prev.map((u) =>
-                                u.user_id === user.user_id ? { ...u, avatar_url: url } : u
-                              )
-                            );
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{user.email}</TableCell>
-                      <TableCell>{user.display_name || "—"}</TableCell>
-                      <TableCell>{user.company || "—"}</TableCell>
-                      <TableCell>
-                        {user.user_id === session?.user.id ? (
-                          <Badge className={ROLE_COLORS[user.role]}>{ROLE_LABELS[user.role]}</Badge>
-                        ) : (
-                          <Select value={user.role} onValueChange={(val) => handleUpdateRole(user.user_id, val)}>
-                            <SelectTrigger className="w-[140px] h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="manager">Manager</SelectItem>
-                              <SelectItem value="employee">Employee</SelectItem>
-                              <SelectItem value="customer">Customer</SelectItem>
-                              <SelectItem value="partner">Partner</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {user.user_id !== session?.user.id && (
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user.user_id, user.email)} className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+          </>
+        )}
       </main>
     </div>
   );
