@@ -1,14 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { User, LogOut, Pencil, Check, X } from "lucide-react";
+import { User, LogOut, Pencil, Check, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useCampaignContext } from "@/contexts/CampaignContext";
+import { useFilters } from "@/contexts/FilterContext";
 
 const PAGE_TITLES: Record<string, string> = {
   "/": "Dashboard",
@@ -23,6 +23,7 @@ export function PlatformHeader() {
   const { session } = useAuth();
   const location = useLocation();
   const { selectedCampaignName, setSelectedCampaignName } = useCampaignContext();
+  const { filters, updateFilter } = useFilters();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [initials, setInitials] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -71,7 +72,6 @@ export function PlatformHeader() {
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/50">
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
-          <SidebarTrigger />
           <h1 className="text-lg font-semibold text-foreground whitespace-nowrap">{pageTitle}</h1>
           {selectedCampaignName && (
             <>
@@ -111,6 +111,15 @@ export function PlatformHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search chargers..."
+              value={filters.search}
+              onChange={(e) => updateFilter("search", e.target.value)}
+              className="pl-8 h-9 w-[200px] text-sm"
+            />
+          </div>
           <NotificationBell />
           <Avatar className="h-9 w-9 cursor-pointer">
             <AvatarImage src={avatarUrl || undefined} alt="Profile" />
