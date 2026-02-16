@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, Loader2, LayoutDashboard, Map, Columns, CalendarDays, Database, BarChart3, Ticket, LogOut, User } from "lucide-react";
+import { Upload, Loader2, LayoutDashboard, Map, CalendarDays, Database, BarChart3, Ticket, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -118,10 +118,6 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
             <TabsTrigger value="map" className="gap-1.5">
               <Map className="h-4 w-4" />
               <span className="hidden sm:inline">Map</span>
-            </TabsTrigger>
-            <TabsTrigger value="kanban" className="gap-1.5">
-              <Columns className="h-4 w-4" />
-              <span className="hidden sm:inline">Kanban</span>
             </TabsTrigger>
             <TabsTrigger value="schedule" className="gap-1.5">
               <CalendarDays className="h-4 w-4" />
