@@ -273,6 +273,7 @@ export function EstimateBuilder({
   const [accountManager, setAccountManager] = useState("");
   const [taxRate, setTaxRate] = useState(TAX_RATE);
   const [status, setStatus] = useState<Estimate["status"]>(initialStatus || "draft");
+  const [savedEstimateId, setSavedEstimateId] = useState<string | null>(null);
   const isReadOnly = status === "approved";
   const [newCategory, setNewCategory] = useState<EstimateLineItem["category"]>("labor");
   const [showDispatch, setShowDispatch] = useState(false);
@@ -348,10 +349,56 @@ export function EstimateBuilder({
     createdAt: new Date().toISOString(),
   });
 
-  const handleSaveDraft = () => {
-    setStatus("draft");
-    onStatusChange?.("draft");
-    toast.success("Estimate saved as draft");
+
+  const handleSaveDraft = async () => {
+    try {
+      const payload = {
+        campaign_id: selectedCampaignId,
+        charger_record_id: null,
+        ticket_id: ticket.ticketId || null,
+        station_id: ticket.id || null,
+        site_name: ticket.accountName || null,
+        customer_email: customerEmail.trim() || null,
+        account_manager: accountManager || null,
+        line_items: lineItems.map(li => ({
+          description: li.description,
+          qty: li.qty,
+          unit: li.unit,
+          rate: li.rate,
+          amount: li.amount,
+          category: li.category,
+        })),
+        subtotal,
+        tax_rate: taxRate,
+        tax,
+        total,
+        notes: notes || null,
+        status: "draft" as const,
+      };
+
+      if (savedEstimateId) {
+        const { error } = await supabase
+          .from("estimates")
+          .update(payload)
+          .eq("id", savedEstimateId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("estimates")
+          .insert(payload)
+          .select()
+          .single();
+        if (error) throw error;
+        setSavedEstimateId(data.id);
+      }
+
+      setStatus("draft");
+      onStatusChange?.("draft");
+      toast.success("Estimate saved as draft");
+    } catch (err: any) {
+      console.error("Save draft error:", err);
+      toast.error(`Failed to save draft: ${err.message || "Unknown error"}`);
+    }
   };
 
   const handleSendEstimate = async () => {
