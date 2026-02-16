@@ -9,6 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
 const PAGE_TITLES: Record<string, string> = {
   "/": "Dashboard",
+  "/dataset": "Dataset",
+  "/kanban": "Kanban",
   "/tickets": "Tickets",
   "/schedule": "Schedule",
   "/settings": "Settings",

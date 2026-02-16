@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import AssessmentTracker from "./pages/AssessmentTracker";
+import Dataset from "./pages/Dataset";
+import Kanban from "./pages/Kanban";
 import Schedule from "./pages/Schedule";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
             <Route path="/" element={<Index />} />
+            <Route path="/dataset" element={<Dataset />} />
+            <Route path="/kanban" element={<Kanban />} />
             <Route path="/tickets" element={<AssessmentTracker />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/settings" element={<Settings />} />
