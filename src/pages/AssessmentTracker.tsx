@@ -159,18 +159,7 @@ const AssessmentTracker = () => {
     setSelectedCampaignIds([]);
   }, []);
 
-  // Show landing page when not dismissed
-  if (!isLandingDismissed) {
-    return (
-      <MissionControlLanding
-        campaigns={campaigns}
-        onUploadFile={handleUploadFile}
-        onSelectCampaigns={handleSelectCampaignsWrapped}
-        onCreateNew={handleCreateNew}
-        onDeleteCampaign={deleteCampaign}
-      />
-    );
-  }
+  // Landing page removed — campaign is selected via sidebar dropdown
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
