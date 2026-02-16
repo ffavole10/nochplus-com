@@ -1,15 +1,13 @@
 import { useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Ticket, CalendarDays, Settings, Plus,
-  AlertTriangle, ChevronDown, ChevronRight, ChevronLeft,
-  MapPin, Zap, FileCheck, UserCog, Database, Columns } from
+  LayoutDashboard, Ticket, CalendarDays, Settings,
+  AlertTriangle, ChevronDown, ChevronRight,
+  MapPin, Zap, FileCheck, UserCog, Database } from
 "lucide-react";
-import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
-import { toast } from "sonner";
-import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { NavLink } from "@/components/NavLink";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,7 +34,7 @@ import { useCampaignContext } from "@/contexts/CampaignContext";
 const navItems = [
 { title: "Dashboard", url: "/", icon: LayoutDashboard },
 { title: "Dataset", url: "/dataset", icon: Database },
-{ title: "Kanban", url: "/kanban", icon: Columns },
+
 { title: "Tickets", url: "/tickets", icon: Ticket },
 { title: "Schedule", url: "/schedule", icon: CalendarDays }];
 
@@ -64,7 +62,7 @@ export function PlatformSidebar() {
   const { hasRole } = useUserRole();
   const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
   const { setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer } = useCampaignContext();
-  const [newCampaignOpen, setNewCampaignOpen] = useState(false);
+  
   const [selectedPartner, setSelectedPartner] = useState<string>("");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
 
@@ -110,7 +108,7 @@ export function PlatformSidebar() {
     setSelectedCustomer(campaign?.customer || "");
   };
 
-  const { toggleSidebar } = useSidebar();
+  
 
   return (
     <Sidebar side="left" collapsible="none" className="border-r border-border/50 relative h-screen sticky top-0">
@@ -156,21 +154,6 @@ export function PlatformSidebar() {
               </SelectContent>
             </Select>
 
-            <Button
-            variant="outline"
-            size="sm"
-            className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent gap-1.5"
-            onClick={() => setNewCampaignOpen(true)}>
-
-              <Plus className="h-4 w-4" />
-              New Campaign
-            </Button>
-            <NewCampaignModal
-            open={newCampaignOpen}
-            onOpenChange={setNewCampaignOpen}
-            onComplete={(data) => {
-              toast.success(`Campaign "${data.name}" created with ${data.chargers.length} chargers`);
-            }} />
 
           </div>
         }
@@ -393,18 +376,6 @@ export function PlatformSidebar() {
         }
       </SidebarFooter>
 
-      {/* Collapse toggle - half in sidebar, half out */}
-      <button
-        onClick={toggleSidebar}
-        className="absolute -right-3 top-6 z-20 h-7 w-7 rounded-full flex items-center justify-center shadow-md transition-colors"
-        style={{ backgroundColor: 'hsl(174, 66%, 32%)' }}
-        aria-label="Toggle sidebar">
-
-        <ChevronLeft
-          className={`h-4 w-4 transition-transform ${isCollapsed ? "rotate-180" : ""}`}
-          style={{ color: 'hsl(174, 66%, 65%)' }} />
-
-      </button>
 
     </Sidebar>);
 
