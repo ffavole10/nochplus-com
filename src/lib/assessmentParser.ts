@@ -293,3 +293,75 @@ export function getTicketStats(chargers: AssessmentCharger[]) {
     solvedTickets: withTickets.filter(c => c.ticketSolvedDate).length,
   };
 }
+
+/** Map a DB ChargerRecord to AssessmentCharger for the Dataset view */
+export function chargerRecordToAssessment(r: {
+  id: string;
+  station_id: string;
+  station_name: string | null;
+  model: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  site_name: string | null;
+  status: string | null;
+  start_date: string | null;
+  service_date: string | null;
+  max_power: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  serviced_qty: number | null;
+  service_required: number | null;
+  summary: string | null;
+  created_at: string;
+}): AssessmentCharger {
+  const assetRecordType = normalizeType(r.model || "");
+
+  // Map DB status to priority
+  let priorityLevel: PriorityLevel = "Low";
+  if (r.status === "Critical") priorityLevel = "Critical";
+  else if (r.status === "Degraded" || r.status === "High") priorityLevel = "High";
+  else if (r.status === "Medium") priorityLevel = "Medium";
+
+  // Determine phase from serviced_qty
+  let phase: Phase = "Needs Assessment";
+  if ((r.serviced_qty ?? 0) > 0) phase = "Completed";
+  else if (r.service_date) phase = "Scheduled";
+
+  const charger: AssessmentCharger = {
+    id: r.id,
+    assetName: r.station_name || r.station_id,
+    assetRecordType,
+    address: r.address || "",
+    city: r.city || "",
+    state: r.state || "",
+    zip: r.zip || "",
+    status: r.status || "Unknown",
+    inServiceDate: r.start_date,
+    partsWarrantyEndDate: null,
+    serviceContractEndDate: null,
+    accountName: r.site_name || "",
+    evseId: r.station_id,
+    priorityScore: 0,
+    priorityLevel,
+    phase,
+    assignedTo: "",
+    scheduledDate: r.service_date,
+    notes: r.summary || "",
+    lastUpdated: r.created_at,
+    latitude: r.latitude ? Number(r.latitude) : null,
+    longitude: r.longitude ? Number(r.longitude) : null,
+    ticketId: null,
+    ticketCreatedDate: null,
+    ticketSolvedDate: null,
+    ticketGroup: null,
+    ticketSubject: null,
+    ticketReportingSource: null,
+    hasOpenTicket: false,
+    extraFields: {},
+  };
+
+  charger.priorityScore = calculatePriorityScore(charger);
+  return charger;
+}

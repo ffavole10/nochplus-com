@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useMemo, useEffect } from "react";
-import { allChargers, getNetworkStats, Charger, getChargersByCustomer } from "@/data/chargerData";
+import { getNetworkStats, Charger, chargerRecordToCharger } from "@/data/chargerData";
 import { HeroMetrics } from "@/components/dashboard/HeroMetrics";
 import { FindingsSection } from "@/components/dashboard/FindingsSection";
 import { ChargerMap } from "@/components/dashboard/ChargerMap";
@@ -7,10 +7,13 @@ import { ComponentAnalysis } from "@/components/dashboard/ComponentAnalysis";
 import { SitePerformanceTable } from "@/components/dashboard/SitePerformanceTable";
 import { ReportLibrary } from "@/components/dashboard/ReportLibrary";
 import { useCampaignContext } from "@/contexts/CampaignContext";
+import { useChargerRecords, useCampaign } from "@/hooks/useCampaigns";
 import { Database } from "lucide-react";
 
 const Index = () => {
   const { selectedCampaignId, selectedCustomer } = useCampaignContext();
+  const { data: campaignData } = useCampaign(selectedCampaignId || null);
+  const { data: chargerRecords = [] } = useChargerRecords(selectedCampaignId || null);
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [focusedLocation, setFocusedLocation] = useState<string | null>(null);
   const criticalRef = useRef<HTMLDivElement>(null);
@@ -19,12 +22,10 @@ const Index = () => {
   const hasCampaign = !!selectedCampaignId;
 
   const baseChargers = useMemo(() => {
-    if (!hasCampaign) return [];
-    if (selectedCustomer) {
-      return getChargersByCustomer(selectedCustomer);
-    }
-    return allChargers;
-  }, [selectedCustomer, hasCampaign]);
+    if (!hasCampaign || chargerRecords.length === 0) return [];
+    const customer = campaignData?.customer || selectedCustomer || "";
+    return chargerRecords.map(r => chargerRecordToCharger(r, customer));
+  }, [hasCampaign, chargerRecords, campaignData, selectedCustomer]);
 
   const [filteredChargers, setFilteredChargers] = useState<Charger[]>([]);
 

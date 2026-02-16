@@ -1,17 +1,20 @@
 import { useState, useCallback, useMemo } from "react";
 import { AssessmentDashboard } from "@/components/assessment/AssessmentDashboard";
 import { ChargerDetailModal } from "@/components/assessment/ChargerDetailModal";
-import { CampaignProgressBanner } from "@/components/schedule/CampaignProgressBanner";
-import { useAssessmentData } from "@/hooks/useAssessmentData";
-import { useCampaignManager } from "@/hooks/useCampaignManager";
-import { useAuth } from "@/hooks/useAuth";
+import { useChargerRecords } from "@/hooks/useCampaigns";
+import { useCampaignContext } from "@/contexts/CampaignContext";
+import { chargerRecordToAssessment } from "@/lib/assessmentParser";
 import { AssessmentCharger } from "@/types/assessment";
-import { toast } from "sonner";
+import { Database } from "lucide-react";
 
 const Dataset = () => {
-  const { chargers, updateCharger } = useAssessmentData();
-  const { session } = useAuth();
-  const { activeCampaign, endCampaign } = useCampaignManager(session);
+  const { selectedCampaignId } = useCampaignContext();
+  const { data: chargerRecords = [] } = useChargerRecords(selectedCampaignId || null);
+
+  const chargers = useMemo(() => {
+    return chargerRecords.map(r => chargerRecordToAssessment(r));
+  }, [chargerRecords]);
+
   const [selectedCharger, setSelectedCharger] = useState<AssessmentCharger | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedState, setSelectedState] = useState("");
@@ -52,21 +55,22 @@ const Dataset = () => {
     setModalOpen(true);
   }, []);
 
+  if (!selectedCampaignId) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <Database className="h-12 w-12 text-muted-foreground/40 mx-auto" />
+          <h2 className="text-lg font-medium text-muted-foreground">No Campaign Selected</h2>
+          <p className="text-sm text-muted-foreground/70 max-w-xs">
+            Select a partner and campaign from the sidebar to view dataset.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col flex-1">
-      {activeCampaign && (
-        <div className="px-6 pt-4">
-          <CampaignProgressBanner
-            campaign={activeCampaign}
-            onViewSchedule={() => {}}
-            onEndCampaign={() => {
-              endCampaign(activeCampaign.id);
-              toast.success("Campaign ended");
-            }}
-          />
-        </div>
-      )}
-
       <AssessmentDashboard
         chargers={filteredChargers}
         onSelectCharger={handleSelectCharger}
@@ -89,7 +93,7 @@ const Dataset = () => {
         charger={selectedCharger}
         open={modalOpen}
         onOpenChange={setModalOpen}
-        onUpdate={updateCharger}
+        onUpdate={() => {}}
       />
     </div>
   );
