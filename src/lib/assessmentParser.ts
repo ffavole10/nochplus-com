@@ -315,6 +315,12 @@ export function chargerRecordToAssessment(r: {
   service_required: number | null;
   summary: string | null;
   created_at: string;
+  ticket_id?: string | null;
+  ticket_created_date?: string | null;
+  ticket_solved_date?: string | null;
+  ticket_group?: string | null;
+  ticket_subject?: string | null;
+  ticket_reporting_source?: string | null;
 }): AssessmentCharger {
   const assetRecordType = normalizeType(r.model || "");
 
@@ -352,13 +358,13 @@ export function chargerRecordToAssessment(r: {
     lastUpdated: r.created_at,
     latitude: r.latitude ? Number(r.latitude) : null,
     longitude: r.longitude ? Number(r.longitude) : null,
-    ticketId: null,
-    ticketCreatedDate: null,
-    ticketSolvedDate: null,
-    ticketGroup: null,
-    ticketSubject: null,
-    ticketReportingSource: null,
-    hasOpenTicket: false,
+    ticketId: r.ticket_id || null,
+    ticketCreatedDate: r.ticket_created_date || null,
+    ticketSolvedDate: r.ticket_solved_date || null,
+    ticketGroup: r.ticket_group || null,
+    ticketSubject: r.ticket_subject || null,
+    ticketReportingSource: r.ticket_reporting_source || null,
+    hasOpenTicket: !!(r.ticket_created_date && !r.ticket_solved_date),
     extraFields: {},
   };
 

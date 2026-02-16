@@ -113,6 +113,12 @@ export type Database = {
           station_name: string | null
           status: string | null
           summary: string | null
+          ticket_created_date: string | null
+          ticket_group: string | null
+          ticket_id: string | null
+          ticket_reporting_source: string | null
+          ticket_solved_date: string | null
+          ticket_subject: string | null
           zip: string | null
         }
         Insert: {
@@ -150,6 +156,12 @@ export type Database = {
           station_name?: string | null
           status?: string | null
           summary?: string | null
+          ticket_created_date?: string | null
+          ticket_group?: string | null
+          ticket_id?: string | null
+          ticket_reporting_source?: string | null
+          ticket_solved_date?: string | null
+          ticket_subject?: string | null
           zip?: string | null
         }
         Update: {
@@ -187,6 +199,12 @@ export type Database = {
           station_name?: string | null
           status?: string | null
           summary?: string | null
+          ticket_created_date?: string | null
+          ticket_group?: string | null
+          ticket_id?: string | null
+          ticket_reporting_source?: string | null
+          ticket_solved_date?: string | null
+          ticket_subject?: string | null
           zip?: string | null
         }
         Relationships: [
