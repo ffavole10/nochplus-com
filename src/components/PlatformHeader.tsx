@@ -85,7 +85,7 @@ export function PlatformHeader() {
             </button>
           )}
           <h1 className="text-lg font-semibold text-foreground whitespace-nowrap">{pageTitle}</h1>
-          {selectedCampaignName && (
+          {selectedCampaignName && location.pathname !== "/settings" && (
             <>
               <span className="text-lg text-muted-foreground font-light">|</span>
               {isEditing ? (
