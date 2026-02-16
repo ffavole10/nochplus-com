@@ -75,14 +75,17 @@ export function chargerRecordToCharger(r: {
   else if (r.status === "High") status = "High";
   else if (r.status === "Medium") status = "Medium";
   else if (!r.status) {
-    // Derive from ticket data when no explicit status
+    // Derive from ticket priority, matching classifyTicketPriority logic
     const hasOpenTicket = !!(r.ticket_id && !r.ticket_solved_date);
-    if (hasOpenTicket) {
-      // Use issue flags to distinguish Critical vs High
-      const issueCount = [r.ccs_cable_issue, r.chademo_cable_issue, r.screen_damage, r.cc_reader_issue,
-        r.rfid_reader_issue, r.app_issue, r.holster_issue, r.power_supply_issue, r.circuit_board_issue, r.other_issue]
-        .filter(Boolean).length;
-      status = issueCount >= 3 ? "Critical" : "High";
+    if (hasOpenTicket && r.ticket_created_date) {
+      const ageDays = Math.floor((Date.now() - new Date(r.ticket_created_date).getTime()) / 86400000);
+      const isDCFC = /dcfc|l3|dc fast/i.test(r.model || "");
+      if (ageDays > 30 && isDCFC) status = "Critical";
+      else if (ageDays > 14) status = "High";
+      else if (ageDays > 7) status = "Medium";
+      else status = "Low";
+    } else if (hasOpenTicket) {
+      status = "High";
     } else if (r.ticket_id && r.ticket_solved_date) {
       status = "Low";
     }
