@@ -67,6 +67,12 @@ export function DataManagement() {
       "Power Cabinet Status": r.power_cabinet_status || "",
       "Power Cabinet Summary": r.power_cabinet_summary || "",
       "Power Cabinet Report URL": r.power_cabinet_report_url || "",
+      "Ticket ID": (r as any).ticket_id || "",
+      "Ticket Created Date": (r as any).ticket_created_date || "",
+      "Ticket Solved Date": (r as any).ticket_solved_date || "",
+      "Ticket Group": (r as any).ticket_group || "",
+      "Ticket Subject": (r as any).ticket_subject || "",
+      "Ticket Reporting Source": (r as any).ticket_reporting_source || "",
     }));
 
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -168,6 +174,12 @@ export function DataManagement() {
           power_cabinet_status: get(["Power Cabinet Status", "power_cabinet_status"]) as string | null,
           power_cabinet_summary: get(["Power Cabinet Summary", "power_cabinet_summary"]) as string | null,
           power_cabinet_report_url: get(["Power Cabinet Report URL", "power_cabinet_report_url"]) as string | null,
+          ticket_id: get(["Ticket ID", "ticket_id"]) as string | null,
+          ticket_created_date: get(["Ticket Created Date", "ticket_created_date", "PST Ticket Created Date"]) as string | null,
+          ticket_solved_date: get(["Ticket Solved Date", "ticket_solved_date"]) as string | null,
+          ticket_group: get(["Ticket Group", "ticket_group"]) as string | null,
+          ticket_subject: get(["Ticket Subject", "ticket_subject"]) as string | null,
+          ticket_reporting_source: get(["Ticket Reporting Source", "ticket_reporting_source"]) as string | null,
         };
       });
 

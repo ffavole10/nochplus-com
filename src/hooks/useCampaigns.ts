@@ -55,6 +55,12 @@ export interface ChargerRecord {
   circuit_board_issue: boolean;
   latitude: number | null;
   longitude: number | null;
+  ticket_id: string | null;
+  ticket_created_date: string | null;
+  ticket_solved_date: string | null;
+  ticket_group: string | null;
+  ticket_subject: string | null;
+  ticket_reporting_source: string | null;
   created_at: string;
 }
 

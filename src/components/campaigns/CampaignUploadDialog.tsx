@@ -140,6 +140,12 @@ export function CampaignUploadDialog({ open, onOpenChange, onSuccess }: Campaign
         circuit_board_issue: c.circuit_board_issue,
         latitude: null,
         longitude: null,
+        ticket_id: null,
+        ticket_created_date: null,
+        ticket_solved_date: null,
+        ticket_group: null,
+        ticket_subject: null,
+        ticket_reporting_source: null,
       }));
 
       await createChargerRecords.mutateAsync(chargerRecords);
