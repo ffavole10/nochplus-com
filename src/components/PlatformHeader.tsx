@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
-
 const PAGE_TITLES: Record<string, string> = {
   "/": "Dashboard",
   "/tickets": "Tickets",
@@ -44,7 +44,10 @@ export function PlatformHeader() {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/50">
       <div className="px-4 py-3 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-foreground">{pageTitle}</h1>
+        <div className="flex items-center gap-3">
+          <SidebarTrigger />
+          <h1 className="text-lg font-semibold text-foreground">{pageTitle}</h1>
+        </div>
 
         <div className="flex items-center gap-3">
           <NotificationBell />
