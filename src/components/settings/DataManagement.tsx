@@ -206,7 +206,14 @@ export function DataManagement() {
         await createRecords.mutateAsync(batch);
       }
 
+      // Update total_chargers on the campaign
+      await supabase
+        .from("campaigns")
+        .update({ total_chargers: mapped.length })
+        .eq("id", selectedCampaignId);
+
       queryClient.invalidateQueries({ queryKey: ["charger_records", selectedCampaignId] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       toast.success(`Uploaded ${mapped.length} records`);
     } catch (err: any) {
       toast.error("Upload failed: " + (err.message || "Unknown error"));

@@ -104,7 +104,7 @@ export function useChargerRecords(campaignId: string | null) {
       if (!campaignId) return [];
       // Fetch all records in batches to bypass the 1000-row default limit
       const allRecords: ChargerRecord[] = [];
-      const PAGE_SIZE = 1000;
+      const PAGE_SIZE = 5000;
       let from = 0;
       let keepFetching = true;
 
