@@ -31,6 +31,7 @@ import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
+import { useCampaignContext } from "@/contexts/CampaignContext";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -62,6 +63,7 @@ export function PlatformSidebar() {
   const isCollapsed = state === "collapsed";
   const { hasRole } = useUserRole();
   const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
+  const { setSelectedCampaignName } = useCampaignContext();
   const [newCampaignOpen, setNewCampaignOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string>("");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
@@ -90,9 +92,17 @@ export function PlatformSidebar() {
     const partnerCampaigns = sampleCampaigns.filter(c => c.customer === value);
     if (partnerCampaigns.length === 1) {
       setSelectedCampaignId(partnerCampaigns[0].id);
+      setSelectedCampaignName(partnerCampaigns[0].name);
     } else {
       setSelectedCampaignId("");
+      setSelectedCampaignName("");
     }
+  };
+
+  const handleCampaignChange = (value: string) => {
+    setSelectedCampaignId(value);
+    const campaign = sampleCampaigns.find(c => c.id === value);
+    setSelectedCampaignName(campaign?.name || "");
   };
 
   return (
@@ -124,7 +134,7 @@ export function PlatformSidebar() {
             {/* Campaign Selector (filtered by partner) */}
             <Select
               value={selectedCampaignId}
-              onValueChange={setSelectedCampaignId}
+              onValueChange={handleCampaignChange}
               disabled={!selectedPartner}
             >
               <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-sm">
