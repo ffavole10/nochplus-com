@@ -66,6 +66,7 @@ export function chargerRecordToCharger(r: {
   ticket_id?: string | null;
   ticket_created_date?: string | null;
   ticket_solved_date?: string | null;
+  ticket_subject?: string | null;
 }, customer: string): Charger {
   // Map DB status to 4-level system
   let status: ChargerStatus = "Low";
@@ -75,7 +76,6 @@ export function chargerRecordToCharger(r: {
   else if (r.status === "High") status = "High";
   else if (r.status === "Medium") status = "Medium";
   else if (!r.status) {
-    // Derive from ticket priority, matching classifyTicketPriority logic
     const hasOpenTicket = !!(r.ticket_id && !r.ticket_solved_date);
     if (hasOpenTicket && r.ticket_created_date) {
       const ageDays = Math.floor((Date.now() - new Date(r.ticket_created_date).getTime()) / 86400000);
@@ -104,16 +104,35 @@ export function chargerRecordToCharger(r: {
   if (r.circuit_board_issue) issues.push("Circuit Board");
   if (r.other_issue) issues.push("Other");
 
+  // Extract charger name, account, and address from ticket_subject when DB fields are empty
+  let stationNumber = r.station_id;
+  let siteName = r.site_name || "";
+  let address = r.address || "";
+
+  if (r.ticket_subject) {
+    const parts = r.ticket_subject.split(" - ").map(p => p.trim());
+    if (!r.station_name && parts.length >= 1) {
+      stationNumber = parts[0];
+    }
+    if (!r.site_name && parts.length >= 3) {
+      siteName = parts[2].replace(/^\(|\)$/g, "");
+    }
+    if (!r.address && parts.length >= 4) {
+      const loc = parts[3].replace(/^\(|\)$/g, "");
+      if (loc && loc.length > 3) address = loc;
+    }
+  }
+
   return {
     charger_id: r.id,
-    station_number: r.station_id,
+    station_number: stationNumber,
     model: r.model || "Unknown",
     manufacturer: "",
-    address: r.address || "",
+    address,
     city: r.city || "",
     state: r.state || "",
     zip: r.zip || "",
-    site_name: r.site_name || "",
+    site_name: siteName,
     serviced: r.serviced_qty ?? 0,
     status,
     summary: r.summary || "",
