@@ -145,10 +145,9 @@ export function generateEstimatePDF(estimate: EstimateRecord, partnerName: strin
 
 export function downloadEstimatePDF(estimate: EstimateRecord, partnerName: string) {
   const doc = generateEstimatePDF(estimate, partnerName);
-  const station = (estimate.station_id || estimate.site_name || "Unknown").replace(/[^a-zA-Z0-9-_]/g, "_");
   const ticket = (estimate.ticket_id || "NoTicket").replace(/[^a-zA-Z0-9-_]/g, "_");
-  const partner = (partnerName || "NoPartner").replace(/[^a-zA-Z0-9-_]/g, "_");
-  const filename = `${station}_${ticket}_${partner}.pdf`;
+  const partner = (partnerName || "NoPartner").replace(/[^a-zA-Z0-9-_]/g, "_").toLowerCase();
+  const filename = `${ticket}-${partner}.pdf`;
   doc.save(filename);
 }
 
