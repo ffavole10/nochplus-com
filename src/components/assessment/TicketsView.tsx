@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, Brain } from "lucide-react";
 import { AssessmentCharger, TicketPriority } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
+import { classifyTicketPriority } from "@/lib/ticketPriority";
 import { useSWIMatching } from "@/hooks/useSWIMatching";
 import { SWIAttachment } from "@/components/assessment/SWIAttachment";
 import { DispatchButton, EstimateStatus } from "@/components/tickets/DispatchButton";
@@ -23,24 +24,7 @@ const PRIORITY_CONFIG: Record<TicketPriority, { color: string; bg: string; label
   "P4-Low": { color: "text-optimal", bg: "bg-optimal text-optimal-foreground", label: "P4 — Low" },
 };
 
-function classifyTicketPriority(charger: AssessmentCharger): TicketPriority {
-  const { priorityLevel, hasOpenTicket, ticketCreatedDate, assetRecordType } = charger;
-  const ageDays = ticketCreatedDate ? differenceInDays(new Date(), new Date(ticketCreatedDate)) : 0;
-
-  // P1: Critical charger priority OR open ticket > 30 days on DCFC
-  if (priorityLevel === "Critical" || (hasOpenTicket && ageDays > 30 && assetRecordType === "DCFC")) {
-    return "P1-Critical";
-  }
-  // P2: High priority OR open ticket > 14 days
-  if (priorityLevel === "High" || (hasOpenTicket && ageDays > 14)) {
-    return "P2-High";
-  }
-  // P3: Medium priority OR open ticket > 7 days
-  if (priorityLevel === "Medium" || (hasOpenTicket && ageDays > 7)) {
-    return "P3-Medium";
-  }
-  return "P4-Low";
-}
+// classifyTicketPriority is now imported from @/lib/ticketPriority
 
 function generateRecommendation(charger: AssessmentCharger, priority: TicketPriority, ageDays: number): string {
   const subject = charger.ticketSubject?.toLowerCase() || "";
