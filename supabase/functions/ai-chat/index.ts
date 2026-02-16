@@ -13,58 +13,31 @@ serve(async (req) => {
 
   try {
     const { messages, max_tokens = 1024 } = await req.json();
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!ANTHROPIC_API_KEY) {
+    if (!LOVABLE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "ANTHROPIC_API_KEY is not configured" }),
+        JSON.stringify({ error: "LOVABLE_API_KEY is not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Convert messages to Anthropic format (separate system from user/assistant)
-    let systemPrompt = "";
-    const anthropicMessages = [];
-
-    for (const msg of messages) {
-      if (msg.role === "system") {
-        systemPrompt += msg.content + "\n";
-      } else {
-        anthropicMessages.push({ role: msg.role, content: msg.content });
-      }
-    }
-
-    const body: Record<string, unknown> = {
-      model: "claude-sonnet-4-20250514",
-      max_tokens,
-      messages: anthropicMessages,
-    };
-
-    if (systemPrompt.trim()) {
-      body.system = systemPrompt.trim();
-    }
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages,
+        max_tokens,
+      }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Anthropic API error:", response.status, errorText);
-
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
+      console.error("AI Gateway error:", response.status, errorText);
       return new Response(
         JSON.stringify({ error: "AI API error", details: errorText }),
         { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -72,12 +45,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-
-    // Extract text content from Anthropic response format
-    const content = data.content
-      ?.filter((block: { type: string }) => block.type === "text")
-      .map((block: { text: string }) => block.text)
-      .join("") || "";
+    const content = data.choices?.[0]?.message?.content || "";
 
     return new Response(
       JSON.stringify({
