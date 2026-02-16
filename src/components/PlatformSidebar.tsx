@@ -25,7 +25,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { PARTNER_CATEGORIES, PARTNER_LABELS } from "@/data/partners";
+import { usePartners } from "@/hooks/usePartners";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
@@ -71,8 +71,20 @@ export function PlatformSidebar() {
   const [swiOpen, setSwiOpen] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
 
-  // Fetch real campaigns from DB
+  // Fetch real data from DB
   const { data: dbCampaigns = [] } = useCampaigns();
+  const { data: dbPartners = [] } = usePartners();
+
+  // Group partners by category
+  const partnerCategories = useMemo(() => {
+    const cats = ["CPOs", "OEMs", "CSMS"];
+    return cats
+      .map((cat) => ({
+        label: cat,
+        partners: dbPartners.filter((p) => p.category === cat),
+      }))
+      .filter((g) => g.partners.length > 0);
+  }, [dbPartners]);
 
   // Filter campaigns by selected partner
   const filteredCampaigns = useMemo(() => {
@@ -118,7 +130,7 @@ export function PlatformSidebar() {
               <SelectValue placeholder="Select Partner" />
             </SelectTrigger>
             <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-              {PARTNER_CATEGORIES.map((cat) => (
+              {partnerCategories.map((cat) => (
                 <SelectGroup key={cat.label}>
                   <SelectLabel className="text-xs font-semibold text-muted-foreground">{cat.label}</SelectLabel>
                   {cat.partners.map((p) => (

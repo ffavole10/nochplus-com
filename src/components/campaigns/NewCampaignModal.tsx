@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
@@ -14,7 +14,7 @@ import {
 import { parseAssessmentExcel, getAssessmentStats } from "@/lib/assessmentParser";
 import { AssessmentCharger } from "@/types/assessment";
 import { CampaignType, CAMPAIGN_TYPE_CONFIG } from "@/types/campaign";
-import { PARTNER_CATEGORIES } from "@/data/partners";
+import { usePartners } from "@/hooks/usePartners";
 import { toast } from "sonner";
 
 interface NewCampaignModalProps {
@@ -43,6 +43,14 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
   const [campaignName, setCampaignName] = useState("");
   const [campaignType, setCampaignType] = useState<CampaignType>("preventive_maintenance");
   const [customer, setCustomer] = useState("");
+
+  const { data: dbPartners = [] } = usePartners();
+  const partnerCategories = useMemo(() => {
+    const cats = ["CPOs", "OEMs", "CSMS"];
+    return cats
+      .map((cat) => ({ label: cat, partners: dbPartners.filter((p) => p.category === cat) }))
+      .filter((g) => g.partners.length > 0);
+  }, [dbPartners]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -257,7 +265,7 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
                   <SelectValue placeholder="Select partner" />
                 </SelectTrigger>
                 <SelectContent>
-                  {PARTNER_CATEGORIES.map((cat) => (
+                  {partnerCategories.map((cat) => (
                     <SelectGroup key={cat.label}>
                       <SelectLabel className="text-xs font-semibold text-muted-foreground">{cat.label}</SelectLabel>
                       {cat.partners.map((p) => (
