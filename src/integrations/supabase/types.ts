@@ -217,6 +217,84 @@ export type Database = {
           },
         ]
       }
+      estimates: {
+        Row: {
+          account_manager: string | null
+          campaign_id: string
+          charger_record_id: string | null
+          created_at: string
+          customer_email: string | null
+          id: string
+          line_items: Json
+          notes: string | null
+          sent_at: string | null
+          site_name: string | null
+          station_id: string | null
+          status: string
+          subtotal: number
+          tax: number
+          tax_rate: number
+          ticket_id: string | null
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          account_manager?: string | null
+          campaign_id: string
+          charger_record_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          line_items?: Json
+          notes?: string | null
+          sent_at?: string | null
+          site_name?: string | null
+          station_id?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          tax_rate?: number
+          ticket_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          account_manager?: string | null
+          campaign_id?: string
+          charger_record_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          line_items?: Json
+          notes?: string | null
+          sent_at?: string | null
+          site_name?: string | null
+          station_id?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          tax_rate?: number
+          ticket_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estimates_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estimates_charger_record_id_fkey"
+            columns: ["charger_record_id"]
+            isOneToOne: false
+            referencedRelation: "charger_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string

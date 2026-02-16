@@ -37,8 +37,8 @@ import { useCampaignContext } from "@/contexts/CampaignContext";
 const navItems = [
 { title: "Dashboard", url: "/", icon: LayoutDashboard },
 { title: "Dataset", url: "/dataset", icon: Database },
-
 { title: "Tickets", url: "/tickets", icon: Ticket },
+{ title: "Estimates", url: "/estimates", icon: FileCheck },
 { title: "Schedule", url: "/schedule", icon: CalendarDays }];
 
 
