@@ -27,12 +27,8 @@ export function PartnerManagement() {
   const [newLabel, setNewLabel] = useState("");
   const [newCategory, setNewCategory] = useState("CPOs");
 
-  const grouped = useMemo(() => {
-    const map: Record<string, typeof partners> = {};
-    for (const cat of CATEGORIES) {
-      map[cat] = partners.filter((p) => p.category === cat);
-    }
-    return map;
+  const sortedPartners = useMemo(() => {
+    return [...partners].sort((a, b) => a.label.localeCompare(b.label));
   }, [partners]);
 
   const startEdit = (p: { id: string; label: string; category: string }) => {
@@ -119,8 +115,7 @@ export function PartnerManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {CATEGORIES.map((cat) =>
-                grouped[cat]?.map((p) => (
+              {sortedPartners.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell>
                       {editingId === p.id ? (
@@ -167,8 +162,7 @@ export function PartnerManagement() {
                       )}
                     </TableCell>
                   </TableRow>
-                ))
-              )}
+                ))}
             </TableBody>
           </Table>
         )}

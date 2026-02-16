@@ -17,7 +17,7 @@ export function usePartners() {
       const { data, error } = await supabase
         .from("partners")
         .select("*")
-        .order("sort_order", { ascending: true });
+        .order("label", { ascending: true });
       if (error) throw error;
       return data as Partner[];
     },
