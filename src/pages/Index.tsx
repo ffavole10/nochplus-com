@@ -28,12 +28,18 @@ const Index = () => {
   }, [hasCampaign, chargerRecords, campaignData, selectedCustomer]);
 
   const [filteredChargers, setFilteredChargers] = useState<Charger[]>([]);
+  const prevRecordsRef = useRef(chargerRecords);
 
   useEffect(() => {
-    setFilteredChargers(baseChargers);
-    setSelectedCharger(null);
-    setFocusedLocation(null);
-  }, [baseChargers]);
+    if (prevRecordsRef.current !== chargerRecords) {
+      prevRecordsRef.current = chargerRecords;
+      setFilteredChargers(baseChargers);
+      setSelectedCharger(null);
+      setFocusedLocation(null);
+    } else if (filteredChargers.length === 0 && baseChargers.length > 0) {
+      setFilteredChargers(baseChargers);
+    }
+  }, [baseChargers, chargerRecords]);
 
   const filteredStats = getNetworkStats(filteredChargers);
 
