@@ -201,7 +201,7 @@ export function PlatformSidebar() {
         {/* Filters Section */}
         {!isCollapsed &&
         <>
-            <SidebarGroup>
+            <SidebarGroup className="pb-0">
               <SidebarGroupLabel className="flex items-center gap-2">
                 
                 Filters
@@ -220,7 +220,7 @@ export function PlatformSidebar() {
             </SidebarGroup>
 
             {/* Status Filter - 4 levels */}
-            <SidebarGroup>
+            <SidebarGroup className="pt-0">
               <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
                 <CollapsibleTrigger className="w-full">
                   <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded px-2 py-1">
