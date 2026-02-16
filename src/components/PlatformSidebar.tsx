@@ -54,7 +54,6 @@ const ACCOUNT_MANAGERS = [
 { value: "jrose", label: "Joe Rose" },
 { value: "cromano", label: "Caitlin Romano" },
 { value: "ffavole", label: "Fernando Favole" }];
-  const [newCampaignOpen, setNewCampaignOpen] = useState(false);
 
 const US_STATES = ["AZ", "CA", "FL", "GA", "IL", "NY", "TX", "VA", "WA"];
 
@@ -64,7 +63,7 @@ export function PlatformSidebar() {
   const { hasRole } = useUserRole();
   const { filters, toggleArrayFilter, updateFilter, clearFilters, hasActiveFilters } = useFilters();
   const { setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer } = useCampaignContext();
-  
+  const [newCampaignOpen, setNewCampaignOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string>("");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
 
