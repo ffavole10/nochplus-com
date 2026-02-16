@@ -2,10 +2,13 @@ import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, DollarSign, Send, Clock, Database, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FileText, Database, CheckCircle, Download } from "lucide-react";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useEstimates, EstimateRecord } from "@/hooks/useEstimates";
 import { format } from "date-fns";
+import { downloadEstimatePDF, downloadMultipleEstimatePDFs } from "@/lib/estimatePdf";
 import {
   Dialog,
   DialogContent,
@@ -13,9 +16,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { MapPin } from "lucide-react";
+import { toast } from "sonner";
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground border-muted" },
@@ -24,7 +25,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 };
 
 /* ── Estimate Detail Modal ─────────────────────── */
-function EstimateDetailModal({ estimate, open, onOpenChange }: { estimate: EstimateRecord | null; open: boolean; onOpenChange: (o: boolean) => void }) {
+function EstimateDetailModal({ estimate, open, onOpenChange, partnerName }: { estimate: EstimateRecord | null; open: boolean; onOpenChange: (o: boolean) => void; partnerName: string }) {
   if (!estimate) return null;
   const isReadOnly = estimate.status === "approved";
   const lineItems = (estimate.line_items || []) as any[];
@@ -39,7 +40,21 @@ function EstimateDetailModal({ estimate, open, onOpenChange }: { estimate: Estim
               <FileText className="h-5 w-5 text-primary" />
               {isReadOnly ? "View Estimate" : "Review Estimate"}
             </DialogTitle>
-            <Badge variant="outline" className={config.className}>{config.label}</Badge>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => {
+                  downloadEstimatePDF(estimate, partnerName);
+                  toast.success("PDF downloaded");
+                }}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download PDF
+              </Button>
+              <Badge variant="outline" className={config.className}>{config.label}</Badge>
+            </div>
           </div>
           <DialogDescription>
             {isReadOnly ? "This estimate has been approved." : "Review estimate details."}
@@ -129,9 +144,12 @@ function EstimateDetailModal({ estimate, open, onOpenChange }: { estimate: Estim
 
 /* ── Main Page ─────────────────────────────────── */
 const Estimates = () => {
-  const { selectedCampaignId } = useCampaignContext();
+  const { selectedCampaignId, selectedCustomer } = useCampaignContext();
   const { data: estimates = [], isLoading } = useEstimates(selectedCampaignId || null);
   const [selectedEstimate, setSelectedEstimate] = useState<EstimateRecord | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const partnerName = selectedCustomer || "Partner";
 
   const stats = useMemo(() => {
     const drafts = estimates.filter(e => e.status === "draft").length;
@@ -140,6 +158,42 @@ const Estimates = () => {
     const totalValue = estimates.reduce((sum, e) => sum + Number(e.total), 0);
     return { total: estimates.length, drafts, sent, approved, totalValue };
   }, [estimates]);
+
+  const allSelected = estimates.length > 0 && selectedIds.size === estimates.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < estimates.length;
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(estimates.map(e => e.id)));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleDownloadSelected = () => {
+    const selected = estimates.filter(e => selectedIds.has(e.id));
+    if (selected.length === 0) {
+      toast.error("No estimates selected");
+      return;
+    }
+    downloadMultipleEstimatePDFs(selected, partnerName);
+    toast.success(`Downloading ${selected.length} estimate${selected.length > 1 ? "s" : ""}`);
+  };
+
+  const handleDownloadAll = () => {
+    if (estimates.length === 0) return;
+    downloadMultipleEstimatePDFs(estimates, partnerName);
+    toast.success(`Downloading all ${estimates.length} estimate${estimates.length > 1 ? "s" : ""}`);
+  };
 
   if (!selectedCampaignId) {
     return (
@@ -193,6 +247,31 @@ const Estimates = () => {
         </Card>
       </div>
 
+      {/* Action Bar */}
+      {estimates.length > 0 && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <span className="text-sm text-muted-foreground">
+                {selectedIds.size} selected
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadSelected}>
+                <Download className="h-3.5 w-3.5" />
+                Download Selected ({selectedIds.size})
+              </Button>
+            )}
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadAll}>
+              <Download className="h-3.5 w-3.5" />
+              Download All
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Estimates Table */}
       <Card>
         <CardContent className="p-0">
@@ -212,6 +291,14 @@ const Estimates = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={toggleAll}
+                      aria-label="Select all"
+                      className={someSelected ? "data-[state=unchecked]:bg-primary/20" : ""}
+                    />
+                  </TableHead>
                   <TableHead>Station / Site</TableHead>
                   <TableHead>Ticket</TableHead>
                   <TableHead>Customer Email</TableHead>
@@ -224,12 +311,20 @@ const Estimates = () => {
               <TableBody>
                 {estimates.map((est) => {
                   const config = STATUS_CONFIG[est.status] || STATUS_CONFIG.draft;
+                  const isChecked = selectedIds.has(est.id);
                   return (
                     <TableRow
                       key={est.id}
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => setSelectedEstimate(est)}
                     >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={() => toggleOne(est.id)}
+                          aria-label={`Select estimate ${est.ticket_id || est.id}`}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="font-medium">{est.site_name || est.station_id || "—"}</div>
                       </TableCell>
@@ -265,6 +360,7 @@ const Estimates = () => {
         estimate={selectedEstimate}
         open={!!selectedEstimate}
         onOpenChange={(o) => { if (!o) setSelectedEstimate(null); }}
+        partnerName={partnerName}
       />
     </div>
   );
