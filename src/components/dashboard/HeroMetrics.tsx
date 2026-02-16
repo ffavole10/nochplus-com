@@ -4,24 +4,26 @@ import { HealthGauge } from "./HealthGauge";
 interface HeroMetricsProps {
   healthScore: number;
   criticalCount: number;
+  highCount: number;
+  mediumCount: number;
+  lowCount: number;
   totalServiced: number;
   totalChargers: number;
-  optimalCount: number;
-  degradedCount: number;
   onCriticalClick: () => void;
 }
 
 export function HeroMetrics({
   healthScore,
   criticalCount,
+  highCount,
+  mediumCount,
+  lowCount,
   totalServiced,
   totalChargers,
-  optimalCount,
-  degradedCount,
   onCriticalClick,
 }: HeroMetricsProps) {
   const completionPercent = Math.round((totalServiced / totalChargers) * 100);
-  const totalAll = optimalCount + degradedCount + criticalCount;
+  const totalAll = criticalCount + highCount + mediumCount + lowCount;
 
   const titleClass = "text-base font-semibold text-foreground flex items-center gap-2";
 
@@ -86,31 +88,31 @@ export function HeroMetrics({
         <div className="space-y-2 w-full px-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-low"></span>
-              <span className="text-sm">Low</span>
+              <span className="w-3 h-3 rounded-full bg-critical"></span>
+              <span className="text-sm">Critical</span>
             </div>
-            <span className="font-semibold text-low">{optimalCount}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-medium"></span>
-              <span className="text-sm">Medium</span>
-            </div>
-            <span className="font-semibold text-medium">{Math.round(degradedCount * 0.5)}</span>
+            <span className="font-semibold text-critical">{criticalCount}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-high"></span>
               <span className="text-sm">High</span>
             </div>
-            <span className="font-semibold text-high">{Math.round(degradedCount * 0.5)}</span>
+            <span className="font-semibold text-high">{highCount}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-critical"></span>
-              <span className="text-sm">Critical</span>
+              <span className="w-3 h-3 rounded-full bg-medium"></span>
+              <span className="text-sm">Medium</span>
             </div>
-            <span className="font-semibold text-critical">{criticalCount}</span>
+            <span className="font-semibold text-medium">{mediumCount}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-low"></span>
+              <span className="text-sm">Low</span>
+            </div>
+            <span className="font-semibold text-low">{lowCount}</span>
           </div>
           <div className="border-t border-border pt-2 mt-2 flex items-center justify-between">
             <span className="text-sm font-medium">Total</span>

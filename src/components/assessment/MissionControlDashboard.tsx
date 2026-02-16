@@ -86,24 +86,15 @@ export function MissionControlDashboard({ campaign }: MissionControlDashboardPro
 
   // Use campaign stats if available, otherwise compute from filtered chargers
   const displayStats = useMemo(() => {
-    if (campaign && campaign.totalServiced > 0) {
-      return {
-        healthScore: campaign.healthScore,
-        critical: campaign.criticalCount,
-        serviced: campaign.totalServiced,
-        total: campaign.totalChargers,
-        optimal: campaign.optimalCount,
-        degraded: campaign.degradedCount,
-      };
-    }
     const stats = getNetworkStats(filteredChargers);
     return {
-      healthScore: stats.healthScore,
+      healthScore: campaign && campaign.totalServiced > 0 ? campaign.healthScore : stats.healthScore,
       critical: stats.critical,
-      serviced: stats.serviced,
+      high: stats.high,
+      medium: stats.medium,
+      low: stats.low,
+      serviced: campaign && campaign.totalServiced > 0 ? campaign.totalServiced : stats.serviced,
       total: stats.total,
-      optimal: stats.optimal,
-      degraded: stats.degraded,
     };
   }, [campaign, filteredChargers]);
 
@@ -126,10 +117,11 @@ export function MissionControlDashboard({ campaign }: MissionControlDashboardPro
             <HeroMetrics
               healthScore={displayStats.healthScore}
               criticalCount={displayStats.critical}
+              highCount={displayStats.high}
+              mediumCount={displayStats.medium}
+              lowCount={displayStats.low}
               totalServiced={displayStats.serviced}
               totalChargers={displayStats.total}
-              optimalCount={displayStats.optimal}
-              degradedCount={displayStats.degraded}
               onCriticalClick={handleCriticalClick}
             />
 
