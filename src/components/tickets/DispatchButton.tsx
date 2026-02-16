@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileText, CheckCircle, Send, Edit, Eye, ClipboardCopy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AssessmentCharger } from "@/types/assessment";
 import { EnrichedSWIMatch } from "@/hooks/useSWIMatching";
 import { EstimateBuilder } from "./EstimateBuilder";
 import { DispatchModal } from "./DispatchModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useCampaignContext } from "@/contexts/CampaignContext";
 
 export type EstimateStatus = "none" | "draft" | "sent" | "approved";
 
@@ -16,10 +18,37 @@ interface DispatchButtonProps {
 }
 
 export function DispatchButton({ ticket, swiMatch, onEstimateStatusChange, onAccountManagerChange }: DispatchButtonProps) {
+  const { selectedCampaignId } = useCampaignContext();
   const [isOpen, setIsOpen] = useState(false);
   const [dispatched, setDispatched] = useState(false);
   const [estimateStatus, setEstimateStatus] = useState<EstimateStatus>("none");
   const [showDispatch, setShowDispatch] = useState(false);
+  const [dbLoaded, setDbLoaded] = useState(false);
+
+  // Load existing estimate status from DB on mount
+  useEffect(() => {
+    if (!selectedCampaignId) return;
+    const ticketId = ticket.ticketId || ticket.id;
+    
+    const fetchStatus = async () => {
+      const { data } = await supabase
+        .from("estimates")
+        .select("status")
+        .eq("campaign_id", selectedCampaignId)
+        .or(`ticket_id.eq.${ticketId},station_id.eq.${ticket.id}`)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        const s = data[0].status as EstimateStatus;
+        setEstimateStatus(s);
+        onEstimateStatusChange?.(s);
+      }
+      setDbLoaded(true);
+    };
+
+    fetchStatus();
+  }, [selectedCampaignId, ticket.ticketId, ticket.id]);
 
   const handleEstimateStatusChange = (status: EstimateStatus) => {
     setEstimateStatus(status);
@@ -43,7 +72,7 @@ export function DispatchButton({ ticket, swiMatch, onEstimateStatusChange, onAcc
           variant="outline"
           size="sm"
           onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
-          className="gap-2 border-green-500/30 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
+          className="gap-2 border-optimal/30 text-optimal hover:bg-optimal/10"
         >
           <Eye className="h-3.5 w-3.5" />
           View Estimate
