@@ -105,6 +105,7 @@ export function chargerRecordToCharger(r: {
   if (r.other_issue) issues.push("Other");
 
   // Extract charger name, account, and address from ticket_subject when DB fields are empty
+  // Pattern: "BTC0329 - Issue - Account (Address)" or "BTC2018 - Issue - Boeing (5868 Approach RD)"
   let stationNumber = r.station_id;
   let siteName = r.site_name || "";
   let address = r.address || "";
@@ -114,12 +115,21 @@ export function chargerRecordToCharger(r: {
     if (!r.station_name && parts.length >= 1) {
       stationNumber = parts[0];
     }
-    if (!r.site_name && parts.length >= 3) {
-      siteName = parts[2].replace(/^\(|\)$/g, "");
-    }
-    if (!r.address && parts.length >= 4) {
-      const loc = parts[3].replace(/^\(|\)$/g, "");
-      if (loc && loc.length > 3) address = loc;
+
+    if (parts.length >= 3) {
+      for (let i = 2; i < parts.length; i++) {
+        const part = parts[i];
+        const parenMatch = part.match(/^(.+?)\s*\((.+?)\)\s*$/);
+        if (parenMatch) {
+          if (!r.site_name && !siteName) siteName = parenMatch[1].trim();
+          if (!r.address && !address) address = parenMatch[2].trim();
+        } else if (part.startsWith("(") && part.endsWith(")")) {
+          const inner = part.slice(1, -1).trim();
+          if (!r.address && !address && inner.length > 3) address = inner;
+        } else if (!r.site_name && !siteName && i === 2) {
+          siteName = part;
+        }
+      }
     }
   }
 
