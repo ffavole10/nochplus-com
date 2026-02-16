@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Ticket, CalendarDays, Settings, Plus,
-  Filter, AlertTriangle, ChevronDown, ChevronRight, ChevronLeft,
+  AlertTriangle, ChevronDown, ChevronRight, ChevronLeft,
   MapPin, Zap, FileCheck, UserCog, Database, Columns } from
 "lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
@@ -206,7 +206,7 @@ export function PlatformSidebar() {
         <>
             <SidebarGroup>
               <SidebarGroupLabel className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
+                
                 Filters
                 {hasActiveFilters &&
               <Button
