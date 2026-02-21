@@ -639,6 +639,7 @@ function ChildInlinePanel({
         <TicketDetailPanel
           ticket={ticket}
           onCollapse={onCollapse}
+          defaultTab="charger"
         />
       )}
     </div>

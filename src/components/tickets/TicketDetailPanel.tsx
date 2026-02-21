@@ -15,6 +15,7 @@ import { useState } from "react";
 interface TicketDetailPanelProps {
   ticket: ServiceTicket;
   onCollapse: () => void;
+  defaultTab?: string;
 }
 
 const PRIORITY_STYLES: Record<string, string> = {
@@ -43,7 +44,7 @@ function StepIcon({ status }: { status: StepStatus }) {
   }
 }
 
-export function TicketDetailPanel({ ticket, onCollapse }: TicketDetailPanelProps) {
+export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "workflow" }: TicketDetailPanelProps) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const progressPercent = ((ticket.currentStep - 1) / 10) * 100;
 
@@ -73,7 +74,7 @@ export function TicketDetailPanel({ ticket, onCollapse }: TicketDetailPanelProps
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="workflow">
+      <Tabs defaultValue={defaultTab}>
         <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="customer">Customer</TabsTrigger>
           <TabsTrigger value="charger">Charger</TabsTrigger>
