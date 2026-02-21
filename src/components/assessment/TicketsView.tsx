@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, Brain } from "lucide-react";
+import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, Brain, ThumbsUp, ThumbsDown } from "lucide-react";
 import { AssessmentCharger, TicketPriority } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
@@ -11,6 +11,10 @@ import { useSWIMatching } from "@/hooks/useSWIMatching";
 import { SWIAttachment } from "@/components/assessment/SWIAttachment";
 import { DispatchButton, EstimateStatus } from "@/components/tickets/DispatchButton";
 import { TicketsEmptyState } from "@/components/empty-states/TicketsEmptyState";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface TicketsViewProps {
   chargers: AssessmentCharger[];
@@ -80,6 +84,10 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
   const [dispatchFilter, setDispatchFilter] = useState<string>("all");
   const [amFilter, setAmFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [reviewFilter, setReviewFilter] = useState<string>("all");
+  const [reviewStatuses, setReviewStatuses] = useState<Record<string, "pending" | "approved" | "rejected">>(() => {
+    try { const s = localStorage.getItem("ticket-review-statuses"); return s ? JSON.parse(s) : {}; } catch { return {}; }
+  });
   const [estimateStatuses, setEstimateStatuses] = useState<Record<string, "none" | "draft" | "sent" | "approved">>(() => {
     try { const s = localStorage.getItem("ticket-estimate-statuses"); return s ? JSON.parse(s) : {}; } catch { return {}; }
   });
@@ -87,7 +95,12 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
     try { const s = localStorage.getItem("ticket-account-managers"); return s ? JSON.parse(s) : {}; } catch { return {}; }
   });
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: "approve" | "reject"; chargerId: string; chargerName: string } | null>(null);
   const { matchTicket, matchBatch, getSWIMatch, getSWIMatches, isMatching, getError, clearMatch, addManualMatch, removeMatch, batchProgress } = useSWIMatching();
+
+  useEffect(() => {
+    localStorage.setItem("ticket-review-statuses", JSON.stringify(reviewStatuses));
+  }, [reviewStatuses]);
 
   useEffect(() => {
     localStorage.setItem("ticket-estimate-statuses", JSON.stringify(estimateStatuses));
@@ -193,8 +206,14 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
         t.charger.accountName.toLowerCase().includes(q)
       );
     }
+    if (reviewFilter !== "all") {
+      result = result.filter(t => {
+        const status = reviewStatuses[t.charger.id] || "pending";
+        return reviewFilter === status;
+      });
+    }
     return result;
-  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, typeFilter, swiFilter, estimateFilter, dispatchFilter, amFilter, getSWIMatch, estimateStatuses, accountManagers]);
+  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, typeFilter, swiFilter, estimateFilter, dispatchFilter, amFilter, reviewFilter, getSWIMatch, estimateStatuses, accountManagers, reviewStatuses]);
 
   const stats = useMemo(() => {
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
@@ -264,8 +283,18 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
         </Card>
       </div>
 
-      {/* Match All SWIs */}
-      <div className="flex justify-end">
+      {/* Review Status Filter Tabs */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <Tabs value={reviewFilter} onValueChange={setReviewFilter}>
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="pending">Pending Review</TabsTrigger>
+            <TabsTrigger value="approved">Approved</TabsTrigger>
+            <TabsTrigger value="rejected">Rejected</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* Match All SWIs */}
         <button
           onClick={() => matchBatch(filtered.map(t => t.charger))}
           disabled={batchProgress.isRunning}
@@ -318,6 +347,15 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                         )}
                         {charger.ticketId && (
                           <Badge variant="outline" className="text-xs">#{charger.ticketId}</Badge>
+                        )}
+                        {/* Review status badge */}
+                        {reviewStatuses[charger.id] === "approved" && (
+                          <Badge className="bg-optimal text-optimal-foreground gap-1">
+                            <CheckCircle className="h-3 w-3" /> Approved ✓
+                          </Badge>
+                        )}
+                        {reviewStatuses[charger.id] === "rejected" && (
+                          <Badge className="bg-muted text-muted-foreground gap-1">Rejected</Badge>
                         )}
                         {/* Milestone tracker */}
                         <div className="flex items-center gap-1 ml-1">
@@ -429,12 +467,52 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                           ) : null;
                         })()}
                       </div>
-                      <button
-                        className="text-sm text-primary hover:underline"
-                        onClick={(e) => { e.stopPropagation(); onSelectCharger(charger); }}
-                      >
-                        View full charger details →
-                      </button>
+
+                      {/* Approve / Reject Actions */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          className="text-sm text-primary hover:underline"
+                          onClick={(e) => { e.stopPropagation(); onSelectCharger(charger); }}
+                        >
+                          View full charger details →
+                        </button>
+                        <div className="flex-1" />
+                        {reviewStatuses[charger.id] !== "approved" && reviewStatuses[charger.id] !== "rejected" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmAction({ type: "reject", chargerId: charger.id, chargerName: charger.assetName });
+                              }}
+                            >
+                              <ThumbsDown className="h-3.5 w-3.5" />
+                              Reject
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="gap-1.5"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmAction({ type: "approve", chargerId: charger.id, chargerName: charger.assetName });
+                              }}
+                            >
+                              <ThumbsUp className="h-3.5 w-3.5" />
+                              Approve to Service Desk
+                            </Button>
+                          </>
+                        )}
+                        {reviewStatuses[charger.id] === "approved" && (
+                          <span className="text-sm text-optimal font-medium flex items-center gap-1">
+                            <CheckCircle className="h-4 w-4" /> Approved — Service ticket created
+                          </span>
+                        )}
+                        {reviewStatuses[charger.id] === "rejected" && (
+                          <span className="text-sm text-muted-foreground font-medium">No service required</span>
+                        )}
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -443,6 +521,43 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
           })}
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction?.type === "approve"
+                ? "Approve to Service Desk"
+                : "Reject — No Service Required"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.type === "approve"
+                ? `This will create a service ticket for "${confirmAction?.chargerName}". Continue?`
+                : `Mark "${confirmAction?.chargerName}" as no service required?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirmAction?.type === "reject" ? "bg-destructive hover:bg-destructive/90" : ""}
+              onClick={() => {
+                if (!confirmAction) return;
+                const { type, chargerId, chargerName } = confirmAction;
+                setReviewStatuses(prev => ({ ...prev, [chargerId]: type === "approve" ? "approved" : "rejected" }));
+                if (type === "approve") {
+                  toast.success(`Issue approved — service ticket created for ${chargerName}`);
+                } else {
+                  toast.info(`Issue rejected — no service for ${chargerName}`);
+                }
+                setConfirmAction(null);
+              }}
+            >
+              {confirmAction?.type === "approve" ? "Approve" : "Reject"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -2,14 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
-import AssessmentTracker from "./pages/AssessmentTracker";
+import IssuesQueue from "./pages/IssuesQueue";
 import Dataset from "./pages/Dataset";
 import Estimates from "./pages/Estimates";
 import Schedule from "./pages/Schedule";
+import FieldReports from "./pages/FieldReports";
 import NotFound from "./pages/NotFound";
 import EstimateStatus from "./pages/EstimateStatus";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -21,7 +22,6 @@ import Customers from "./pages/placeholders/Customers";
 import AllChargers from "./pages/placeholders/AllChargers";
 import NochPlusDashboard from "./pages/placeholders/NochPlusDashboard";
 import NochPlusChargers from "./pages/placeholders/NochPlusChargers";
-import FieldReports from "./pages/placeholders/FieldReports";
 
 const queryClient = new QueryClient();
 
@@ -34,12 +34,12 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
-            {/* Campaigns section (uses existing pages) */}
+            {/* Campaigns section */}
             <Route path="/" element={<Index />} />
             <Route path="/dataset" element={<Dataset />} />
-            <Route path="/tickets" element={<AssessmentTracker />} />
+            <Route path="/issues" element={<IssuesQueue />} />
             <Route path="/schedule" element={<Schedule />} />
-            <Route path="/campaigns/reports" element={<FieldReports />} />
+            <Route path="/field-reports" element={<FieldReports />} />
 
             {/* Service Desk section */}
             <Route path="/service-desk/tickets" element={<ServiceTickets />} />
@@ -55,7 +55,9 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
           </Route>
           {/* Legacy redirects */}
-          <Route path="/missioncontrol" element={<ProtectedRoute><AssessmentTracker /></ProtectedRoute>} />
+          <Route path="/tickets" element={<Navigate to="/issues" replace />} />
+          <Route path="/campaigns/reports" element={<Navigate to="/field-reports" replace />} />
+          <Route path="/missioncontrol" element={<ProtectedRoute><IssuesQueue /></ProtectedRoute>} />
           <Route path="/estimate-status" element={<EstimateStatus />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

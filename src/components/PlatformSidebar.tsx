@@ -59,7 +59,7 @@ function getActiveSection(pathname: string): SectionKey {
   if (pathname.startsWith("/service-desk")) return "service-desk";
   if (pathname.startsWith("/noch-plus")) return "noch-plus";
   // Legacy root routes map to campaigns
-  if (["/", "/dataset", "/tickets", "/issues", "/estimates", "/schedule"].includes(pathname)) return "campaigns";
+  if (["/", "/dataset", "/tickets", "/issues", "/estimates", "/schedule", "/field-reports"].includes(pathname)) return "campaigns";
   return null;
 }
 
@@ -132,9 +132,9 @@ export function PlatformSidebar() {
   const campaignPages = [
     { title: "Dashboard", url: "/", icon: LayoutDashboard },
     { title: "Dataset", url: "/dataset", icon: Database },
-    { title: "Issues Queue", url: "/tickets", icon: SearchIcon },
+    { title: "Issues Queue", url: "/issues", icon: SearchIcon },
     { title: "Schedule", url: "/schedule", icon: CalendarDays },
-    { title: "Field Reports", url: "/campaigns/reports", icon: FolderOpen },
+    { title: "Field Reports", url: "/field-reports", icon: FolderOpen },
   ];
 
   const serviceDeskPages = [

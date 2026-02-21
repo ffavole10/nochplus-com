@@ -7,7 +7,7 @@ import { chargerRecordToAssessment } from "@/lib/assessmentParser";
 import { AssessmentCharger } from "@/types/assessment";
 import { Database } from "lucide-react";
 
-const AssessmentTracker = () => {
+const IssuesQueue = () => {
   const { selectedCampaignId } = useCampaignContext();
   const { data: chargerRecords = [] } = useChargerRecords(selectedCampaignId || null);
 
@@ -30,7 +30,7 @@ const AssessmentTracker = () => {
           <Database className="h-12 w-12 text-muted-foreground/40 mx-auto" />
           <h2 className="text-lg font-medium text-muted-foreground">No Campaign Selected</h2>
           <p className="text-sm text-muted-foreground/70 max-w-xs">
-            Select a partner and campaign from the sidebar to view tickets.
+            Select a partner and campaign from the sidebar to view issues.
           </p>
         </div>
       </div>
@@ -54,4 +54,4 @@ const AssessmentTracker = () => {
   );
 };
 
-export default AssessmentTracker;
+export default IssuesQueue;
