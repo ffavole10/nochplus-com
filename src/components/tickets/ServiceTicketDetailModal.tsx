@@ -72,7 +72,7 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
           </div>
         </DialogHeader>
 
-        <Tabs defaultValue="workflow" className="mt-2">
+        <Tabs defaultValue="charger" className="mt-2">
           <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="customer">Customer</TabsTrigger>
             <TabsTrigger value="charger">Charger</TabsTrigger>
