@@ -92,6 +92,7 @@ export interface ServiceTicket {
   reviewNotes?: string;
   rejectionReason?: string;
   metadata?: ServiceTicketMetadata;
+  fieldReportUrl?: string;
   // Parent-Child fields
   isParent?: boolean;
   parentTicketId?: string; // id of parent (for children)

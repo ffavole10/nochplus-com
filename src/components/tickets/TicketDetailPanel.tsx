@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ServiceTicket, StepStatus } from "@/types/serviceTicket";
 import { ServiceDispatchModal } from "@/components/tickets/ServiceDispatchModal";
+import { TicketCloseStep } from "@/components/tickets/TicketCloseStep";
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
   MapPin, Wrench, FileText, Send, Eye, ExternalLink,
@@ -377,6 +378,8 @@ function WorkflowStepDetail({ ticket, stepNumber }: { ticket: ServiceTicket; ste
       );
     case 6:
       return <ScheduleStep ticket={ticket} />;
+    case 10:
+      return <TicketCloseStep ticket={ticket} />;
     default:
       return <p className="text-xs text-muted-foreground">Details will appear when this step is active.</p>;
   }
