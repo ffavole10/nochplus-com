@@ -1,4 +1,5 @@
 import { TicketSource, TicketCustomerInfo, TicketChargerInfo, TicketPhoto, TicketIssueInfo } from "./ticket";
+import { ChargerDatabaseRecord } from "@/services/BtcDatabaseService";
 
 export type WorkflowStep =
   | "assessment"
@@ -24,7 +25,7 @@ export interface WorkflowStepInfo {
 }
 
 export type ServiceTicketPriority = "Critical" | "High" | "Medium" | "Low";
-export type ServiceTicketStatus = "pending_review" | "in_progress" | "completed" | "cancelled";
+export type ServiceTicketStatus = "pending_review" | "approved" | "assessed" | "in_progress" | "completed" | "cancelled" | "rejected";
 
 export interface ServiceTicketHistoryEntry {
   id: string;
@@ -32,6 +33,26 @@ export interface ServiceTicketHistoryEntry {
   action: string;
   performedBy: string;
   details?: string;
+}
+
+export interface AssessmentData {
+  riskLevel: "Critical" | "High" | "Medium" | "Low";
+  assessmentText: string;
+  recommendation: string;
+  chargerType: "AC | Level 2" | "DC | Level 3";
+  warrantyNotes: string[];
+  dataSources: string[];
+  timestamp: string;
+}
+
+export interface SWIMatchData {
+  matched_swi_id: string | null;
+  confidence: number;
+  reasoning: string;
+  key_factors: string[];
+  estimated_service_time: string;
+  required_parts: string[];
+  warnings: string[];
 }
 
 export interface ServiceTicket {
@@ -55,6 +76,12 @@ export interface ServiceTicket {
   createdAt: string;
   updatedAt: string;
   history: ServiceTicketHistoryEntry[];
+  // Enhanced fields
+  assessmentData?: AssessmentData;
+  swiMatchData?: SWIMatchData;
+  btcDatabaseData?: ChargerDatabaseRecord | null;
+  reviewNotes?: string;
+  rejectionReason?: string;
 }
 
 export const WORKFLOW_STEPS_TEMPLATE: Omit<WorkflowStepInfo, "status">[] = [

@@ -249,16 +249,85 @@ function WorkflowStepDetail({ ticket, stepNumber }: { ticket: ServiceTicket; ste
   switch (stepNumber) {
     case 1:
       return (
-        <div className="space-y-2">
-          <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority} Risk</Badge>
-          <p className="text-xs text-muted-foreground">AutoHeal AI assessment completed. Issue analyzed and priority classified based on charger model, age, and reported symptoms.</p>
-          <p className="text-xs text-muted-foreground">Recommendation: {ticket.issue.description.substring(0, 120)}...</p>
+        <div className="space-y-3">
+          {ticket.assessmentData ? (
+            <>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className={PRIORITY_STYLES[ticket.assessmentData.riskLevel]}>{ticket.assessmentData.riskLevel} Risk</Badge>
+                <Badge variant="outline">{ticket.assessmentData.chargerType}</Badge>
+              </div>
+              {/* Data Sources */}
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-1">Data Sources Used:</p>
+                <div className="space-y-0.5">
+                  {ticket.assessmentData.dataSources.map((src, i) => (
+                    <p key={i} className="text-xs text-optimal flex items-center gap-1">✓ {src}</p>
+                  ))}
+                  {ticket.reviewNotes && <p className="text-xs text-optimal flex items-center gap-1">✓ Account manager notes</p>}
+                </div>
+              </div>
+              {/* Assessment Text */}
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-1">Assessment:</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{ticket.assessmentData.assessmentText}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-1">Recommendation:</p>
+                <p className="text-xs text-muted-foreground">{ticket.assessmentData.recommendation}</p>
+              </div>
+              {/* Warranty/BTC Notes */}
+              {ticket.assessmentData.warrantyNotes.length > 0 && (
+                <div className="space-y-1 p-2 bg-medium/5 border border-medium/20 rounded-md">
+                  {ticket.assessmentData.warrantyNotes.map((note, i) => (
+                    <p key={i} className="text-xs text-foreground">{note}</p>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority} Risk</Badge>
+              <p className="text-xs text-muted-foreground">AutoHeal AI assessment completed. Issue analyzed and priority classified.</p>
+              <p className="text-xs text-muted-foreground">Recommendation: {ticket.issue.description.substring(0, 120)}...</p>
+            </>
+          )}
         </div>
       );
     case 2:
       return (
         <div className="space-y-2">
-          {ticket.swiMatchId && (
+          {ticket.swiMatchData ? (
+            <>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="text-xs">{ticket.swiMatchData.matched_swi_id || "No match"}</Badge>
+                {ticket.swiMatchData.confidence > 0 && (
+                  <Badge className={ticket.swiMatchData.confidence >= 90 ? "bg-optimal/10 text-optimal" : "bg-degraded/10 text-degraded"}>
+                    {ticket.swiMatchData.confidence}% confidence
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">{ticket.swiMatchData.reasoning}</p>
+              {ticket.swiMatchData.estimated_service_time && (
+                <p className="text-xs text-muted-foreground">⏱️ Est. time: {ticket.swiMatchData.estimated_service_time}</p>
+              )}
+              {ticket.swiMatchData.required_parts.length > 0 && (
+                <p className="text-xs text-muted-foreground">🔧 Parts: {ticket.swiMatchData.required_parts.join(", ")}</p>
+              )}
+              {ticket.swiMatchData.warnings.length > 0 && (
+                <div className="p-2 bg-critical/5 border border-critical/20 rounded-md">
+                  {ticket.swiMatchData.warnings.map((w, i) => (
+                    <p key={i} className="text-xs text-critical">⚠️ {w}</p>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
+                  <ExternalLink className="h-3 w-3" /> View SWI Document
+                </Button>
+                <Button variant="ghost" size="sm" className="text-xs h-7">Match Different SWI</Button>
+              </div>
+            </>
+          ) : ticket.swiMatchId ? (
             <>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="outline" className="text-xs">{ticket.swiMatchId}</Badge>
@@ -275,6 +344,8 @@ function WorkflowStepDetail({ ticket, stepNumber }: { ticket: ServiceTicket; ste
                 <Button variant="ghost" size="sm" className="text-xs h-7">Match Different SWI</Button>
               </div>
             </>
+          ) : (
+            <p className="text-xs text-muted-foreground">SWI matching in progress...</p>
           )}
         </div>
       );
