@@ -138,7 +138,7 @@ export function PlatformSidebar() {
   ];
 
   const serviceDeskPages = [
-    { title: "Service Tickets", url: "/service-desk/tickets", icon: Ticket, badge: 89 },
+    { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: 89 },
     { title: "Estimates", url: "/estimates", icon: DollarSign, badge: 34 },
     { title: "Customers", url: "/service-desk/customers", icon: Users },
     { title: "All Chargers", url: "/service-desk/chargers", icon: HardDrive },
