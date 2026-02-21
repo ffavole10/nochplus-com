@@ -134,12 +134,12 @@ export default function ServiceTickets() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Service Tickets</h1>
+          <h1 className="text-xl font-bold text-foreground">Tickets</h1>
           <p className="text-sm text-muted-foreground">Unified ticket view across all sources</p>
         </div>
         <Button onClick={() => setFormOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          Create Manual Ticket
+          New Ticket
         </Button>
       </div>
 
