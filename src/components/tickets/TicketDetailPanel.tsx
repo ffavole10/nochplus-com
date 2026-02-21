@@ -45,7 +45,7 @@ function StepIcon({ status }: { status: StepStatus }) {
   }
 }
 
-export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "workflow" }: TicketDetailPanelProps) {
+export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }: TicketDetailPanelProps) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const progressPercent = ((ticket.currentStep - 1) / 10) * 100;
 
