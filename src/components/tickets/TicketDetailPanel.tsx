@@ -4,10 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ServiceTicket, StepStatus } from "@/types/serviceTicket";
+import { ServiceDispatchModal } from "@/components/tickets/ServiceDispatchModal";
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
   MapPin, Wrench, FileText, Send, Eye, ExternalLink,
-  Image as ImageIcon, AlertTriangle, X, ChevronDown, ChevronUp,
+  Image as ImageIcon, AlertTriangle, X, ChevronDown, ChevronUp, ClipboardCopy,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -374,8 +375,42 @@ function WorkflowStepDetail({ ticket, stepNumber }: { ticket: ServiceTicket; ste
         </div>
       );
     case 6:
-      return <Button size="sm" className="text-xs h-7">Schedule Now</Button>;
+      return <ScheduleStep ticket={ticket} />;
     default:
       return <p className="text-xs text-muted-foreground">Details will appear when this step is active.</p>;
   }
+}
+
+function ScheduleStep({ ticket }: { ticket: ServiceTicket }) {
+  const [dispatchOpen, setDispatchOpen] = useState(false);
+  const [dispatched, setDispatched] = useState(false);
+
+  if (dispatched) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-optimal font-medium">
+        <CheckCircle className="h-4 w-4" />
+        <span>Dispatched to Jobber</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <Button
+        size="sm"
+        className="text-xs h-7 gap-1.5"
+        onClick={() => setDispatchOpen(true)}
+      >
+        <ClipboardCopy className="h-3 w-3" />
+        Dispatch to Jobber
+        <ExternalLink className="h-3 w-3" />
+      </Button>
+      <ServiceDispatchModal
+        open={dispatchOpen}
+        onOpenChange={setDispatchOpen}
+        ticket={ticket}
+        onDispatched={() => { setDispatched(true); setDispatchOpen(false); }}
+      />
+    </div>
+  );
 }
