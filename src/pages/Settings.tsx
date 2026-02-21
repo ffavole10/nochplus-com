@@ -17,7 +17,6 @@ import { CampaignManagement } from "@/components/settings/CampaignManagement";
 import { PartnerManagement } from "@/components/settings/PartnerManagement";
 import { DataManagement } from "@/components/settings/DataManagement";
 import { SWIDocumentManagement } from "@/components/settings/SWIDocumentManagement";
-import { OEMManagement } from "@/components/settings/OEMManagement";
 
 type UserWithRole = {
   id: string;
@@ -48,13 +47,12 @@ const ROLE_LABELS: Record<string, string> = {
   partner: "Partner",
 };
 
-type SettingsTab = "campaigns" | "data" | "partners" | "swi" | "oem" | "users";
+type SettingsTab = "campaigns" | "data" | "partners" | "swi" | "users";
 
 const TABS: { value: SettingsTab; label: string }[] = [
   { value: "campaigns", label: "Campaigns" },
   { value: "data", label: "Data Management" },
   { value: "swi", label: "SWI Library" },
-  { value: "oem", label: "OEM & SWI Catalog" },
   { value: "partners", label: "Partners" },
   { value: "users", label: "All Users" },
 ];
@@ -204,7 +202,6 @@ const Settings = () => {
         {activeTab === "campaigns" && <CampaignManagement />}
         {activeTab === "data" && <DataManagement />}
         {activeTab === "swi" && <SWIDocumentManagement />}
-        {activeTab === "oem" && <OEMManagement />}
         {activeTab === "partners" && <PartnerManagement />}
         {activeTab === "users" && (
           <>

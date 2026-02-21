@@ -120,5 +120,15 @@ export function useSWICatalogEntries(oemId?: string) {
     return true;
   };
 
-  return { entries, loading, reload: load, addEntry, deleteEntry };
+  const updateEntry = async (id: string, updates: Partial<Pick<SWICatalogEntry, "title" | "folder" | "filename">>) => {
+    const { error } = await supabase.from("swi_catalog_entries").update(updates).eq("id", id);
+    if (error) {
+      toast.error("Failed to update entry: " + error.message);
+      return false;
+    }
+    await load();
+    return true;
+  };
+
+  return { entries, loading, reload: load, addEntry, deleteEntry, updateEntry };
 }
