@@ -137,6 +137,111 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
             </h4>
             <p className="text-sm text-muted-foreground leading-relaxed">{ticket.issue.description}</p>
           </div>
+
+          {/* Recommendation */}
+          {ticket.assessmentData && (
+            <div className="border-t pt-3">
+              <div className="bg-muted/50 rounded-lg p-4">
+                <h4 className="text-xs font-semibold text-foreground flex items-center gap-2 mb-2 uppercase tracking-wide">
+                  <Wrench className="h-3.5 w-3.5 text-primary" /> Recommendation
+                </h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">{ticket.assessmentData.recommendation}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Metadata Grid */}
+          <div className="border-t pt-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div>
+                <p className="text-muted-foreground text-xs">Account</p>
+                <p className="font-medium">{ticket.customer.company || "—"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Created</p>
+                <p className="font-medium">{format(new Date(ticket.createdAt), "yyyy-MM-dd")}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Solved</p>
+                <p className="font-medium">{ticket.status === "completed" ? format(new Date(ticket.updatedAt), "yyyy-MM-dd") : "—"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Reporting Source</p>
+                <p className="font-medium">{SOURCE_LABELS[ticket.source] || ticket.source}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* SWI Match Card */}
+          <div className="border-t pt-3">
+            <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-2 uppercase tracking-wide">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground" /> SWI Match
+            </h4>
+            {ticket.swiMatchData ? (
+              <div className="border border-primary/20 rounded-lg p-3 bg-primary/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-primary truncate">
+                        {ticket.swiMatchData.matched_swi_id || "No SWI matched"}
+                      </p>
+                      {ticket.swiMatchData.reasoning && (
+                        <p className="text-xs text-muted-foreground truncate">{ticket.swiMatchData.reasoning}</p>
+                      )}
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 flex-shrink-0">
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                  {ticket.swiMatchData.confidence > 0 && (
+                    <span className={`text-xs font-medium flex items-center gap-1 ${
+                      ticket.swiMatchData.confidence >= 90 ? "text-optimal" :
+                      ticket.swiMatchData.confidence >= 70 ? "text-medium" : "text-degraded"
+                    }`}>
+                      <CheckCircle className="h-3 w-3" />
+                      {ticket.swiMatchData.confidence}% match
+                    </span>
+                  )}
+                  {ticket.swiMatchData.estimated_service_time && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {ticket.swiMatchData.estimated_service_time}
+                    </span>
+                  )}
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    🤖 AI matched
+                  </span>
+                </div>
+                {ticket.swiMatchData.required_parts.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">🔧 Parts: {ticket.swiMatchData.required_parts.join(", ")}</p>
+                )}
+                {ticket.swiMatchData.warnings.length > 0 && (
+                  <div className="mt-2 p-2 bg-critical/5 border border-critical/20 rounded-md">
+                    {ticket.swiMatchData.warnings.map((w, i) => (
+                      <p key={i} className="text-xs text-critical">⚠️ {w}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : ticket.swiMatchId ? (
+              <div className="border border-border rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">{ticket.swiMatchId}</span>
+                  {ticket.swiConfidence && (
+                    <span className={`text-xs font-medium ${ticket.swiConfidence >= 90 ? "text-optimal" : "text-degraded"}`}>
+                      {ticket.swiConfidence}% match
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">SWI matching not yet completed.</p>
+            )}
+          </div>
         </TabsContent>
 
         {/* Workflow */}
