@@ -14,7 +14,12 @@ export interface SWIDocument {
   requiredParts: string[];
   driveUrl: string;
   folder: string;
+  oem?: string;
 }
+
+export const SWI_OEMS = ["BTC Power"] as const;
+
+export const getSWIOem = (doc: SWIDocument): string => doc.oem || "BTC Power";
 
 const DRIVE_BASE = "https://drive.google.com/drive/folders/1oSyDFrB8nFhiKARScPjBWIfnnvtL4sRE";
 
