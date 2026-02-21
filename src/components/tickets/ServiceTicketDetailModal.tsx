@@ -138,6 +138,75 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
               </h4>
               <p className="text-sm text-muted-foreground leading-relaxed">{ticket.issue.description}</p>
             </div>
+
+            {/* AutoHeal Assessment */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-2">
+                <CheckCircle className="h-4 w-4" /> AutoHeal Assessment
+              </h4>
+              {ticket.assessmentData ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className={PRIORITY_STYLES[ticket.assessmentData.riskLevel]}>{ticket.assessmentData.riskLevel} Risk</Badge>
+                    <Badge variant="outline">{ticket.assessmentData.chargerType}</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{ticket.assessmentData.assessmentText}</p>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground mb-1">Recommendation:</p>
+                    <p className="text-sm text-muted-foreground">{ticket.assessmentData.recommendation}</p>
+                  </div>
+                  {ticket.assessmentData.warrantyNotes.length > 0 && (
+                    <div className="space-y-1 p-2 bg-medium/5 border border-medium/20 rounded-md">
+                      {ticket.assessmentData.warrantyNotes.map((note, i) => (
+                        <p key={i} className="text-xs text-foreground">{note}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No assessment data available yet.</p>
+              )}
+            </div>
+
+            {/* SWI Match */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-2">
+                <FileText className="h-4 w-4" /> SWI Match
+              </h4>
+              {ticket.swiMatchData ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className="text-xs">{ticket.swiMatchData.matched_swi_id || "No match"}</Badge>
+                    {ticket.swiMatchData.confidence > 0 && (
+                      <Badge className={ticket.swiMatchData.confidence >= 90 ? "bg-optimal/10 text-optimal" : ticket.swiMatchData.confidence >= 70 ? "bg-medium/10 text-medium" : "bg-degraded/10 text-degraded"}>
+                        {ticket.swiMatchData.confidence}% accuracy
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{ticket.swiMatchData.reasoning}</p>
+                  {ticket.swiMatchData.estimated_service_time && (
+                    <p className="text-xs text-muted-foreground">⏱️ Est. time: {ticket.swiMatchData.estimated_service_time}</p>
+                  )}
+                  {ticket.swiMatchData.required_parts.length > 0 && (
+                    <p className="text-xs text-muted-foreground">🔧 Parts: {ticket.swiMatchData.required_parts.join(", ")}</p>
+                  )}
+                  <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
+                    <ExternalLink className="h-3 w-3" /> View SWI Document
+                  </Button>
+                </div>
+              ) : ticket.swiMatchId ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="text-xs">{ticket.swiMatchId}</Badge>
+                  {ticket.swiConfidence && (
+                    <Badge className={ticket.swiConfidence >= 90 ? "bg-optimal/10 text-optimal" : "bg-degraded/10 text-degraded"}>
+                      {ticket.swiConfidence}% accuracy
+                    </Badge>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">SWI matching not yet completed.</p>
+              )}
+            </div>
           </TabsContent>
 
           {/* Workflow */}
