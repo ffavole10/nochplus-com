@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { NochPlusMap } from "@/components/noch-plus/NochPlusMap";
 
 interface Subscriber {
   id: string;
@@ -24,6 +25,10 @@ interface Subscriber {
   ticketsCreated: number;
   totalRevenue: number;
   memberSince: string;
+  lat: number;
+  lng: number;
+  city: string;
+  state: string;
 }
 
 const PLAN_STYLES: Record<string, string> = {
@@ -40,15 +45,15 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const MOCK_SUBSCRIBERS: Subscriber[] = [
-  { id: "s1", company: "ChargePoint Inc.", contactName: "Sarah Chen", email: "sarah.chen@chargepoint.com", plan: "Premium", monthlyCost: 499, status: "active", chargerCount: 85, submissionsCount: 42, ticketsCreated: 18, totalRevenue: 5988, memberSince: "2024-03-01" },
-  { id: "s2", company: "EVgo Services", contactName: "Marcus Johnson", email: "mjohnson@evgo.com", plan: "Premium", monthlyCost: 499, status: "active", chargerCount: 72, submissionsCount: 35, ticketsCreated: 14, totalRevenue: 5988, memberSince: "2024-04-15" },
-  { id: "s3", company: "Electrify America", contactName: "Lisa Park", email: "lpark@ea.com", plan: "Standard", monthlyCost: 299, status: "active", chargerCount: 48, submissionsCount: 22, ticketsCreated: 9, totalRevenue: 2990, memberSince: "2024-06-01" },
-  { id: "s4", company: "Blink Charging", contactName: "David Torres", email: "dtorres@blinkcharging.com", plan: "Standard", monthlyCost: 299, status: "active", chargerCount: 35, submissionsCount: 16, ticketsCreated: 7, totalRevenue: 2392, memberSince: "2024-07-10" },
-  { id: "s5", company: "FreeWire Tech", contactName: "Amy Nguyen", email: "anguyen@freewire.com", plan: "Basic", monthlyCost: 149, status: "active", chargerCount: 20, submissionsCount: 8, ticketsCreated: 3, totalRevenue: 1192, memberSince: "2024-08-20" },
-  { id: "s6", company: "Volta Charging", contactName: "Jessica Rivera", email: "jrivera@volta.com", plan: "Premium", monthlyCost: 499, status: "active", chargerCount: 65, submissionsCount: 30, ticketsCreated: 12, totalRevenue: 4491, memberSince: "2024-05-01" },
-  { id: "s7", company: "SemaConnect", contactName: "Robert Kim", email: "rkim@sema.com", plan: "Basic", monthlyCost: 149, status: "cancelled", chargerCount: 15, submissionsCount: 5, ticketsCreated: 2, totalRevenue: 894, memberSince: "2024-06-15" },
-  { id: "s8", company: "TurnOnGreen", contactName: "Michael Scott", email: "mscott@turnongreen.com", plan: "Standard", monthlyCost: 299, status: "trial", chargerCount: 28, submissionsCount: 3, ticketsCreated: 1, totalRevenue: 0, memberSince: "2025-02-01" },
-  { id: "s9", company: "Wallbox NA", contactName: "Elena Vasquez", email: "evasquez@wallbox.com", plan: "Basic", monthlyCost: 149, status: "expired", chargerCount: 12, submissionsCount: 4, ticketsCreated: 1, totalRevenue: 596, memberSince: "2024-05-20" },
+  { id: "s1", company: "ChargePoint Inc.", contactName: "Sarah Chen", email: "sarah.chen@chargepoint.com", plan: "Premium", monthlyCost: 499, status: "active", chargerCount: 85, submissionsCount: 42, ticketsCreated: 18, totalRevenue: 5988, memberSince: "2024-03-01", lat: 33.4484, lng: -112.0740, city: "Phoenix", state: "AZ" },
+  { id: "s2", company: "EVgo Services", contactName: "Marcus Johnson", email: "mjohnson@evgo.com", plan: "Premium", monthlyCost: 499, status: "active", chargerCount: 72, submissionsCount: 35, ticketsCreated: 14, totalRevenue: 5988, memberSince: "2024-04-15", lat: 34.0522, lng: -118.2437, city: "Los Angeles", state: "CA" },
+  { id: "s3", company: "Electrify America", contactName: "Lisa Park", email: "lpark@ea.com", plan: "Standard", monthlyCost: 299, status: "active", chargerCount: 48, submissionsCount: 22, ticketsCreated: 9, totalRevenue: 2990, memberSince: "2024-06-01", lat: 37.3382, lng: -121.8863, city: "San Jose", state: "CA" },
+  { id: "s4", company: "Blink Charging", contactName: "David Torres", email: "dtorres@blinkcharging.com", plan: "Standard", monthlyCost: 299, status: "active", chargerCount: 35, submissionsCount: 16, ticketsCreated: 7, totalRevenue: 2392, memberSince: "2024-07-10", lat: 25.7617, lng: -80.1918, city: "Miami", state: "FL" },
+  { id: "s5", company: "FreeWire Tech", contactName: "Amy Nguyen", email: "anguyen@freewire.com", plan: "Basic", monthlyCost: 149, status: "active", chargerCount: 20, submissionsCount: 8, ticketsCreated: 3, totalRevenue: 1192, memberSince: "2024-08-20", lat: 47.6062, lng: -122.3321, city: "Seattle", state: "WA" },
+  { id: "s6", company: "Volta Charging", contactName: "Jessica Rivera", email: "jrivera@volta.com", plan: "Premium", monthlyCost: 499, status: "active", chargerCount: 65, submissionsCount: 30, ticketsCreated: 12, totalRevenue: 4491, memberSince: "2024-05-01", lat: 40.7128, lng: -74.0060, city: "New York", state: "NY" },
+  { id: "s7", company: "SemaConnect", contactName: "Robert Kim", email: "rkim@sema.com", plan: "Basic", monthlyCost: 149, status: "cancelled", chargerCount: 15, submissionsCount: 5, ticketsCreated: 2, totalRevenue: 894, memberSince: "2024-06-15", lat: 41.8781, lng: -87.6298, city: "Chicago", state: "IL" },
+  { id: "s8", company: "TurnOnGreen", contactName: "Michael Scott", email: "mscott@turnongreen.com", plan: "Standard", monthlyCost: 299, status: "trial", chargerCount: 28, submissionsCount: 3, ticketsCreated: 1, totalRevenue: 0, memberSince: "2025-02-01", lat: 29.7604, lng: -95.3698, city: "Houston", state: "TX" },
+  { id: "s9", company: "Wallbox NA", contactName: "Elena Vasquez", email: "evasquez@wallbox.com", plan: "Basic", monthlyCost: 149, status: "expired", chargerCount: 12, submissionsCount: 4, ticketsCreated: 1, totalRevenue: 596, memberSince: "2024-05-20", lat: 33.7490, lng: -84.3880, city: "Atlanta", state: "GA" },
 ];
 
 export default function NochPlusDashboard() {
@@ -97,6 +102,9 @@ export default function NochPlusDashboard() {
         <Card className="border-l-4 border-l-optimal"><CardContent className="p-4 text-center"><p className="text-sm text-muted-foreground flex items-center justify-center gap-1"><DollarSign className="h-3.5 w-3.5" />Monthly Revenue</p><p className="text-2xl font-bold text-optimal">${stats.monthlyRevenue.toLocaleString()}</p></CardContent></Card>
         <Card className="border-l-4 border-l-medium"><CardContent className="p-4 text-center"><p className="text-sm text-muted-foreground flex items-center justify-center gap-1"><TrendingDown className="h-3.5 w-3.5" />Churn Rate</p><p className="text-2xl font-bold text-medium">{stats.churnRate}%</p></CardContent></Card>
       </div>
+
+      {/* Map */}
+      <NochPlusMap subscribers={MOCK_SUBSCRIBERS} />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
