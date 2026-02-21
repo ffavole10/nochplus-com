@@ -1,0 +1,148 @@
+import {
+  ServiceTicket,
+  WORKFLOW_STEPS_TEMPLATE,
+  WorkflowStepInfo,
+} from "@/types/serviceTicket";
+
+function makeSteps(currentStep: number): WorkflowStepInfo[] {
+  return WORKFLOW_STEPS_TEMPLATE.map((s) => ({
+    ...s,
+    status:
+      s.number < currentStep
+        ? "complete"
+        : s.number === currentStep
+        ? "in_progress"
+        : "pending",
+    completedAt:
+      s.number < currentStep
+        ? new Date(Date.now() - (currentStep - s.number) * 86400000 * 2).toISOString()
+        : undefined,
+  }));
+}
+
+export const MOCK_SERVICE_TICKETS: ServiceTicket[] = [
+  {
+    id: "st-001",
+    ticketId: "T-10042",
+    source: "campaign",
+    sourceCampaignName: "BTC Q1 2025 Portfolio",
+    customer: { name: "Michael Chen", company: "GreenCharge Networks", email: "mchen@greencharge.com", phone: "(415) 555-0142", address: "1200 Market St, San Francisco, CA 94103" },
+    charger: { brand: "BTC", serialNumber: "BTC-2024-00842", type: "DC_L3", location: "1200 Market St, San Francisco, CA" },
+    photos: [],
+    issue: { description: "Station offline for 3+ weeks. CCS connector shows error code E-4412. Multiple customer complaints received. Charger fails to initiate session — screen freezes at 'Initializing' step." },
+    priority: "Critical",
+    status: "in_progress",
+    currentStep: 5,
+    workflowSteps: makeSteps(5),
+    estimateId: "EST-2045",
+    estimateAmount: 4250,
+    swiMatchId: "swi_btc_dc_offline",
+    swiConfidence: 92,
+    assignedTo: "Joe Rose",
+    createdAt: new Date(Date.now() - 15 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+    history: [
+      { id: "h1", timestamp: new Date(Date.now() - 15 * 86400000).toISOString(), action: "Ticket created from campaign assessment", performedBy: "System" },
+      { id: "h2", timestamp: new Date(Date.now() - 14 * 86400000).toISOString(), action: "AutoHeal assessment completed — Critical risk", performedBy: "AI Engine" },
+      { id: "h3", timestamp: new Date(Date.now() - 13 * 86400000).toISOString(), action: "SWI matched: BTC DC Offline Recovery (92%)", performedBy: "AI Engine" },
+      { id: "h4", timestamp: new Date(Date.now() - 10 * 86400000).toISOString(), action: "Estimate created: $4,250.00", performedBy: "Joe Rose" },
+      { id: "h5", timestamp: new Date(Date.now() - 9 * 86400000).toISOString(), action: "Estimate sent to mchen@greencharge.com", performedBy: "Joe Rose" },
+      { id: "h6", timestamp: new Date(Date.now() - 1 * 86400000).toISOString(), action: "Awaiting customer approval", performedBy: "System" },
+    ],
+  },
+  {
+    id: "st-002",
+    ticketId: "T-10038",
+    source: "noch_plus",
+    customer: { name: "Sarah Williams", company: "ChargePoint Plus", email: "swilliams@cpplus.com", phone: "(512) 555-0198", address: "4500 Guadalupe St, Austin, TX 78751" },
+    charger: { brand: "ABB", serialNumber: "ABB-HPC-7821", type: "DC_L3", location: "4500 Guadalupe St, Austin, TX" },
+    photos: [],
+    issue: { description: "Payment terminal not accepting contactless cards. RFID reader intermittent. Screen shows 'Payment Error' after tap. Issue started after last firmware update 2 weeks ago." },
+    priority: "High",
+    status: "in_progress",
+    currentStep: 3,
+    workflowSteps: makeSteps(3),
+    swiMatchId: "swi_payment_terminal",
+    swiConfidence: 85,
+    assignedTo: "Caitlin Romano",
+    createdAt: new Date(Date.now() - 8 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+    history: [
+      { id: "h1", timestamp: new Date(Date.now() - 8 * 86400000).toISOString(), action: "Noch+ submission received", performedBy: "Customer Portal" },
+      { id: "h2", timestamp: new Date(Date.now() - 7 * 86400000).toISOString(), action: "Assessment complete — High priority", performedBy: "AI Engine" },
+      { id: "h3", timestamp: new Date(Date.now() - 6 * 86400000).toISOString(), action: "SWI matched: Payment Terminal Repair (85%)", performedBy: "AI Engine" },
+      { id: "h4", timestamp: new Date(Date.now() - 2 * 86400000).toISOString(), action: "Estimate in progress", performedBy: "Caitlin Romano" },
+    ],
+  },
+  {
+    id: "st-003",
+    ticketId: "T-10051",
+    source: "manual",
+    customer: { name: "David Park", company: "EV Solutions Inc", email: "dpark@evsolutions.com", phone: "(305) 555-0167", address: "789 Brickell Ave, Miami, FL 33131" },
+    charger: { brand: "Delta", serialNumber: "DLT-L2-4490", type: "AC_L2", location: "789 Brickell Ave, Miami, FL" },
+    photos: [],
+    issue: { description: "Level 2 charger displays 'Ground Fault' error on startup. Unit powers on but refuses to start charging session. Breaker trips occasionally under load." },
+    priority: "Medium",
+    status: "pending_review",
+    currentStep: 1,
+    workflowSteps: makeSteps(1),
+    createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+    history: [
+      { id: "h1", timestamp: new Date(Date.now() - 2 * 86400000).toISOString(), action: "Manual ticket created", performedBy: "Fernando Favole" },
+      { id: "h2", timestamp: new Date(Date.now() - 1 * 86400000).toISOString(), action: "Assessment in progress", performedBy: "AI Engine" },
+    ],
+  },
+  {
+    id: "st-004",
+    ticketId: "T-10029",
+    source: "campaign",
+    sourceCampaignName: "BTC Q4 2024 Northeast",
+    customer: { name: "Jennifer Liu", company: "Metro EV Hub", email: "jliu@metroev.com", phone: "(212) 555-0234", address: "350 5th Ave, New York, NY 10118" },
+    charger: { brand: "Tritium", serialNumber: "TRT-RT50-1192", type: "DC_L3", location: "350 5th Ave, New York, NY" },
+    photos: [],
+    issue: { description: "Routine preventive maintenance — annual inspection due. No active faults reported. Unit operating normally but approaching 12-month service interval." },
+    priority: "Low",
+    status: "completed",
+    currentStep: 10,
+    workflowSteps: makeSteps(10),
+    estimateId: "EST-1987",
+    estimateAmount: 1200,
+    swiMatchId: "swi_preventive_maint",
+    swiConfidence: 98,
+    assignedTo: "Joe Rose",
+    createdAt: new Date(Date.now() - 45 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+    history: [
+      { id: "h1", timestamp: new Date(Date.now() - 45 * 86400000).toISOString(), action: "Ticket created from campaign", performedBy: "System" },
+      { id: "h2", timestamp: new Date(Date.now() - 5 * 86400000).toISOString(), action: "Ticket closed — service complete", performedBy: "Joe Rose" },
+    ],
+  },
+  {
+    id: "st-005",
+    ticketId: "T-10055",
+    source: "noch_plus",
+    customer: { name: "Robert Taylor", company: "Suncoast Charging", email: "rtaylor@suncoast.com", phone: "(813) 555-0189", address: "2100 N Dale Mabry Hwy, Tampa, FL 33607" },
+    charger: { brand: "Signet", serialNumber: "SGN-FC-0823", type: "DC_L3", location: "2100 N Dale Mabry Hwy, Tampa, FL" },
+    photos: [],
+    issue: { description: "CCS cable showing visible wear. Connector housing cracked. Cable jacket has small tears near the connector end. Still functional but safety concern." },
+    priority: "High",
+    status: "in_progress",
+    currentStep: 4,
+    workflowSteps: makeSteps(4),
+    estimateId: "EST-2051",
+    estimateAmount: 3100,
+    swiMatchId: "swi_cable_replacement",
+    swiConfidence: 88,
+    assignedTo: "Fernando Favole",
+    createdAt: new Date(Date.now() - 6 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+    history: [
+      { id: "h1", timestamp: new Date(Date.now() - 6 * 86400000).toISOString(), action: "Noch+ submission received", performedBy: "Customer Portal" },
+      { id: "h2", timestamp: new Date(Date.now() - 5 * 86400000).toISOString(), action: "Assessment complete", performedBy: "AI Engine" },
+      { id: "h3", timestamp: new Date(Date.now() - 4 * 86400000).toISOString(), action: "SWI matched: CCS Cable Replacement (88%)", performedBy: "AI Engine" },
+      { id: "h4", timestamp: new Date(Date.now() - 3 * 86400000).toISOString(), action: "Estimate created: $3,100.00", performedBy: "Fernando Favole" },
+      { id: "h5", timestamp: new Date(Date.now() - 1 * 86400000).toISOString(), action: "Estimate sent to customer", performedBy: "Fernando Favole" },
+    ],
+  },
+];
