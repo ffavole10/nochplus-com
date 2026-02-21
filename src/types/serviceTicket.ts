@@ -55,6 +55,15 @@ export interface SWIMatchData {
   warnings: string[];
 }
 
+export interface ServiceTicketMetadata {
+  issueId?: string;
+  campaignId?: string;
+  campaignName?: string;
+  approvedBy?: string;
+  approvedByName?: string;
+  approvedAt?: string;
+}
+
 export interface ServiceTicket {
   id: string;
   ticketId: string; // T-12345
@@ -82,6 +91,7 @@ export interface ServiceTicket {
   btcDatabaseData?: ChargerDatabaseRecord | null;
   reviewNotes?: string;
   rejectionReason?: string;
+  metadata?: ServiceTicketMetadata;
 }
 
 export const WORKFLOW_STEPS_TEMPLATE: Omit<WorkflowStepInfo, "status">[] = [

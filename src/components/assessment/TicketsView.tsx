@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, Brain, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, Brain, ThumbsUp, ThumbsDown, ExternalLink } from "lucide-react";
 import { AssessmentCharger, TicketPriority } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
@@ -15,10 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface TicketsViewProps {
   chargers: AssessmentCharger[];
   onSelectCharger: (charger: AssessmentCharger) => void;
+  onApproveToServiceDesk?: (charger: AssessmentCharger) => string | null; // returns ticketId or null
 }
 
 const PRIORITY_CONFIG: Record<TicketPriority, { color: string; bg: string; label: string }> = {
@@ -74,7 +76,8 @@ function generateRecommendation(charger: AssessmentCharger, priority: TicketPrio
   return parts.join(" ");
 }
 
-export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
+export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk }: TicketsViewProps) {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("open");
@@ -95,7 +98,10 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
     try { const s = localStorage.getItem("ticket-account-managers"); return s ? JSON.parse(s) : {}; } catch { return {}; }
   });
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [confirmAction, setConfirmAction] = useState<{ type: "approve" | "reject"; chargerId: string; chargerName: string } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: "approve" | "reject"; chargerId: string; chargerName: string; charger?: AssessmentCharger } | null>(null);
+  const [createdTicketIds, setCreatedTicketIds] = useState<Record<string, string>>(() => {
+    try { const s = localStorage.getItem("ticket-created-ids"); return s ? JSON.parse(s) : {}; } catch { return {}; }
+  });
   const { matchTicket, matchBatch, getSWIMatch, getSWIMatches, isMatching, getError, clearMatch, addManualMatch, removeMatch, batchProgress } = useSWIMatching();
 
   useEffect(() => {
@@ -496,7 +502,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                               className="gap-1.5"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setConfirmAction({ type: "approve", chargerId: charger.id, chargerName: charger.assetName });
+                                setConfirmAction({ type: "approve", chargerId: charger.id, chargerName: charger.assetName, charger });
                               }}
                             >
                               <ThumbsUp className="h-3.5 w-3.5" />
@@ -505,9 +511,25 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                           </>
                         )}
                         {reviewStatuses[charger.id] === "approved" && (
-                          <span className="text-sm text-optimal font-medium flex items-center gap-1">
-                            <CheckCircle className="h-4 w-4" /> Approved — Service ticket created
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-optimal font-medium flex items-center gap-1">
+                              <CheckCircle className="h-4 w-4" /> Approved ✓
+                            </span>
+                            {createdTicketIds[charger.id] && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate("/service-desk/tickets");
+                                }}
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Ticket {createdTicketIds[charger.id]}
+                              </Button>
+                            )}
+                          </div>
                         )}
                         {reviewStatuses[charger.id] === "rejected" && (
                           <span className="text-sm text-muted-foreground font-medium">No service required</span>
@@ -533,7 +555,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmAction?.type === "approve"
-                ? `This will create a service ticket for "${confirmAction?.chargerName}". Continue?`
+                ? `This will create a service ticket in Service Desk. The issue will be marked as approved. Continue?`
                 : `Mark "${confirmAction?.chargerName}" as no service required?`}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -543,9 +565,24 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
               className={confirmAction?.type === "reject" ? "bg-destructive hover:bg-destructive/90" : ""}
               onClick={() => {
                 if (!confirmAction) return;
-                const { type, chargerId, chargerName } = confirmAction;
+                const { type, chargerId, chargerName, charger } = confirmAction;
                 setReviewStatuses(prev => ({ ...prev, [chargerId]: type === "approve" ? "approved" : "rejected" }));
-                if (type === "approve") {
+                if (type === "approve" && charger && onApproveToServiceDesk) {
+                  const ticketId = onApproveToServiceDesk(charger);
+                  if (ticketId) {
+                    setCreatedTicketIds(prev => ({ ...prev, [chargerId]: ticketId }));
+                    toast.success(
+                      `✓ Issue approved. Service ticket ${ticketId} created.`,
+                      {
+                        action: {
+                          label: "View Ticket",
+                          onClick: () => navigate("/service-desk/tickets"),
+                        },
+                        duration: 6000,
+                      }
+                    );
+                  }
+                } else if (type === "approve") {
                   toast.success(`Issue approved — service ticket created for ${chargerName}`);
                 } else {
                   toast.info(`Issue rejected — no service for ${chargerName}`);
@@ -553,7 +590,7 @@ export function TicketsView({ chargers, onSelectCharger }: TicketsViewProps) {
                 setConfirmAction(null);
               }}
             >
-              {confirmAction?.type === "approve" ? "Approve" : "Reject"}
+              {confirmAction?.type === "approve" ? "Approve & Create Ticket" : "Reject"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

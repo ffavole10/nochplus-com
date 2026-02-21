@@ -12,7 +12,7 @@ import { ServiceTicketDetailModal } from "@/components/tickets/ServiceTicketDeta
 import { TicketReviewModal } from "@/components/tickets/TicketReviewModal";
 import type { TicketData } from "@/types/ticket";
 import { ServiceTicket } from "@/types/serviceTicket";
-import { MOCK_SERVICE_TICKETS } from "@/data/mockServiceTickets";
+import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { AutoHealResult } from "@/services/autoHealService";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
@@ -52,7 +52,8 @@ function getStageFromStep(ticket: ServiceTicket): string {
 }
 
 export default function ServiceTickets() {
-  const [tickets, setTickets] = useState<ServiceTicket[]>(MOCK_SERVICE_TICKETS);
+  const tickets = useServiceTicketsStore((s) => s.tickets);
+  const updateTicketInStore = useServiceTicketsStore((s) => s.updateTicket);
   const [formOpen, setFormOpen] = useState(false);
   const [detailTicket, setDetailTicket] = useState<ServiceTicket | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -106,10 +107,13 @@ export default function ServiceTickets() {
     completed: tickets.filter(t => t.status === "completed" && differenceInDays(new Date(), new Date(t.updatedAt)) <= 30).length,
   }), [tickets]);
 
+  const addTicket = useServiceTicketsStore((s) => s.addTicket);
+
   const handleSubmit = (data: TicketData) => {
+    const nextId = useServiceTicketsStore.getState().getNextTicketId();
     const newTicket: ServiceTicket = {
       id: `st-${Date.now()}`,
-      ticketId: `T-${10000 + tickets.length + 1}`,
+      ticketId: nextId,
       source: "manual",
       customer: data.customer,
       charger: data.charger,
@@ -123,7 +127,7 @@ export default function ServiceTickets() {
       updatedAt: new Date().toISOString(),
       history: [{ id: "h1", timestamp: new Date().toISOString(), action: "Manual ticket created", performedBy: "Current User" }],
     };
-    setTickets(prev => [newTicket, ...prev]);
+    addTicket(newTicket);
     toast.success(`Ticket ${newTicket.ticketId} created successfully`);
     setFormOpen(false);
   };
@@ -139,59 +143,55 @@ export default function ServiceTickets() {
   };
 
   const handleApproveTicket = (ticketId: string, result: AutoHealResult, notes: string) => {
-    setTickets(prev => prev.map(t => {
-      if (t.id !== ticketId) return t;
-      const now = new Date().toISOString();
-      const updatedSteps = t.workflowSteps.map(s => {
-        if (s.number === 1) return { ...s, status: "complete" as const, completedAt: now };
-        if (s.number === 2 && result.swiMatch?.matched_swi_id) return { ...s, status: "complete" as const, completedAt: now };
-        if (s.number === 2 && !result.swiMatch?.matched_swi_id) return { ...s, status: "in_progress" as const };
-        if (s.number === 3) return { ...s, status: result.swiMatch?.matched_swi_id ? "in_progress" as const : "pending" as const };
-        return s;
-      });
-      const newStep = result.swiMatch?.matched_swi_id ? 3 : 2;
-      return {
-        ...t,
-        status: "in_progress" as const,
-        currentStep: newStep,
-        workflowSteps: updatedSteps,
-        assessmentData: {
-          riskLevel: result.assessment.riskLevel,
-          assessmentText: result.assessment.assessmentText,
-          recommendation: result.assessment.recommendation,
-          chargerType: result.assessment.chargerType,
-          warrantyNotes: result.assessment.warrantyNotes,
-          dataSources: result.assessment.dataSources,
-          timestamp: result.assessment.timestamp,
-        },
-        swiMatchData: result.swiMatch || undefined,
-        swiMatchId: result.swiMatch?.matched_swi_id || undefined,
-        swiConfidence: result.swiMatch?.confidence || undefined,
-        btcDatabaseData: result.assessment.btcData,
-        reviewNotes: notes || undefined,
-        priority: result.assessment.riskLevel,
-        updatedAt: now,
-        history: [
-          ...t.history,
-          { id: `h-${Date.now()}`, timestamp: now, action: `Approved & AutoHeal assessment complete — ${result.assessment.riskLevel} risk`, performedBy: "Account Manager" },
-          ...(result.swiMatch?.matched_swi_id ? [{ id: `h-${Date.now() + 1}`, timestamp: now, action: `SWI matched: ${result.swiMatch.matched_swi_id} (${result.swiMatch.confidence}%)`, performedBy: "AI Engine" }] : []),
-        ],
-      };
-    }));
+    const t = useServiceTicketsStore.getState().getTicketById(ticketId);
+    if (!t) return;
+    const now = new Date().toISOString();
+    const updatedSteps = t.workflowSteps.map(s => {
+      if (s.number === 1) return { ...s, status: "complete" as const, completedAt: now };
+      if (s.number === 2 && result.swiMatch?.matched_swi_id) return { ...s, status: "complete" as const, completedAt: now };
+      if (s.number === 2 && !result.swiMatch?.matched_swi_id) return { ...s, status: "in_progress" as const };
+      if (s.number === 3) return { ...s, status: result.swiMatch?.matched_swi_id ? "in_progress" as const : "pending" as const };
+      return s;
+    });
+    const newStep = result.swiMatch?.matched_swi_id ? 3 : 2;
+    updateTicketInStore(ticketId, {
+      status: "in_progress" as const,
+      currentStep: newStep,
+      workflowSteps: updatedSteps,
+      assessmentData: {
+        riskLevel: result.assessment.riskLevel,
+        assessmentText: result.assessment.assessmentText,
+        recommendation: result.assessment.recommendation,
+        chargerType: result.assessment.chargerType,
+        warrantyNotes: result.assessment.warrantyNotes,
+        dataSources: result.assessment.dataSources,
+        timestamp: result.assessment.timestamp,
+      },
+      swiMatchData: result.swiMatch || undefined,
+      swiMatchId: result.swiMatch?.matched_swi_id || undefined,
+      swiConfidence: result.swiMatch?.confidence || undefined,
+      btcDatabaseData: result.assessment.btcData,
+      reviewNotes: notes || undefined,
+      priority: result.assessment.riskLevel,
+      updatedAt: now,
+      history: [
+        ...t.history,
+        { id: `h-${Date.now()}`, timestamp: now, action: `Approved & AutoHeal assessment complete — ${result.assessment.riskLevel} risk`, performedBy: "Account Manager" },
+        ...(result.swiMatch?.matched_swi_id ? [{ id: `h-${Date.now() + 1}`, timestamp: now, action: `SWI matched: ${result.swiMatch.matched_swi_id} (${result.swiMatch.confidence}%)`, performedBy: "AI Engine" }] : []),
+      ],
+    });
   };
 
   const handleRejectTicket = (ticketId: string, reason: string) => {
-    setTickets(prev => prev.map(t => {
-      if (t.id !== ticketId) return t;
-      const now = new Date().toISOString();
-      return {
-        ...t,
-        status: "rejected" as const,
-        rejectionReason: reason,
-        updatedAt: now,
-        history: [...t.history, { id: `h-${Date.now()}`, timestamp: now, action: `Ticket rejected: ${reason}`, performedBy: "Account Manager" }],
-      };
-    }));
+    const t = useServiceTicketsStore.getState().getTicketById(ticketId);
+    if (!t) return;
+    const now = new Date().toISOString();
+    updateTicketInStore(ticketId, {
+      status: "rejected" as const,
+      rejectionReason: reason,
+      updatedAt: now,
+      history: [...t.history, { id: `h-${Date.now()}`, timestamp: now, action: `Ticket rejected: ${reason}`, performedBy: "Account Manager" }],
+    });
   };
 
   return (

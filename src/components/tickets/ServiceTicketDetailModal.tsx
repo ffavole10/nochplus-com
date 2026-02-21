@@ -96,6 +96,9 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
                 {ticket.sourceCampaignName && <div><span className="text-muted-foreground">Campaign:</span> <span className="font-medium">{ticket.sourceCampaignName}</span></div>}
                 <div><span className="text-muted-foreground">Created:</span> <span className="font-medium">{format(new Date(ticket.createdAt), "MMM d, yyyy h:mm a")}</span></div>
                 {ticket.assignedTo && <div><span className="text-muted-foreground">Assigned to:</span> <span className="font-medium">{ticket.assignedTo}</span></div>}
+                {ticket.metadata?.issueId && <div><span className="text-muted-foreground">Issue ID:</span> <span className="font-medium font-mono text-xs">{ticket.metadata.issueId}</span></div>}
+                {ticket.metadata?.approvedByName && <div><span className="text-muted-foreground">Approved by:</span> <span className="font-medium">{ticket.metadata.approvedByName}</span></div>}
+                {ticket.metadata?.approvedAt && <div><span className="text-muted-foreground">Approved at:</span> <span className="font-medium">{format(new Date(ticket.metadata.approvedAt), "MMM d, yyyy h:mm a")}</span></div>}
               </div>
             </div>
           </TabsContent>
