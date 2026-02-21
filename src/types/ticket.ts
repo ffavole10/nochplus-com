@@ -1,7 +1,7 @@
 export type TicketSource = "campaign" | "noch_plus" | "manual";
 
 export type ChargerBrand = "BTC" | "ABB" | "Delta" | "Tritium" | "Signet" | "Other";
-export type ChargerType = "L2" | "DCFC" | "HPCD";
+export type ChargerType = "AC_L2" | "DC_L3";
 
 export interface TicketCustomerInfo {
   name: string;
