@@ -17,8 +17,8 @@ export default function ServiceTickets() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-foreground">Service Tickets</h2>
+      <div className="items-end justify-between flex flex-col">
+        
         <Button onClick={() => setFormOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
           New Ticket
@@ -39,10 +39,10 @@ export default function ServiceTickets() {
             mode="create"
             source="manual"
             onSubmit={handleSubmit}
-            onCancel={() => setFormOpen(false)}
-          />
+            onCancel={() => setFormOpen(false)} />
+
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }
