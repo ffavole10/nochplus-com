@@ -5,14 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { FileText, Trash2, Check, Search, Eye, Upload, FolderOpen, Box } from "lucide-react";
 import { toast } from "sonner";
-import { SWI_CATALOG, SWI_OEMS, getSWIOem, type SWIDocument } from "@/data/swiCatalog";
+import { SWI_CATALOG, getSWIOem, type SWIDocument } from "@/data/swiCatalog";
 import { uploadSWIDocument, listSWIDocuments, deleteSWIDocument, getSWIPublicUrl } from "@/lib/swiStorage";
 import { SWIPreviewDialog } from "@/components/tickets/SWIPreviewDialog";
+import { useSWIOems, useSWICatalogEntries } from "@/hooks/useSWICatalogDB";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 
 const FOLDER_ORDER = [
@@ -21,17 +19,27 @@ const FOLDER_ORDER = [
   "Gen4 Public/EA", "Gen4 EA Dispenser (G4HP)", "Volta",
 ];
 
+// Unified SWI item shape for rendering
+interface UnifiedSWI {
+  id: string;
+  title: string;
+  filename: string;
+  folder: string;
+  oem: string;
+}
+
 export function SWIDocumentManagement() {
   const [uploadedFiles, setUploadedFiles] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
-  const [previewDoc, setPreviewDoc] = useState<SWIDocument | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<UnifiedSWI | null>(null);
   const [draggingOver, setDraggingOver] = useState<string | null>(null);
   const [uploading, setUploading] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    loadUploaded();
-  }, []);
+  const { oems } = useSWIOems();
+  const { entries: dbEntries } = useSWICatalogEntries();
+
+  useEffect(() => { loadUploaded(); }, []);
 
   const loadUploaded = async () => {
     try {
@@ -43,84 +51,94 @@ export function SWIDocumentManagement() {
     }
   };
 
-  // Group by OEM -> folder -> docs
+  // Build unified list: hardcoded + DB entries
+  const allSWIs: UnifiedSWI[] = useMemo(() => {
+    const hardcoded: UnifiedSWI[] = SWI_CATALOG.map(s => ({
+      id: s.id, title: s.title, filename: s.filename, folder: s.folder, oem: getSWIOem(s),
+    }));
+
+    const oemMap = Object.fromEntries(oems.map(o => [o.id, o.name]));
+    const fromDb: UnifiedSWI[] = dbEntries.map(e => ({
+      id: e.id, title: e.title, filename: e.filename, folder: e.folder, oem: oemMap[e.oem_id] || "Unknown",
+    }));
+
+    return [...hardcoded, ...fromDb];
+  }, [oems, dbEntries]);
+
+  // Group by OEM -> folder
   const groupedByOem = useMemo(() => {
     const q = search.toLowerCase();
-    const filtered = SWI_CATALOG.filter((s) => {
+    const filtered = allSWIs.filter((s) => {
       if (!q) return true;
-      return (
-        s.title.toLowerCase().includes(q) ||
-        s.filename.toLowerCase().includes(q) ||
-        s.id.toLowerCase().includes(q)
-      );
+      return s.title.toLowerCase().includes(q) || s.filename.toLowerCase().includes(q) || s.id.toLowerCase().includes(q);
     });
 
-    const oemMap: Record<string, Record<string, SWIDocument[]>> = {};
+    const oemMap: Record<string, Record<string, UnifiedSWI[]>> = {};
     for (const swi of filtered) {
-      const oem = getSWIOem(swi);
+      if (!oemMap[swi.oem]) oemMap[swi.oem] = {};
       const folder = swi.folder || "Other";
-      if (!oemMap[oem]) oemMap[oem] = {};
-      if (!oemMap[oem][folder]) oemMap[oem][folder] = [];
-      oemMap[oem][folder].push(swi);
+      if (!oemMap[swi.oem][folder]) oemMap[swi.oem][folder] = [];
+      oemMap[swi.oem][folder].push(swi);
     }
     return oemMap;
-  }, [search]);
+  }, [allSWIs, search]);
+
+  // Sorted OEM names (hardcoded first, then DB OEMs)
+  const sortedOemNames = useMemo(() => {
+    const names = Object.keys(groupedByOem);
+    return names.sort((a, b) => {
+      if (a === "BTC Power") return -1;
+      if (b === "BTC Power") return 1;
+      return a.localeCompare(b);
+    });
+  }, [groupedByOem]);
 
   const sortFolders = (folders: string[]) =>
-    folders.sort((a, b) => {
+    [...folders].sort((a, b) => {
       const ia = FOLDER_ORDER.indexOf(a);
       const ib = FOLDER_ORDER.indexOf(b);
       return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
     });
 
-  const matchFileToSWI = (filename: string): SWIDocument | undefined => {
+  const matchFileToSWI = (filename: string): UnifiedSWI | undefined => {
     const cleanName = filename.replace(/\.[^.]+$/, "").toLowerCase();
-    let match = SWI_CATALOG.find(
-      (s) => s.filename.replace(/\.[^.]+$/, "").toLowerCase() === cleanName
-    );
+    let match = allSWIs.find(s => s.filename.replace(/\.[^.]+$/, "").toLowerCase() === cleanName);
     if (match) return match;
     const idPattern = cleanName.replace(/[\s-]/g, "_");
-    match = SWI_CATALOG.find((s) => idPattern.includes(s.id));
+    match = allSWIs.find(s => idPattern.includes(s.id));
     if (match) return match;
-    match = SWI_CATALOG.find((s) =>
-      cleanName.includes(s.title.toLowerCase().replace(/[^a-z0-9]/g, ""))
-    );
+    match = allSWIs.find(s => cleanName.includes(s.title.toLowerCase().replace(/[^a-z0-9]/g, "")));
     return match;
   };
 
-  const handleFiles = useCallback(
-    async (files: FileList | File[]) => {
-      const pdfFiles = Array.from(files).filter(
-        (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
-      );
-      if (pdfFiles.length === 0) { toast.error("Only PDF files are accepted"); return; }
+  const handleFiles = useCallback(async (files: FileList | File[]) => {
+    const pdfFiles = Array.from(files).filter(f => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
+    if (pdfFiles.length === 0) { toast.error("Only PDF files are accepted"); return; }
 
-      let uploaded = 0;
-      let unmatched: string[] = [];
+    let uploaded = 0;
+    let unmatched: string[] = [];
 
-      for (const file of pdfFiles) {
-        const swiDoc = matchFileToSWI(file.name);
-        if (!swiDoc) { unmatched.push(file.name); continue; }
+    for (const file of pdfFiles) {
+      const swiDoc = matchFileToSWI(file.name);
+      if (!swiDoc) { unmatched.push(file.name); continue; }
 
-        setUploading((prev) => new Set([...prev, swiDoc.id]));
-        try {
-          await uploadSWIDocument(swiDoc.id, file);
-          setUploadedFiles((prev) => new Set([...prev, swiDoc.id]));
-          uploaded++;
-        } catch (err: any) {
-          console.error(`Failed to upload ${file.name}:`, err);
-        } finally {
-          setUploading((prev) => { const next = new Set(prev); next.delete(swiDoc.id); return next; });
-        }
+      setUploading(prev => new Set([...prev, swiDoc.id]));
+      try {
+        await uploadSWIDocument(swiDoc.id, file);
+        setUploadedFiles(prev => new Set([...prev, swiDoc.id]));
+        uploaded++;
+      } catch (err: any) {
+        console.error(`Failed to upload ${file.name}:`, err);
+      } finally {
+        setUploading(prev => { const next = new Set(prev); next.delete(swiDoc.id); return next; });
       }
+    }
 
-      if (uploaded > 0) toast.success(`Uploaded ${uploaded} SWI document${uploaded > 1 ? "s" : ""}`);
-      if (unmatched.length > 0) {
-        toast.error(`${unmatched.length} file${unmatched.length > 1 ? "s" : ""} couldn't be matched: ${unmatched.slice(0, 3).join(", ")}${unmatched.length > 3 ? "..." : ""}`);
-      }
-    },
-    []
-  );
+    if (uploaded > 0) toast.success(`Uploaded ${uploaded} SWI document${uploaded > 1 ? "s" : ""}`);
+    if (unmatched.length > 0) {
+      toast.error(`${unmatched.length} file${unmatched.length > 1 ? "s" : ""} couldn't be matched: ${unmatched.slice(0, 3).join(", ")}${unmatched.length > 3 ? "..." : ""}`);
+    }
+  }, [allSWIs]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); e.stopPropagation(); setDraggingOver(null);
@@ -135,18 +153,18 @@ export function SWIDocumentManagement() {
     e.preventDefault(); setDraggingOver(null);
   }, []);
 
-  const handleDelete = async (swiDoc: SWIDocument) => {
-    if (!confirm(`Remove uploaded PDF for "${swiDoc.title}"?`)) return;
+  const handleDelete = async (swi: UnifiedSWI) => {
+    if (!confirm(`Remove uploaded PDF for "${swi.title}"?`)) return;
     try {
-      await deleteSWIDocument(swiDoc.id);
-      setUploadedFiles((prev) => { const next = new Set(prev); next.delete(swiDoc.id); return next; });
+      await deleteSWIDocument(swi.id);
+      setUploadedFiles(prev => { const next = new Set(prev); next.delete(swi.id); return next; });
       toast.success("File removed");
     } catch (err: any) {
       toast.error("Delete failed: " + err.message);
     }
   };
 
-  const uploadedCount = SWI_CATALOG.filter((s) => uploadedFiles.has(s.id)).length;
+  const uploadedCount = allSWIs.filter(s => uploadedFiles.has(s.id)).length;
 
   return (
     <>
@@ -158,7 +176,7 @@ export function SWIDocumentManagement() {
           </CardTitle>
           <CardDescription>
             Drag & drop PDF files to upload. Files are auto-matched to SWI entries by filename.{" "}
-            <span className="font-medium text-foreground">{uploadedCount}/{SWI_CATALOG.length}</span> uploaded.
+            <span className="font-medium text-foreground">{uploadedCount}/{allSWIs.length}</span> uploaded.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -192,33 +210,31 @@ export function SWIDocumentManagement() {
 
           {/* OEM Boxes */}
           <div className="space-y-6">
-            {SWI_OEMS.filter((oem) => groupedByOem[oem]).map((oem) => {
-              const folders = groupedByOem[oem];
-              const allDocs = Object.values(folders).flat();
-              const oemUploaded = allDocs.filter((s) => uploadedFiles.has(s.id)).length;
+            {sortedOemNames.map((oemName) => {
+              const folders = groupedByOem[oemName];
+              const allOemDocs = Object.values(folders).flat();
+              const oemUploaded = allOemDocs.filter(s => uploadedFiles.has(s.id)).length;
 
               return (
-                <div key={oem} className="border rounded-xl overflow-hidden bg-card">
-                  {/* OEM Header */}
+                <div key={oemName} className="border rounded-xl overflow-hidden bg-card">
                   <div className="flex items-center gap-3 px-5 py-4 bg-muted/40 border-b">
                     <Box className="h-5 w-5 text-primary flex-shrink-0" />
-                    <h3 className="font-bold text-base">{oem}</h3>
+                    <h3 className="font-bold text-base">{oemName}</h3>
                     <Badge variant="outline" className="text-xs ml-auto">
-                      {oemUploaded}/{allDocs.length} uploaded
+                      {oemUploaded}/{allOemDocs.length} uploaded
                     </Badge>
-                    {oemUploaded === allDocs.length && allDocs.length > 0 && (
+                    {oemUploaded === allOemDocs.length && allOemDocs.length > 0 && (
                       <Badge className="bg-optimal/10 text-optimal border-optimal/20 text-xs gap-1">
                         <Check className="h-3 w-3" /> Complete
                       </Badge>
                     )}
                   </div>
 
-                  {/* Folders inside OEM */}
                   <div className="p-3">
                     <Accordion type="multiple" className="space-y-1.5">
                       {sortFolders(Object.keys(folders)).map((folder) => {
                         const docs = folders[folder];
-                        const folderUploaded = docs.filter((s) => uploadedFiles.has(s.id)).length;
+                        const folderUploaded = docs.filter(s => uploadedFiles.has(s.id)).length;
 
                         return (
                           <AccordionItem key={folder} value={folder} className="border rounded-lg overflow-hidden">
@@ -226,9 +242,7 @@ export function SWIDocumentManagement() {
                               <div className="flex items-center gap-3 flex-1">
                                 <FolderOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                 <span className="font-semibold text-sm">{folder}</span>
-                                <Badge variant="outline" className="text-xs">
-                                  {folderUploaded}/{docs.length}
-                                </Badge>
+                                <Badge variant="outline" className="text-xs">{folderUploaded}/{docs.length}</Badge>
                                 {folderUploaded === docs.length && docs.length > 0 && (
                                   <Badge className="bg-optimal/10 text-optimal border-optimal/20 text-xs gap-1">
                                     <Check className="h-3 w-3" /> Complete
