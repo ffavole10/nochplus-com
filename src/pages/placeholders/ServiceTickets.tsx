@@ -583,9 +583,18 @@ function ChildInlinePanel({
   onReject: (ticketId: string, reason: string) => void;
   onUpdate: (ticketId: string, updates: Partial<ServiceTicket>) => void;
 }) {
-  const parent = useServiceTicketsStore((s) => s.getParentOf(ticket.id));
-  const siblings = useServiceTicketsStore((s) => s.getSiblings(ticket.id));
-  const children = parent ? useServiceTicketsStore.getState().getChildrenOf(parent.id) : [];
+  const allTickets = useServiceTicketsStore((s) => s.tickets);
+  const parent = useMemo(() => {
+    if (!ticket.parentTicketId) return undefined;
+    return allTickets.find((t) => t.id === ticket.parentTicketId);
+  }, [allTickets, ticket.parentTicketId]);
+  const children = useMemo(() => {
+    if (!parent?.childTicketIds) return [];
+    return parent.childTicketIds
+      .map((cid) => allTickets.find((t) => t.id === cid))
+      .filter(Boolean) as ServiceTicket[];
+  }, [allTickets, parent?.childTicketIds]);
+  const siblings = useMemo(() => children.filter((c) => c.id !== ticket.id), [children, ticket.id]);
 
   return (
     <div className="border-t border-border">
