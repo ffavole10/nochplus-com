@@ -7,9 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ServiceTicket, StepStatus } from "@/types/serviceTicket";
 import { SWI_CATALOG } from "@/data/swiCatalog";
 import { TicketCloseStep } from "@/components/tickets/TicketCloseStep";
+import { SWIPreviewDialog } from "@/components/tickets/SWIPreviewDialog";
+import { getSWIPublicUrl } from "@/lib/swiStorage";
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
-  MapPin, Wrench, FileText, Send, Eye, Calendar, ChevronDown, ChevronUp, ExternalLink,
+  MapPin, Wrench, FileText, Send, Eye, Calendar, ChevronDown, ChevronUp, ExternalLink, Download,
   Image as ImageIcon, AlertTriangle
 } from "lucide-react";
 import { useState } from "react";
@@ -48,6 +50,7 @@ function StepIcon({ status }: { status: StepStatus }) {
 
 export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: ServiceTicketDetailModalProps) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
+  const [swiPreviewOpen, setSwiPreviewOpen] = useState(false);
 
   if (!ticket) return null;
 
@@ -179,59 +182,91 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
                   const swiDoc = ticket.swiMatchData.matched_swi_id
                     ? SWI_CATALOG.find(s => s.id === ticket.swiMatchData!.matched_swi_id)
                     : undefined;
-                  const driveUrl = swiDoc?.driveUrl;
+                  const swiFileUrl = swiDoc ? getSWIPublicUrl(`${swiDoc.id}.pdf`) : null;
                   return (
-                    <div
-                      className={`border border-primary/20 rounded-lg p-3 bg-primary/5 ${driveUrl ? "cursor-pointer hover:bg-primary/10 transition-colors" : ""}`}
-                      onClick={() => driveUrl && window.open(driveUrl, "_blank")}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <FileText className="h-4 w-4 text-primary flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-primary truncate">
-                              {swiDoc?.title || ticket.swiMatchData.matched_swi_id || "No SWI matched"}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {swiDoc?.filename || ticket.swiMatchData.reasoning || ""}
-                            </p>
+                    <>
+                      <div
+                        className={`border border-primary/20 rounded-lg p-3 bg-primary/5 ${swiFileUrl ? "cursor-pointer hover:bg-primary/10 transition-colors" : ""}`}
+                        onClick={() => swiFileUrl && setSwiPreviewOpen(true)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-primary truncate">
+                                {swiDoc?.title || ticket.swiMatchData.matched_swi_id || "No SWI matched"}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {swiDoc?.filename || ticket.swiMatchData.reasoning || ""}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {swiFileUrl && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={(e) => { e.stopPropagation(); setSwiPreviewOpen(true); }}
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const link = document.createElement("a");
+                                    link.href = swiFileUrl;
+                                    link.download = swiDoc?.filename || "swi-document.pdf";
+                                    link.target = "_blank";
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                  }}
+                                >
+                                  <Download className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </div>
-                        {driveUrl && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 flex-shrink-0"
-                            onClick={(e) => { e.stopPropagation(); window.open(driveUrl, "_blank"); }}
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 mt-2 flex-wrap">
-                        {ticket.swiMatchData.confidence > 0 && (
-                          <span className={`text-xs font-medium flex items-center gap-1 ${
-                            ticket.swiMatchData.confidence >= 90 ? "text-optimal" :
-                            ticket.swiMatchData.confidence >= 70 ? "text-medium" : "text-degraded"
-                          }`}>
-                            <CheckCircle className="h-3 w-3" />
-                            {ticket.swiMatchData.confidence}% match
-                          </span>
-                        )}
-                        {(swiDoc?.estimatedTime || ticket.swiMatchData.estimated_service_time) && (
+                        <div className="flex items-center gap-3 mt-2 flex-wrap">
+                          {ticket.swiMatchData.confidence > 0 && (
+                            <span className={`text-xs font-medium flex items-center gap-1 ${
+                              ticket.swiMatchData.confidence >= 90 ? "text-optimal" :
+                              ticket.swiMatchData.confidence >= 70 ? "text-medium" : "text-degraded"
+                            }`}>
+                              <CheckCircle className="h-3 w-3" />
+                              {ticket.swiMatchData.confidence}% match
+                            </span>
+                          )}
+                          {(swiDoc?.estimatedTime || ticket.swiMatchData.estimated_service_time) && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {swiDoc?.estimatedTime || ticket.swiMatchData.estimated_service_time}
+                            </span>
+                          )}
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {swiDoc?.estimatedTime || ticket.swiMatchData.estimated_service_time}
+                            🤖 AI matched
                           </span>
+                        </div>
+                        {ticket.swiMatchData.required_parts.length > 0 && (
+                          <p className="text-xs text-muted-foreground mt-2">🔧 Parts: {ticket.swiMatchData.required_parts.join(", ")}</p>
                         )}
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          🤖 AI matched
-                        </span>
                       </div>
-                      {ticket.swiMatchData.required_parts.length > 0 && (
-                        <p className="text-xs text-muted-foreground mt-2">🔧 Parts: {ticket.swiMatchData.required_parts.join(", ")}</p>
+                      {swiFileUrl && swiDoc && (
+                        <SWIPreviewDialog
+                          open={swiPreviewOpen}
+                          onOpenChange={setSwiPreviewOpen}
+                          fileUrl={swiFileUrl}
+                          title={swiDoc.title}
+                          filename={swiDoc.filename}
+                        />
                       )}
-                    </div>
+                    </>
                   );
                 })()
               ) : ticket.swiMatchId ? (

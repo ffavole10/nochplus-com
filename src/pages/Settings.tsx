@@ -16,6 +16,7 @@ import { AvatarUpload } from "@/components/AvatarUpload";
 import { CampaignManagement } from "@/components/settings/CampaignManagement";
 import { PartnerManagement } from "@/components/settings/PartnerManagement";
 import { DataManagement } from "@/components/settings/DataManagement";
+import { SWIDocumentManagement } from "@/components/settings/SWIDocumentManagement";
 
 type UserWithRole = {
   id: string;
@@ -46,11 +47,12 @@ const ROLE_LABELS: Record<string, string> = {
   partner: "Partner",
 };
 
-type SettingsTab = "campaigns" | "data" | "partners" | "users";
+type SettingsTab = "campaigns" | "data" | "partners" | "swi" | "users";
 
 const TABS: { value: SettingsTab; label: string }[] = [
   { value: "campaigns", label: "Campaigns" },
   { value: "data", label: "Data Management" },
+  { value: "swi", label: "SWI Library" },
   { value: "partners", label: "Partners" },
   { value: "users", label: "All Users" },
 ];
@@ -199,6 +201,7 @@ const Settings = () => {
       <main className="container mx-auto px-4 py-8 max-w-5xl space-y-6">
         {activeTab === "campaigns" && <CampaignManagement />}
         {activeTab === "data" && <DataManagement />}
+        {activeTab === "swi" && <SWIDocumentManagement />}
         {activeTab === "partners" && <PartnerManagement />}
         {activeTab === "users" && (
           <>
