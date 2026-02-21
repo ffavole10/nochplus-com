@@ -66,7 +66,7 @@ export interface ServiceTicketMetadata {
 
 export interface ServiceTicket {
   id: string;
-  ticketId: string; // T-12345
+  ticketId: string; // NP-1000 (parent) or NP-1000/1 (child)
   source: TicketSource;
   sourceCampaignName?: string;
   customer: TicketCustomerInfo;
@@ -92,6 +92,11 @@ export interface ServiceTicket {
   reviewNotes?: string;
   rejectionReason?: string;
   metadata?: ServiceTicketMetadata;
+  // Parent-Child fields
+  isParent?: boolean;
+  parentTicketId?: string; // id of parent (for children)
+  childTicketIds?: string[]; // ids of children (for parents)
+  childIndex?: number; // 1-based index within parent (for children)
 }
 
 export const WORKFLOW_STEPS_TEMPLATE: Omit<WorkflowStepInfo, "status">[] = [
