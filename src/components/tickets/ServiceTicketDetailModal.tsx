@@ -1,0 +1,321 @@
+import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ServiceTicket, StepStatus } from "@/types/serviceTicket";
+import {
+  CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
+  MapPin, Wrench, FileText, Send, Eye, Calendar, ChevronDown, ChevronUp, ExternalLink,
+  Image as ImageIcon, AlertTriangle
+} from "lucide-react";
+import { useState } from "react";
+
+interface ServiceTicketDetailModalProps {
+  ticket: ServiceTicket | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const PRIORITY_STYLES: Record<string, string> = {
+  Critical: "bg-critical text-critical-foreground",
+  High: "bg-degraded text-degraded-foreground",
+  Medium: "bg-medium text-medium-foreground",
+  Low: "bg-optimal text-optimal-foreground",
+};
+
+const SOURCE_LABELS: Record<string, string> = {
+  campaign: "Campaign",
+  noch_plus: "Noch+ Submission",
+  manual: "Manual Entry",
+};
+
+function StepIcon({ status }: { status: StepStatus }) {
+  switch (status) {
+    case "complete":
+      return <CheckCircle className="h-5 w-5 text-optimal flex-shrink-0" />;
+    case "in_progress":
+      return <Loader2 className="h-5 w-5 text-primary animate-spin flex-shrink-0" />;
+    case "failed":
+      return <XCircle className="h-5 w-5 text-critical flex-shrink-0" />;
+    default:
+      return <Circle className="h-5 w-5 text-muted-foreground/40 flex-shrink-0" />;
+  }
+}
+
+export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: ServiceTicketDetailModalProps) {
+  const [expandedStep, setExpandedStep] = useState<number | null>(null);
+
+  if (!ticket) return null;
+
+  const progressPercent = ((ticket.currentStep - 1) / 10) * 100;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center gap-3 flex-wrap">
+            <DialogTitle className="text-lg">{ticket.ticketId}</DialogTitle>
+            <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority}</Badge>
+            <Badge variant="outline">{SOURCE_LABELS[ticket.source]}</Badge>
+            {ticket.sourceCampaignName && (
+              <span className="text-xs text-muted-foreground">({ticket.sourceCampaignName})</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-sm text-muted-foreground">Step {ticket.currentStep} of 10</span>
+            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-xs">
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+        </DialogHeader>
+
+        <Tabs defaultValue="workflow" className="mt-2">
+          <TabsList className="grid grid-cols-5 w-full">
+            <TabsTrigger value="customer">Customer</TabsTrigger>
+            <TabsTrigger value="charger">Charger</TabsTrigger>
+            <TabsTrigger value="workflow">Workflow</TabsTrigger>
+            <TabsTrigger value="estimate">Estimate</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
+          </TabsList>
+
+          {/* Customer Info */}
+          <TabsContent value="customer" className="space-y-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <InfoRow icon={User} label="Name" value={ticket.customer.name} />
+              <InfoRow icon={Building2} label="Company" value={ticket.customer.company} />
+              <InfoRow icon={Mail} label="Email" value={ticket.customer.email} />
+              <InfoRow icon={Phone} label="Phone" value={ticket.customer.phone} />
+              <InfoRow icon={MapPin} label="Address" value={ticket.customer.address} className="sm:col-span-2" />
+            </div>
+            <div className="border-t pt-4 space-y-2">
+              <h4 className="text-sm font-semibold text-foreground">Source Metadata</h4>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted-foreground">Source:</span> <span className="font-medium">{SOURCE_LABELS[ticket.source]}</span></div>
+                {ticket.sourceCampaignName && <div><span className="text-muted-foreground">Campaign:</span> <span className="font-medium">{ticket.sourceCampaignName}</span></div>}
+                <div><span className="text-muted-foreground">Created:</span> <span className="font-medium">{format(new Date(ticket.createdAt), "MMM d, yyyy h:mm a")}</span></div>
+                {ticket.assignedTo && <div><span className="text-muted-foreground">Assigned to:</span> <span className="font-medium">{ticket.assignedTo}</span></div>}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Charger Info */}
+          <TabsContent value="charger" className="space-y-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <InfoRow icon={Wrench} label="Brand" value={ticket.charger.brand || "—"} />
+              <InfoRow icon={FileText} label="Serial Number" value={ticket.charger.serialNumber} />
+              <InfoRow icon={Wrench} label="Type" value={ticket.charger.type === "DC_L3" ? "DC | Level 3" : "AC | Level 2"} />
+              <InfoRow icon={MapPin} label="Location" value={ticket.charger.location} />
+            </div>
+
+            {/* Photos */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                <ImageIcon className="h-4 w-4" /> Photos
+              </h4>
+              {ticket.photos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No photos uploaded</p>
+              ) : (
+                <div className="grid grid-cols-4 gap-2">
+                  {ticket.photos.map((p) => (
+                    <div key={p.id} className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <ImageIcon className="h-6 w-6 text-muted-foreground/50" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Issue Description */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-4 w-4" /> Issue Description
+              </h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">{ticket.issue.description}</p>
+            </div>
+          </TabsContent>
+
+          {/* Workflow */}
+          <TabsContent value="workflow" className="mt-4">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-sm font-medium">Step {ticket.currentStep} of 10:</span>
+              <span className="text-sm text-muted-foreground">
+                {ticket.workflowSteps.find(s => s.number === ticket.currentStep)?.label}
+              </span>
+            </div>
+            <div className="space-y-1">
+              {ticket.workflowSteps.map((step) => {
+                const isExpanded = expandedStep === step.number;
+                return (
+                  <div key={step.number} className={`rounded-lg border transition-colors ${
+                    step.status === "in_progress" ? "border-primary/30 bg-primary/5" :
+                    step.status === "complete" ? "border-optimal/20 bg-optimal/5" :
+                    "border-border bg-background"
+                  }`}>
+                    <button
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                      onClick={() => setExpandedStep(isExpanded ? null : step.number)}
+                    >
+                      <StepIcon status={step.status} />
+                      <div className="flex-1 min-w-0">
+                        <span className={`text-sm font-medium ${step.status === "pending" ? "text-muted-foreground" : "text-foreground"}`}>
+                          {step.number}. {step.label}
+                        </span>
+                        {step.completedAt && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {format(new Date(step.completedAt), "MMM d")}
+                          </span>
+                        )}
+                      </div>
+                      {step.status !== "pending" && (
+                        isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </button>
+                    {isExpanded && step.status !== "pending" && (
+                      <div className="px-4 pb-3 pl-12">
+                        <WorkflowStepDetail ticket={ticket} stepNumber={step.number} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </TabsContent>
+
+          {/* Estimate */}
+          <TabsContent value="estimate" className="mt-4">
+            {ticket.estimateId ? (
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Estimate {ticket.estimateId}</span>
+                    <Badge className="bg-primary text-primary-foreground">${ticket.estimateAmount?.toLocaleString()}</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Created {format(new Date(ticket.createdAt), "MMM d, yyyy")}
+                  </p>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <ExternalLink className="h-3.5 w-3.5" /> View Full Estimate
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
+                <p className="text-sm">No estimate created yet</p>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* History */}
+          <TabsContent value="history" className="mt-4">
+            <div className="space-y-3">
+              {ticket.history.map((entry) => (
+                <div key={entry.id} className="flex gap-3 items-start">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground">{entry.action}</p>
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {format(new Date(entry.timestamp), "MMM d, yyyy h:mm a")}
+                      <span>•</span>
+                      <span>{entry.performedBy}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function InfoRow({ icon: Icon, label, value, className = "" }: { icon: React.ElementType; label: string; value: string; className?: string }) {
+  return (
+    <div className={`flex items-start gap-3 ${className}`}>
+      <Icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-medium">{value || "—"}</p>
+      </div>
+    </div>
+  );
+}
+
+function WorkflowStepDetail({ ticket, stepNumber }: { ticket: ServiceTicket; stepNumber: number }) {
+  switch (stepNumber) {
+    case 1:
+      return (
+        <div className="space-y-2">
+          <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority} Risk</Badge>
+          <p className="text-xs text-muted-foreground">AutoHeal AI assessment completed. Issue analyzed and priority classified based on charger model, age, and reported symptoms.</p>
+          <p className="text-xs text-muted-foreground">Recommendation: {ticket.issue.description.substring(0, 120)}...</p>
+        </div>
+      );
+    case 2:
+      return (
+        <div className="space-y-2">
+          {ticket.swiMatchId && (
+            <>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="text-xs">{ticket.swiMatchId}</Badge>
+                {ticket.swiConfidence && (
+                  <Badge className={ticket.swiConfidence >= 90 ? "bg-optimal/10 text-optimal" : "bg-degraded/10 text-degraded"}>
+                    {ticket.swiConfidence}% confidence
+                  </Badge>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
+                  <ExternalLink className="h-3 w-3" /> View SWI Document
+                </Button>
+                <Button variant="ghost" size="sm" className="text-xs h-7">Match Different SWI</Button>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    case 3:
+      return ticket.estimateId ? (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">Estimate {ticket.estimateId} — ${ticket.estimateAmount?.toLocaleString()}</p>
+          <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
+            <Eye className="h-3 w-3" /> View Full Estimate
+          </Button>
+        </div>
+      ) : <p className="text-xs text-muted-foreground">Creating estimate...</p>;
+    case 4:
+      return (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">Sent to {ticket.customer.email}</p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
+              <Send className="h-3 w-3" /> Resend Email
+            </Button>
+            <Button variant="ghost" size="sm" className="text-xs h-7">Copy Approval Link</Button>
+          </div>
+        </div>
+      );
+    case 5:
+      return (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Awaiting customer approval</p>
+          <div className="flex gap-2">
+            <Button size="sm" className="text-xs h-7">Approve Manually</Button>
+            <Button variant="destructive" size="sm" className="text-xs h-7">Reject</Button>
+          </div>
+        </div>
+      );
+    case 6:
+      return (
+        <div>
+          <Button size="sm" className="text-xs h-7">Schedule Now</Button>
+        </div>
+      );
+    default:
+      return <p className="text-xs text-muted-foreground">Details will appear when this step is active.</p>;
+  }
+}
