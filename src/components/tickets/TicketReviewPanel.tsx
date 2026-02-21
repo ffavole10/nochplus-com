@@ -54,9 +54,9 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
       .map(h => ({ text: h.action.replace("Comment: ", ""), timestamp: h.timestamp, author: h.performedBy }))
   );
 
-  // Editing state
-  const [editingSection, setEditingSection] = useState<string | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  // Global editing mode
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showSaveCheck, setShowSaveCheck] = useState(false);
 
   // Reject / approve flow
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -66,7 +66,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
   const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const markChanged = () => setHasUnsavedChanges(true);
+  
 
   const handleSaveChanges = () => {
     onUpdate(ticket.id, {
@@ -91,8 +91,9 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
       reviewNotes: notes || undefined,
       updatedAt: new Date().toISOString(),
     });
-    setHasUnsavedChanges(false);
-    setEditingSection(null);
+    setIsEditMode(false);
+    setShowSaveCheck(true);
+    setTimeout(() => setShowSaveCheck(false), 1500);
     toast.success("Changes saved");
   };
 
@@ -126,7 +127,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
   const handleApproveConfirm = async () => {
     setApproveConfirmOpen(false);
     // Save any pending edits first
-    if (hasUnsavedChanges) handleSaveChanges();
+    if (isEditMode) handleSaveChanges();
 
     setIsProcessing(true);
     setError(null);
@@ -206,45 +207,44 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
     toast.success("Ticket approved (without AI assessment)");
   };
 
-  const isEditing = (section: string) => editingSection === section;
-  const toggleEdit = (section: string) => {
-    setEditingSection(prev => prev === section ? null : section);
-  };
-
   return (
     <div className="border-t border-border bg-muted/30 p-5 space-y-5 animate-in slide-in-from-top-2 duration-200">
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Brain className="h-4 w-4 text-primary" /> Review Ticket {ticket.ticketId}
-        </h3>
-        <div className="flex items-center gap-2">
-          {hasUnsavedChanges && (
-            <Button size="sm" variant="outline" onClick={handleSaveChanges} className="gap-1.5 text-xs">
-              <Save className="h-3.5 w-3.5" /> Save Changes
+          {showSaveCheck ? (
+            <CheckCircle className="h-4 w-4 text-optimal animate-in fade-in duration-200" />
+          ) : (
+            <button
+              onClick={() => setIsEditMode(!isEditMode)}
+              className={`p-1 rounded hover:bg-muted transition-colors ${isEditMode ? "text-primary" : "text-muted-foreground"}`}
+              title={isEditMode ? "Exit edit mode" : "Edit ticket"}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {isEditMode && (
+            <Button size="sm" variant="outline" onClick={handleSaveChanges} className="h-6 px-2 text-xs gap-1 ml-1">
+              <Save className="h-3 w-3" /> Save
             </Button>
           )}
-          <Button size="sm" variant="ghost" onClick={onCollapse} className="text-xs">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+        </h3>
+        <Button size="sm" variant="ghost" onClick={onCollapse} className="text-xs">
+          <X className="h-4 w-4" />
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Customer Information */}
-        <EditableSection
-          title="Customer Information"
-          icon={User}
-          isEditing={isEditing("customer")}
-          onToggleEdit={() => toggleEdit("customer")}
-        >
-          {isEditing("customer") ? (
+        <SectionHeader title="Customer Information" icon={User}>
+          {isEditMode ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <EditField label="Name" value={customerName} onChange={(v) => { setCustomerName(v); markChanged(); }} />
-              <EditField label="Company" value={customerCompany} onChange={(v) => { setCustomerCompany(v); markChanged(); }} />
-              <EditField label="Email" value={customerEmail} onChange={(v) => { setCustomerEmail(v); markChanged(); }} />
-              <EditField label="Phone" value={customerPhone} onChange={(v) => { setCustomerPhone(v); markChanged(); }} />
-              <EditField label="Address" value={customerAddress} onChange={(v) => { setCustomerAddress(v); markChanged(); }} className="sm:col-span-2" />
+              <EditField label="Name" value={customerName} onChange={setCustomerName} />
+              <EditField label="Company" value={customerCompany} onChange={setCustomerCompany} />
+              <EditField label="Email" value={customerEmail} onChange={setCustomerEmail} />
+              <EditField label="Phone" value={customerPhone} onChange={setCustomerPhone} />
+              <EditField label="Address" value={customerAddress} onChange={setCustomerAddress} className="sm:col-span-2" />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
@@ -255,24 +255,19 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
               <InfoRow label="Address" value={customerAddress} className="sm:col-span-2" />
             </div>
           )}
-        </EditableSection>
+        </SectionHeader>
 
         {/* Charger Information */}
-        <EditableSection
-          title="Charger Information"
-          icon={Zap}
-          isEditing={isEditing("charger")}
-          onToggleEdit={() => toggleEdit("charger")}
-        >
-          {isEditing("charger") ? (
+        <SectionHeader title="Charger Information" icon={Zap}>
+          {isEditMode ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <EditField label="Brand" value={chargerBrand} onChange={(v) => { setChargerBrand(v); markChanged(); }} />
-              <EditField label="Serial Number" value={chargerSerial} onChange={(v) => { setChargerSerial(v); markChanged(); }} />
+              <EditField label="Brand" value={chargerBrand} onChange={setChargerBrand} />
+              <EditField label="Serial Number" value={chargerSerial} onChange={setChargerSerial} />
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Type</label>
                 <p className="text-sm font-medium">{ticket.charger.type === "DC_L3" ? "DC | Level 3" : "AC | Level 2"}</p>
               </div>
-              <EditField label="Location" value={chargerLocation} onChange={(v) => { setChargerLocation(v); markChanged(); }} />
+              <EditField label="Location" value={chargerLocation} onChange={setChargerLocation} />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
@@ -282,34 +277,23 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
               <InfoRow label="Location" value={chargerLocation} />
             </div>
           )}
-        </EditableSection>
+        </SectionHeader>
 
         {/* Issue Description */}
-        <EditableSection
-          title="Issue Description"
-          icon={AlertTriangle}
-          isEditing={isEditing("issue")}
-          onToggleEdit={() => toggleEdit("issue")}
-        >
-          {isEditing("issue") ? (
+        <SectionHeader title="Issue Description" icon={AlertTriangle}>
+          {isEditMode ? (
             <Textarea
               value={issueDescription}
-              onChange={(e) => { setIssueDescription(e.target.value); markChanged(); }}
+              onChange={(e) => setIssueDescription(e.target.value)}
               className="min-h-[80px] text-sm"
             />
           ) : (
             <p className="text-sm text-muted-foreground leading-relaxed">{issueDescription}</p>
           )}
-        </EditableSection>
+        </SectionHeader>
 
         {/* Photos */}
-        <EditableSection
-          title={`Photos (${ticket.photos.length})`}
-          icon={ImageIcon}
-          isEditing={false}
-          onToggleEdit={() => {}}
-          showEditButton={false}
-        >
+        <SectionHeader title={`Photos (${ticket.photos.length})`} icon={ImageIcon}>
           {ticket.photos.length === 0 ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ImageIcon className="h-4 w-4" />
@@ -327,7 +311,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
           <Button variant="outline" size="sm" className="mt-2 gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" /> Add Photos
           </Button>
-        </EditableSection>
+        </SectionHeader>
       </div>
 
       {/* Source Metadata */}
@@ -347,7 +331,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
         {/* AM Notes */}
         <Textarea
           value={notes}
-          onChange={(e) => { setNotes(e.target.value); markChanged(); }}
+          onChange={(e) => setNotes(e.target.value)}
           placeholder="Add internal notes about this ticket..."
           className="min-h-[60px] text-sm"
         />
@@ -459,23 +443,12 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
 
 /* ── Sub-components ── */
 
-function EditableSection({
-  title, icon: Icon, isEditing, onToggleEdit, showEditButton = true, children,
-}: {
-  title: string; icon: React.ElementType; isEditing: boolean; onToggleEdit: () => void; showEditButton?: boolean; children: React.ReactNode;
-}) {
+function SectionHeader({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5 uppercase tracking-wide">
-          <Icon className="h-3.5 w-3.5 text-muted-foreground" /> {title}
-        </h4>
-        {showEditButton && (
-          <Button variant="ghost" size="sm" onClick={onToggleEdit} className="h-6 px-2 text-xs gap-1">
-            <Pencil className="h-3 w-3" /> {isEditing ? "Done" : "Edit"}
-          </Button>
-        )}
-      </div>
+      <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5 uppercase tracking-wide">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" /> {title}
+      </h4>
       {children}
     </div>
   );
