@@ -14,11 +14,16 @@ import { useFilters } from "@/contexts/FilterContext";
 const PAGE_TITLES: Record<string, string> = {
   "/": "Dashboard",
   "/dataset": "Dataset",
-  "/kanban": "Kanban",
-  "/tickets": "Tickets",
+  "/tickets": "Issues Queue",
   "/estimates": "Estimates",
   "/schedule": "Schedule",
-  "/settings": "Settings"
+  "/settings": "Settings",
+  "/campaigns/reports": "Field Reports",
+  "/service-desk/tickets": "Service Tickets",
+  "/service-desk/customers": "Customers",
+  "/service-desk/chargers": "All Chargers",
+  "/noch-plus/dashboard": "Noch+ Dashboard",
+  "/noch-plus/chargers": "Subscriber Chargers",
 };
 
 export function PlatformHeader() {
@@ -36,24 +41,25 @@ export function PlatformHeader() {
 
   const pageTitle = PAGE_TITLES[location.pathname] || "Dashboard";
   const isSettingsPage = location.pathname === "/settings";
+  const isCampaignPage = ["/", "/dataset", "/tickets", "/schedule", "/campaigns/reports"].includes(location.pathname);
 
   useEffect(() => {
     if (!session?.user?.id) return;
-    supabase.
-    from("profiles").
-    select("avatar_url, display_name").
-    eq("user_id", session.user.id).
-    single().
-    then(({ data }) => {
-      if (data) {
-        setAvatarUrl(data.avatar_url);
-        if (data.display_name) {
-          setInitials(
-            data.display_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
-          );
+    supabase
+      .from("profiles")
+      .select("avatar_url, display_name")
+      .eq("user_id", session.user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setAvatarUrl(data.avatar_url);
+          if (data.display_name) {
+            setInitials(
+              data.display_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+            );
+          }
         }
-      }
-    });
+      });
   }, [session?.user?.id]);
 
   const startEditing = () => {
@@ -77,51 +83,48 @@ export function PlatformHeader() {
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/50">
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-baseline gap-2 min-w-0">
-          {sidebarCollapsed &&
-          <button
-            onClick={toggleSidebar}
-            className="h-6 w-6 rounded-full border border-border bg-background shadow-sm flex items-center justify-center hover:bg-accent transition-colors shrink-0"
-            aria-label="Open sidebar">
-
+          {sidebarCollapsed && (
+            <button
+              onClick={toggleSidebar}
+              className="h-6 w-6 rounded-full border border-border bg-background shadow-sm flex items-center justify-center hover:bg-accent transition-colors shrink-0"
+              aria-label="Open sidebar"
+            >
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
-          }
+          )}
           <h1 className="font-semibold whitespace-nowrap text-3xl text-muted-foreground">{pageTitle}</h1>
-          {selectedCampaignName && !isSettingsPage &&
-          <>
+          {selectedCampaignName && isCampaignPage && !isSettingsPage && (
+            <>
               <span className="text-lg text-muted-foreground font-light">|</span>
-              {isEditing ?
-            <div className="flex items-center gap-1">
+              {isEditing ? (
+                <div className="flex items-center gap-1">
                   <Input
-                ref={inputRef}
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") confirmEdit();
-                  if (e.key === "Escape") cancelEdit();
-                }}
-                className="h-7 text-sm w-[260px]" />
-
+                    ref={inputRef}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") confirmEdit();
+                      if (e.key === "Escape") cancelEdit();
+                    }}
+                    className="h-7 text-sm w-[260px]"
+                  />
                   <Button variant="ghost" size="icon" className="h-6 w-6" onClick={confirmEdit}>
                     <Check className="h-3.5 w-3.5 text-primary" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-6 w-6" onClick={cancelEdit}>
                     <X className="h-3.5 w-3.5 text-muted-foreground" />
                   </Button>
-                </div> :
-
-            <button
-              onClick={startEditing}
-              className="flex items-center gap-1.5 group min-w-0">
-
+                </div>
+              ) : (
+                <button onClick={startEditing} className="flex items-center gap-1.5 group min-w-0">
                   <span className="text-sm text-muted-foreground truncate max-w-[300px]">
                     {selectedCampaignName}
                   </span>
                   <Pencil className="h-3 w-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </button>
-            }
+              )}
             </>
-          }
+          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -132,7 +135,8 @@ export function PlatformHeader() {
                 placeholder="Search chargers..."
                 value={filters.search}
                 onChange={(e) => updateFilter("search", e.target.value)}
-                className="pl-8 h-9 w-[200px] text-sm" />
+                className="pl-8 h-9 w-[200px] text-sm"
+              />
             </div>
           )}
           <NotificationBell />
@@ -149,12 +153,12 @@ export function PlatformHeader() {
             onClick={async () => {
               await supabase.auth.signOut();
               window.location.href = "/login";
-            }}>
-
+            }}
+          >
             <LogOut className="w-4 h-4" />
           </Button>
         </div>
       </div>
-    </header>);
-
+    </header>
+  );
 }

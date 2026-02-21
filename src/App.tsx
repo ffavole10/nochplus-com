@@ -15,6 +15,14 @@ import EstimateStatus from "./pages/EstimateStatus";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MainPlatformLayout from "./layouts/MainPlatformLayout";
 
+// Placeholder pages for new sections
+import ServiceTickets from "./pages/placeholders/ServiceTickets";
+import Customers from "./pages/placeholders/Customers";
+import AllChargers from "./pages/placeholders/AllChargers";
+import NochPlusDashboard from "./pages/placeholders/NochPlusDashboard";
+import NochPlusChargers from "./pages/placeholders/NochPlusChargers";
+import FieldReports from "./pages/placeholders/FieldReports";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -26,14 +34,27 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
+            {/* Campaigns section (uses existing pages) */}
             <Route path="/" element={<Index />} />
             <Route path="/dataset" element={<Dataset />} />
             <Route path="/tickets" element={<AssessmentTracker />} />
-            <Route path="/estimates" element={<Estimates />} />
             <Route path="/schedule" element={<Schedule />} />
+            <Route path="/campaigns/reports" element={<FieldReports />} />
+
+            {/* Service Desk section */}
+            <Route path="/service-desk/tickets" element={<ServiceTickets />} />
+            <Route path="/estimates" element={<Estimates />} />
+            <Route path="/service-desk/customers" element={<Customers />} />
+            <Route path="/service-desk/chargers" element={<AllChargers />} />
+
+            {/* Noch+ Program section */}
+            <Route path="/noch-plus/dashboard" element={<NochPlusDashboard />} />
+            <Route path="/noch-plus/chargers" element={<NochPlusChargers />} />
+
+            {/* Settings */}
             <Route path="/settings" element={<Settings />} />
           </Route>
-          {/* Legacy redirect */}
+          {/* Legacy redirects */}
           <Route path="/missioncontrol" element={<ProtectedRoute><AssessmentTracker /></ProtectedRoute>} />
           <Route path="/estimate-status" element={<EstimateStatus />} />
           <Route path="*" element={<NotFound />} />
