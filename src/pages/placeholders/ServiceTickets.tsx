@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StandardizedTicketIntakeForm from "@/components/tickets/StandardizedTicketIntakeForm";
-import { ServiceTicketDetailModal } from "@/components/tickets/ServiceTicketDetailModal";
+import { TicketDetailPanel } from "@/components/tickets/TicketDetailPanel";
 import { TicketReviewPanel } from "@/components/tickets/TicketReviewPanel";
 import type { TicketData } from "@/types/ticket";
 import { ServiceTicket } from "@/types/serviceTicket";
@@ -55,9 +55,7 @@ export default function ServiceTickets() {
   const tickets = useServiceTicketsStore((s) => s.tickets);
   const updateTicketInStore = useServiceTicketsStore((s) => s.updateTicket);
   const [formOpen, setFormOpen] = useState(false);
-  const [detailTicket, setDetailTicket] = useState<ServiceTicket | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
+  const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -132,12 +130,7 @@ export default function ServiceTickets() {
   };
 
   const handleViewDetails = (ticket: ServiceTicket) => {
-    if (ticket.status === "pending_review") {
-      setExpandedReviewId(prev => prev === ticket.id ? null : ticket.id);
-    } else {
-      setDetailTicket(ticket);
-      setDetailOpen(true);
-    }
+    setExpandedTicketId(prev => prev === ticket.id ? null : ticket.id);
   };
 
   const handleUpdateTicket = (ticketId: string, updates: Partial<ServiceTicket>) => {
@@ -403,13 +396,20 @@ export default function ServiceTickets() {
                     </div>
                   </div>
                 {/* Inline Review Panel */}
-                {ticket.status === "pending_review" && expandedReviewId === ticket.id && (
+                {ticket.status === "pending_review" && expandedTicketId === ticket.id && (
                   <TicketReviewPanel
                     ticket={ticket}
                     onApprove={handleApproveTicket}
                     onReject={handleRejectTicket}
                     onUpdate={handleUpdateTicket}
-                    onCollapse={() => setExpandedReviewId(null)}
+                    onCollapse={() => setExpandedTicketId(null)}
+                  />
+                )}
+                {/* Inline Detail Panel */}
+                {ticket.status !== "pending_review" && expandedTicketId === ticket.id && (
+                  <TicketDetailPanel
+                    ticket={ticket}
+                    onCollapse={() => setExpandedTicketId(null)}
                   />
                 )}
               </CardContent>
@@ -433,13 +433,6 @@ export default function ServiceTickets() {
           />
         </DialogContent>
       </Dialog>
-
-      {/* Ticket Detail Modal */}
-      <ServiceTicketDetailModal
-        ticket={detailTicket}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-      />
 
     </div>
   );
