@@ -385,6 +385,83 @@ export type Database = {
         }
         Relationships: []
       }
+      swi_catalog_entries: {
+        Row: {
+          charger_models: string[] | null
+          created_at: string
+          description: string | null
+          estimated_time: string | null
+          filename: string
+          folder: string
+          id: string
+          issue_types: string[] | null
+          oem_id: string
+          priority: string[] | null
+          required_parts: string[] | null
+          service_categories: string[] | null
+          title: string
+        }
+        Insert: {
+          charger_models?: string[] | null
+          created_at?: string
+          description?: string | null
+          estimated_time?: string | null
+          filename: string
+          folder?: string
+          id?: string
+          issue_types?: string[] | null
+          oem_id: string
+          priority?: string[] | null
+          required_parts?: string[] | null
+          service_categories?: string[] | null
+          title: string
+        }
+        Update: {
+          charger_models?: string[] | null
+          created_at?: string
+          description?: string | null
+          estimated_time?: string | null
+          filename?: string
+          folder?: string
+          id?: string
+          issue_types?: string[] | null
+          oem_id?: string
+          priority?: string[] | null
+          required_parts?: string[] | null
+          service_categories?: string[] | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swi_catalog_entries_oem_id_fkey"
+            columns: ["oem_id"]
+            isOneToOne: false
+            referencedRelation: "swi_oems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      swi_oems: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
