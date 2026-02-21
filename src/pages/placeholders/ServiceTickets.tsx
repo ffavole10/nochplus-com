@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Ticket, Search, ArrowUpDown, Crosshair, Diamond, UserPlus, Loader2, Eye, Camera, FileText, Wrench } from "lucide-react";
+import { Plus, Ticket, Search, ArrowUpDown, Crosshair, Diamond, UserPlus, Loader2, Eye, Camera, FileText, Wrench, Shield, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StandardizedTicketIntakeForm from "@/components/tickets/StandardizedTicketIntakeForm";
 import { ServiceTicketDetailModal } from "@/components/tickets/ServiceTicketDetailModal";
+import { TicketReviewModal } from "@/components/tickets/TicketReviewModal";
 import type { TicketData } from "@/types/ticket";
 import { ServiceTicket } from "@/types/serviceTicket";
 import { MOCK_SERVICE_TICKETS } from "@/data/mockServiceTickets";
+import { AutoHealResult } from "@/services/autoHealService";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 
@@ -54,6 +56,8 @@ export default function ServiceTickets() {
   const [formOpen, setFormOpen] = useState(false);
   const [detailTicket, setDetailTicket] = useState<ServiceTicket | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [reviewTicket, setReviewTicket] = useState<ServiceTicket | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -125,8 +129,69 @@ export default function ServiceTickets() {
   };
 
   const handleViewDetails = (ticket: ServiceTicket) => {
-    setDetailTicket(ticket);
-    setDetailOpen(true);
+    if (ticket.status === "pending_review") {
+      setReviewTicket(ticket);
+      setReviewOpen(true);
+    } else {
+      setDetailTicket(ticket);
+      setDetailOpen(true);
+    }
+  };
+
+  const handleApproveTicket = (ticketId: string, result: AutoHealResult, notes: string) => {
+    setTickets(prev => prev.map(t => {
+      if (t.id !== ticketId) return t;
+      const now = new Date().toISOString();
+      const updatedSteps = t.workflowSteps.map(s => {
+        if (s.number === 1) return { ...s, status: "complete" as const, completedAt: now };
+        if (s.number === 2 && result.swiMatch?.matched_swi_id) return { ...s, status: "complete" as const, completedAt: now };
+        if (s.number === 2 && !result.swiMatch?.matched_swi_id) return { ...s, status: "in_progress" as const };
+        if (s.number === 3) return { ...s, status: result.swiMatch?.matched_swi_id ? "in_progress" as const : "pending" as const };
+        return s;
+      });
+      const newStep = result.swiMatch?.matched_swi_id ? 3 : 2;
+      return {
+        ...t,
+        status: "in_progress" as const,
+        currentStep: newStep,
+        workflowSteps: updatedSteps,
+        assessmentData: {
+          riskLevel: result.assessment.riskLevel,
+          assessmentText: result.assessment.assessmentText,
+          recommendation: result.assessment.recommendation,
+          chargerType: result.assessment.chargerType,
+          warrantyNotes: result.assessment.warrantyNotes,
+          dataSources: result.assessment.dataSources,
+          timestamp: result.assessment.timestamp,
+        },
+        swiMatchData: result.swiMatch || undefined,
+        swiMatchId: result.swiMatch?.matched_swi_id || undefined,
+        swiConfidence: result.swiMatch?.confidence || undefined,
+        btcDatabaseData: result.assessment.btcData,
+        reviewNotes: notes || undefined,
+        priority: result.assessment.riskLevel,
+        updatedAt: now,
+        history: [
+          ...t.history,
+          { id: `h-${Date.now()}`, timestamp: now, action: `Approved & AutoHeal assessment complete — ${result.assessment.riskLevel} risk`, performedBy: "Account Manager" },
+          ...(result.swiMatch?.matched_swi_id ? [{ id: `h-${Date.now() + 1}`, timestamp: now, action: `SWI matched: ${result.swiMatch.matched_swi_id} (${result.swiMatch.confidence}%)`, performedBy: "AI Engine" }] : []),
+        ],
+      };
+    }));
+  };
+
+  const handleRejectTicket = (ticketId: string, reason: string) => {
+    setTickets(prev => prev.map(t => {
+      if (t.id !== ticketId) return t;
+      const now = new Date().toISOString();
+      return {
+        ...t,
+        status: "rejected" as const,
+        rejectionReason: reason,
+        updatedAt: now,
+        history: [...t.history, { id: `h-${Date.now()}`, timestamp: now, action: `Ticket rejected: ${reason}`, performedBy: "Account Manager" }],
+      };
+    }));
   };
 
   return (
@@ -250,8 +315,18 @@ export default function ServiceTickets() {
                         <Badge variant="outline" className={`gap-1 text-xs ${srcConfig.className}`}>
                           <SrcIcon className="h-3 w-3" />
                           {srcConfig.label}
-                          {ticket.sourceCampaignName && ` (${ticket.sourceCampaignName})`}
+                        {ticket.sourceCampaignName && ` (${ticket.sourceCampaignName})`}
                         </Badge>
+                        {ticket.status === "pending_review" && (
+                          <Badge variant="outline" className="gap-1 text-xs bg-medium/10 text-medium border-medium/20">
+                            <Shield className="h-3 w-3" /> Pending Review
+                          </Badge>
+                        )}
+                        {ticket.status === "rejected" && (
+                          <Badge variant="outline" className="gap-1 text-xs bg-critical/10 text-critical border-critical/20">
+                            Rejected
+                          </Badge>
+                        )}
                         {ticket.swiConfidence && (
                           <Badge variant="outline" className="gap-1 text-xs bg-optimal/5 text-optimal border-optimal/20">
                             🤖 SWI {ticket.swiConfidence}%
@@ -303,15 +378,26 @@ export default function ServiceTickets() {
                       {ticket.assignedTo && (
                         <span className="text-xs text-muted-foreground">{ticket.assignedTo}</span>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1.5 text-xs"
-                        onClick={() => handleViewDetails(ticket)}
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        View Details
-                      </Button>
+                      {ticket.status === "pending_review" ? (
+                        <Button
+                          size="sm"
+                          className="gap-1.5 text-xs"
+                          onClick={() => handleViewDetails(ticket)}
+                        >
+                          <Brain className="h-3.5 w-3.5" />
+                          Review
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 text-xs"
+                          onClick={() => handleViewDetails(ticket)}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          View Details
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -341,6 +427,15 @@ export default function ServiceTickets() {
         ticket={detailTicket}
         open={detailOpen}
         onOpenChange={setDetailOpen}
+      />
+
+      {/* Ticket Review Modal */}
+      <TicketReviewModal
+        ticket={reviewTicket}
+        open={reviewOpen}
+        onClose={() => { setReviewOpen(false); setReviewTicket(null); }}
+        onApprove={handleApproveTicket}
+        onReject={handleRejectTicket}
       />
     </div>
   );
