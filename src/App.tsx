@@ -43,7 +43,7 @@ const App = () => (
 
             {/* Service Desk section */}
             <Route path="/service-desk/tickets" element={<ServiceTickets />} />
-            <Route path="/estimates" element={<Estimates />} />
+            <Route path="/service-desk/estimates" element={<Estimates />} />
             <Route path="/service-desk/customers" element={<Customers />} />
             <Route path="/service-desk/chargers" element={<AllChargers />} />
 
@@ -57,6 +57,7 @@ const App = () => (
           {/* Legacy redirects */}
           <Route path="/tickets" element={<Navigate to="/issues" replace />} />
           <Route path="/campaigns/reports" element={<Navigate to="/field-reports" replace />} />
+          <Route path="/estimates" element={<Navigate to="/service-desk/estimates" replace />} />
           <Route path="/missioncontrol" element={<ProtectedRoute><IssuesQueue /></ProtectedRoute>} />
           <Route path="/estimate-status" element={<EstimateStatus />} />
           <Route path="*" element={<NotFound />} />
