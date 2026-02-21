@@ -8,6 +8,7 @@ import {
   CheckCircle, Loader2, Circle, Shield, Clock,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
+import { useMemo } from "react";
 
 interface ParentTicketDetailProps {
   ticket: ServiceTicket;
@@ -33,7 +34,13 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
 };
 
 export function ParentTicketDetail({ ticket, onCollapse, onNavigateToChild }: ParentTicketDetailProps) {
-  const children = useServiceTicketsStore((s) => s.getChildrenOf(ticket.id));
+  const allTickets = useServiceTicketsStore((s) => s.tickets);
+  const children = useMemo(() => {
+    if (!ticket.childTicketIds) return [];
+    return ticket.childTicketIds
+      .map((cid) => allTickets.find((t) => t.id === cid))
+      .filter(Boolean) as ServiceTicket[];
+  }, [allTickets, ticket.childTicketIds]);
 
   const completedCount = children.filter((c) => c.status === "completed").length;
   const pendingCount = children.filter((c) => c.status === "pending_review").length;

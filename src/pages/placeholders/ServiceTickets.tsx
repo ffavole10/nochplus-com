@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Plus, Ticket, Search, ArrowUpDown, Crosshair, Diamond, UserPlus, Loader2, Eye, Camera, FileText, Wrench, Shield, Brain, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,7 +63,6 @@ function getHighestPriority(tickets: ServiceTicket[]): string {
 export default function ServiceTickets() {
   const tickets = useServiceTicketsStore((s) => s.tickets);
   const updateTicketInStore = useServiceTicketsStore((s) => s.updateTicket);
-  const getChildrenOf = useServiceTicketsStore((s) => s.getChildrenOf);
   const [formOpen, setFormOpen] = useState(false);
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null);
 
@@ -73,6 +72,15 @@ export default function ServiceTickets() {
   const [stageFilter, setStageFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"date" | "priority" | "status" | "customer">("date");
+
+  // Local helper to get children without store selector (avoids infinite loop)
+  const getChildrenOf = useCallback((parentId: string) => {
+    const parent = tickets.find((t) => t.id === parentId);
+    if (!parent?.childTicketIds) return [];
+    return parent.childTicketIds
+      .map((cid) => tickets.find((t) => t.id === cid))
+      .filter(Boolean) as ServiceTicket[];
+  }, [tickets]);
 
   // Display tickets: only parents and standalones (not children)
   const displayTickets = useMemo(() => {
