@@ -145,8 +145,9 @@ export function PlatformSidebar() {
   ];
 
   const nochPlusPages = [
-    { title: "Program Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard },
-    { title: "Subscriber Chargers", url: "/noch-plus/chargers", icon: HardDrive },
+    { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard },
+    { title: "Members", url: "/noch-plus/members", icon: Users },
+    { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive },
   ];
 
   const SectionHeader = ({
@@ -287,7 +288,7 @@ export function PlatformSidebar() {
         )}
 
         {/* ─── NOCH+ PROGRAM SECTION ─── */}
-        <SectionHeader label="NOCH+ PROGRAM" icon={Diamond} section="noch-plus" />
+        <SectionHeader label="NOCH+" icon={Diamond} section="noch-plus" />
         {expandedSection === "noch-plus" && (
           <div className="pl-1">
             <SidebarMenu className="px-1">
