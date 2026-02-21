@@ -37,9 +37,8 @@ const CHARGER_BRANDS: { value: ChargerBrand; label: string }[] = [
 ];
 
 const CHARGER_TYPES: { value: ChargerType; label: string }[] = [
-  { value: "L2", label: "Level 2" },
-  { value: "DCFC", label: "DCFC" },
-  { value: "HPCD", label: "HPCD" },
+  { value: "AC_L2", label: "AC | Level 2" },
+  { value: "DC_L3", label: "DC | Level 3" },
 ];
 
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB
