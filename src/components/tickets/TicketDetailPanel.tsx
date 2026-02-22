@@ -489,14 +489,20 @@ function WorkflowStepDetail({ ticket, stepNumber }: { ticket: ServiceTicket; ste
         </div>
       );
     case 3:
-      return ticket.estimateId ? (
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Estimate {ticket.estimateId} — ${ticket.estimateAmount?.toLocaleString()}</p>
-          <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
-            <Eye className="h-3 w-3" /> View Estimate
-          </Button>
-        </div>
-      ) : <p className="text-xs text-muted-foreground">Creating estimate...</p>;
+      if (ticket.estimateId) {
+        return (
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Estimate {ticket.estimateId} — ${ticket.estimateAmount?.toLocaleString()}</p>
+            <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
+              <Eye className="h-3 w-3" /> View Estimate
+            </Button>
+          </div>
+        );
+      }
+      if (ticket.currentStep > 3) {
+        return <p className="text-xs text-muted-foreground">Estimate created.</p>;
+      }
+      return <p className="text-xs text-muted-foreground">Creating estimate...</p>;
     case 4:
       return (
         <div className="space-y-1">
