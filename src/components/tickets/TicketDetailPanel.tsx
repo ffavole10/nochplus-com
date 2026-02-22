@@ -9,6 +9,7 @@ import { ServiceDispatchModal } from "@/components/tickets/ServiceDispatchModal"
 import { SWIPreviewDialog } from "@/components/tickets/SWIPreviewDialog";
 import { getSWIPublicUrl } from "@/lib/swiStorage";
 import { TicketCloseStep } from "@/components/tickets/TicketCloseStep";
+import { InlineEstimateEditor } from "@/components/tickets/InlineEstimateEditor";
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
   MapPin, Wrench, FileText, Send, Eye, ExternalLink, Download,
@@ -83,8 +84,8 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
         <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="customer">Customer</TabsTrigger>
           <TabsTrigger value="charger">Charger</TabsTrigger>
-          <TabsTrigger value="workflow">Workflow</TabsTrigger>
           <TabsTrigger value="estimate">Estimate</TabsTrigger>
+          <TabsTrigger value="workflow">Workflow</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
@@ -347,25 +348,7 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
 
         {/* Estimate */}
         <TabsContent value="estimate" className="mt-4">
-          {ticket.estimateId ? (
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">Estimate {ticket.estimateId}</span>
-                  <Badge className="bg-primary text-primary-foreground">${ticket.estimateAmount?.toLocaleString()}</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">Created {format(new Date(ticket.createdAt), "MMM d, yyyy")}</p>
-                <Button variant="outline" size="sm" className="gap-2 text-xs">
-                  <ExternalLink className="h-3.5 w-3.5" /> View Full Estimate
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="text-center py-6 text-muted-foreground">
-              <FileText className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-              <p className="text-xs">No estimate created yet</p>
-            </div>
-          )}
+          <InlineEstimateEditor ticket={ticket} />
         </TabsContent>
 
         {/* History */}
