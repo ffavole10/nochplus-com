@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,12 +12,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Plus, Trash2, Save, Send, GripVertical, AlertTriangle, CheckCircle, Loader2,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Plus, Trash2, Save, Send, GripVertical, AlertTriangle, CheckCircle, Loader2, RefreshCw, UserCheck,
 } from "lucide-react";
 import { ServiceTicket } from "@/types/serviceTicket";
 import { SWI_CATALOG } from "@/data/swiCatalog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -232,8 +244,20 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
   const [savedEstimateId, setSavedEstimateId] = useState<string | null>(null);
   const [newCategory, setNewCategory] = useState<EstimateLineItem["category"]>("labor");
   const [isSending, setIsSending] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [sentAt, setSentAt] = useState<string | null>(null);
+  const [approvalData, setApprovalData] = useState<{
+    method: "email" | "manual";
+    approvedBy?: string;
+    approvedAt?: string;
+    notes?: string;
+  } | null>(null);
+  const [manualApproveOpen, setManualApproveOpen] = useState(false);
+  const [approvalNotes, setApprovalNotes] = useState("");
 
-  const isReadOnly = status === "approved";
+  const updateTicket = useServiceTicketsStore((s) => s.updateTicket);
+
+  const isReadOnly = status === "approved" || status === "sent";
 
   /* Derived totals */
   const subtotal = useMemo(
@@ -410,8 +434,8 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
       if (data?.error) throw new Error(data.error);
 
       setStatus("sent");
+      setSentAt(new Date().toISOString());
       setSavedEstimateId(savedEstimate.id);
-      toast.success(`Estimate sent to ${customerEmail}`);
     } catch (err: any) {
       console.error("Send estimate error:", err);
       toast.error(`Failed to send: ${err.message || "Unknown error"}`);
@@ -434,23 +458,212 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
     );
   }
 
-  // Already sent
-  if (status === "sent") {
+  const handleResendEmail = async () => {
+    if (!savedEstimateId || !customerEmail) return;
+    setIsResending(true);
+    try {
+      const swiDoc = ticket.swiMatchData?.matched_swi_id
+        ? SWI_CATALOG.find(s => s.id === ticket.swiMatchData!.matched_swi_id)
+        : undefined;
+      const ccEmails = [
+        ...(accountManager ? [accountManager] : []),
+        ...additionalEmails.filter((e) => e.includes("@")),
+      ];
+      const { error } = await supabase.functions.invoke("send-estimate", {
+        body: {
+          to: customerEmail.trim(),
+          cc: ccEmails.length > 0 ? ccEmails : undefined,
+          estimateId: savedEstimateId,
+          ticketId: ticket.ticketId,
+          accountName: ticket.customer.company || "—",
+          chargerName: ticket.charger.serialNumber,
+          chargerType: ticket.charger.type === "DC_L3" ? "DC | Level 3" : "AC | Level 2",
+          location: ticket.charger.location || "—",
+          swiTitle: swiDoc?.title || ticket.swiMatchData?.matched_swi_id || "General Service",
+          lineItems: lineItems.map(li => ({ description: li.description, qty: li.qty, unit: li.unit, rate: li.rate, amount: li.amount, category: li.category })),
+          subtotal, tax, total, notes,
+        },
+      });
+      if (error) throw error;
+      const now = new Date().toISOString();
+      setSentAt(now);
+      await supabase.from("estimates").update({ sent_at: now }).eq("id", savedEstimateId);
+      toast.success(`Email resent to ${customerEmail}`);
+    } catch (err: any) {
+      toast.error(`Failed to resend: ${err.message}`);
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const handleManualApprove = async () => {
+    if (!savedEstimateId) return;
+    try {
+      const now = new Date().toISOString();
+      await supabase.from("estimates").update({ status: "approved", updated_at: now }).eq("id", savedEstimateId);
+
+      const approver = accountManager
+        ? ACCOUNT_MANAGERS.find(am => am.email === accountManager)?.name || accountManager
+        : "Account Manager";
+
+      setApprovalData({ method: "manual", approvedBy: approver, approvedAt: now, notes: approvalNotes || undefined });
+      setStatus("approved");
+      setManualApproveOpen(false);
+      setApprovalNotes("");
+
+      // Advance ticket workflow to step 6
+      updateTicket(ticket.id, {
+        currentStep: 6,
+        workflowSteps: ticket.workflowSteps.map(s => ({
+          ...s,
+          status: s.number <= 5 ? "complete" as const : s.number === 6 ? "in_progress" as const : s.status,
+          completedAt: s.number <= 5 && !s.completedAt ? now : s.completedAt,
+        })),
+      });
+
+      await supabase.from("notifications").insert({
+        title: "Estimate Manually Approved",
+        message: `Estimate for ticket #${ticket.ticketId} manually approved by ${approver}`,
+        type: "estimate_approved",
+        reference_id: savedEstimateId,
+      });
+
+      toast.success("Estimate manually approved — workflow advanced to Schedule Service");
+    } catch (err: any) {
+      toast.error(`Approval failed: ${err.message}`);
+    }
+  };
+
+  /* ---------------------------------------------------------------- */
+  /*  Render                                                           */
+  /* ---------------------------------------------------------------- */
+
+  // No assessment yet
+  if (!ticket.assessmentData) {
+    return (
+      <div className="text-center py-6 text-muted-foreground">
+        <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
+        <p className="text-xs">Assessment must be completed before creating an estimate.</p>
+      </div>
+    );
+  }
+
+  // Approved state
+  if (status === "approved") {
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-optimal font-medium">
-          <CheckCircle className="h-4 w-4" />
-          <span>Estimate sent to {customerEmail}</span>
+        <div className="flex items-center gap-2 text-sm font-medium text-optimal">
+          <CheckCircle className="h-5 w-5" />
+          <span>Estimate Approved</span>
         </div>
-        <div className="bg-muted/30 rounded-lg p-4 border border-border/50 space-y-2">
-          <div className="flex justify-between text-sm">
+        <div className="bg-optimal/5 border border-optimal/20 rounded-lg p-4 space-y-3">
+          {approvalData?.method === "manual" ? (
+            <>
+              <p className="text-sm text-foreground">✓ Manually approved by <span className="font-semibold">{approvalData.approvedBy}</span></p>
+              {approvalData.approvedAt && (
+                <p className="text-xs text-muted-foreground">Approved: {format(new Date(approvalData.approvedAt), "MMM d, yyyy 'at' h:mm a")}</p>
+              )}
+              {approvalData.notes && (
+                <p className="text-xs text-muted-foreground">Notes: "{approvalData.notes}"</p>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-foreground">✓ Approved by customer via email link</p>
+              {approvalData?.approvedAt && (
+                <p className="text-xs text-muted-foreground">Approved: {format(new Date(approvalData.approvedAt), "MMM d, yyyy 'at' h:mm a")}</p>
+              )}
+            </>
+          )}
+          <div className="border-t border-border pt-3 flex justify-between text-sm">
             <span className="text-muted-foreground">Total</span>
-            <span className="font-bold text-primary tabular-nums">
-              ${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </span>
+            <span className="font-bold text-primary tabular-nums">${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
           </div>
           <p className="text-xs text-muted-foreground">{lineItems.length} line items</p>
         </div>
+        <p className="text-xs text-optimal font-medium">→ Next step: Schedule Service</p>
+      </div>
+    );
+  }
+
+  // Sent — waiting for approval
+  if (status === "sent") {
+    return (
+      <div className="space-y-4">
+        {/* Step 4 complete */}
+        <div className="flex items-center gap-2 text-sm font-medium text-optimal">
+          <CheckCircle className="h-4 w-4" />
+          <span>4. Sent to Customer</span>
+        </div>
+        <div className="bg-muted/30 rounded-lg p-4 border border-border/50 space-y-3">
+          <p className="text-xs text-optimal flex items-center gap-1">
+            <CheckCircle className="h-3 w-3" /> Sent to: {customerEmail}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Sent: {sentAt ? format(new Date(sentAt), "MMM d, yyyy 'at' h:mm a") : "Just now"}
+          </p>
+          <div className="border-t border-border pt-3 flex justify-between text-sm">
+            <span className="text-muted-foreground">Total</span>
+            <span className="font-bold text-primary tabular-nums">${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">{lineItems.length} line items</p>
+        </div>
+
+        {/* Waiting badge */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-xs text-muted-foreground">Status:</span>
+          <Badge className="bg-medium/15 text-medium border-medium/30 animate-estimate-pulse">
+            Waiting on Approval
+          </Badge>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={handleResendEmail}
+            disabled={isResending}
+          >
+            {isResending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            {isResending ? "Resending..." : "Resend Email"}
+          </Button>
+          <Button
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => setManualApproveOpen(true)}
+          >
+            <UserCheck className="h-3.5 w-3.5" /> Approve Manually
+          </Button>
+        </div>
+
+        {/* Manual Approval Dialog */}
+        <AlertDialog open={manualApproveOpen} onOpenChange={setManualApproveOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Approve this estimate manually?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will mark the estimate as approved and advance the workflow to Schedule Service.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-2">
+              <label className="text-xs font-medium text-foreground block mb-1.5">
+                Approval notes (e.g., "Customer approved via phone call")
+              </label>
+              <Textarea
+                value={approvalNotes}
+                onChange={(e) => setApprovalNotes(e.target.value)}
+                placeholder="Customer approved via phone call…"
+                className="min-h-[80px] text-sm"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleManualApprove}>Confirm Manual Approval</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
