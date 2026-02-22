@@ -732,24 +732,17 @@ export default function SubmitAssessment() {
                         </div>
                         <div>
                           <Label className="text-xs">Is the charger working? *</Label>
-                          <Select value={charger.isWorking} onValueChange={v => updateCharger(charger.id, "isWorking", v)}>
-                            <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="yes">Yes</SelectItem>
-                              <SelectItem value="no">No</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="flex gap-2 mt-1">
+                            <Button type="button" size="sm" variant={charger.isWorking === "yes" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "isWorking", "yes")}>Yes</Button>
+                            <Button type="button" size="sm" variant={charger.isWorking === "no" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "isWorking", "no")}>No</Button>
+                          </div>
                         </div>
                         <div>
                           <Label className="text-xs">Is the charger under warranty? *</Label>
-                          <Select value={charger.underWarranty} onValueChange={v => updateCharger(charger.id, "underWarranty", v)}>
-                            <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="yes">Yes</SelectItem>
-                              <SelectItem value="no">No</SelectItem>
-                              <SelectItem value="unknown">I don't know</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="flex gap-2 mt-1">
+                            <Button type="button" size="sm" variant={charger.underWarranty === "yes" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "underWarranty", "yes")}>Yes</Button>
+                            <Button type="button" size="sm" variant={charger.underWarranty === "no" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "underWarranty", "no")}>No</Button>
+                          </div>
                         </div>
                         <div className="sm:col-span-2">
                           <Label className="text-xs">Known Issues</Label>
