@@ -457,9 +457,7 @@ export default function SubmitAssessment() {
         </div>
 
         {/* Footer with copyright and admin access */}
-        <div className="pb-6 flex justify-center items-center gap-3">
-          <span className="text-white/40 text-sm">© 2026 Noch Power. All rights reserved.</span>
-          <span className="text-white/30">|</span>
+        <div className="pb-6 flex flex-col items-center gap-2">
           <button
             onClick={() => navigate("/login")}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/10 transition-all text-sm"
@@ -468,6 +466,7 @@ export default function SubmitAssessment() {
             <Monitor className="h-4 w-4" />
             <span>Admin Access</span>
           </button>
+          <span className="text-white/40 text-sm">© 2026 Noch Power. All rights reserved.</span>
         </div>
       </div>
     );
