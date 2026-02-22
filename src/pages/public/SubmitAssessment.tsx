@@ -15,6 +15,7 @@ import {
   Plus, Trash2, Loader2, ArrowRight, X, Navigation,
   Users, Monitor, BadgePercent, Package, Wrench, Star, CreditCard, Shield
 } from "lucide-react";
+import evChargerBg from "@/assets/ev-charger-bg.png";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -386,7 +387,12 @@ export default function SubmitAssessment() {
   // ─── LANDING PAGE ───
   if (currentStep === "landing") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[hsl(170,40%,55%)] via-[hsl(170,35%,60%)] to-[hsl(175,30%,65%)] flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-[hsl(170,40%,55%)] via-[hsl(170,35%,60%)] to-[hsl(175,30%,65%)] flex flex-col relative">
+        <img
+          src={evChargerBg}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
+        />
         <header className="px-6 pt-8 pb-4">
           <div className="flex items-center gap-2 text-white">
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
