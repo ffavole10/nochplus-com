@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   CheckCircle2, Clock, Zap, Camera,
-  Plus, Trash2, Loader2, ArrowRight, X, Navigation,
+  Plus, Trash2, Loader2, ArrowRight, X, LocateFixed,
   Users, Monitor, BadgePercent, Package, Wrench, Star, CreditCard, Shield
 } from "lucide-react";
 import evChargerBg from "@/assets/ev-charger-bg.png";
@@ -636,7 +636,7 @@ export default function SubmitAssessment() {
                       disabled={locatingUser}
                       title="Use my current location"
                     >
-                      {locatingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+                      {locatingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
