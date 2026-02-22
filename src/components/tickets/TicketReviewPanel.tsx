@@ -168,10 +168,11 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
       );
 
       setProgressSteps(prev => prev.map(s => ({ ...s, status: "done" as const })));
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 800));
 
+      setIsProcessing(false);
       onApprove(ticket.id, result, notes.trim());
-      toast.success("Assessment complete");
+      toast.success("Assessment complete — opening estimate");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       setError(msg);
