@@ -13,7 +13,8 @@ import { toast } from "sonner";
 import {
   CheckCircle2, Clock, Zap, Camera,
   Plus, Trash2, Loader2, ArrowRight, X, LocateFixed,
-  Users, Monitor, BadgePercent, Package, Wrench, Star, CreditCard, Shield
+  Users, Monitor, BadgePercent, Package, Wrench, Star, CreditCard, Shield,
+  Hash, ImagePlus
 } from "lucide-react";
 import evChargerBg from "@/assets/ev-charger-bg.png";
 
@@ -27,6 +28,12 @@ const US_STATES = [
 const CHARGER_BRANDS = ["BTC", "ABB", "Delta", "Tritium", "Signet", "ChargePoint", "Other"];
 const CHARGER_TYPES = ["AC | Level 2", "DC | Level 3"];
 
+interface ChargerPhoto {
+  file: File;
+  previewUrl: string;
+  label: "front_view" | "serial_number" | "additional";
+}
+
 interface ChargerEntry {
   id: string;
   brand: string;
@@ -34,8 +41,7 @@ interface ChargerEntry {
   chargerType: string;
   installationLocation: string;
   knownIssues: string;
-  photos: File[];
-  photoPreviewUrls: string[];
+  photos: ChargerPhoto[];
 }
 
 const createEmptyCharger = (): ChargerEntry => ({
@@ -46,7 +52,6 @@ const createEmptyCharger = (): ChargerEntry => ({
   installationLocation: "",
   knownIssues: "",
   photos: [],
-  photoPreviewUrls: [],
 });
 
 type FormStep = "landing" | "step1" | "step2" | "membership" | "step3";
@@ -120,24 +125,28 @@ export default function SubmitAssessment() {
     setChargers(prev => prev.filter(c => c.id !== id));
   };
 
-  const handlePhotoUpload = (chargerId: string, files: FileList | null) => {
+  const handlePhotoUpload = (chargerId: string, files: FileList | null, label: ChargerPhoto["label"]) => {
     if (!files) return;
     const fileArr = Array.from(files).filter(f => f.size <= 5 * 1024 * 1024 && f.type.startsWith("image/"));
     if (fileArr.length === 0) { toast.error("Invalid file. Max 5MB, images only."); return; }
     setChargers(prev => prev.map(c => {
       if (c.id !== chargerId) return c;
-      const newPhotos = [...c.photos, ...fileArr];
-      const newPreviews = [...c.photoPreviewUrls, ...fileArr.map(f => URL.createObjectURL(f))];
-      return { ...c, photos: newPhotos, photoPreviewUrls: newPreviews };
+      if (c.photos.length + fileArr.length > 6) {
+        toast.error("Maximum 6 photos per charger.");
+        return c;
+      }
+      const newPhotos: ChargerPhoto[] = fileArr.map(f => ({ file: f, previewUrl: URL.createObjectURL(f), label }));
+      return { ...c, photos: [...c.photos, ...newPhotos] };
     }));
   };
 
   const removePhoto = (chargerId: string, index: number) => {
     setChargers(prev => prev.map(c => {
       if (c.id !== chargerId) return c;
-      const photos = [...c.photos]; photos.splice(index, 1);
-      const previews = [...c.photoPreviewUrls]; URL.revokeObjectURL(previews[index]); previews.splice(index, 1);
-      return { ...c, photos, photoPreviewUrls: previews };
+      const photos = [...c.photos];
+      URL.revokeObjectURL(photos[index].previewUrl);
+      photos.splice(index, 1);
+      return { ...c, photos };
     }));
   };
 
@@ -340,11 +349,11 @@ export default function SubmitAssessment() {
         const photoUrls: string[] = [];
 
         for (const photo of charger.photos) {
-          const ext = photo.name.split(".").pop();
+          const ext = photo.file.name.split(".").pop();
           const path = `${submission.id}/${charger.id}/${crypto.randomUUID()}.${ext}`;
           const { error: uploadErr } = await supabase.storage
             .from("submission-photos")
-            .upload(path, photo);
+            .upload(path, photo.file);
           if (!uploadErr) {
             const { data: urlData } = supabase.storage.from("submission-photos").getPublicUrl(path);
             photoUrls.push(urlData.publicUrl);
@@ -722,21 +731,43 @@ export default function SubmitAssessment() {
                           <Textarea value={charger.knownIssues} onChange={e => updateCharger(charger.id, "knownIssues", e.target.value)} placeholder="Any problems or concerns?" rows={2} className="text-sm" />
                         </div>
                         <div className="sm:col-span-2">
-                          <Label className="text-xs">Photos (optional)</Label>
+                          <Label className="text-xs">Photos (optional, up to 6)</Label>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {charger.photoPreviewUrls.map((url, pi) => (
+                            {/* Existing photos */}
+                            {charger.photos.map((photo, pi) => (
                               <div key={pi} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
-                                <img src={url} alt="" className="w-full h-full object-cover" />
+                                <img src={photo.previewUrl} alt={photo.label} className="w-full h-full object-cover" />
+                                <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] text-center py-0.5 truncate">
+                                  {photo.label === "front_view" ? "Front" : photo.label === "serial_number" ? "Serial #" : "Photo"}
+                                </span>
                                 <button onClick={() => removePhoto(charger.id, pi)} className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <X className="h-3 w-3" />
                                 </button>
                               </div>
                             ))}
-                            <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
-                              <Camera className="h-5 w-5 text-muted-foreground" />
-                              <span className="text-[10px] text-muted-foreground mt-0.5">Add Photo</span>
-                              <input type="file" accept="image/*" multiple className="hidden" onChange={e => handlePhotoUpload(charger.id, e.target.files)} />
-                            </label>
+
+                            {/* Prompt slots: Front View, Serial #, then Add More */}
+                            {!charger.photos.some(p => p.label === "front_view") && charger.photos.length < 6 && (
+                              <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                                <Camera className="h-5 w-5 text-muted-foreground" />
+                                <span className="text-[9px] text-muted-foreground mt-0.5 text-center leading-tight">Front View</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={e => handlePhotoUpload(charger.id, e.target.files, "front_view")} />
+                              </label>
+                            )}
+                            {!charger.photos.some(p => p.label === "serial_number") && charger.photos.length < 6 && (
+                              <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                                <Hash className="h-5 w-5 text-muted-foreground" />
+                                <span className="text-[9px] text-muted-foreground mt-0.5 text-center leading-tight">Serial #</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={e => handlePhotoUpload(charger.id, e.target.files, "serial_number")} />
+                              </label>
+                            )}
+                            {charger.photos.length > 0 && charger.photos.length < 6 && (
+                              <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                                <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                                <span className="text-[9px] text-muted-foreground mt-0.5 text-center leading-tight">Add More</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={e => handlePhotoUpload(charger.id, e.target.files, "additional")} />
+                              </label>
+                            )}
                           </div>
                         </div>
                       </div>
