@@ -5,7 +5,7 @@ import {
   AlertTriangle, ChevronDown, ChevronRight,
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus,
-  Filter, Crosshair,
+  Filter, Crosshair, Home,
 } from "lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
@@ -423,8 +423,8 @@ export function PlatformSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
-        {hasRole("super_admin") && (
-          <SidebarMenu>
+        <SidebarMenu>
+          {hasRole("super_admin") && (
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <NavLink
@@ -437,8 +437,19 @@ export function PlatformSidebar() {
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
-        )}
+          )}
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <a
+                href="/"
+                className="flex items-center gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
+              >
+                <Home className="mr-2 h-4 w-4" />
+                <span>Home Page</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
 
       <NewCampaignModal
