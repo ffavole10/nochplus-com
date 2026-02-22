@@ -24,6 +24,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/service-desk/chargers": "All Chargers",
   "/noch-plus/dashboard": "Noch+ Dashboard",
   "/noch-plus/chargers": "Subscriber Chargers",
+  "/noch-plus/assessments": "Assessments",
 };
 
 export function PlatformHeader() {
