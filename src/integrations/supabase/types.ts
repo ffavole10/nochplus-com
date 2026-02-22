@@ -217,6 +217,50 @@ export type Database = {
           },
         ]
       }
+      charger_submissions: {
+        Row: {
+          brand: string
+          charger_type: string
+          created_at: string
+          id: string
+          installation_location: string | null
+          known_issues: string | null
+          photo_urls: string[] | null
+          serial_number: string | null
+          submission_id: string
+        }
+        Insert: {
+          brand: string
+          charger_type: string
+          created_at?: string
+          id?: string
+          installation_location?: string | null
+          known_issues?: string | null
+          photo_urls?: string[] | null
+          serial_number?: string | null
+          submission_id: string
+        }
+        Update: {
+          brand?: string
+          charger_type?: string
+          created_at?: string
+          id?: string
+          installation_location?: string | null
+          known_issues?: string | null
+          photo_urls?: string[] | null
+          serial_number?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charger_submissions_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estimates: {
         Row: {
           account_manager: string | null
@@ -382,6 +426,72 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      submissions: {
+        Row: {
+          assessment_needs: string[] | null
+          city: string
+          company_name: string
+          created_at: string
+          customer_notes: string | null
+          email: string
+          full_name: string
+          id: string
+          noch_plus_member: boolean
+          phone: string
+          referral_source: string | null
+          service_urgency: string | null
+          staff_notes: string | null
+          state: string
+          status: string
+          street_address: string
+          submission_id: string
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          assessment_needs?: string[] | null
+          city: string
+          company_name: string
+          created_at?: string
+          customer_notes?: string | null
+          email: string
+          full_name: string
+          id?: string
+          noch_plus_member?: boolean
+          phone: string
+          referral_source?: string | null
+          service_urgency?: string | null
+          staff_notes?: string | null
+          state: string
+          status?: string
+          street_address: string
+          submission_id: string
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          assessment_needs?: string[] | null
+          city?: string
+          company_name?: string
+          created_at?: string
+          customer_notes?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          noch_plus_member?: boolean
+          phone?: string
+          referral_source?: string | null
+          service_urgency?: string | null
+          staff_notes?: string | null
+          state?: string
+          status?: string
+          street_address?: string
+          submission_id?: string
+          updated_at?: string
+          zip_code?: string
         }
         Relationships: []
       }
