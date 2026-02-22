@@ -169,17 +169,17 @@ export function PlatformSidebar() {
           "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all",
           "border",
           isOpen
-            ? "bg-primary/15 text-primary border-primary/30 shadow-sm"
+            ? "bg-primary text-primary-foreground border-primary shadow-sm"
             : "bg-sidebar-accent/30 text-sidebar-foreground/80 border-sidebar-border/40 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
         )}
       >
         <div className="flex items-center gap-2.5">
-          <Icon className={cn("h-4 w-4", isOpen && "text-primary")} />
+          <Icon className={cn("h-4 w-4", isOpen && "text-primary-foreground")} />
           <span>{label}</span>
         </div>
         <span className={cn(
           "text-xs font-mono",
-          isOpen ? "text-primary" : "text-sidebar-foreground/50"
+          isOpen ? "text-primary-foreground" : "text-sidebar-foreground/50"
         )}>
           {isOpen ? "−" : "+"}
         </span>
