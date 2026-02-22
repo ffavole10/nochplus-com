@@ -220,7 +220,7 @@ export type Database = {
       estimates: {
         Row: {
           account_manager: string | null
-          campaign_id: string
+          campaign_id: string | null
           charger_record_id: string | null
           created_at: string
           customer_email: string | null
@@ -240,7 +240,7 @@ export type Database = {
         }
         Insert: {
           account_manager?: string | null
-          campaign_id: string
+          campaign_id?: string | null
           charger_record_id?: string | null
           created_at?: string
           customer_email?: string | null
@@ -260,7 +260,7 @@ export type Database = {
         }
         Update: {
           account_manager?: string | null
-          campaign_id?: string
+          campaign_id?: string | null
           charger_record_id?: string | null
           created_at?: string
           customer_email?: string | null

@@ -309,7 +309,7 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
   const handleSaveDraft = async () => {
     try {
       const payload = {
-        campaign_id: campaignId || "00000000-0000-0000-0000-000000000000",
+        campaign_id: campaignId || null,
         ticket_id: ticket.ticketId || null,
         station_id: null,
         site_name: ticket.customer.company || null,
@@ -375,7 +375,7 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
       const { data: savedEstimate, error: saveErr } = await supabase
         .from("estimates")
         .insert({
-          campaign_id: campaignId || "00000000-0000-0000-0000-000000000000",
+          campaign_id: campaignId || null,
           ticket_id: ticket.ticketId || null,
           station_id: null,
           site_name: ticket.customer.company || null,
