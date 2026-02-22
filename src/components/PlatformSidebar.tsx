@@ -166,16 +166,21 @@ export function PlatformSidebar() {
       <button
         onClick={() => toggleSection(section)}
         className={cn(
-          "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-semibold transition-colors",
-          "text-sidebar-foreground/90 hover:bg-sidebar-accent/60",
-          isOpen && "bg-sidebar-accent/40"
+          "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all",
+          "border",
+          isOpen
+            ? "bg-primary/15 text-primary border-primary/30 shadow-sm"
+            : "bg-sidebar-accent/30 text-sidebar-foreground/80 border-sidebar-border/40 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
         )}
       >
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4" />
+        <div className="flex items-center gap-2.5">
+          <Icon className={cn("h-4 w-4", isOpen && "text-primary")} />
           <span>{label}</span>
         </div>
-        <span className="text-xs font-mono text-sidebar-foreground/60">
+        <span className={cn(
+          "text-xs font-mono",
+          isOpen ? "text-primary" : "text-sidebar-foreground/50"
+        )}>
           {isOpen ? "−" : "+"}
         </span>
       </button>
