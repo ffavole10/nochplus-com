@@ -99,7 +99,7 @@ export default function NochPlusAssessments() {
 
   // Only tickets with assessmentData
   const assessedTickets = useMemo(() =>
-    tickets.filter(t => t.assessmentData && !t.isParent),
+    tickets.filter(t => t.assessmentData),
     [tickets]
   );
 
@@ -238,8 +238,7 @@ export default function NochPlusAssessments() {
     <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Assessment Reports</h1>
-        <p className="text-sm text-muted-foreground mt-1">Browse, preview, and send assessment reports to customers</p>
+        <h1 className="text-2xl font-bold text-foreground">Dashboard for Assessments</h1>
       </div>
 
       {/* KPI Cards */}
