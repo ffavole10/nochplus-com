@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ServiceTicket } from "@/types/serviceTicket";
-import { downloadAssessmentReport, getAssessmentReportBlob } from "@/lib/assessmentReportPdf";
+import { downloadAssessmentReport, getAssessmentReportBlob, getAssessmentReportDataUri } from "@/lib/assessmentReportPdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Download, Eye, Send, Loader2, FileText } from "lucide-react";
@@ -21,17 +21,13 @@ export function AssessmentReportActions({ ticket }: AssessmentReportActionsProps
   const [sending, setSending] = useState(false);
 
   const handlePreview = () => {
-    const blob = getAssessmentReportBlob(ticket);
-    const url = URL.createObjectURL(blob);
-    setPreviewUrl(url);
+    const dataUri = getAssessmentReportDataUri(ticket);
+    setPreviewUrl(dataUri);
     setPreviewOpen(true);
   };
 
   const handleClosePreview = (open: boolean) => {
-    if (!open && previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
+    if (!open) setPreviewUrl(null);
     setPreviewOpen(open);
   };
 
