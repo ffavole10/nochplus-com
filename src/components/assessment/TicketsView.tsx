@@ -3,13 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, Brain, ThumbsUp, ThumbsDown, ExternalLink } from "lucide-react";
+import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, ExternalLink, PauseCircle } from "lucide-react";
 import { AssessmentCharger, TicketPriority } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
-import { useSWIMatching } from "@/hooks/useSWIMatching";
-import { SWIAttachment } from "@/components/assessment/SWIAttachment";
-import { DispatchButton, EstimateStatus } from "@/components/tickets/DispatchButton";
 import { TicketsEmptyState } from "@/components/empty-states/TicketsEmptyState";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -82,17 +79,11 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("open");
   const [stateFilter, setStateFilter] = useState<string>("all");
-  const [swiFilter, setSwiFilter] = useState<string>("all");
-  const [estimateFilter, setEstimateFilter] = useState<string>("all");
-  const [dispatchFilter, setDispatchFilter] = useState<string>("all");
   const [amFilter, setAmFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [reviewFilter, setReviewFilter] = useState<string>("all");
   const [reviewStatuses, setReviewStatuses] = useState<Record<string, "pending" | "approved" | "rejected">>(() => {
     try { const s = localStorage.getItem("ticket-review-statuses"); return s ? JSON.parse(s) : {}; } catch { return {}; }
-  });
-  const [estimateStatuses, setEstimateStatuses] = useState<Record<string, "none" | "draft" | "sent" | "approved">>(() => {
-    try { const s = localStorage.getItem("ticket-estimate-statuses"); return s ? JSON.parse(s) : {}; } catch { return {}; }
   });
   const [accountManagers, setAccountManagers] = useState<Record<string, string>>(() => {
     try { const s = localStorage.getItem("ticket-account-managers"); return s ? JSON.parse(s) : {}; } catch { return {}; }
@@ -102,15 +93,11 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
   const [createdTicketIds, setCreatedTicketIds] = useState<Record<string, string>>(() => {
     try { const s = localStorage.getItem("ticket-created-ids"); return s ? JSON.parse(s) : {}; } catch { return {}; }
   });
-  const { matchTicket, matchBatch, getSWIMatch, getSWIMatches, isMatching, getError, clearMatch, addManualMatch, removeMatch, batchProgress } = useSWIMatching();
+  
 
   useEffect(() => {
     localStorage.setItem("ticket-review-statuses", JSON.stringify(reviewStatuses));
   }, [reviewStatuses]);
-
-  useEffect(() => {
-    localStorage.setItem("ticket-estimate-statuses", JSON.stringify(estimateStatuses));
-  }, [estimateStatuses]);
 
   useEffect(() => {
     localStorage.setItem("ticket-account-managers", JSON.stringify(accountManagers));
@@ -172,34 +159,10 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
   const filtered = useMemo(() => {
     let result = ticketChargers;
     if (statusFilter === "open") result = result.filter(t => t.charger.hasOpenTicket);
-    else if (statusFilter === "in_progress") result = result.filter(t => {
-      const hasSWI = !!getSWIMatch(t.charger.id);
-      const hasEst = (estimateStatuses[t.charger.id] || "none") !== "none";
-      return t.charger.hasOpenTicket && (hasSWI || hasEst);
-    });
     else if (statusFilter === "solved") result = result.filter(t => !!t.charger.ticketSolvedDate);
     if (priorityFilter !== "all") result = result.filter(t => t.ticketPriority === priorityFilter);
     if (typeFilter !== "all") result = result.filter(t => t.charger.assetRecordType === typeFilter);
     if (stateFilter !== "all") result = result.filter(t => t.charger.state === stateFilter);
-    if (swiFilter !== "all") {
-      result = result.filter(t => {
-        const hasSWI = !!getSWIMatch(t.charger.id);
-        return swiFilter === "matched" ? hasSWI : !hasSWI;
-      });
-    }
-    if (estimateFilter !== "all") {
-      result = result.filter(t => {
-        const estStatus = estimateStatuses[t.charger.id] || "none";
-        return estimateFilter === estStatus;
-      });
-    }
-    if (dispatchFilter !== "all") {
-      // Currently dispatch is always false, but filter infrastructure is ready
-      result = result.filter(t => {
-        const dispatched = false; // placeholder
-        return dispatchFilter === "dispatched" ? dispatched : !dispatched;
-      });
-    }
     if (amFilter !== "all") {
       result = result.filter(t => accountManagers[t.charger.id] === amFilter);
     }
@@ -219,26 +182,20 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
       });
     }
     return result;
-  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, typeFilter, swiFilter, estimateFilter, dispatchFilter, amFilter, reviewFilter, getSWIMatch, estimateStatuses, accountManagers, reviewStatuses]);
+  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, typeFilter, amFilter, reviewFilter, accountManagers, reviewStatuses]);
 
   const stats = useMemo(() => {
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
-    const inProgress = open.filter(t => {
-      const hasSWI = !!getSWIMatch(t.charger.id);
-      const hasEst = (estimateStatuses[t.charger.id] || "none") !== "none";
-      return hasSWI || hasEst;
-    });
     return {
       total: ticketChargers.length,
       open: open.length,
-      inProgress: inProgress.length,
       solved: ticketChargers.length - open.length,
       p1: open.filter(t => t.ticketPriority === "P1-Critical").length,
       p2: open.filter(t => t.ticketPriority === "P2-High").length,
       p3: open.filter(t => t.ticketPriority === "P3-Medium").length,
       p4: open.filter(t => t.ticketPriority === "P4-Low").length,
     };
-  }, [ticketChargers, getSWIMatch, estimateStatuses]);
+  }, [ticketChargers]);
 
   return (
     <div className="space-y-6 p-6">
@@ -248,12 +205,6 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
           <CardContent className="p-4 text-center">
             <p className="text-sm text-muted-foreground">Open Tickets</p>
             <p className="text-2xl font-bold text-critical">{stats.open}</p>
-          </CardContent>
-        </Card>
-        <Card className="metric-card border-l-4 border-l-secondary">
-          <CardContent className="p-4 text-center">
-            <p className="text-sm text-muted-foreground">In Progress</p>
-            <p className="text-2xl font-bold text-secondary">{stats.inProgress}</p>
           </CardContent>
         </Card>
         <Card className="metric-card border-l-4 border-l-optimal">
@@ -300,24 +251,6 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
           </TabsList>
         </Tabs>
 
-        {/* Match All SWIs */}
-        <button
-          onClick={() => matchBatch(filtered.map(t => t.charger))}
-          disabled={batchProgress.isRunning}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all shadow-md font-medium flex items-center gap-2 text-sm"
-        >
-          {batchProgress.isRunning ? (
-            <>
-              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-              <span>Matching {batchProgress.current}/{batchProgress.total}...</span>
-            </>
-          ) : (
-            <>
-              <Brain className="h-4 w-4" />
-              <span>Match All SWIs</span>
-            </>
-          )}
-        </button>
       </div>
 
       {/* Ticket List */}
@@ -343,8 +276,8 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
                         <Badge className={config.bg}>{config.label}</Badge>
                         <span className="font-semibold text-foreground truncate">{charger.assetName}</span>
                         {charger.hasOpenTicket ? (
-                          <Badge className="bg-critical text-critical-foreground animate-pulse gap-1">
-                            <AlertTriangle className="h-3 w-3" /> Open
+                          <Badge className="bg-degraded/15 text-degraded border border-degraded/30 gap-1">
+                            <PauseCircle className="h-3 w-3" /> Needs Review
                           </Badge>
                         ) : (
                           <Badge className="bg-optimal text-optimal-foreground gap-1">
@@ -363,43 +296,11 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
                         {reviewStatuses[charger.id] === "rejected" && (
                           <Badge className="bg-muted text-muted-foreground gap-1">Rejected</Badge>
                         )}
-                        {/* Milestone tracker */}
-                        <div className="flex items-center gap-1 ml-1">
-                          {(() => {
-                            const hasSWI = !!getSWIMatch(charger.id);
-                            const estStatus = estimateStatuses[charger.id] || "none";
-                            const hasDispatch = false;
-
-                            // E milestone: blue for draft, yellow for sent, green for approved
-                            const eColor = estStatus === "approved"
-                              ? "bg-optimal text-optimal-foreground border-optimal"
-                              : estStatus === "sent"
-                                ? "bg-medium text-medium-foreground border-medium"
-                                : estStatus === "draft"
-                                  ? "bg-secondary text-secondary-foreground border-secondary"
-                                  : "bg-muted text-muted-foreground border-border";
-
-                            const milestones = [
-                              { label: "S", className: hasSWI ? "bg-optimal text-optimal-foreground border-optimal" : "bg-muted text-muted-foreground border-border" },
-                              { label: "E", className: eColor },
-                              { label: "D", className: hasDispatch ? "bg-optimal text-optimal-foreground border-optimal" : "bg-muted text-muted-foreground border-border" },
-                            ];
-                            return milestones.map((m) => (
-                              <span
-                                key={m.label}
-                                title={m.label === "S" ? "SWI" : m.label === "E" ? "Estimate" : "Dispatch"}
-                                className={`inline-flex items-center justify-center rounded-full text-[9px] font-bold w-5 h-5 border ${m.className}`}
-                              >
-                                {m.label}
-                              </span>
-                            ));
-                          })()}
-                          {accountManagers[charger.id] && (
-                            <span className="text-xs text-muted-foreground font-medium ml-1 truncate max-w-[120px]">
-                              {accountManagers[charger.id]}
-                            </span>
-                          )}
-                        </div>
+                        {accountManagers[charger.id] && (
+                          <span className="text-xs text-muted-foreground font-medium ml-1 truncate max-w-[120px]">
+                            {accountManagers[charger.id]}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground flex-wrap">
                         {charger.ticketSubject && <span className="truncate max-w-xs">{charger.ticketSubject}</span>}
@@ -450,28 +351,6 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
                           <p className="text-muted-foreground text-xs">Reporting Source</p>
                           <p className="font-medium">{charger.ticketReportingSource || "—"}</p>
                         </div>
-                      </div>
-                      <div className="mt-3">
-                        <SWIAttachment
-                          ticket={charger}
-                          swiMatches={getSWIMatches(charger.id)}
-                          isMatching={isMatching(charger.id)}
-                          error={getError(charger.id)}
-                          onMatch={matchTicket}
-                          onRemove={removeMatch}
-                          onAddManual={addManualMatch}
-                        />
-                        {(() => {
-                          const swiMatch = getSWIMatch(charger.id);
-                          return swiMatch && swiMatch.confidence >= 70 ? (
-                            <DispatchButton
-                              ticket={charger}
-                              swiMatch={swiMatch}
-                              onEstimateStatusChange={(s) => setEstimateStatuses(prev => ({ ...prev, [charger.id]: s }))}
-                              onAccountManagerChange={(name) => setAccountManagers(prev => ({ ...prev, [charger.id]: name }))}
-                            />
-                          ) : null;
-                        })()}
                       </div>
 
                       {/* Approve / Reject Actions */}
