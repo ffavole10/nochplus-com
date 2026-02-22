@@ -42,6 +42,8 @@ interface ChargerEntry {
   installationLocation: string;
   knownIssues: string;
   photos: ChargerPhoto[];
+  isWorking: string;
+  underWarranty: string;
 }
 
 const createEmptyCharger = (): ChargerEntry => ({
@@ -52,6 +54,8 @@ const createEmptyCharger = (): ChargerEntry => ({
   installationLocation: "",
   knownIssues: "",
   photos: [],
+  isWorking: "",
+  underWarranty: "",
 });
 
 type FormStep = "landing" | "step1" | "step2" | "membership" | "step3";
@@ -723,8 +727,29 @@ export default function SubmitAssessment() {
                           <Input value={charger.serialNumber} onChange={e => updateCharger(charger.id, "serialNumber", e.target.value)} placeholder="If visible on charger" className="text-sm" />
                         </div>
                         <div>
-                          <Label className="text-xs">Location on Site</Label>
-                          <Input value={charger.installationLocation} onChange={e => updateCharger(charger.id, "installationLocation", e.target.value)} placeholder="e.g., Parking Garage Level 2" className="text-sm" />
+                          <Label className="text-xs">Company Name</Label>
+                          <Input value={charger.installationLocation} onChange={e => updateCharger(charger.id, "installationLocation", e.target.value)} placeholder="e.g., Acme Corp" className="text-sm" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Is the charger working? *</Label>
+                          <Select value={charger.isWorking} onValueChange={v => updateCharger(charger.id, "isWorking", v)}>
+                            <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="yes">Yes</SelectItem>
+                              <SelectItem value="no">No</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Is the charger under warranty? *</Label>
+                          <Select value={charger.underWarranty} onValueChange={v => updateCharger(charger.id, "underWarranty", v)}>
+                            <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="yes">Yes</SelectItem>
+                              <SelectItem value="no">No</SelectItem>
+                              <SelectItem value="unknown">I don't know</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="sm:col-span-2">
                           <Label className="text-xs">Known Issues</Label>
@@ -761,7 +786,7 @@ export default function SubmitAssessment() {
                                 <input type="file" accept="image/*" className="hidden" onChange={e => handlePhotoUpload(charger.id, e.target.files, "serial_number")} />
                               </label>
                             )}
-                            {charger.photos.length > 0 && charger.photos.length < 6 && (
+                            {charger.photos.length < 6 && (
                               <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
                                 <ImagePlus className="h-5 w-5 text-muted-foreground" />
                                 <span className="text-[9px] text-muted-foreground mt-0.5 text-center leading-tight">Add More</span>
