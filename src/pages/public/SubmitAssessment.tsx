@@ -442,8 +442,10 @@ export default function SubmitAssessment() {
           </div>
         </div>
 
-        {/* Admin access */}
-        <div className="pb-6 flex justify-center">
+        {/* Footer with copyright and admin access */}
+        <div className="pb-6 flex justify-center items-center gap-3">
+          <span className="text-white/40 text-sm">© 2026 Noch Power. All rights reserved.</span>
+          <span className="text-white/30">|</span>
           <button
             onClick={() => navigate("/login")}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/10 transition-all text-sm"
@@ -598,26 +600,8 @@ export default function SubmitAssessment() {
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</span>
-                Your Location & Contact
+                Your Information
               </h3>
-
-              <Button
-                variant="outline"
-                className="w-full mb-4 gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={useCurrentLocation}
-                disabled={locatingUser}
-              >
-                {locatingUser ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Detecting location...</>
-                ) : (
-                  <><Navigation className="h-4 w-4" /> Use My Current Location</>
-                )}
-              </Button>
-
-              <div className="relative mb-4">
-                <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">or enter manually</span></div>
-              </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -642,7 +626,19 @@ export default function SubmitAssessment() {
                 </div>
                 <div className="sm:col-span-2">
                   <Label>Street Address</Label>
-                  <Input value={streetAddress} onChange={e => setStreetAddress(e.target.value)} placeholder="123 Main St (optional)" />
+                  <div className="flex gap-2">
+                    <Input className="flex-1" value={streetAddress} onChange={e => setStreetAddress(e.target.value)} placeholder="123 Main St (optional)" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0 border-primary/30 text-primary hover:bg-primary/5"
+                      onClick={useCurrentLocation}
+                      disabled={locatingUser}
+                      title="Use my current location"
+                    >
+                      {locatingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
                 <div>
                   <Label>City *</Label>
