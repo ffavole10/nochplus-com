@@ -31,7 +31,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col" style={{
-      background: "linear-gradient(155deg, #FF8E53 0%, #FF9B6B 20%, #25b3a5 50%, #20a89a 75%, #1a8a7e 100%)"
+      background: "linear-gradient(180deg, #FF8E53 0%, #FFB088 20%, #FFC4A3 40%, #A8D5CE 60%, #25b3a5 80%, #1a8a7e 100%)"
     }}>
       {/* Floating shapes */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -44,25 +44,15 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         <div className="absolute w-[180px] h-[180px] rounded-full backdrop-blur-3xl bg-white/[0.04] top-[15%] left-[60%] animate-float-reverse" />
       </div>
 
-      {/* Skip button */}
-      <div className={`absolute top-6 right-6 z-20 transition-all duration-700 ${stage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}`}>
-        <button
-          onClick={onStart}
-          className="px-5 py-2 rounded-full bg-white/10 backdrop-blur-md text-white/70 text-sm font-medium hover:bg-white/20 hover:text-white transition-all"
-          aria-label="Skip to form"
-        >
-          Skip
-        </button>
-      </div>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10">
         {/* Headline */}
         <div className={`text-center mb-2 transition-all duration-1000 ease-out ${stage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-wide leading-none">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white/50 tracking-wide leading-none">
             PEACE OF
           </h1>
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-wide leading-none">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white/50 tracking-wide leading-none">
             MIND
           </h1>
         </div>
@@ -77,65 +67,56 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         {/* Hero image with arc */}
         <div className={`relative mb-8 transition-all duration-1000 ease-out ${stage >= 3 ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}>
           <div className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72">
-            {/* Animated arc SVG */}
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 280 280" fill="none">
-              <defs>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              {/* Arc path */}
-              <path
-                d="M 60 220 Q 30 140, 100 80 Q 170 20, 240 100"
-                stroke="white"
-                strokeWidth="2"
-                fill="none"
-                opacity="0.5"
-                filter="url(#glow)"
-                className={stage >= 4 ? "animate-draw-arc" : ""}
-                strokeDasharray="400"
-                strokeDashoffset={stage >= 4 ? "0" : "400"}
-                style={{ transition: "stroke-dashoffset 1.5s ease-out" }}
-              />
-              {/* Traveling dot */}
-              {stage >= 4 && (
-                <circle r="4" fill="white" filter="url(#glow)">
-                  <animateMotion
-                    dur="4s"
-                    repeatCount="indefinite"
-                    path="M 60 220 Q 30 140, 100 80 Q 170 20, 240 100"
-                  />
-                </circle>
-              )}
-              {/* Time labels */}
-              <text x="50" y="235" fill="white" fontSize="12" fontFamily="monospace" opacity={stage >= 5 ? 0.7 : 0} style={{ transition: "opacity 0.5s" }}>02:53</text>
-              <text x="215" y="90" fill="white" fontSize="12" fontFamily="monospace" opacity={stage >= 5 ? 0.7 : 0} style={{ transition: "opacity 0.5s" }}>&lt; 07:45</text>
-            </svg>
-            {/* Person image */}
+            {/* Person image with bottom fade */}
             <img
               src={heroPerson}
               alt="Happy customer"
               className="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)] object-cover object-top rounded-full animate-hero-float"
               loading="eager"
+              style={{
+                WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0.8) 75%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0) 100%)",
+                maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0.8) 75%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0) 100%)",
+              }}
             />
           </div>
         </div>
 
         {/* Value proposition */}
-        <div className={`text-center mb-10 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-          <p className="text-white text-xl sm:text-2xl md:text-3xl font-semibold leading-relaxed">
-            3 simple steps
+        <div className={`text-center mb-6 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+          <p className="text-white text-xl sm:text-2xl md:text-3xl font-extralight leading-relaxed">
+            Fast. Simple. Reliable.
           </p>
-          <p className="text-white/80 text-lg sm:text-xl md:text-2xl">
-            in less than <span className="font-bold text-white">2 minutes</span>
+          <p className="text-white/80 text-lg sm:text-xl md:text-2xl font-extralight">
+            Your peace of mind
           </p>
-          <p className="text-white text-xl sm:text-2xl md:text-3xl font-semibold">
-            you're done!
+          <p className="text-white text-xl sm:text-2xl md:text-3xl font-extralight">
+            is just <span className="font-light text-white">2 minutes</span> away
           </p>
+        </div>
+
+        {/* Curved arc with 3 steps */}
+        <div className={`mb-8 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+          <svg width="260" height="80" viewBox="0 0 300 100" fill="none" className="mx-auto">
+            <path
+              d="M 30 75 Q 150 10 270 75"
+              stroke="white"
+              strokeWidth="2"
+              fill="none"
+              opacity="0.6"
+              strokeDasharray="500"
+              strokeDashoffset={stage >= 5 ? "0" : "500"}
+              style={{ transition: "stroke-dashoffset 1.5s ease-out" }}
+            />
+            {/* Dot 1 */}
+            <circle cx="30" cy="75" r="10" fill="white" opacity={stage >= 5 ? 0.9 : 0} style={{ transition: "opacity 0.4s ease-out 0.3s" }} />
+            <text x="30" y="80" fill="#25b3a5" textAnchor="middle" fontSize="13" fontWeight="700" opacity={stage >= 5 ? 1 : 0} style={{ transition: "opacity 0.4s ease-out 0.3s" }}>1</text>
+            {/* Dot 2 */}
+            <circle cx="150" cy="18" r="10" fill="white" opacity={stage >= 5 ? 0.9 : 0} style={{ transition: "opacity 0.4s ease-out 0.6s" }} />
+            <text x="150" y="23" fill="#25b3a5" textAnchor="middle" fontSize="13" fontWeight="700" opacity={stage >= 5 ? 1 : 0} style={{ transition: "opacity 0.4s ease-out 0.6s" }}>2</text>
+            {/* Dot 3 */}
+            <circle cx="270" cy="75" r="10" fill="white" opacity={stage >= 5 ? 0.9 : 0} style={{ transition: "opacity 0.4s ease-out 0.9s" }} />
+            <text x="270" y="80" fill="#25b3a5" textAnchor="middle" fontSize="13" fontWeight="700" opacity={stage >= 5 ? 1 : 0} style={{ transition: "opacity 0.4s ease-out 0.9s" }}>3</text>
+          </svg>
         </div>
 
         {/* CTA button */}
