@@ -13,6 +13,9 @@ import Schedule from "./pages/Schedule";
 import FieldReports from "./pages/FieldReports";
 import NotFound from "./pages/NotFound";
 import EstimateStatus from "./pages/EstimateStatus";
+import SubmitAssessment from "./pages/public/SubmitAssessment";
+import SubmissionConfirmation from "./pages/public/SubmissionConfirmation";
+import TrackSubmission from "./pages/public/TrackSubmission";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MainPlatformLayout from "./layouts/MainPlatformLayout";
 
@@ -62,6 +65,11 @@ const App = () => (
           <Route path="/estimates" element={<Navigate to="/service-desk/estimates" replace />} />
           <Route path="/missioncontrol" element={<ProtectedRoute><IssuesQueue /></ProtectedRoute>} />
           <Route path="/estimate-status" element={<EstimateStatus />} />
+          {/* Public Noch+ submission pages */}
+          <Route path="/submit" element={<SubmitAssessment />} />
+          <Route path="/submit/confirmation/:submissionId" element={<SubmissionConfirmation />} />
+          <Route path="/track" element={<TrackSubmission />} />
+          <Route path="/track/:submissionId" element={<TrackSubmission />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
