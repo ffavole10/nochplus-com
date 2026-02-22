@@ -108,9 +108,11 @@ export default function SubmissionConfirmation() {
                 <h3 className="font-semibold">Welcome to Noch+ Membership!</h3>
               </div>
               <div className="space-y-1 text-sm text-muted-foreground">
-                <p>✓ Your submission will be prioritized (24-hour response)</p>
-                <p>✓ Unlimited future assessments activated</p>
-                <p>✓ 15% off all services</p>
+                <p>✓ Dedicated account manager</p>
+                <p>✓ Member exclusive rate — 50% off</p>
+                <p>✓ Parts discount — 20% off</p>
+                <p>✓ Annual Preventive Maintenance — 50% off</p>
+                <p>✓ Direct system access</p>
                 <p className="italic mt-2">Our team will contact you to complete membership setup.</p>
               </div>
             </CardContent>
