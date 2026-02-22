@@ -21,6 +21,7 @@ import MainPlatformLayout from "./layouts/MainPlatformLayout";
 
 // Placeholder pages for new sections
 import ServiceTickets from "./pages/placeholders/ServiceTickets";
+import Submissions from "./pages/Submissions";
 import Customers from "./pages/placeholders/Customers";
 import AllChargers from "./pages/placeholders/AllChargers";
 import NochPlusDashboard from "./pages/placeholders/NochPlusDashboard";
@@ -47,6 +48,7 @@ const App = () => (
 
             {/* Service Desk section */}
             <Route path="/service-desk/tickets" element={<ServiceTickets />} />
+            <Route path="/service-desk/submissions" element={<Submissions />} />
             <Route path="/service-desk/estimates" element={<Estimates />} />
             <Route path="/service-desk/customers" element={<Customers />} />
             <Route path="/service-desk/chargers" element={<AllChargers />} />
