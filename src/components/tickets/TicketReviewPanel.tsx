@@ -170,7 +170,9 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
       setProgressSteps(prev => prev.map(s => ({ ...s, status: "done" as const })));
       await new Promise(r => setTimeout(r, 800));
 
+      // Close modal first, then wait a tick for cleanup before triggering parent transition
       setIsProcessing(false);
+      await new Promise(r => setTimeout(r, 100));
       onApprove(ticket.id, result, notes.trim());
       toast.success("Assessment complete — opening estimate");
     } catch (err) {
@@ -406,7 +408,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
       </AlertDialog>
 
       {/* Processing Modal */}
-      <Dialog open={isProcessing} onOpenChange={() => {}}>
+      <Dialog open={isProcessing} onOpenChange={(open) => { if (!open && !error) return; if (!open) setIsProcessing(false); }}>
         <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
