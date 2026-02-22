@@ -50,10 +50,10 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         {/* Headline */}
         <div className={`text-center mb-2 transition-all duration-1000 ease-out ${stage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white/50 tracking-wide leading-none">
-            PEACE OF
+            RELIABILITY
           </h1>
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white/50 tracking-wide leading-none">
-            MIND
+            STARTS HERE.
           </h1>
         </div>
 
