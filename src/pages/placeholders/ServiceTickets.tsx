@@ -206,6 +206,9 @@ export default function ServiceTickets() {
       return s;
     });
     const newStep = result.swiMatch?.matched_swi_id ? 3 : 2;
+    // Set the post-approve tab BEFORE updating the store, so when the
+    // DetailPanel mounts (triggered by the store update) the defaultTab is ready.
+    setPostApproveTab(prev => ({ ...prev, [ticketId]: "estimate" }));
     updateTicketInStore(ticketId, {
       status: "in_progress" as const,
       currentStep: newStep,
@@ -232,8 +235,6 @@ export default function ServiceTickets() {
         ...(result.swiMatch?.matched_swi_id ? [{ id: `h-${Date.now() + 1}`, timestamp: now, action: `SWI matched: ${result.swiMatch.matched_swi_id} (${result.swiMatch.confidence}%)`, performedBy: "AI Engine" }] : []),
       ],
     });
-    // After approval, auto-navigate to the Estimate tab
-    setPostApproveTab(prev => ({ ...prev, [ticketId]: "estimate" }));
   };
 
   const handleRejectTicket = (ticketId: string, reason: string) => {
@@ -541,6 +542,7 @@ export default function ServiceTickets() {
                   {/* Inline Detail Panel for standalone tickets */}
                   {!isParent && ticket.status !== "pending_review" && expandedTicketId === ticket.id && (
                     <TicketDetailPanel
+                      key={`${ticket.id}-${postApproveTab[ticket.id] || "charger"}`}
                       ticket={ticket}
                       onCollapse={() => setExpandedTicketId(null)}
                       defaultTab={postApproveTab[ticket.id] || "charger"}
@@ -645,6 +647,7 @@ function ChildInlinePanel({
         />
       ) : (
         <TicketDetailPanel
+          key={`${ticket.id}-${defaultTab || "charger"}`}
           ticket={ticket}
           onCollapse={onCollapse}
           defaultTab={defaultTab || "charger"}
