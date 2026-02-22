@@ -116,10 +116,10 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         <div className={`transition-all duration-700 ease-out ${stage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
           <button
             onClick={onStart}
-            className="px-8 py-3 rounded-full bg-white/20 backdrop-blur-md text-white text-lg font-light hover:bg-white/30 active:scale-95 transition-all duration-300"
+            className="px-8 py-3 rounded-full bg-white/20 backdrop-blur-md text-white text-lg font-light hover:bg-white/30 active:scale-95 transition-all duration-300 tracking-widest"
             aria-label="Start assessment"
           >
-            Get Started
+            START &gt;
           </button>
         </div>
       </div>
