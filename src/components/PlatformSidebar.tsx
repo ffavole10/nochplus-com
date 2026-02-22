@@ -59,7 +59,7 @@ function getActiveSection(pathname: string): SectionKey {
   if (pathname.startsWith("/service-desk")) return "service-desk";
   if (pathname.startsWith("/noch-plus")) return "noch-plus";
   // Legacy root routes map to campaigns
-  if (["/", "/dataset", "/tickets", "/issues", "/schedule", "/field-reports"].includes(pathname)) return "campaigns";
+  if (["/dashboard", "/dataset", "/tickets", "/issues", "/schedule", "/field-reports"].includes(pathname)) return "campaigns";
   return null;
 }
 
@@ -130,7 +130,7 @@ export function PlatformSidebar() {
 
   // Campaign nav items - use existing routes for backward compat
   const campaignPages = [
-    { title: "Dashboard", url: "/", icon: LayoutDashboard },
+    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { title: "Dataset", url: "/dataset", icon: Database },
     { title: "Issues Queue", url: "/issues", icon: SearchIcon },
     { title: "Schedule", url: "/schedule", icon: CalendarDays },
@@ -196,7 +196,7 @@ export function PlatformSidebar() {
       <SidebarMenuButton asChild>
         <NavLink
           to={item.url}
-          end={item.url === "/"}
+          end={item.url === "/dashboard"}
           className="hover:bg-sidebar-accent/50 flex items-center justify-between"
           activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
         >

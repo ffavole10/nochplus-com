@@ -431,6 +431,17 @@ export default function SubmitAssessment() {
             Start Assessment
           </Button>
         </div>
+
+        {/* Admin access */}
+        <div className="pb-6 flex justify-center">
+          <button
+            onClick={() => navigate("/login")}
+            className="p-2 rounded-full text-white/30 hover:text-white/60 transition-colors"
+            aria-label="Admin login"
+          >
+            <Shield className="h-5 w-5" />
+          </button>
+        </div>
       </div>
     );
   }
