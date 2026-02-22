@@ -19,13 +19,13 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
       return;
     }
     const timers = [
-      setTimeout(() => setStage(1), 300),
-      setTimeout(() => setStage(2), 800),
-      setTimeout(() => setStage(3), 1200),
-      setTimeout(() => setStage(4), 1800),
-      setTimeout(() => setStage(5), 2400),
-      setTimeout(() => setStage(6), 3000),
-    ];
+    setTimeout(() => setStage(1), 300),
+    setTimeout(() => setStage(2), 800),
+    setTimeout(() => setStage(3), 1200),
+    setTimeout(() => setStage(4), 1800),
+    setTimeout(() => setStage(5), 2400),
+    setTimeout(() => setStage(6), 3000)];
+
     return () => timers.forEach(clearTimeout);
   }, []);
 
@@ -49,11 +49,11 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
       <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10">
         {/* Headline */}
         <div className={`text-center mb-2 transition-all duration-1000 ease-out ${stage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white/50 tracking-wide leading-none">
-            RELIABILITY
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white/50 tracking-wide leading-none lg:text-7xl">
+            PEACE OF
           </h1>
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white/50 tracking-wide leading-none">
-            STARTS HERE.
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white/50 tracking-wide leading-none lg:text-6xl">
+            MIND
           </h1>
         </div>
 
@@ -74,9 +74,9 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
               loading="eager"
               style={{
                 WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0) 100%)",
-                maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0) 100%)",
-              }}
-            />
+                maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0) 100%)"
+              }} />
+
           </div>
           {/* Inverted arc below person */}
           <svg width="260" height="60" viewBox="0 0 300 70" fill="none" className="mx-auto -mt-4">
@@ -88,8 +88,8 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
               opacity="0.5"
               strokeDasharray="500"
               strokeDashoffset={stage >= 4 ? "0" : "500"}
-              style={{ transition: "stroke-dashoffset 1.5s ease-out" }}
-            />
+              style={{ transition: "stroke-dashoffset 1.5s ease-out" }} />
+
             <circle cx="30" cy="10" r="8" fill="white" opacity={stage >= 4 ? 0.9 : 0} style={{ transition: "opacity 0.4s ease-out 0.3s" }} />
             <text x="30" y="15" fill="#25b3a5" textAnchor="middle" fontSize="12" fontWeight="700" opacity={stage >= 4 ? 1 : 0} style={{ transition: "opacity 0.4s ease-out 0.3s" }}>1</text>
             <circle cx="150" cy="60" r="8" fill="white" opacity={stage >= 4 ? 0.9 : 0} style={{ transition: "opacity 0.4s ease-out 0.6s" }} />
@@ -117,8 +117,8 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
           <button
             onClick={onStart}
             className="px-8 py-3 rounded-full bg-white/20 backdrop-blur-md text-white text-lg font-light hover:bg-white/30 active:scale-95 transition-all duration-300 tracking-widest"
-            aria-label="Start assessment"
-          >
+            aria-label="Start assessment">
+
             START &gt;
           </button>
         </div>
@@ -130,8 +130,8 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         <button
           onClick={() => navigate("/login")}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/10 transition-all text-sm"
-          aria-label="Admin login"
-        >
+          aria-label="Admin login">
+
           <Monitor className="h-4 w-4" />
           <span>Admin Access</span>
         </button>
@@ -170,6 +170,6 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
           }
         }
       `}</style>
-    </div>
-  );
+    </div>);
+
 }
