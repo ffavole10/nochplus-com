@@ -404,7 +404,7 @@ export default function SubmitAssessment() {
             Let's assess your charging stations remotely
           </p>
 
-          <div className="space-y-3 mb-10">
+          <div className="max-w-lg mx-auto w-full space-y-3 mb-10">
             {[
               { icon: Clock, title: "Quick Process", desc: "2 minutes per charger" },
               { icon: Camera, title: "Photo-Based", desc: "Just snap a few photos" },
@@ -422,24 +422,27 @@ export default function SubmitAssessment() {
             ))}
           </div>
 
-          <Button
-            size="lg"
-            className="w-full bg-white text-[hsl(170,40%,40%)] hover:bg-white/90 text-lg font-semibold rounded-2xl h-14 gap-2 shadow-lg"
-            onClick={() => setCurrentStep("step1")}
-          >
-            <Zap className="h-5 w-5" />
-            Start Assessment
-          </Button>
+          <div className="max-w-lg mx-auto w-full">
+            <Button
+              size="lg"
+              className="w-full bg-white text-[hsl(170,40%,40%)] hover:bg-white/90 text-lg font-semibold rounded-2xl h-14 gap-2 shadow-lg"
+              onClick={() => setCurrentStep("step1")}
+            >
+              <Zap className="h-5 w-5" />
+              Start Assessment
+            </Button>
+          </div>
         </div>
 
         {/* Admin access */}
         <div className="pb-6 flex justify-center">
           <button
             onClick={() => navigate("/login")}
-            className="p-2 rounded-full text-white/30 hover:text-white/60 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/10 transition-all text-sm"
             aria-label="Admin login"
           >
-            <Shield className="h-5 w-5" />
+            <Monitor className="h-4 w-4" />
+            <span>Admin Access</span>
           </button>
         </div>
       </div>
