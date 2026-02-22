@@ -429,6 +429,86 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_sheet_items: {
+        Row: {
+          created_at: string
+          hours: number | null
+          id: string
+          notes: string | null
+          rate_192h: number | null
+          rate_24h: number | null
+          rate_48h: number | null
+          rate_72h: number | null
+          rate_96h: number | null
+          rate_sheet_id: string
+          scope_code: string
+          scope_name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          hours?: number | null
+          id?: string
+          notes?: string | null
+          rate_192h?: number | null
+          rate_24h?: number | null
+          rate_48h?: number | null
+          rate_72h?: number | null
+          rate_96h?: number | null
+          rate_sheet_id: string
+          scope_code: string
+          scope_name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          hours?: number | null
+          id?: string
+          notes?: string | null
+          rate_192h?: number | null
+          rate_24h?: number | null
+          rate_48h?: number | null
+          rate_72h?: number | null
+          rate_96h?: number | null
+          rate_sheet_id?: string
+          scope_code?: string
+          scope_name?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_sheet_items_rate_sheet_id_fkey"
+            columns: ["rate_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "rate_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_sheets: {
+        Row: {
+          created_at: string
+          customer: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
           assessment_needs: string[] | null
