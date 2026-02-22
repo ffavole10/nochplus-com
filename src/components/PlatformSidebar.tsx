@@ -5,8 +5,8 @@ import {
   AlertTriangle, ChevronDown, ChevronRight,
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus,
-  Filter, Crosshair, Home,
-} from "lucide-react";
+  Filter, Crosshair, Home } from
+"lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
 import { usePartners } from "@/hooks/usePartners";
@@ -28,8 +28,8 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar,
-} from "@/components/ui/sidebar";
+  useSidebar } from
+"@/components/ui/sidebar";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
@@ -38,20 +38,20 @@ import { cn } from "@/lib/utils";
 
 type SectionKey = "campaigns" | "service-desk" | "noch-plus" | null;
 
-const STATUS_LEVELS: { value: StatusLevel; label: string; colorClass: string }[] = [
-  { value: "Critical", label: "Critical", colorClass: "bg-critical" },
-  { value: "High", label: "High", colorClass: "bg-high" },
-  { value: "Medium", label: "Medium", colorClass: "bg-medium" },
-  { value: "Low", label: "Low", colorClass: "bg-low" },
-];
+const STATUS_LEVELS: {value: StatusLevel;label: string;colorClass: string;}[] = [
+{ value: "Critical", label: "Critical", colorClass: "bg-critical" },
+{ value: "High", label: "High", colorClass: "bg-high" },
+{ value: "Medium", label: "Medium", colorClass: "bg-medium" },
+{ value: "Low", label: "Low", colorClass: "bg-low" }];
+
 
 const CHARGER_TYPES = ["DCFC", "L2", "HPCD"];
 const SWI_OPTIONS = ["With SWI", "Without SWI"];
 const ACCOUNT_MANAGERS = [
-  { value: "jrose", label: "Joe Rose" },
-  { value: "cromano", label: "Caitlin Romano" },
-  { value: "ffavole", label: "Fernando Favole" },
-];
+{ value: "jrose", label: "Joe Rose" },
+{ value: "cromano", label: "Caitlin Romano" },
+{ value: "ffavole", label: "Fernando Favole" }];
+
 const US_STATES = ["AZ", "CA", "FL", "GA", "IL", "NY", "TX", "VA", "WA"];
 
 function getActiveSection(pathname: string): SectionKey {
@@ -72,7 +72,7 @@ export function PlatformSidebar() {
   const { filters, toggleArrayFilter, clearFilters, hasActiveFilters } = useFilters();
   const {
     selectedCampaignName, selectedCampaignId: contextCampaignId, selectedCustomer,
-    setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer,
+    setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer
   } = useCampaignContext();
 
   const [newCampaignOpen, setNewCampaignOpen] = useState(false);
@@ -125,42 +125,42 @@ export function PlatformSidebar() {
   };
 
   const toggleSection = (section: SectionKey) => {
-    setExpandedSection((prev) => (prev === section ? null : section));
+    setExpandedSection((prev) => prev === section ? null : section);
   };
 
   // Campaign nav items - use existing routes for backward compat
   const campaignPages = [
-    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-    { title: "Dataset", url: "/dataset", icon: Database },
-    { title: "Issues Queue", url: "/issues", icon: SearchIcon },
-    { title: "Schedule", url: "/schedule", icon: CalendarDays },
-    { title: "Field Reports", url: "/field-reports", icon: FolderOpen },
-  ];
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Dataset", url: "/dataset", icon: Database },
+  { title: "Issues Queue", url: "/issues", icon: SearchIcon },
+  { title: "Schedule", url: "/schedule", icon: CalendarDays },
+  { title: "Field Reports", url: "/field-reports", icon: FolderOpen }];
+
 
   const serviceDeskPages = [
-    { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: 89 },
-    { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: 34 },
-    { title: "Customers", url: "/service-desk/customers", icon: Users },
-    { title: "All Chargers", url: "/service-desk/chargers", icon: HardDrive },
-  ];
+  { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: 89 },
+  { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: 34 },
+  { title: "Customers", url: "/service-desk/customers", icon: Users },
+  { title: "All Chargers", url: "/service-desk/chargers", icon: HardDrive }];
+
 
   const nochPlusPages = [
-    { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard },
-    { title: "Submissions", url: "/noch-plus/submissions", icon: FileCheck },
-    { title: "Assessments", url: "/noch-plus/assessments", icon: FolderOpen },
-    { title: "Members", url: "/noch-plus/members", icon: Users },
-    { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive },
-  ];
+  { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard },
+  { title: "Submissions", url: "/noch-plus/submissions", icon: FileCheck },
+  { title: "Assessments", url: "/noch-plus/assessments", icon: FolderOpen },
+  { title: "Members", url: "/noch-plus/members", icon: Users },
+  { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
+
 
   const SectionHeader = ({
     label,
     icon: Icon,
-    section,
-  }: {
-    label: string;
-    icon: React.ElementType;
-    section: SectionKey;
-  }) => {
+    section
+
+
+
+
+  }: {label: string;icon: React.ElementType;section: SectionKey;}) => {
     const isOpen = expandedSection === section;
     return (
       <button
@@ -168,11 +168,11 @@ export function PlatformSidebar() {
         className={cn(
           "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all",
           "border",
-          isOpen
-            ? "bg-primary text-primary-foreground border-primary shadow-sm"
-            : "bg-sidebar-accent/30 text-sidebar-foreground/80 border-sidebar-border/40 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-        )}
-      >
+          isOpen ?
+          "bg-primary text-primary-foreground border-primary shadow-sm" :
+          "bg-sidebar-accent/30 text-sidebar-foreground/80 border-sidebar-border/40 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+        )}>
+
         <div className="flex items-center gap-2.5">
           <Icon className={cn("h-4 w-4", isOpen && "text-primary-foreground")} />
           <span>{label}</span>
@@ -183,36 +183,36 @@ export function PlatformSidebar() {
         )}>
           {isOpen ? "−" : "+"}
         </span>
-      </button>
-    );
+      </button>);
+
   };
 
   const NavItem = ({
-    item,
-  }: {
-    item: { title: string; url: string; icon: React.ElementType; badge?: number };
-  }) => (
-    <SidebarMenuItem>
+    item
+
+
+  }: {item: {title: string;url: string;icon: React.ElementType;badge?: number;};}) =>
+  <SidebarMenuItem>
       <SidebarMenuButton asChild>
         <NavLink
-          to={item.url}
-          end={item.url === "/dashboard"}
-          className="hover:bg-sidebar-accent/50 flex items-center justify-between"
-          activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-        >
+        to={item.url}
+        end={item.url === "/dashboard"}
+        className="hover:bg-sidebar-accent/50 flex items-center justify-between"
+        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
+
           <div className="flex items-center gap-2">
             <item.icon className="h-4 w-4" />
             <span>{item.title}</span>
           </div>
-          {item.badge !== undefined && (
-            <span className="bg-sidebar-accent/80 text-sidebar-foreground text-xs font-medium px-1.5 py-0.5 rounded-full">
+          {item.badge !== undefined &&
+        <span className="bg-sidebar-accent/80 text-sidebar-foreground text-xs font-medium px-1.5 py-0.5 rounded-full">
               {item.badge}
             </span>
-          )}
+        }
         </NavLink>
       </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
+    </SidebarMenuItem>;
+
 
   if (isCollapsed) {
     return (
@@ -220,8 +220,8 @@ export function PlatformSidebar() {
         <SidebarContent className="flex flex-col items-center py-4 gap-3">
           <Crosshair className="h-5 w-5 text-sidebar-foreground/70" />
         </SidebarContent>
-      </Sidebar>
-    );
+      </Sidebar>);
+
   }
 
   return (
@@ -235,8 +235,8 @@ export function PlatformSidebar() {
       <SidebarContent className="custom-scrollbar px-2 py-2 space-y-1">
         {/* ─── CAMPAIGNS SECTION ─── */}
         <SectionHeader label="CAMPAIGNS" icon={Crosshair} section="campaigns" />
-        {expandedSection === "campaigns" && (
-          <div className="space-y-2 pl-1">
+        {expandedSection === "campaigns" &&
+        <div className="space-y-2 pl-1">
             {/* Partner → Campaign Selectors */}
             <div className="space-y-1.5 px-2">
               <Select value={selectedPartner} onValueChange={handlePartnerChange}>
@@ -244,11 +244,11 @@ export function PlatformSidebar() {
                   <SelectValue placeholder="Select Partner" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-                  {partners.map((p) => (
-                    <SelectItem key={p.value} value={p.value} className="cursor-pointer">
+                  {partners.map((p) =>
+                <SelectItem key={p.value} value={p.value} className="cursor-pointer">
                       {p.label}
                     </SelectItem>
-                  ))}
+                )}
                 </SelectContent>
               </Select>
 
@@ -257,54 +257,54 @@ export function PlatformSidebar() {
                   <SelectValue placeholder={selectedPartner ? "Select Campaign" : "Select partner first"} />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-                  {filteredCampaigns.map((c) => (
-                    <SelectItem key={c.id} value={c.id} className="cursor-pointer max-w-[220px]">
+                  {filteredCampaigns.map((c) =>
+                <SelectItem key={c.id} value={c.id} className="cursor-pointer max-w-[220px]">
                       <span className="truncate block">{c.name}</span>
                     </SelectItem>
-                  ))}
+                )}
                 </SelectContent>
               </Select>
 
               <button
-                onClick={() => setNewCampaignOpen(true)}
-                className="flex items-center gap-1.5 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors"
-              >
+              onClick={() => setNewCampaignOpen(true)}
+              className="flex items-center gap-1.5 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors">
+
                 <Plus className="h-3 w-3" />
                 New Campaign
               </button>
             </div>
 
             <SidebarMenu className="px-1">
-              {campaignPages.map((item) => (
-                <NavItem key={item.title} item={item} />
-              ))}
+              {campaignPages.map((item) =>
+            <NavItem key={item.title} item={item} />
+            )}
             </SidebarMenu>
           </div>
-        )}
+        }
 
         {/* ─── SERVICE DESK SECTION ─── */}
         <SectionHeader label="SERVICE DESK" icon={Ticket} section="service-desk" />
-        {expandedSection === "service-desk" && (
-          <div className="pl-1">
+        {expandedSection === "service-desk" &&
+        <div className="pl-1">
             <SidebarMenu className="px-1">
-              {serviceDeskPages.map((item) => (
-                <NavItem key={item.title} item={item} />
-              ))}
+              {serviceDeskPages.map((item) =>
+            <NavItem key={item.title} item={item} />
+            )}
             </SidebarMenu>
           </div>
-        )}
+        }
 
         {/* ─── NOCH+ PROGRAM SECTION ─── */}
         <SectionHeader label="NOCH+" icon={Diamond} section="noch-plus" />
-        {expandedSection === "noch-plus" && (
-          <div className="pl-1">
+        {expandedSection === "noch-plus" &&
+        <div className="pl-1">
             <SidebarMenu className="px-1">
-              {nochPlusPages.map((item) => (
-                <NavItem key={item.title} item={item} />
-              ))}
+              {nochPlusPages.map((item) =>
+            <NavItem key={item.title} item={item} />
+            )}
             </SidebarMenu>
           </div>
-        )}
+        }
 
         {/* ─── FILTERS SECTION ─── */}
         <div className="border-t border-sidebar-border mt-2 pt-2">
@@ -314,9 +314,9 @@ export function PlatformSidebar() {
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4" />
                   <span>FILTERS</span>
-                  {hasActiveFilters && (
-                    <span className="w-2 h-2 rounded-full bg-critical animate-pulse" />
-                  )}
+                  {hasActiveFilters &&
+                  <span className="w-2 h-2 rounded-full bg-critical animate-pulse" />
+                  }
                 </div>
                 <span className="text-xs font-mono text-sidebar-foreground/60">
                   {filtersOpen ? "−" : "+"}
@@ -325,96 +325,96 @@ export function PlatformSidebar() {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="px-1 space-y-0.5">
-                {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="h-6 px-2 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground w-full justify-start"
-                  >
+                {hasActiveFilters &&
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="h-6 px-2 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground w-full justify-start">
+
                     Clear All
                   </Button>
-                )}
+                }
 
                 {/* Status */}
                 <FilterGroup
                   label="Status"
                   icon={AlertTriangle}
                   open={statusOpen}
-                  onOpenChange={setStatusOpen}
-                >
-                  {STATUS_LEVELS.map((s) => (
-                    <div key={s.value} className="flex items-center gap-2">
+                  onOpenChange={setStatusOpen}>
+
+                  {STATUS_LEVELS.map((s) =>
+                  <div key={s.value} className="flex items-center gap-2">
                       <Checkbox
-                        id={`status-${s.value}`}
-                        checked={filters.status.includes(s.value)}
-                        onCheckedChange={() => toggleArrayFilter("status", s.value)}
-                        className={`border-${s.value.toLowerCase()} data-[state=checked]:bg-${s.value.toLowerCase()}`}
-                      />
+                      id={`status-${s.value}`}
+                      checked={filters.status.includes(s.value)}
+                      onCheckedChange={() => toggleArrayFilter("status", s.value)}
+                      className={`border-${s.value.toLowerCase()} data-[state=checked]:bg-${s.value.toLowerCase()}`} />
+
                       <Label htmlFor={`status-${s.value}`} className="flex items-center gap-2 text-sm cursor-pointer">
                         <span className={`w-2 h-2 rounded-full ${s.colorClass}`} />
                         {s.label}
                       </Label>
                     </div>
-                  ))}
+                  )}
                 </FilterGroup>
 
                 {/* State */}
                 <FilterGroup label="State" icon={MapPin} open={stateOpen} onOpenChange={setStateOpen}>
                   <div className="max-h-36 overflow-y-auto custom-scrollbar space-y-2">
-                    {US_STATES.map((st) => (
-                      <div key={st} className="flex items-center gap-2">
+                    {US_STATES.map((st) =>
+                    <div key={st} className="flex items-center gap-2">
                         <Checkbox
-                          id={`state-${st}`}
-                          checked={filters.states.includes(st)}
-                          onCheckedChange={() => toggleArrayFilter("states", st)}
-                        />
+                        id={`state-${st}`}
+                        checked={filters.states.includes(st)}
+                        onCheckedChange={() => toggleArrayFilter("states", st)} />
+
                         <Label htmlFor={`state-${st}`} className="text-sm cursor-pointer">{st}</Label>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </FilterGroup>
 
                 {/* Charger Type */}
                 <FilterGroup label="Charger Type" icon={Zap} open={typeOpen} onOpenChange={setTypeOpen}>
-                  {CHARGER_TYPES.map((type) => (
-                    <div key={type} className="flex items-center gap-2">
+                  {CHARGER_TYPES.map((type) =>
+                  <div key={type} className="flex items-center gap-2">
                       <Checkbox
-                        id={`type-${type}`}
-                        checked={filters.chargerTypes.includes(type)}
-                        onCheckedChange={() => toggleArrayFilter("chargerTypes", type)}
-                      />
+                      id={`type-${type}`}
+                      checked={filters.chargerTypes.includes(type)}
+                      onCheckedChange={() => toggleArrayFilter("chargerTypes", type)} />
+
                       <Label htmlFor={`type-${type}`} className="text-sm cursor-pointer">{type}</Label>
                     </div>
-                  ))}
+                  )}
                 </FilterGroup>
 
                 {/* SWI Status */}
                 <FilterGroup label="SWI Status" icon={FileCheck} open={swiOpen} onOpenChange={setSwiOpen}>
-                  {SWI_OPTIONS.map((opt) => (
-                    <div key={opt} className="flex items-center gap-2">
+                  {SWI_OPTIONS.map((opt) =>
+                  <div key={opt} className="flex items-center gap-2">
                       <Checkbox
-                        id={`swi-${opt}`}
-                        checked={filters.swiStatus.includes(opt)}
-                        onCheckedChange={() => toggleArrayFilter("swiStatus", opt)}
-                      />
+                      id={`swi-${opt}`}
+                      checked={filters.swiStatus.includes(opt)}
+                      onCheckedChange={() => toggleArrayFilter("swiStatus", opt)} />
+
                       <Label htmlFor={`swi-${opt}`} className="text-sm cursor-pointer">{opt}</Label>
                     </div>
-                  ))}
+                  )}
                 </FilterGroup>
 
                 {/* Account Manager */}
                 <FilterGroup label="Account Manager" icon={UserCog} open={managerOpen} onOpenChange={setManagerOpen}>
-                  {ACCOUNT_MANAGERS.map((mgr) => (
-                    <div key={mgr.value} className="flex items-center gap-2">
+                  {ACCOUNT_MANAGERS.map((mgr) =>
+                  <div key={mgr.value} className="flex items-center gap-2">
                       <Checkbox
-                        id={`mgr-${mgr.value}`}
-                        checked={filters.accountManagers.includes(mgr.value)}
-                        onCheckedChange={() => toggleArrayFilter("accountManagers", mgr.value)}
-                      />
+                      id={`mgr-${mgr.value}`}
+                      checked={filters.accountManagers.includes(mgr.value)}
+                      onCheckedChange={() => toggleArrayFilter("accountManagers", mgr.value)} />
+
                       <Label htmlFor={`mgr-${mgr.value}`} className="text-sm cursor-pointer">{mgr.label}</Label>
                     </div>
-                  ))}
+                  )}
                 </FilterGroup>
               </div>
             </CollapsibleContent>
@@ -424,28 +424,28 @@ export function PlatformSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <SidebarMenu>
-          {hasRole("super_admin") && (
-            <SidebarMenuItem>
+          {hasRole("super_admin") &&
+          <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <NavLink
-                  to="/settings"
-                  className="hover:bg-sidebar-accent/50"
-                  activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                >
+                to="/settings"
+                className="hover:bg-sidebar-accent/50"
+                activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
+
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          )}
+          }
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <a
                 href="/"
-                className="flex items-center gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
-              >
+                className="flex items-center gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
+
                 <Home className="mr-2 h-4 w-4" />
-                <span>Home Page</span>
+                <span>Home</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -457,10 +457,10 @@ export function PlatformSidebar() {
         onOpenChange={setNewCampaignOpen}
         onComplete={(data) => {
           toast.success(`Campaign "${data.name}" created with ${data.chargers.length} chargers`);
-        }}
-      />
-    </Sidebar>
-  );
+        }} />
+
+    </Sidebar>);
+
 }
 
 /* ─── Reusable Filter Group ─── */
@@ -469,14 +469,14 @@ function FilterGroup({
   icon: Icon,
   open,
   onOpenChange,
-  children,
-}: {
-  label: string;
-  icon: React.ElementType;
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-  children: React.ReactNode;
-}) {
+  children
+
+
+
+
+
+
+}: {label: string;icon: React.ElementType;open: boolean;onOpenChange: (o: boolean) => void;children: React.ReactNode;}) {
   return (
     <Collapsible open={open} onOpenChange={onOpenChange}>
       <CollapsibleTrigger className="w-full">
@@ -491,6 +491,6 @@ function FilterGroup({
       <CollapsibleContent>
         <div className="px-2 py-2 space-y-2">{children}</div>
       </CollapsibleContent>
-    </Collapsible>
-  );
+    </Collapsible>);
+
 }
