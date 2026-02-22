@@ -66,11 +66,11 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
         {/* Hero image - no circle background */}
         <div className={`relative mb-4 transition-all duration-1000 ease-out ${stage >= 3 ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}>
-          <div className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72">
+          <div className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 mx-auto">
             <img
               src={heroPerson}
               alt="Happy customer"
-              className="w-full h-full object-cover object-top animate-hero-float"
+              className="w-full h-full object-contain object-center animate-hero-float"
               loading="eager"
               style={{
                 WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0) 100%)",
