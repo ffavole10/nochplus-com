@@ -98,7 +98,6 @@ export default function Submissions() {
       return;
     }
 
-    // Fetch charger submissions for all
     const subIds = (subs || []).map((s) => s.id);
     const { data: chargers } = subIds.length
       ? await supabase.from("charger_submissions").select("*").in("submission_id", subIds)
@@ -133,7 +132,6 @@ export default function Submissions() {
     return result;
   }, [submissions, statusFilter, search]);
 
-  // Stats
   const stats = useMemo(() => ({
     total: submissions.length,
     pending: submissions.filter((s) => s.status === "pending_review").length,
@@ -224,7 +222,6 @@ export default function Submissions() {
 
       if (subError) throw subError;
 
-      // Update each charger
       for (const ch of editChargers) {
         const { error: chError } = await supabase
           .from("charger_submissions")
@@ -266,49 +263,47 @@ export default function Submissions() {
 
   // Detail view
   const charger = selectedSubmission?.chargers[activeChargerIndex];
+  const photoLabels = ["Front", "Back", "Serial"];
 
   if (selectedSubmission) {
     return (
-      <div className="p-6 space-y-6">
-        {/* Back button */}
-        <Button variant="ghost" onClick={() => { setSelectedSubmission(null); setIsEditing(false); }} className="gap-2">
-          <ChevronLeft className="h-4 w-4" />
-          Back to Submissions
-        </Button>
-
-        {/* Edit / Save / Cancel controls */}
-        <div className="flex items-center gap-2">
-          {!isEditing ? (
-            <Button variant="outline" size="sm" className="gap-2" onClick={startEditing}>
-              <Pencil className="h-4 w-4" />
-              Edit Submission
+      <div className="p-6 space-y-5">
+        {/* Header row: back + title + action buttons */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { setSelectedSubmission(null); setIsEditing(false); }}
+              className="h-8 w-8 rounded-full border border-border bg-card flex items-center justify-center hover:bg-accent transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <h2 className="text-xl font-bold text-foreground">
+              Submission {selectedSubmission.submission_id}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => toast.info("Email feature coming soon")}>
+              <Mail className="h-4 w-4" />
+              Email Customer
             </Button>
-          ) : (
-            <>
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
-              <Button size="sm" className="gap-2" onClick={handleSaveEdit} disabled={savingEdit}>
-                {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {savingEdit ? "Saving..." : "Save Changes"}
-              </Button>
-            </>
-          )}
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => toast.info("PDF export coming soon")}>
+              <Download className="h-4 w-4" />
+              Export PDF
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* LEFT COLUMN */}
+        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
+          {/* LEFT SIDEBAR */}
           <div className="space-y-4">
             {/* Customer Info */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center justify-between">
-                  Customer Info
-                  <Badge className={STATUS_STYLES[selectedSubmission.status] || ""}>
-                    {STATUS_LABELS[selectedSubmission.status] || selectedSubmission.status}
-                  </Badge>
-                </CardTitle>
-                <p className="text-xs text-muted-foreground font-mono">{selectedSubmission.submission_id}</p>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
+            <Card className="border border-border/60">
+              <CardContent className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground">Customer Info</h3>
+                  <span className="text-sm font-mono text-primary">{selectedSubmission.submission_id}</span>
+                </div>
+
                 {isEditing ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
@@ -349,178 +344,158 @@ export default function Submissions() {
                         <Input value={editForm.phone || ""} onChange={(e) => updateEditField("phone", e.target.value)} />
                       </div>
                     </div>
+                    <div className="flex gap-2 pt-1">
+                      <Button size="sm" className="gap-2" onClick={handleSaveEdit} disabled={savingEdit}>
+                        {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        {savingEdit ? "Saving..." : "Save Changes"}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
+                    </div>
                   </div>
                 ) : (
-                  <>
-                    <div className="flex items-start gap-2">
-                      <span className="text-muted-foreground">👤</span>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-start gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground shrink-0 mt-0.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                       <div>
-                        <p className="font-medium">{selectedSubmission.full_name}</p>
+                        <p className="font-medium text-foreground">{selectedSubmission.full_name}</p>
                         <p className="text-muted-foreground">{selectedSubmission.company_name}</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-muted-foreground">📍</span>
+                    <div className="flex items-start gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground shrink-0 mt-0.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                       <div>
-                        <p>{selectedSubmission.street_address}</p>
-                        <p>{selectedSubmission.city}, {selectedSubmission.state} {selectedSubmission.zip_code}</p>
+                        <p className="text-foreground">{selectedSubmission.street_address}</p>
+                        <p className="text-muted-foreground">{selectedSubmission.city}, {selectedSubmission.state} {selectedSubmission.zip_code}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">📧</span>
-                      <p className="truncate">{selectedSubmission.email}</p>
+                    <div className="flex items-center gap-3">
+                      <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <a href={`mailto:${selectedSubmission.email}`} className="text-primary hover:underline truncate">{selectedSubmission.email}</a>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">📞</span>
-                      <p>{selectedSubmission.phone}</p>
+                    <div className="flex items-center gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground shrink-0"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                      <a href={`tel:${selectedSubmission.phone}`} className="text-primary hover:underline">{selectedSubmission.phone}</a>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">📅</span>
-                      <p>{format(new Date(selectedSubmission.created_at), "MMM d, yyyy 'at' h:mm a")}</p>
+                    <div className="flex items-center gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground shrink-0"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                      <p className="text-foreground">{format(new Date(selectedSubmission.created_at), "MMMM d, yyyy 'at' h:mm a")}</p>
                     </div>
-                    {selectedSubmission.noch_plus_member && (
-                      <Badge className="bg-purple-500/15 text-purple-600 border-purple-500/30">Noch+ Member</Badge>
-                    )}
-                  </>
+                  </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Status Management */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Select
-                  value={selectedSubmission.status}
-                  onValueChange={(v) => handleStatusChange(selectedSubmission.id, v)}
-                  disabled={updatingStatus}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending_review">Pending</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Status */}
+            <Card className="border border-border/60">
+              <CardContent className="p-5 space-y-3">
+                <h3 className="font-semibold text-foreground">Status</h3>
+                <div className="flex items-center gap-3">
+                  <Badge className={STATUS_STYLES[selectedSubmission.status] || ""}>
+                    {STATUS_LABELS[selectedSubmission.status] || selectedSubmission.status}
+                  </Badge>
+                  <Select
+                    value={selectedSubmission.status}
+                    onValueChange={(v) => handleStatusChange(selectedSubmission.id, v)}
+                    disabled={updatingStatus}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending_review">Pending</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="archived">Archived</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardContent>
             </Card>
 
             {/* Notes */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Internal Notes</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Textarea
-                  value={staffNotes}
-                  onChange={(e) => setStaffNotes(e.target.value)}
-                  placeholder="Add internal notes..."
-                  rows={4}
-                />
-                <Button size="sm" onClick={handleSaveNotes} disabled={savingNotes} className="gap-2">
-                  <Save className="h-3.5 w-3.5" />
-                  {savingNotes ? "Saving..." : "Save Note"}
-                </Button>
+            <Card className="border border-border/60">
+              <CardContent className="p-5 space-y-3">
+                <h3 className="font-semibold text-foreground">Notes</h3>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={staffNotes}
+                    onChange={(e) => setStaffNotes(e.target.value)}
+                    placeholder="Add a note..."
+                    className="flex-1"
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSaveNotes(); }}
+                  />
+                  <Button
+                    size="icon"
+                    className="h-10 w-10 shrink-0"
+                    onClick={handleSaveNotes}
+                    disabled={savingNotes}
+                  >
+                    {savingNotes ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
-
-            {/* Additional Info */}
-            {(selectedSubmission.referral_source || selectedSubmission.service_urgency || (selectedSubmission.assessment_needs && selectedSubmission.assessment_needs.length > 0)) && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Additional Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  {selectedSubmission.referral_source && (
-                    <div>
-                      <p className="text-muted-foreground text-xs">How they found us</p>
-                      <p>{selectedSubmission.referral_source}</p>
-                    </div>
-                  )}
-                  {selectedSubmission.service_urgency && (
-                    <div>
-                      <p className="text-muted-foreground text-xs">Service urgency</p>
-                      <p className="capitalize">{selectedSubmission.service_urgency.replace(/_/g, " ")}</p>
-                    </div>
-                  )}
-                  {selectedSubmission.assessment_needs && selectedSubmission.assessment_needs.length > 0 && (
-                    <div>
-                      <p className="text-muted-foreground text-xs mb-1">Assessment needs</p>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedSubmission.assessment_needs.map((n, i) => (
-                          <Badge key={i} variant="outline" className="text-xs">{n}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {selectedSubmission.customer_notes && (
-                    <div>
-                      <p className="text-muted-foreground text-xs">Customer notes</p>
-                      <p className="text-sm">{selectedSubmission.customer_notes}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-2">
-              <Button variant="outline" size="sm" className="gap-2 justify-start" onClick={() => toast.info("Email feature coming soon")}>
-                <Mail className="h-4 w-4" />
-                Email Customer
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2 justify-start" onClick={() => toast.info("PDF export coming soon")}>
-                <Download className="h-4 w-4" />
-                Export PDF
-              </Button>
-            </div>
           </div>
 
-          {/* RIGHT COLUMN */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Charger Navigation */}
+          {/* RIGHT CONTENT */}
+          <div className="space-y-0">
+            {/* Charger Tabs */}
             {selectedSubmission.chargers.length > 0 ? (
               <>
-                <Card>
-                  <CardHeader className="pb-3">
+                <div className="flex items-center gap-2 mb-4">
+                  {selectedSubmission.chargers.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveChargerIndex(i)}
+                      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                        i === activeChargerIndex
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card border border-border text-foreground hover:bg-accent"
+                      }`}
+                    >
+                      Charger {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Charger Details Card */}
+                <Card className="border border-border/60">
+                  <CardContent className="p-6 space-y-6">
+                    {/* Charger header with edit + nav */}
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">
-                        Charger {activeChargerIndex + 1} of {selectedSubmission.chargers.length}
-                      </CardTitle>
+                      <h3 className="text-lg font-semibold text-foreground">
+                        Charger {activeChargerIndex + 1} Details
+                      </h3>
                       <div className="flex items-center gap-2">
+                        {!isEditing ? (
+                          <Button variant="outline" size="icon" className="h-9 w-9" onClick={startEditing}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <>
+                            <Button size="sm" className="gap-2" onClick={handleSaveEdit} disabled={savingEdit}>
+                              {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                              Save
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
+                          </>
+                        )}
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-9 w-9"
                           disabled={activeChargerIndex === 0}
                           onClick={() => setActiveChargerIndex((p) => p - 1)}
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
-                        {/* Charger tabs */}
-                        <div className="flex gap-1">
-                          {selectedSubmission.chargers.map((_, i) => (
-                            <button
-                              key={i}
-                              onClick={() => setActiveChargerIndex(i)}
-                              className={`w-8 h-8 rounded text-xs font-medium transition-colors ${
-                                i === activeChargerIndex
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted text-muted-foreground hover:bg-accent"
-                              }`}
-                            >
-                              {i + 1}
-                            </button>
-                          ))}
-                        </div>
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-9 w-9"
                           disabled={activeChargerIndex === selectedSubmission.chargers.length - 1}
                           onClick={() => setActiveChargerIndex((p) => p + 1)}
                         >
@@ -528,162 +503,74 @@ export default function Submissions() {
                         </Button>
                       </div>
                     </div>
-                  </CardHeader>
-                  {charger && (
-                    <CardContent className="space-y-4">
-                      {isEditing ? (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-xs">Brand</Label>
-                            <Input value={editChargers[activeChargerIndex]?.brand || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "brand", e.target.value)} />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Serial Number</Label>
-                            <Input value={editChargers[activeChargerIndex]?.serial_number || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "serial_number", e.target.value)} />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Charger Type</Label>
-                            <Input value={editChargers[activeChargerIndex]?.charger_type || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "charger_type", e.target.value)} />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Installation Location</Label>
-                            <Input value={editChargers[activeChargerIndex]?.installation_location || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "installation_location", e.target.value)} />
-                          </div>
-                          <div className="col-span-2">
-                            <Label className="text-xs">Known Issues</Label>
-                            <Textarea value={editChargers[activeChargerIndex]?.known_issues || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "known_issues", e.target.value)} rows={3} />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs text-muted-foreground">Brand</p>
-                            <p className="font-medium">{charger.brand}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Serial Number</p>
-                            <p className="font-medium">{charger.serial_number || "—"}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Charger Type</p>
-                            <p className="font-medium">{charger.charger_type}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Installation Location</p>
-                            <p className="font-medium">{charger.installation_location || "—"}</p>
-                          </div>
-                        </div>
-                      )}
 
-                      {/* Photos */}
-                      {charger.photo_urls && charger.photo_urls.length > 0 ? (
+                    {charger && (
+                      <>
+                        {/* Brand & Serial */}
+                        {isEditing ? (
+                          <div className="grid grid-cols-2 gap-6">
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Brand</Label>
+                              <Input value={editChargers[activeChargerIndex]?.brand || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "brand", e.target.value)} />
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Serial Number</Label>
+                              <Input value={editChargers[activeChargerIndex]?.serial_number || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "serial_number", e.target.value)} />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-6">
+                            <div>
+                              <p className="text-sm text-muted-foreground mb-0.5">Brand</p>
+                              <p className="font-medium text-foreground">{charger.brand || "Not specified"}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-muted-foreground mb-0.5">Serial Number</p>
+                              <p className="font-medium text-foreground font-mono">{charger.serial_number || "Not provided"}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Photos */}
                         <div>
-                          <p className="text-xs text-muted-foreground mb-2">Photos ({charger.photo_urls.length})</p>
-                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            {charger.photo_urls.map((url, i) => (
-                              <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="aspect-square rounded-md overflow-hidden border bg-muted hover:opacity-80 transition-opacity">
-                                <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                              </a>
-                            ))}
-                          </div>
+                          <p className="text-sm text-muted-foreground mb-3">Photos</p>
+                          {charger.photo_urls && charger.photo_urls.length > 0 ? (
+                            <div className="flex gap-3">
+                              {charger.photo_urls.map((url, i) => (
+                                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="w-24 h-24 rounded-lg overflow-hidden border border-border bg-muted hover:opacity-80 transition-opacity">
+                                  <img src={url} alt={photoLabels[i] || `Photo ${i + 1}`} className="w-full h-full object-cover" />
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="flex gap-3">
+                              {photoLabels.map((label) => (
+                                <div key={label} className="w-24 h-24 rounded-lg border-2 border-dashed border-border/60 flex flex-col items-center justify-center text-muted-foreground/50">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-1"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                  <span className="text-xs">{label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <CameraOff className="h-4 w-4" />
-                          No photos uploaded
-                        </div>
-                      )}
 
-                      {/* Known Issues */}
-                      {charger.known_issues && (
+                        {/* Internal Notes */}
                         <div>
-                          <p className="text-xs text-muted-foreground mb-1">Known Issues / Concerns</p>
-                          <p className="text-sm bg-muted/50 rounded-md p-3">{charger.known_issues}</p>
+                          <p className="text-sm text-muted-foreground mb-1">Internal Notes</p>
+                          <p className="text-sm text-foreground">{charger.known_issues || "No notes"}</p>
                         </div>
-                      )}
-
-                      <Separator />
-
-                      {/* Charger Actions */}
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => toast.info("Ticket creation coming soon")}
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                          Approve & Create Ticket
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => {
-                            setRejectChargerIdx(activeChargerIndex);
-                            setRejectReason("");
-                            setRejectOpen(true);
-                          }}
-                        >
-                          <XCircle className="h-4 w-4" />
-                          Reject
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => {
-                            setRequestInfoMessage("");
-                            setRequestInfoOpen(true);
-                          }}
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                          Request More Info
-                        </Button>
-                      </div>
-                    </CardContent>
-                  )}
+                      </>
+                    )}
+                  </CardContent>
                 </Card>
               </>
             ) : (
-              <Card>
+              <Card className="border border-border/60">
                 <CardContent className="p-8 text-center text-muted-foreground">
                   No chargers submitted
                 </CardContent>
               </Card>
             )}
-
-            {/* Timeline */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Activity Timeline</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <TimelineItem
-                    icon={<CheckCircle className="h-4 w-4 text-optimal" />}
-                    label="Submitted"
-                    time={format(new Date(selectedSubmission.created_at), "MMM d, yyyy 'at' h:mm a")}
-                    active
-                  />
-                  {selectedSubmission.status !== "pending_review" && (
-                    <TimelineItem
-                      icon={<CheckCircle className="h-4 w-4 text-optimal" />}
-                      label={`Status changed to ${STATUS_LABELS[selectedSubmission.status] || selectedSubmission.status}`}
-                      time={format(new Date(selectedSubmission.updated_at), "MMM d, yyyy 'at' h:mm a")}
-                      active
-                    />
-                  )}
-                  {selectedSubmission.status === "pending_review" && (
-                    <TimelineItem
-                      icon={<Clock className="h-4 w-4 text-medium" />}
-                      label="Under Review"
-                      time="In progress"
-                      active={false}
-                    />
-                  )}
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
 
