@@ -61,7 +61,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
   // Reject / approve flow
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
-  const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
+  const [_approveConfirmOpen, setApproveConfirmOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -373,7 +373,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
       <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
         <Button variant="outline" size="sm" onClick={onCollapse}>Cancel</Button>
         <Button variant="destructive" size="sm" onClick={() => setRejectOpen(true)}>Reject</Button>
-        <Button size="sm" onClick={() => setApproveConfirmOpen(true)} className="gap-2">
+        <Button size="sm" onClick={handleApproveConfirm} className="gap-2">
           <Brain className="h-4 w-4" /> Approve & Run Assessment
         </Button>
       </div>
@@ -393,19 +393,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Approve Confirm */}
-      <AlertDialog open={approveConfirmOpen} onOpenChange={setApproveConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Run AutoHeal Assessment?</AlertDialogTitle>
-            <AlertDialogDescription>This will trigger AutoHeal assessment using ticket data and BTC database. Continue?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleApproveConfirm}>Continue</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Approve Confirm dialog removed — assessment runs directly */}
 
       {/* Processing Modal */}
       <Dialog open={isProcessing} onOpenChange={(open) => { if (!open && !error) return; if (!open) setIsProcessing(false); }}>
@@ -413,7 +401,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {error ? <XCircle className="h-5 w-5 text-critical" /> : <Brain className="h-5 w-5 text-primary animate-pulse" />}
-              {error ? "Assessment Failed" : "🤖 Running AutoHeal Assessment..."}
+              {error ? "Assessment Failed" : "Running AutoHeal Assessment..."}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
