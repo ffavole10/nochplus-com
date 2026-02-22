@@ -27,6 +27,7 @@ import AllChargers from "./pages/placeholders/AllChargers";
 import NochPlusDashboard from "./pages/placeholders/NochPlusDashboard";
 import NochPlusChargers from "./pages/placeholders/NochPlusChargers";
 import NochPlusMembers from "./pages/placeholders/NochPlusMembers";
+import NochPlusAssessments from "./pages/placeholders/NochPlusAssessments";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/noch-plus/dashboard" element={<NochPlusDashboard />} />
             <Route path="/noch-plus/members" element={<NochPlusMembers />} />
             <Route path="/noch-plus/chargers" element={<NochPlusChargers />} />
+            <Route path="/noch-plus/assessments" element={<NochPlusAssessments />} />
 
             {/* Settings */}
             <Route path="/settings" element={<Settings />} />
