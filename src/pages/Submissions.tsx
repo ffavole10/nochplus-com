@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive } from "lucide-react";
+import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +71,10 @@ export default function Submissions() {
   const [staffNotes, setStaffNotes] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Submission>>({});
+  const [editChargers, setEditChargers] = useState<ChargerSubmission[]>([]);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Reject dialog
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -179,6 +183,85 @@ export default function Submissions() {
     setSelectedSubmission(sub);
     setActiveChargerIndex(0);
     setStaffNotes(sub.staff_notes || "");
+    setIsEditing(false);
+    setEditForm({});
+    setEditChargers([]);
+  };
+
+  const startEditing = () => {
+    if (!selectedSubmission) return;
+    setEditForm({
+      full_name: selectedSubmission.full_name,
+      company_name: selectedSubmission.company_name,
+      email: selectedSubmission.email,
+      phone: selectedSubmission.phone,
+      street_address: selectedSubmission.street_address,
+      city: selectedSubmission.city,
+      state: selectedSubmission.state,
+      zip_code: selectedSubmission.zip_code,
+    });
+    setEditChargers(selectedSubmission.chargers.map(c => ({ ...c })));
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedSubmission) return;
+    setSavingEdit(true);
+    try {
+      const { error: subError } = await supabase
+        .from("submissions")
+        .update({
+          full_name: editForm.full_name,
+          company_name: editForm.company_name,
+          email: editForm.email,
+          phone: editForm.phone,
+          street_address: editForm.street_address,
+          city: editForm.city,
+          state: editForm.state,
+          zip_code: editForm.zip_code,
+        })
+        .eq("id", selectedSubmission.id);
+
+      if (subError) throw subError;
+
+      // Update each charger
+      for (const ch of editChargers) {
+        const { error: chError } = await supabase
+          .from("charger_submissions")
+          .update({
+            brand: ch.brand,
+            serial_number: ch.serial_number,
+            charger_type: ch.charger_type,
+            installation_location: ch.installation_location,
+            known_issues: ch.known_issues,
+          })
+          .eq("id", ch.id);
+        if (chError) throw chError;
+      }
+
+      const updated: Submission = {
+        ...selectedSubmission,
+        ...editForm as any,
+        chargers: editChargers,
+      };
+
+      setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      setSelectedSubmission(updated);
+      setIsEditing(false);
+      toast.success("Submission updated");
+    } catch (err: any) {
+      toast.error(`Failed to save: ${err.message}`);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const updateEditField = (field: string, value: string) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateEditCharger = (index: number, field: string, value: string) => {
+    setEditChargers((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
   };
 
   // Detail view
@@ -188,10 +271,28 @@ export default function Submissions() {
     return (
       <div className="p-6 space-y-6">
         {/* Back button */}
-        <Button variant="ghost" onClick={() => setSelectedSubmission(null)} className="gap-2">
+        <Button variant="ghost" onClick={() => { setSelectedSubmission(null); setIsEditing(false); }} className="gap-2">
           <ChevronLeft className="h-4 w-4" />
           Back to Submissions
         </Button>
+
+        {/* Edit / Save / Cancel controls */}
+        <div className="flex items-center gap-2">
+          {!isEditing ? (
+            <Button variant="outline" size="sm" className="gap-2" onClick={startEditing}>
+              <Pencil className="h-4 w-4" />
+              Edit Submission
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
+              <Button size="sm" className="gap-2" onClick={handleSaveEdit} disabled={savingEdit}>
+                {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {savingEdit ? "Saving..." : "Save Changes"}
+              </Button>
+            </>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* LEFT COLUMN */}
@@ -208,34 +309,79 @@ export default function Submissions() {
                 <p className="text-xs text-muted-foreground font-mono">{selectedSubmission.submission_id}</p>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <div className="flex items-start gap-2">
-                  <span className="text-muted-foreground">👤</span>
-                  <div>
-                    <p className="font-medium">{selectedSubmission.full_name}</p>
-                    <p className="text-muted-foreground">{selectedSubmission.company_name}</p>
+                {isEditing ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Full Name</Label>
+                        <Input value={editForm.full_name || ""} onChange={(e) => updateEditField("full_name", e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Company</Label>
+                        <Input value={editForm.company_name || ""} onChange={(e) => updateEditField("company_name", e.target.value)} />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Street Address</Label>
+                      <Input value={editForm.street_address || ""} onChange={(e) => updateEditField("street_address", e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <Label className="text-xs">City</Label>
+                        <Input value={editForm.city || ""} onChange={(e) => updateEditField("city", e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs">State</Label>
+                        <Input value={editForm.state || ""} onChange={(e) => updateEditField("state", e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs">ZIP</Label>
+                        <Input value={editForm.zip_code || ""} onChange={(e) => updateEditField("zip_code", e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Email</Label>
+                        <Input type="email" value={editForm.email || ""} onChange={(e) => updateEditField("email", e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Phone</Label>
+                        <Input value={editForm.phone || ""} onChange={(e) => updateEditField("phone", e.target.value)} />
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-muted-foreground">📍</span>
-                  <div>
-                    <p>{selectedSubmission.street_address}</p>
-                    <p>{selectedSubmission.city}, {selectedSubmission.state} {selectedSubmission.zip_code}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">📧</span>
-                  <p className="truncate">{selectedSubmission.email}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">📞</span>
-                  <p>{selectedSubmission.phone}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">📅</span>
-                  <p>{format(new Date(selectedSubmission.created_at), "MMM d, yyyy 'at' h:mm a")}</p>
-                </div>
-                {selectedSubmission.noch_plus_member && (
-                  <Badge className="bg-purple-500/15 text-purple-600 border-purple-500/30">Noch+ Member</Badge>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-2">
+                      <span className="text-muted-foreground">👤</span>
+                      <div>
+                        <p className="font-medium">{selectedSubmission.full_name}</p>
+                        <p className="text-muted-foreground">{selectedSubmission.company_name}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-muted-foreground">📍</span>
+                      <div>
+                        <p>{selectedSubmission.street_address}</p>
+                        <p>{selectedSubmission.city}, {selectedSubmission.state} {selectedSubmission.zip_code}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">📧</span>
+                      <p className="truncate">{selectedSubmission.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">📞</span>
+                      <p>{selectedSubmission.phone}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">📅</span>
+                      <p>{format(new Date(selectedSubmission.created_at), "MMM d, yyyy 'at' h:mm a")}</p>
+                    </div>
+                    {selectedSubmission.noch_plus_member && (
+                      <Badge className="bg-purple-500/15 text-purple-600 border-purple-500/30">Noch+ Member</Badge>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -385,24 +531,49 @@ export default function Submissions() {
                   </CardHeader>
                   {charger && (
                     <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Brand</p>
-                          <p className="font-medium">{charger.brand}</p>
+                      {isEditing ? (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-xs">Brand</Label>
+                            <Input value={editChargers[activeChargerIndex]?.brand || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "brand", e.target.value)} />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Serial Number</Label>
+                            <Input value={editChargers[activeChargerIndex]?.serial_number || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "serial_number", e.target.value)} />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Charger Type</Label>
+                            <Input value={editChargers[activeChargerIndex]?.charger_type || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "charger_type", e.target.value)} />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Installation Location</Label>
+                            <Input value={editChargers[activeChargerIndex]?.installation_location || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "installation_location", e.target.value)} />
+                          </div>
+                          <div className="col-span-2">
+                            <Label className="text-xs">Known Issues</Label>
+                            <Textarea value={editChargers[activeChargerIndex]?.known_issues || ""} onChange={(e) => updateEditCharger(activeChargerIndex, "known_issues", e.target.value)} rows={3} />
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Serial Number</p>
-                          <p className="font-medium">{charger.serial_number || "—"}</p>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Brand</p>
+                            <p className="font-medium">{charger.brand}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Serial Number</p>
+                            <p className="font-medium">{charger.serial_number || "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Charger Type</p>
+                            <p className="font-medium">{charger.charger_type}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Installation Location</p>
+                            <p className="font-medium">{charger.installation_location || "—"}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Charger Type</p>
-                          <p className="font-medium">{charger.charger_type}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Installation Location</p>
-                          <p className="font-medium">{charger.installation_location || "—"}</p>
-                        </div>
-                      </div>
+                      )}
 
                       {/* Photos */}
                       {charger.photo_urls && charger.photo_urls.length > 0 ? (
