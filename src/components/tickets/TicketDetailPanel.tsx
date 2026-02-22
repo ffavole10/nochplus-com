@@ -10,6 +10,7 @@ import { SWIPreviewDialog } from "@/components/tickets/SWIPreviewDialog";
 import { getSWIPublicUrl } from "@/lib/swiStorage";
 import { TicketCloseStep } from "@/components/tickets/TicketCloseStep";
 import { InlineEstimateEditor } from "@/components/tickets/InlineEstimateEditor";
+import { AssessmentReportActions } from "@/components/tickets/AssessmentReportActions";
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
   MapPin, Wrench, FileText, Send, Eye, ExternalLink, Download,
@@ -153,6 +154,11 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
                 <p className="text-sm text-muted-foreground leading-relaxed">{ticket.assessmentData.recommendation}</p>
               </div>
             </div>
+          )}
+
+          {/* Assessment Report PDF */}
+          {ticket.assessmentData && (
+            <AssessmentReportActions ticket={ticket} />
           )}
 
           {/* Metadata Grid */}
