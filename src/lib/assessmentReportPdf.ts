@@ -359,3 +359,8 @@ export function getAssessmentReportBlob(ticket: ServiceTicket): Blob {
   const doc = generateAssessmentReportPDF(ticket);
   return doc.output("blob");
 }
+
+export function getAssessmentReportDataUri(ticket: ServiceTicket): string {
+  const doc = generateAssessmentReportPDF(ticket);
+  return doc.output("datauristring");
+}
