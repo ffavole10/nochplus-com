@@ -436,6 +436,21 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
       setStatus("sent");
       setSentAt(new Date().toISOString());
       setSavedEstimateId(savedEstimate.id);
+
+      // Advance ticket workflow: steps 3-4 complete, step 5 in progress
+      const now2 = new Date().toISOString();
+      updateTicket(ticket.id, {
+        currentStep: 5,
+        estimateId: savedEstimate.id,
+        estimateAmount: total,
+        workflowSteps: ticket.workflowSteps.map(s => ({
+          ...s,
+          status: s.number <= 4 ? "complete" as const : s.number === 5 ? "in_progress" as const : s.status,
+          completedAt: s.number <= 4 && !s.completedAt ? now2 : s.completedAt,
+        })),
+      });
+
+      toast.success("Estimate sent — awaiting customer approval");
     } catch (err: any) {
       console.error("Send estimate error:", err);
       toast.error(`Failed to send: ${err.message || "Unknown error"}`);
