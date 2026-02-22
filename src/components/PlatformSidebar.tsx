@@ -138,7 +138,6 @@ export function PlatformSidebar() {
   ];
 
   const serviceDeskPages = [
-    { title: "Submissions", url: "/service-desk/submissions", icon: FileCheck },
     { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: 89 },
     { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: 34 },
     { title: "Customers", url: "/service-desk/customers", icon: Users },
@@ -147,6 +146,7 @@ export function PlatformSidebar() {
 
   const nochPlusPages = [
     { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard },
+    { title: "Submissions", url: "/noch-plus/submissions", icon: FileCheck },
     { title: "Members", url: "/noch-plus/members", icon: Users },
     { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive },
   ];
