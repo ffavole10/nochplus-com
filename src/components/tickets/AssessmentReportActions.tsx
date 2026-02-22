@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ServiceTicket } from "@/types/serviceTicket";
-import { downloadAssessmentReport, getAssessmentReportBlob, getAssessmentReportDataUri } from "@/lib/assessmentReportPdf";
+import { downloadAssessmentReport, getAssessmentReportBlob, generateAssessmentReportPDF } from "@/lib/assessmentReportPdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Download, Eye, Send, Loader2, FileText } from "lucide-react";
@@ -14,21 +14,17 @@ interface AssessmentReportActionsProps {
 }
 
 export function AssessmentReportActions({ ticket }: AssessmentReportActionsProps) {
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [sendOpen, setSendOpen] = useState(false);
   const [sendEmail, setSendEmail] = useState(ticket.customer.email);
   const [sending, setSending] = useState(false);
 
   const handlePreview = () => {
-    const dataUri = getAssessmentReportDataUri(ticket);
-    setPreviewUrl(dataUri);
-    setPreviewOpen(true);
-  };
-
-  const handleClosePreview = (open: boolean) => {
-    if (!open) setPreviewUrl(null);
-    setPreviewOpen(open);
+    const doc = generateAssessmentReportPDF(ticket);
+    const blob = doc.output("blob");
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    // Revoke after a delay to allow the tab to load
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
   };
 
   const handleDownload = () => {
@@ -96,18 +92,6 @@ export function AssessmentReportActions({ ticket }: AssessmentReportActionsProps
           </Button>
         </div>
       </div>
-
-      {/* Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={handleClosePreview}>
-        <DialogContent className="max-w-4xl h-[85vh]">
-          <DialogHeader>
-            <DialogTitle>Assessment Report — {ticket.ticketId}</DialogTitle>
-          </DialogHeader>
-          {previewUrl && (
-            <iframe src={previewUrl} className="w-full flex-1 rounded-lg border" style={{ minHeight: "70vh" }} />
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Send Dialog */}
       <Dialog open={sendOpen} onOpenChange={setSendOpen}>
