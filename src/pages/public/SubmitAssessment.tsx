@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import {
   CheckCircle2, Clock, Zap, Camera,
   Plus, Trash2, Loader2, ArrowRight, X, LocateFixed,
-  Users, Monitor, BadgePercent, Package, Wrench, Star, CreditCard, Shield,
+  Users, Monitor, BadgePercent, Package, Wrench, Award, CreditCard, Shield,
   Hash, ImagePlus
 } from "lucide-react";
 import evChargerBg from "@/assets/ev-charger-bg.png";
@@ -513,7 +513,7 @@ export default function SubmitAssessment() {
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Star className="h-8 w-8 text-primary fill-primary" />
+              <Award className="h-8 w-8 text-optimal fill-optimal" />
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Unlock Noch+ Membership</h1>
             <p className="text-muted-foreground">Get exclusive benefits for your {chargers.length} charger{chargers.length > 1 ? "s" : ""}</p>
@@ -823,7 +823,7 @@ export default function SubmitAssessment() {
 
               {nochPlus && (
                 <div className="mb-4 p-3 bg-primary/10 rounded-lg flex items-center gap-2 text-sm">
-                  <Star className="h-4 w-4 text-primary fill-primary" />
+                  <Award className="h-4 w-4 text-optimal fill-optimal" />
                   <span className="font-medium">Noch+ Membership active</span>
                   <Badge className="ml-auto bg-primary text-primary-foreground text-xs">Member</Badge>
                 </div>
