@@ -418,7 +418,7 @@ export default function SubmitAssessment() {
               { icon: Camera, title: "Photo-Based", desc: "Just snap a few photos" },
               { icon: CheckCircle2, title: "Fast Response", desc: "Review within 24 hours" },
             ].map((feat, i) => (
-              <div key={i} className="flex items-center gap-4 bg-white/15 backdrop-blur-sm rounded-2xl px-5 py-4">
+              <div key={i} className="flex items-center gap-4 bg-white/30 backdrop-blur-sm rounded-2xl px-5 py-4">
                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                   <feat.icon className="h-6 w-6 text-white/90" />
                 </div>
