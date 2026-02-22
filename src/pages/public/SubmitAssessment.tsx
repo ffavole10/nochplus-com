@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import evChargerBg from "@/assets/ev-charger-bg.png";
 import medalBadge from "@/assets/medal-badge.png";
+import AnimatedLandingPage from "@/components/public/AnimatedLandingPage";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -400,76 +401,7 @@ export default function SubmitAssessment() {
 
   // ─── LANDING PAGE ───
   if (currentStep === "landing") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[hsl(170,40%,55%)] via-[hsl(170,35%,60%)] to-[hsl(175,30%,65%)] flex flex-col relative">
-        <img
-          src={evChargerBg}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
-        />
-        <header className="px-6 pt-8 pb-4">
-          <div className="flex items-center gap-2 text-white">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <Zap className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-white">NOCH+</span>
-          </div>
-        </header>
-
-        <div className="flex-1 flex flex-col justify-center px-6 pb-8">
-          <div className="max-w-lg mx-auto w-full">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 leading-tight">
-              Welcome to Noch Plus!
-            </h1>
-            <p className="text-white/80 text-lg mb-10">
-              Let's assess your charging stations remotely
-            </p>
-          </div>
-
-          <div className="max-w-lg mx-auto w-full space-y-3 mb-10">
-            {[
-              { icon: Clock, title: "Quick Process", desc: "2 minutes per charger" },
-              { icon: Camera, title: "Photo-Based", desc: "Just snap a few photos" },
-              { icon: CheckCircle2, title: "Fast Response", desc: "Review within 24 hours" },
-            ].map((feat, i) => (
-              <div key={i} className="flex items-center gap-4 bg-white/30 backdrop-blur-sm rounded-2xl px-5 py-4">
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                  <feat.icon className="h-6 w-6 text-white/90" />
-                </div>
-                <div>
-                  <p className="font-semibold text-white">{feat.title}</p>
-                  <p className="text-sm text-white/70">{feat.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="max-w-lg mx-auto w-full">
-            <Button
-              size="lg"
-              className="w-full bg-white text-[hsl(170,40%,40%)] hover:bg-white/90 text-lg font-semibold rounded-2xl h-14 gap-2 shadow-lg"
-              onClick={() => setCurrentStep("step1")}
-            >
-              <Zap className="h-5 w-5" />
-              Start Assessment
-            </Button>
-          </div>
-        </div>
-
-        {/* Footer with copyright and admin access */}
-        <div className="pb-6 flex flex-col items-center gap-2">
-          <button
-            onClick={() => navigate("/login")}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/10 transition-all text-sm"
-            aria-label="Admin login"
-          >
-            <Monitor className="h-4 w-4" />
-            <span>Admin Access</span>
-          </button>
-          <span className="text-white/40 text-sm">© 2026 Noch Power. All rights reserved.</span>
-        </div>
-      </div>
-    );
+    return <AnimatedLandingPage onStart={() => setCurrentStep("step1")} />;
   }
 
   // ─── FORM HEADER ───
