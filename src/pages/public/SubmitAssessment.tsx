@@ -397,12 +397,14 @@ export default function SubmitAssessment() {
         </header>
 
         <div className="flex-1 flex flex-col justify-center px-6 pb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 leading-tight">
-            Welcome to Noch Plus!
-          </h1>
-          <p className="text-white/80 text-lg mb-10">
-            Let's assess your charging stations remotely
-          </p>
+          <div className="max-w-lg mx-auto w-full">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 leading-tight">
+              Welcome to Noch Plus!
+            </h1>
+            <p className="text-white/80 text-lg mb-10">
+              Let's assess your charging stations remotely
+            </p>
+          </div>
 
           <div className="max-w-lg mx-auto w-full space-y-3 mb-10">
             {[
