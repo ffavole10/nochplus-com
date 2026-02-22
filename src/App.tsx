@@ -41,7 +41,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
             {/* Campaigns section */}
-            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Index />} />
             <Route path="/dataset" element={<Dataset />} />
             <Route path="/issues" element={<IssuesQueue />} />
             <Route path="/schedule" element={<Schedule />} />
@@ -69,7 +69,8 @@ const App = () => (
           <Route path="/estimates" element={<Navigate to="/service-desk/estimates" replace />} />
           <Route path="/missioncontrol" element={<ProtectedRoute><IssuesQueue /></ProtectedRoute>} />
           <Route path="/estimate-status" element={<EstimateStatus />} />
-          {/* Public Noch+ submission pages */}
+          {/* Public Noch+ submission pages — "/" is the main landing */}
+          <Route path="/" element={<SubmitAssessment />} />
           <Route path="/submit" element={<SubmitAssessment />} />
           <Route path="/submit/confirmation/:submissionId" element={<SubmissionConfirmation />} />
           <Route path="/track" element={<TrackSubmission />} />

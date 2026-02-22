@@ -12,7 +12,7 @@ import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useFilters } from "@/contexts/FilterContext";
 
 const PAGE_TITLES: Record<string, string> = {
-  "/": "Dashboard",
+  "/dashboard": "Dashboard",
   "/dataset": "Dataset",
   "/issues": "Issues Queue",
   "/schedule": "Schedule",
@@ -44,7 +44,7 @@ export function PlatformHeader() {
 
   const pageTitle = PAGE_TITLES[location.pathname] || "Dashboard";
   const isSettingsPage = location.pathname === "/settings";
-  const isCampaignPage = ["/", "/dataset", "/tickets", "/schedule", "/campaigns/reports"].includes(location.pathname);
+  const isCampaignPage = ["/dashboard", "/dataset", "/tickets", "/schedule", "/campaigns/reports"].includes(location.pathname);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -155,7 +155,7 @@ export function PlatformHeader() {
             className="text-muted-foreground hover:text-foreground"
             onClick={async () => {
               await supabase.auth.signOut();
-              window.location.href = "/login";
+              window.location.href = "/";
             }}
           >
             <LogOut className="w-4 h-4" />
