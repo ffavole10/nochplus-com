@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   CheckCircle2, Clock, Zap, Camera,
-  Plus, Trash2, Loader2, ArrowRight, X, MapPin, Navigation,
-  Users, Monitor, BadgePercent, Package, Wrench, Star
+  Plus, Trash2, Loader2, ArrowRight, X, Navigation,
+  Users, Monitor, BadgePercent, Package, Wrench, Star, CreditCard, Shield
 } from "lucide-react";
 
 const US_STATES = [
@@ -48,11 +48,15 @@ const createEmptyCharger = (): ChargerEntry => ({
   photoPreviewUrls: [],
 });
 
+type FormStep = "landing" | "step1" | "step2" | "membership" | "step3";
+
 export default function SubmitAssessment() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
-  const [started, setStarted] = useState(false);
+  const [currentStep, setCurrentStep] = useState<FormStep>("landing");
   const [locatingUser, setLocatingUser] = useState(false);
+  const [membershipLoading, setMembershipLoading] = useState(false);
 
   // Customer fields
   const [fullName, setFullName] = useState("");
@@ -77,6 +81,22 @@ export default function SubmitAssessment() {
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Handle return from Stripe checkout
+  useEffect(() => {
+    const membership = searchParams.get("membership");
+    if (membership === "success") {
+      setNochPlus(true);
+      setCurrentStep("step3");
+      toast.success("Membership payment successful! Complete your submission below.");
+      // Clean URL
+      window.history.replaceState({}, "", "/submit");
+    } else if (membership === "cancelled") {
+      setCurrentStep("membership");
+      toast.info("Membership signup was cancelled. You can still submit your assessment.");
+      window.history.replaceState({}, "", "/submit");
+    }
+  }, [searchParams]);
 
   const formatPhone = (val: string) => {
     const digits = val.replace(/\D/g, "").slice(0, 10);
@@ -141,8 +161,6 @@ export default function SubmitAssessment() {
             if (road) setStreetAddress(road);
             if (addr.city || addr.town || addr.village) setCity(addr.city || addr.town || addr.village);
             if (addr.state) {
-              const stateAbbr = US_STATES.find(s => addr.state?.toLowerCase().includes(s.toLowerCase())) || "";
-              // Try matching full state name to abbreviation
               const stateMap: Record<string, string> = {
                 "alabama":"AL","alaska":"AK","arizona":"AZ","arkansas":"AR","california":"CA","colorado":"CO",
                 "connecticut":"CT","delaware":"DE","florida":"FL","georgia":"GA","hawaii":"HI","idaho":"ID",
@@ -156,7 +174,7 @@ export default function SubmitAssessment() {
                 "washington":"WA","west virginia":"WV","wisconsin":"WI","wyoming":"WY",
                 "district of columbia":"DC"
               };
-              const matched = stateMap[addr.state.toLowerCase()] || stateAbbr;
+              const matched = stateMap[addr.state.toLowerCase()] || "";
               if (matched) setState(matched);
             }
             if (addr.postcode) setZipCode(addr.postcode.split("-")[0]);
@@ -176,7 +194,7 @@ export default function SubmitAssessment() {
     );
   };
 
-  const validate = () => {
+  const validateStep1 = () => {
     const e: Record<string, string> = {};
     if (!fullName.trim()) e.fullName = "Name is required";
     if (!companyName.trim()) e.companyName = "Company name is required";
@@ -184,21 +202,109 @@ export default function SubmitAssessment() {
     if (!phone.trim() || phone.replace(/\D/g, "").length < 10) e.phone = "Valid phone number is required";
     if (!city.trim()) e.city = "City is required";
     if (!state) e.state = "State is required";
-
-    chargers.forEach((c, i) => {
-      if (!c.brand) e[`charger_${i}_brand`] = "Brand is required";
-      if (!c.chargerType) e[`charger_${i}_type`] = "Charger type is required";
-    });
-
-    if (!termsAgreed) e.terms = "You must agree to the terms";
-    if (!contactConsent) e.consent = "You must consent to being contacted";
-
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
+  const validateStep2 = () => {
+    const e: Record<string, string> = {};
+    chargers.forEach((c, i) => {
+      if (!c.brand) e[`charger_${i}_brand`] = "Brand is required";
+      if (!c.chargerType) e[`charger_${i}_type`] = "Charger type is required";
+    });
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const validateStep3 = () => {
+    const e: Record<string, string> = {};
+    if (!termsAgreed) e.terms = "You must agree to the terms";
+    if (!contactConsent) e.consent = "You must consent to being contacted";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleNextStep1 = () => {
+    if (validateStep1()) {
+      setCurrentStep("step2");
+      window.scrollTo(0, 0);
+    } else {
+      toast.error("Please fix the errors before continuing.");
+    }
+  };
+
+  const handleNextStep2 = () => {
+    if (validateStep2()) {
+      setCurrentStep("membership");
+      window.scrollTo(0, 0);
+    } else {
+      toast.error("Please fix the errors before continuing.");
+    }
+  };
+
+  const handleSubscribe = async () => {
+    setMembershipLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-membership-checkout", {
+        body: {
+          email: email.trim().toLowerCase(),
+          chargerCount: chargers.length,
+          fullName: fullName.trim(),
+          companyName: companyName.trim(),
+        },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        // Save form state to sessionStorage before redirecting
+        sessionStorage.setItem("submit-form-state", JSON.stringify({
+          fullName, companyName, email, phone, streetAddress, city, state, zipCode,
+          chargers: chargers.map(c => ({ ...c, photos: [], photoPreviewUrls: [] })),
+          customerNotes, termsAgreed, contactConsent,
+        }));
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (err: any) {
+      console.error("Membership checkout error:", err);
+      toast.error("Could not start membership checkout. Please try again.");
+    } finally {
+      setMembershipLoading(false);
+    }
+  };
+
+  const handleSkipMembership = () => {
+    setNochPlus(false);
+    setCurrentStep("step3");
+    window.scrollTo(0, 0);
+  };
+
+  // Restore form state after Stripe redirect
+  useEffect(() => {
+    const saved = sessionStorage.getItem("submit-form-state");
+    if (saved && (searchParams.get("membership") === "success" || searchParams.get("membership") === "cancelled")) {
+      try {
+        const s = JSON.parse(saved);
+        setFullName(s.fullName || "");
+        setCompanyName(s.companyName || "");
+        setEmail(s.email || "");
+        setPhone(s.phone || "");
+        setStreetAddress(s.streetAddress || "");
+        setCity(s.city || "");
+        setState(s.state || "");
+        setZipCode(s.zipCode || "");
+        if (s.chargers?.length) setChargers(s.chargers);
+        setCustomerNotes(s.customerNotes || "");
+        setTermsAgreed(s.termsAgreed || false);
+        setContactConsent(s.contactConsent || false);
+        sessionStorage.removeItem("submit-form-state");
+      } catch { /* ignore */ }
+    }
+  }, [searchParams]);
+
   const handleSubmit = async () => {
-    if (!validate()) { toast.error("Please fix the errors before submitting."); return; }
+    if (!validateStep3()) { toast.error("Please fix the errors before submitting."); return; }
     setSubmitting(true);
 
     try {
@@ -275,11 +381,12 @@ export default function SubmitAssessment() {
     }
   };
 
+  const stepNumber = currentStep === "step1" ? 1 : currentStep === "step2" ? 2 : currentStep === "membership" ? 2.5 : currentStep === "step3" ? 3 : 0;
+
   // ─── LANDING PAGE ───
-  if (!started) {
+  if (currentStep === "landing") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[hsl(170,40%,55%)] via-[hsl(170,35%,60%)] to-[hsl(175,30%,65%)] flex flex-col">
-        {/* Header */}
         <header className="px-6 pt-8 pb-4">
           <div className="flex items-center gap-2 text-white">
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
@@ -289,7 +396,6 @@ export default function SubmitAssessment() {
           </div>
         </header>
 
-        {/* Hero */}
         <div className="flex-1 flex flex-col justify-center px-6 pb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 leading-tight">
             Welcome to Noch Plus!
@@ -298,7 +404,6 @@ export default function SubmitAssessment() {
             Let's assess your charging stations remotely
           </p>
 
-          {/* Feature Cards */}
           <div className="space-y-3 mb-10">
             {[
               { icon: Clock, title: "Quick Process", desc: "2 minutes per charger" },
@@ -317,11 +422,10 @@ export default function SubmitAssessment() {
             ))}
           </div>
 
-          {/* CTA Button */}
           <Button
             size="lg"
             className="w-full bg-white text-[hsl(170,40%,40%)] hover:bg-white/90 text-lg font-semibold rounded-2xl h-14 gap-2 shadow-lg"
-            onClick={() => setStarted(true)}
+            onClick={() => setCurrentStep("step1")}
           >
             <Zap className="h-5 w-5" />
             Start Assessment
@@ -331,262 +435,364 @@ export default function SubmitAssessment() {
     );
   }
 
-  // ─── FORM PAGE ───
+  // ─── FORM HEADER ───
+  const FormHeader = () => (
+    <header className="border-b border-border/50 bg-gradient-to-r from-[hsl(170,40%,55%)] to-[hsl(175,35%,60%)]">
+      <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+            <Zap className="h-4 w-4 text-white" />
+          </div>
+          <span className="font-bold text-white">NOCH+</span>
+        </div>
+        <Badge className="bg-white/20 text-white border-0 hover:bg-white/30">Free Assessment</Badge>
+      </div>
+    </header>
+  );
+
+  // ─── STEP PROGRESS ───
+  const StepProgress = () => (
+    <div className="flex items-center justify-center gap-2 mb-8">
+      {[1, 2, 3].map(s => (
+        <div key={s} className="flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+            s < stepNumber ? "bg-primary text-primary-foreground" :
+            s === Math.floor(stepNumber) ? "bg-primary text-primary-foreground" :
+            "bg-muted text-muted-foreground"
+          }`}>
+            {s < stepNumber ? <CheckCircle2 className="h-4 w-4" /> : s}
+          </div>
+          {s < 3 && <div className={`w-8 h-0.5 ${s < stepNumber ? "bg-primary" : "bg-muted"}`} />}
+        </div>
+      ))}
+    </div>
+  );
+
+  // ─── MEMBERSHIP UPSELL PAGE ───
+  if (currentStep === "membership") {
+    return (
+      <div className="min-h-screen bg-background">
+        <FormHeader />
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Star className="h-8 w-8 text-primary fill-primary" />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Unlock Noch+ Membership</h1>
+            <p className="text-muted-foreground">Get exclusive benefits for your {chargers.length} charger{chargers.length > 1 ? "s" : ""}</p>
+          </div>
+
+          {/* Pricing */}
+          <Card className="mb-6 border-primary shadow-lg">
+            <CardContent className="p-6">
+              <div className="text-center mb-6">
+                <div className="text-4xl font-bold text-foreground">
+                  $19<span className="text-lg font-normal text-muted-foreground">/mo per charger</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {chargers.length} charger{chargers.length > 1 ? "s" : ""} × $19 = <span className="font-semibold text-foreground">${chargers.length * 19}/mo</span>
+                </p>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                {[
+                  { icon: Users, text: "Dedicated account manager" },
+                  { icon: BadgePercent, text: "Member exclusive rate — 50% off" },
+                  { icon: Package, text: "Parts discount — 20% off" },
+                  { icon: Wrench, text: "Annual Preventive Maintenance — 50% off" },
+                  { icon: Monitor, text: "Direct system access" },
+                  { icon: Shield, text: "Priority support & response" },
+                ].map((benefit, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <benefit.icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium">{benefit.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center mb-6 italic">
+                For less than a coffee a day, get peace of mind for your entire charging setup.
+              </p>
+
+              {/* Subscribe Button */}
+              <Button
+                size="lg"
+                className="w-full text-lg gap-2 h-14"
+                onClick={handleSubscribe}
+                disabled={membershipLoading}
+              >
+                {membershipLoading ? (
+                  <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
+                ) : (
+                  <><CreditCard className="h-5 w-5" /> Subscribe — ${chargers.length * 19}/mo</>
+                )}
+              </Button>
+
+              <div className="flex items-center justify-center gap-2 mt-3 text-xs text-muted-foreground">
+                <Shield className="h-3 w-3" />
+                <span>Secure payment powered by Stripe</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Skip */}
+          <div className="text-center">
+            <button
+              onClick={handleSkipMembership}
+              className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
+            >
+              Skip for now — continue with free assessment
+            </button>
+          </div>
+        </div>
+
+        <footer className="py-6 border-t border-border/50 bg-card">
+          <div className="max-w-3xl mx-auto px-4 text-center text-sm text-muted-foreground">
+            <p>© {new Date().getFullYear()} Noch Power. All rights reserved.</p>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // ─── FORM STEPS ───
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-gradient-to-r from-[hsl(170,40%,55%)] to-[hsl(175,35%,60%)]">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-              <Zap className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-bold text-white">NOCH+</span>
-          </div>
-          <Badge className="bg-white/20 text-white border-0 hover:bg-white/30">Free Assessment</Badge>
-        </div>
-      </header>
+      <FormHeader />
 
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
+        <div className="text-center mb-2">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Submit Your Chargers</h1>
           <p className="text-muted-foreground">Fill in the basics — takes about 2 minutes</p>
         </div>
 
+        <StepProgress />
+
         {/* Step 1: Location & Contact */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</span>
-              Your Location & Contact
-            </h3>
+        {currentStep === "step1" && (
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</span>
+                Your Location & Contact
+              </h3>
 
-            {/* Auto-locate button */}
-            <Button
-              variant="outline"
-              className="w-full mb-4 gap-2 border-primary/30 text-primary hover:bg-primary/5"
-              onClick={useCurrentLocation}
-              disabled={locatingUser}
-            >
-              {locatingUser ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Detecting location...</>
-              ) : (
-                <><Navigation className="h-4 w-4" /> Use My Current Location</>
-              )}
-            </Button>
+              <Button
+                variant="outline"
+                className="w-full mb-4 gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={useCurrentLocation}
+                disabled={locatingUser}
+              >
+                {locatingUser ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Detecting location...</>
+                ) : (
+                  <><Navigation className="h-4 w-4" /> Use My Current Location</>
+                )}
+              </Button>
 
-            <div className="relative mb-4">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-              <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">or enter manually</span></div>
-            </div>
+              <div className="relative mb-4">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">or enter manually</span></div>
+              </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <Label>Full Name *</Label>
-                <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="John Smith" />
-                {errors.fullName && <p className="text-xs text-destructive mt-1">{errors.fullName}</p>}
-              </div>
-              <div>
-                <Label>Company / Property *</Label>
-                <Input value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Acme Properties" />
-                {errors.companyName && <p className="text-xs text-destructive mt-1">{errors.companyName}</p>}
-              </div>
-              <div>
-                <Label>Email *</Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="john@example.com" />
-                {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
-              </div>
-              <div>
-                <Label>Phone *</Label>
-                <Input value={phone} onChange={e => setPhone(formatPhone(e.target.value))} placeholder="(555) 123-4567" />
-                {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Street Address</Label>
-                <Input value={streetAddress} onChange={e => setStreetAddress(e.target.value)} placeholder="123 Main St (optional)" />
-              </div>
-              <div>
-                <Label>City *</Label>
-                <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Los Angeles" />
-                {errors.city && <p className="text-xs text-destructive mt-1">{errors.city}</p>}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <Label>State *</Label>
-                  <Select value={state} onValueChange={setState}>
-                    <SelectTrigger><SelectValue placeholder="State" /></SelectTrigger>
-                    <SelectContent>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
-                  {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
+                  <Label>Full Name *</Label>
+                  <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="John Smith" />
+                  {errors.fullName && <p className="text-xs text-destructive mt-1">{errors.fullName}</p>}
                 </div>
                 <div>
-                  <Label>ZIP Code</Label>
-                  <Input value={zipCode} onChange={e => setZipCode(e.target.value)} placeholder="90001" />
+                  <Label>Company / Property *</Label>
+                  <Input value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Acme Properties" />
+                  {errors.companyName && <p className="text-xs text-destructive mt-1">{errors.companyName}</p>}
+                </div>
+                <div>
+                  <Label>Email *</Label>
+                  <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="john@example.com" />
+                  {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
+                </div>
+                <div>
+                  <Label>Phone *</Label>
+                  <Input value={phone} onChange={e => setPhone(formatPhone(e.target.value))} placeholder="(555) 123-4567" />
+                  {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
+                </div>
+                <div className="sm:col-span-2">
+                  <Label>Street Address</Label>
+                  <Input value={streetAddress} onChange={e => setStreetAddress(e.target.value)} placeholder="123 Main St (optional)" />
+                </div>
+                <div>
+                  <Label>City *</Label>
+                  <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Los Angeles" />
+                  {errors.city && <p className="text-xs text-destructive mt-1">{errors.city}</p>}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>State *</Label>
+                    <Select value={state} onValueChange={setState}>
+                      <SelectTrigger><SelectValue placeholder="State" /></SelectTrigger>
+                      <SelectContent>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                    {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
+                  </div>
+                  <div>
+                    <Label>ZIP Code</Label>
+                    <Input value={zipCode} onChange={e => setZipCode(e.target.value)} placeholder="90001" />
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+
+              <Button size="lg" className="w-full mt-6 gap-2" onClick={handleNextStep1}>
+                Next <ArrowRight className="h-5 w-5" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Step 2: Chargers */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">2</span>
-                Your Chargers
-              </h3>
-              <Badge variant="outline">{chargers.length} charger{chargers.length > 1 ? "s" : ""}</Badge>
-            </div>
+        {currentStep === "step2" && (
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">2</span>
+                  Your Chargers
+                </h3>
+                <Badge variant="outline">{chargers.length} charger{chargers.length > 1 ? "s" : ""}</Badge>
+              </div>
 
-            <div className="space-y-4">
-              {chargers.map((charger, idx) => (
-                <Card key={charger.id} className="border-border/70">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-medium text-sm">Charger {idx + 1}</span>
-                      {chargers.length > 1 && (
-                        <Button variant="ghost" size="sm" onClick={() => removeCharger(charger.id)} className="text-destructive hover:text-destructive h-7 px-2">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs">Brand *</Label>
-                        <Select value={charger.brand} onValueChange={v => updateCharger(charger.id, "brand", v)}>
-                          <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
-                          <SelectContent>{CHARGER_BRANDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
-                        </Select>
-                        {errors[`charger_${idx}_brand`] && <p className="text-xs text-destructive mt-1">{errors[`charger_${idx}_brand`]}</p>}
+              <div className="space-y-4">
+                {chargers.map((charger, idx) => (
+                  <Card key={charger.id} className="border-border/70">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-medium text-sm">Charger {idx + 1}</span>
+                        {chargers.length > 1 && (
+                          <Button variant="ghost" size="sm" onClick={() => removeCharger(charger.id)} className="text-destructive hover:text-destructive h-7 px-2">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
-                      <div>
-                        <Label className="text-xs">Charger Type *</Label>
-                        <Select value={charger.chargerType} onValueChange={v => updateCharger(charger.id, "chargerType", v)}>
-                          <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                          <SelectContent>{CHARGER_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                        </Select>
-                        {errors[`charger_${idx}_type`] && <p className="text-xs text-destructive mt-1">{errors[`charger_${idx}_type`]}</p>}
-                      </div>
-                      <div>
-                        <Label className="text-xs">Serial Number</Label>
-                        <Input value={charger.serialNumber} onChange={e => updateCharger(charger.id, "serialNumber", e.target.value)} placeholder="If visible on charger" className="text-sm" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Location on Site</Label>
-                        <Input value={charger.installationLocation} onChange={e => updateCharger(charger.id, "installationLocation", e.target.value)} placeholder="e.g., Parking Garage Level 2" className="text-sm" />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <Label className="text-xs">Known Issues</Label>
-                        <Textarea value={charger.knownIssues} onChange={e => updateCharger(charger.id, "knownIssues", e.target.value)} placeholder="Any problems or concerns?" rows={2} className="text-sm" />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <Label className="text-xs">Photos (optional)</Label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {charger.photoPreviewUrls.map((url, pi) => (
-                            <div key={pi} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
-                              <img src={url} alt="" className="w-full h-full object-cover" />
-                              <button onClick={() => removePhoto(charger.id, pi)} className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
-                          <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
-                            <Camera className="h-5 w-5 text-muted-foreground" />
-                            <span className="text-[10px] text-muted-foreground mt-0.5">Add Photo</span>
-                            <input type="file" accept="image/*" multiple className="hidden" onChange={e => handlePhotoUpload(charger.id, e.target.files)} />
-                          </label>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Brand *</Label>
+                          <Select value={charger.brand} onValueChange={v => updateCharger(charger.id, "brand", v)}>
+                            <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
+                            <SelectContent>{CHARGER_BRANDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                          </Select>
+                          {errors[`charger_${idx}_brand`] && <p className="text-xs text-destructive mt-1">{errors[`charger_${idx}_brand`]}</p>}
+                        </div>
+                        <div>
+                          <Label className="text-xs">Charger Type *</Label>
+                          <Select value={charger.chargerType} onValueChange={v => updateCharger(charger.id, "chargerType", v)}>
+                            <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                            <SelectContent>{CHARGER_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                          </Select>
+                          {errors[`charger_${idx}_type`] && <p className="text-xs text-destructive mt-1">{errors[`charger_${idx}_type`]}</p>}
+                        </div>
+                        <div>
+                          <Label className="text-xs">Serial Number</Label>
+                          <Input value={charger.serialNumber} onChange={e => updateCharger(charger.id, "serialNumber", e.target.value)} placeholder="If visible on charger" className="text-sm" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Location on Site</Label>
+                          <Input value={charger.installationLocation} onChange={e => updateCharger(charger.id, "installationLocation", e.target.value)} placeholder="e.g., Parking Garage Level 2" className="text-sm" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <Label className="text-xs">Known Issues</Label>
+                          <Textarea value={charger.knownIssues} onChange={e => updateCharger(charger.id, "knownIssues", e.target.value)} placeholder="Any problems or concerns?" rows={2} className="text-sm" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <Label className="text-xs">Photos (optional)</Label>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {charger.photoPreviewUrls.map((url, pi) => (
+                              <div key={pi} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
+                                <img src={url} alt="" className="w-full h-full object-cover" />
+                                <button onClick={() => removePhoto(charger.id, pi)} className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                            <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                              <Camera className="h-5 w-5 text-muted-foreground" />
+                              <span className="text-[10px] text-muted-foreground mt-0.5">Add Photo</span>
+                              <input type="file" accept="image/*" multiple className="hidden" onChange={e => handlePhotoUpload(charger.id, e.target.files)} />
+                            </label>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {chargers.length < 50 && (
-              <Button variant="outline" className="w-full mt-4 gap-2" onClick={addCharger}>
-                <Plus className="h-4 w-4" /> Add Another Charger
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Noch+ Membership */}
-        <Card className={`mb-6 transition-all ${nochPlus ? "border-primary shadow-md" : ""}`}>
-          <CardContent className="p-6">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <Checkbox checked={nochPlus} onCheckedChange={v => setNochPlus(!!v)} className="mt-1" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-primary fill-primary" />
-                  <span className="font-semibold">Interested in Noch+ Membership?</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">Unlock exclusive benefits for your charging operations</p>
-                {nochPlus && (
-                  <div className="mt-3 p-4 bg-[hsl(170,40%,55%)]/10 rounded-xl text-sm space-y-2.5">
-                    <p className="font-semibold text-foreground mb-2">Noch+ Member Benefits</p>
-                    <div className="flex items-center gap-2.5">
-                      <Users className="h-4 w-4 text-primary shrink-0" />
-                      <span>Dedicated account manager</span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <Monitor className="h-4 w-4 text-primary shrink-0" />
-                      <span>Direct system access</span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <BadgePercent className="h-4 w-4 text-primary shrink-0" />
-                      <span>Member exclusive rate — 50% off</span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <Package className="h-4 w-4 text-primary shrink-0" />
-                      <span>Parts discount — 20% off</span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <Wrench className="h-4 w-4 text-primary shrink-0" />
-                      <span>Annual Preventive Maintenance — 50% off</span>
-                    </div>
-                    <p className="text-muted-foreground italic text-xs mt-2">For less than a Starbucks frappuccino and butter croissant, you get peace of mind for your entire charging setup.</p>
-                    <p className="text-muted-foreground italic text-xs">Our team will contact you with membership details.</p>
-                  </div>
-                )}
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </label>
-          </CardContent>
-        </Card>
 
-        {/* Submit */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">3</span>
-              Submit
-            </h3>
-            <div className="mb-4">
-              <Label className="text-sm">Notes for our team (optional)</Label>
-              <Textarea value={customerNotes} onChange={e => setCustomerNotes(e.target.value)} placeholder="Anything else we should know?" rows={2} />
-            </div>
-            <div className="space-y-3 mb-4">
-              <label className="flex items-start gap-2 text-sm cursor-pointer">
-                <Checkbox checked={termsAgreed} onCheckedChange={v => setTermsAgreed(!!v)} className="mt-0.5" />
-                <span>I agree to the <a href="#" className="text-primary underline">Terms of Service</a> and <a href="#" className="text-primary underline">Privacy Policy</a></span>
-              </label>
-              {errors.terms && <p className="text-xs text-destructive ml-6">{errors.terms}</p>}
-              <label className="flex items-start gap-2 text-sm cursor-pointer">
-                <Checkbox checked={contactConsent} onCheckedChange={v => setContactConsent(!!v)} className="mt-0.5" />
-                <span>I consent to being contacted about my submission</span>
-              </label>
-              {errors.consent && <p className="text-xs text-destructive ml-6">{errors.consent}</p>}
-            </div>
-            <Button size="lg" className="w-full text-lg gap-2" disabled={submitting} onClick={handleSubmit}>
-              {submitting ? <><Loader2 className="h-5 w-5 animate-spin" /> Submitting...</> : <>Submit Assessment Request <ArrowRight className="h-5 w-5" /></>}
-            </Button>
-            <p className="text-center text-xs text-muted-foreground mt-3">100% Free • No credit card required</p>
-          </CardContent>
-        </Card>
+              {chargers.length < 50 && (
+                <Button variant="outline" className="w-full mt-4 gap-2" onClick={addCharger}>
+                  <Plus className="h-4 w-4" /> Add Another Charger
+                </Button>
+              )}
+
+              <div className="flex gap-3 mt-6">
+                <Button variant="outline" size="lg" className="flex-1" onClick={() => { setCurrentStep("step1"); window.scrollTo(0, 0); }}>
+                  Back
+                </Button>
+                <Button size="lg" className="flex-1 gap-2" onClick={handleNextStep2}>
+                  Next <ArrowRight className="h-5 w-5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 3: Submit */}
+        {currentStep === "step3" && (
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">3</span>
+                Submit
+              </h3>
+
+              {nochPlus && (
+                <div className="mb-4 p-3 bg-primary/10 rounded-lg flex items-center gap-2 text-sm">
+                  <Star className="h-4 w-4 text-primary fill-primary" />
+                  <span className="font-medium">Noch+ Membership active</span>
+                  <Badge className="ml-auto bg-primary text-primary-foreground text-xs">Member</Badge>
+                </div>
+              )}
+
+              <div className="mb-4">
+                <Label className="text-sm">Notes for our team (optional)</Label>
+                <Textarea value={customerNotes} onChange={e => setCustomerNotes(e.target.value)} placeholder="Anything else we should know?" rows={2} />
+              </div>
+              <div className="space-y-3 mb-4">
+                <label className="flex items-start gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={termsAgreed} onCheckedChange={v => setTermsAgreed(!!v)} className="mt-0.5" />
+                  <span>I agree to the <a href="#" className="text-primary underline">Terms of Service</a> and <a href="#" className="text-primary underline">Privacy Policy</a></span>
+                </label>
+                {errors.terms && <p className="text-xs text-destructive ml-6">{errors.terms}</p>}
+                <label className="flex items-start gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={contactConsent} onCheckedChange={v => setContactConsent(!!v)} className="mt-0.5" />
+                  <span>I consent to being contacted about my submission</span>
+                </label>
+                {errors.consent && <p className="text-xs text-destructive ml-6">{errors.consent}</p>}
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="outline" size="lg" className="flex-1" onClick={() => { setCurrentStep("membership"); window.scrollTo(0, 0); }}>
+                  Back
+                </Button>
+                <Button size="lg" className="flex-1 text-lg gap-2" disabled={submitting} onClick={handleSubmit}>
+                  {submitting ? <><Loader2 className="h-5 w-5 animate-spin" /> Submitting...</> : <>Submit <ArrowRight className="h-5 w-5" /></>}
+                </Button>
+              </div>
+              <p className="text-center text-xs text-muted-foreground mt-3">100% Free • No credit card required for assessment</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {/* Footer */}
       <footer className="py-6 border-t border-border/50 bg-card">
         <div className="max-w-3xl mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} Noch Power. All rights reserved.</p>
