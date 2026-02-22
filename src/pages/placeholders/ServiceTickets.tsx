@@ -192,6 +192,8 @@ export default function ServiceTickets() {
     updateTicketInStore(ticketId, updates);
   };
 
+  const [postApproveTab, setPostApproveTab] = useState<Record<string, string>>({});
+
   const handleApproveTicket = (ticketId: string, result: AutoHealResult, notes: string) => {
     const t = useServiceTicketsStore.getState().getTicketById(ticketId);
     if (!t) return;
@@ -230,6 +232,8 @@ export default function ServiceTickets() {
         ...(result.swiMatch?.matched_swi_id ? [{ id: `h-${Date.now() + 1}`, timestamp: now, action: `SWI matched: ${result.swiMatch.matched_swi_id} (${result.swiMatch.confidence}%)`, performedBy: "AI Engine" }] : []),
       ],
     });
+    // After approval, auto-navigate to the Estimate tab
+    setPostApproveTab(prev => ({ ...prev, [ticketId]: "estimate" }));
   };
 
   const handleRejectTicket = (ticketId: string, reason: string) => {
@@ -520,6 +524,7 @@ export default function ServiceTickets() {
                       onApprove={handleApproveTicket}
                       onReject={handleRejectTicket}
                       onUpdate={handleUpdateTicket}
+                      defaultTab={postApproveTab[expandedTicket.id]}
                     />
                   )}
 
@@ -538,6 +543,7 @@ export default function ServiceTickets() {
                     <TicketDetailPanel
                       ticket={ticket}
                       onCollapse={() => setExpandedTicketId(null)}
+                      defaultTab={postApproveTab[ticket.id] || "charger"}
                     />
                   )}
                 </CardContent>
@@ -574,6 +580,7 @@ function ChildInlinePanel({
   onApprove,
   onReject,
   onUpdate,
+  defaultTab,
 }: {
   ticket: ServiceTicket;
   onCollapse: () => void;
@@ -582,6 +589,7 @@ function ChildInlinePanel({
   onApprove: (ticketId: string, result: AutoHealResult, notes: string) => void;
   onReject: (ticketId: string, reason: string) => void;
   onUpdate: (ticketId: string, updates: Partial<ServiceTicket>) => void;
+  defaultTab?: string;
 }) {
   const allTickets = useServiceTicketsStore((s) => s.tickets);
   const parent = useMemo(() => {
@@ -639,7 +647,7 @@ function ChildInlinePanel({
         <TicketDetailPanel
           ticket={ticket}
           onCollapse={onCollapse}
-          defaultTab="charger"
+          defaultTab={defaultTab || "charger"}
         />
       )}
     </div>

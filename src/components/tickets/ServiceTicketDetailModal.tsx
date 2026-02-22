@@ -80,8 +80,8 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
           <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="customer">Customer</TabsTrigger>
             <TabsTrigger value="charger">Charger</TabsTrigger>
-            <TabsTrigger value="workflow">Workflow</TabsTrigger>
             <TabsTrigger value="estimate">Estimate</TabsTrigger>
+            <TabsTrigger value="workflow">Workflow</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
