@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil } from "lucide-react";
+import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -84,6 +84,7 @@ export default function Submissions() {
   // Request info dialog
   const [requestInfoOpen, setRequestInfoOpen] = useState(false);
   const [requestInfoMessage, setRequestInfoMessage] = useState("");
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const fetchSubmissions = async () => {
     setLoading(true);
@@ -537,9 +538,9 @@ export default function Submissions() {
                           {charger.photo_urls && charger.photo_urls.length > 0 ? (
                             <div className="flex gap-3">
                               {charger.photo_urls.map((url, i) => (
-                                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="w-24 h-24 rounded-lg overflow-hidden border border-border bg-muted hover:opacity-80 transition-opacity">
+                                <button key={i} onClick={() => setLightboxUrl(url)} className="w-24 h-24 rounded-lg overflow-hidden border border-border bg-muted hover:opacity-80 transition-opacity cursor-zoom-in">
                                   <img src={url} alt={photoLabels[i] || `Photo ${i + 1}`} className="w-full h-full object-cover" />
-                                </a>
+                                </button>
                               ))}
                             </div>
                           ) : (
@@ -635,6 +636,27 @@ export default function Submissions() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Photo Lightbox */}
+        {lightboxUrl && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            onClick={() => setLightboxUrl(null)}
+          >
+            <button
+              onClick={() => setLightboxUrl(null)}
+              className="absolute top-4 right-4 z-50 h-10 w-10 rounded-full bg-card/80 flex items-center justify-center hover:bg-card transition-colors"
+            >
+              <X className="h-6 w-6 text-foreground" />
+            </button>
+            <img
+              src={lightboxUrl}
+              alt="Charger photo"
+              className="max-w-[90vw] max-h-[85vh] rounded-lg object-contain shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
       </div>
     );
   }
