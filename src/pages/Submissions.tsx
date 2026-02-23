@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X } from "lucide-react";
+import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X, Play, FileDown } from "lucide-react";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
 import type { TicketChargerInfo, ChargerBrand } from "@/types/ticket";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,10 @@ export default function Submissions() {
   const [editChargers, setEditChargers] = useState<ChargerSubmission[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  // Assessment state
+  const [assessmentStatus, setAssessmentStatus] = useState<"idle" | "running" | "done">("idle");
+  const [assessmentPdfBlob, setAssessmentPdfBlob] = useState<Blob | null>(null);
 
   // Per-charger editable fields
   const [chargerStatuses, setChargerStatuses] = useState<Record<string, string>>({});
@@ -161,6 +165,8 @@ export default function Submissions() {
     setIsEditing(false);
     setEditForm({});
     setEditChargers([]);
+    setAssessmentStatus("idle");
+    setAssessmentPdfBlob(null);
     // Initialize per-charger state from DB values
     const statuses: Record<string, string> = {};
     const serviceNeeded: Record<string, boolean | null> = {};
@@ -368,9 +374,122 @@ export default function Submissions() {
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => toast.info("Email feature coming soon")}>
+            {/* Run Assessment */}
+            {(() => {
+              const allApproved = selectedSubmission.chargers.length > 0 &&
+                selectedSubmission.chargers.every(ch => chargerStatuses[ch.id] === "approved");
+              return (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    disabled={!allApproved || assessmentStatus === "running"}
+                    onClick={async () => {
+                      setAssessmentStatus("running");
+                      try {
+                        const { data, error } = await supabase.functions.invoke("ai-chat", {
+                          body: {
+                            messages: [
+                              {
+                                role: "user",
+                                content: `Generate a brief EV charger assessment report summary for this submission:\n\nCustomer: ${selectedSubmission.full_name} (${selectedSubmission.company_name})\nLocation: ${selectedSubmission.street_address}, ${selectedSubmission.city}, ${selectedSubmission.state} ${selectedSubmission.zip_code}\n\nChargers:\n${selectedSubmission.chargers.map((ch, i) => `${i + 1}. ${ch.brand} ${ch.charger_type} (SN: ${ch.serial_number || "N/A"}) — Issues: ${ch.known_issues || "None reported"} — Location: ${ch.installation_location || "N/A"}`).join("\n")}\n\nProvide: 1) Overall risk assessment 2) Per-charger recommendations 3) Priority actions. Keep it professional and concise.`
+                              }
+                            ]
+                          }
+                        });
+                        if (error) throw error;
+                        const aiText = data?.reply || data?.content || "Assessment complete.";
+                        const { default: jsPDF } = await import("jspdf");
+                        const doc = new jsPDF();
+                        doc.setFontSize(18);
+                        doc.setTextColor(30, 41, 59);
+                        doc.text("NOCH Power — Assessment Report", 20, 25);
+                        doc.setFontSize(10);
+                        doc.setTextColor(100);
+                        doc.text(`Submission: ${selectedSubmission.submission_id}`, 20, 35);
+                        doc.text(`Customer: ${selectedSubmission.full_name} — ${selectedSubmission.company_name}`, 20, 41);
+                        doc.text(`Location: ${selectedSubmission.city}, ${selectedSubmission.state}`, 20, 47);
+                        doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 53);
+                        doc.setDrawColor(200);
+                        doc.line(20, 57, 190, 57);
+                        doc.setFontSize(11);
+                        doc.setTextColor(30, 41, 59);
+                        const lines = doc.splitTextToSize(aiText, 170);
+                        doc.text(lines, 20, 65);
+                        const blob = doc.output("blob");
+                        setAssessmentPdfBlob(blob);
+                        setAssessmentStatus("done");
+                        toast.success("Assessment report generated");
+                      } catch (err: any) {
+                        console.error("Assessment error:", err);
+                        toast.error(`Assessment failed: ${err.message}`);
+                        setAssessmentStatus("idle");
+                      }
+                    }}
+                  >
+                    {assessmentStatus === "running" ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                    {assessmentStatus === "running" ? "Running..." : "Run Assessment"}
+                  </Button>
+                  {assessmentStatus === "done" && assessmentPdfBlob && (
+                    <button
+                      onClick={() => {
+                        const url = URL.createObjectURL(assessmentPdfBlob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `${selectedSubmission.submission_id}-assessment.pdf`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="h-8 w-8 rounded-md border border-border bg-card flex items-center justify-center hover:bg-accent transition-colors"
+                      title="Download Assessment Report"
+                    >
+                      <FileDown className="h-4 w-4 text-primary" />
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={async () => {
+                if (assessmentStatus === "done" && assessmentPdfBlob) {
+                  try {
+                    const reader = new FileReader();
+                    const base64 = await new Promise<string>((resolve, reject) => {
+                      reader.onload = () => resolve((reader.result as string).split(",")[1]);
+                      reader.onerror = reject;
+                      reader.readAsDataURL(assessmentPdfBlob);
+                    });
+                    const { error } = await supabase.functions.invoke("send-assessment-report", {
+                      body: {
+                        to: selectedSubmission.email,
+                        ticketId: selectedSubmission.submission_id,
+                        customerName: selectedSubmission.full_name,
+                        customerCompany: selectedSubmission.company_name,
+                        pdfBase64: base64,
+                      },
+                    });
+                    if (error) throw error;
+                    toast.success(`Assessment report emailed to ${selectedSubmission.email}`);
+                  } catch (err: any) {
+                    toast.error(`Failed to send: ${err.message}`);
+                  }
+                } else {
+                  toast.info("Run the assessment first to attach the report to the email.");
+                }
+              }}
+            >
               <Mail className="h-4 w-4" />
               Email Customer
+              {assessmentStatus === "done" && <FileText className="h-3 w-3 text-primary ml-1" />}
             </Button>
             <Button variant="outline" size="sm" className="gap-2" onClick={() => toast.info("PDF export coming soon")}>
               <Download className="h-4 w-4" />
