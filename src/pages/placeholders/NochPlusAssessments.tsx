@@ -57,7 +57,7 @@ function PdfCanvasPreview({ pdfData }: { pdfData: ArrayBuffer }) {
         canvas.style.border = "1px solid hsl(var(--border))";
         containerRef.current.appendChild(canvas);
         const ctx = canvas.getContext("2d")!;
-        await page.render({ canvasContext: ctx, viewport }).promise;
+        await page.render({ canvasContext: ctx, viewport, canvas }).promise;
       }
       setLoading(false);
     }
