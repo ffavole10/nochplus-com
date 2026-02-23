@@ -139,9 +139,9 @@ export function PlatformSidebar() {
   { title: "Field Reports", url: "/field-reports", icon: FolderOpen }];
 
 
-  // Real ticket count from store (non-parent, non-completed)
+  // Total ticket count matching the KPI "Total Tickets" card
   const allTickets = useServiceTicketsStore((s) => s.tickets);
-  const activeTicketCount = useMemo(() => allTickets.filter(t => !t.isParent && t.status !== "completed" && t.status !== "rejected").length, [allTickets]);
+  const totalTicketCount = useMemo(() => allTickets.length, [allTickets]);
 
   // Real estimate count from DB
   const [estimateCount, setEstimateCount] = useState<number>(0);
@@ -152,7 +152,7 @@ export function PlatformSidebar() {
   }, []);
 
   const serviceDeskPages = [
-  { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: activeTicketCount },
+  { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: totalTicketCount },
   { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: estimateCount },
   { title: "Customers", url: "/service-desk/customers", icon: Users },
   { title: "All Chargers", url: "/service-desk/chargers", icon: HardDrive }];
