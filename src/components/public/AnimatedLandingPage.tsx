@@ -48,7 +48,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10">
         {/* Headline */}
-        <div className={`text-center mb-2 transition-all duration-1000 ease-out ${stage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+        <div className={`text-center mb-2 pt-6 transition-all duration-1000 ease-out ${stage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white/50 tracking-wide leading-none lg:text-7xl">
             RELIABILITY
           </h1>
@@ -100,7 +100,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         </div>
 
         {/* Value proposition */}
-        <div className={`text-center mb-6 -mt-4 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+        <div className={`text-center mb-0 -mt-4 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
           <p className="text-white text-lg sm:text-xl font-extralight leading-relaxed md:text-4xl">
             Fast. Simple. Reliable.
           </p>
