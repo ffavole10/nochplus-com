@@ -255,13 +255,7 @@ export default function ServiceTickets() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-end">
-        <Button onClick={() => setFormOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Ticket
-        </Button>
-      </div>
+
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -344,6 +338,14 @@ export default function ServiceTickets() {
             <SelectItem value="customer">Customer</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* New Ticket Button */}
+      <div className="flex items-center justify-end">
+        <Button onClick={() => setFormOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          New Ticket
+        </Button>
       </div>
 
       {/* Ticket List */}
