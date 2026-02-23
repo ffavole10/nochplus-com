@@ -227,6 +227,9 @@ export type Database = {
           known_issues: string | null
           photo_urls: string[] | null
           serial_number: string | null
+          service_needed: boolean | null
+          staff_notes: string | null
+          status: string
           submission_id: string
         }
         Insert: {
@@ -238,6 +241,9 @@ export type Database = {
           known_issues?: string | null
           photo_urls?: string[] | null
           serial_number?: string | null
+          service_needed?: boolean | null
+          staff_notes?: string | null
+          status?: string
           submission_id: string
         }
         Update: {
@@ -249,6 +255,9 @@ export type Database = {
           known_issues?: string | null
           photo_urls?: string[] | null
           serial_number?: string | null
+          service_needed?: boolean | null
+          staff_notes?: string | null
+          status?: string
           submission_id?: string
         }
         Relationships: [

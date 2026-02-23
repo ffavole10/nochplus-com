@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -25,6 +24,9 @@ interface ChargerSubmission {
   installation_location: string | null;
   photo_urls: string[] | null;
   known_issues: string | null;
+  status: string;
+  service_needed: boolean | null;
+  staff_notes: string | null;
 }
 
 interface Submission {
@@ -69,13 +71,17 @@ export default function Submissions() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [activeChargerIndex, setActiveChargerIndex] = useState(0);
-  const [staffNotes, setStaffNotes] = useState("");
-  const [savingNotes, setSavingNotes] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Submission>>({});
   const [editChargers, setEditChargers] = useState<ChargerSubmission[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  // Per-charger editable fields
+  const [chargerStatuses, setChargerStatuses] = useState<Record<string, string>>({});
+  const [chargerServiceNeeded, setChargerServiceNeeded] = useState<Record<string, boolean | null>>({});
+  const [chargerNotes, setChargerNotes] = useState<Record<string, string>>({});
 
   // Reject dialog
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -85,9 +91,6 @@ export default function Submissions() {
   // Request info dialog
   const [requestInfoOpen, setRequestInfoOpen] = useState(false);
   const [requestInfoMessage, setRequestInfoMessage] = useState("");
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-  const [servicePromptOpen, setServicePromptOpen] = useState(false);
-  const [pendingApprovalId, setPendingApprovalId] = useState<string | null>(null);
 
   const fetchSubmissions = async () => {
     setLoading(true);
@@ -109,7 +112,12 @@ export default function Submissions() {
 
     const merged: Submission[] = (subs || []).map((s) => ({
       ...s,
-      chargers: (chargers || []).filter((c) => c.submission_id === s.id),
+      chargers: (chargers || []).filter((c) => c.submission_id === s.id).map((c) => ({
+        ...c,
+        status: (c as any).status || "pending_review",
+        service_needed: (c as any).service_needed ?? null,
+        staff_notes: (c as any).staff_notes || null,
+      })),
     }));
 
     setSubmissions(merged);
@@ -145,69 +153,24 @@ export default function Submissions() {
 
   const hasPhotos = (s: Submission) => s.chargers.some((c) => c.photo_urls && c.photo_urls.length > 0);
 
-  const handleStatusChange = async (submissionId: string, newStatus: string) => {
-    if (newStatus === "approved") {
-      setPendingApprovalId(submissionId);
-      setServicePromptOpen(true);
-      return;
-    }
-    await applyStatusChange(submissionId, newStatus);
-  };
-
-  const applyStatusChange = async (submissionId: string, newStatus: string) => {
-    setUpdatingStatus(true);
-    const { error } = await supabase.from("submissions").update({ status: newStatus }).eq("id", submissionId);
-    if (error) {
-      toast.error("Failed to update status");
-    } else {
-      toast.success(`Status updated to ${STATUS_LABELS[newStatus] || newStatus}`);
-      setSubmissions((prev) =>
-        prev.map((s) => (s.id === submissionId ? { ...s, status: newStatus } : s))
-      );
-      if (selectedSubmission?.id === submissionId) {
-        setSelectedSubmission((prev) => prev ? { ...prev, status: newStatus } : null);
-      }
-    }
-    setUpdatingStatus(false);
-  };
-
-  const handleServicePromptAnswer = async (needsService: boolean) => {
-    setServicePromptOpen(false);
-    if (!pendingApprovalId) return;
-    await applyStatusChange(pendingApprovalId, "approved");
-    if (needsService) {
-      toast.success("Submission approved — send to Service Desk to continue.", { duration: 5000 });
-      // TODO: wire up actual service desk ticket creation
-    }
-    setPendingApprovalId(null);
-  };
-
-  const handleSaveNotes = async () => {
-    if (!selectedSubmission) return;
-    setSavingNotes(true);
-    const { error } = await supabase
-      .from("submissions")
-      .update({ staff_notes: staffNotes })
-      .eq("id", selectedSubmission.id);
-    if (error) {
-      toast.error("Failed to save notes");
-    } else {
-      toast.success("Notes saved");
-      setSubmissions((prev) =>
-        prev.map((s) => (s.id === selectedSubmission.id ? { ...s, staff_notes: staffNotes } : s))
-      );
-      setSelectedSubmission((prev) => prev ? { ...prev, staff_notes: staffNotes } : null);
-    }
-    setSavingNotes(false);
-  };
-
   const openDetail = (sub: Submission) => {
     setSelectedSubmission(sub);
     setActiveChargerIndex(0);
-    setStaffNotes(sub.staff_notes || "");
     setIsEditing(false);
     setEditForm({});
     setEditChargers([]);
+    // Initialize per-charger state from DB values
+    const statuses: Record<string, string> = {};
+    const serviceNeeded: Record<string, boolean | null> = {};
+    const notes: Record<string, string> = {};
+    sub.chargers.forEach((c) => {
+      statuses[c.id] = c.status || "pending_review";
+      serviceNeeded[c.id] = c.service_needed;
+      notes[c.id] = c.staff_notes || "";
+    });
+    setChargerStatuses(statuses);
+    setChargerServiceNeeded(serviceNeeded);
+    setChargerNotes(notes);
   };
 
   const startEditing = () => {
@@ -230,6 +193,7 @@ export default function Submissions() {
     if (!selectedSubmission) return;
     setSavingEdit(true);
     try {
+      // Save customer info
       const { error: subError } = await supabase
         .from("submissions")
         .update({
@@ -246,6 +210,7 @@ export default function Submissions() {
 
       if (subError) throw subError;
 
+      // Save each charger's details + per-charger status/service/notes
       for (const ch of editChargers) {
         const { error: chError } = await supabase
           .from("charger_submissions")
@@ -255,21 +220,49 @@ export default function Submissions() {
             charger_type: ch.charger_type,
             installation_location: ch.installation_location,
             known_issues: ch.known_issues,
+            status: chargerStatuses[ch.id] || "pending_review",
+            service_needed: chargerServiceNeeded[ch.id] ?? null,
+            staff_notes: chargerNotes[ch.id] || null,
           })
           .eq("id", ch.id);
         if (chError) throw chError;
       }
 
+      // Update submission-level status based on charger statuses
+      const allApproved = editChargers.every(ch => chargerStatuses[ch.id] === "approved");
+      const anyApproved = editChargers.some(ch => chargerStatuses[ch.id] === "approved");
+      let newSubStatus = selectedSubmission.status;
+      if (allApproved) newSubStatus = "approved";
+      else if (anyApproved) newSubStatus = "approved";
+
+      if (newSubStatus !== selectedSubmission.status) {
+        await supabase.from("submissions").update({ status: newSubStatus }).eq("id", selectedSubmission.id);
+      }
+
+      const updatedChargers = editChargers.map(ch => ({
+        ...ch,
+        status: chargerStatuses[ch.id] || "pending_review",
+        service_needed: chargerServiceNeeded[ch.id] ?? null,
+        staff_notes: chargerNotes[ch.id] || null,
+      }));
+
       const updated: Submission = {
         ...selectedSubmission,
         ...editForm as any,
-        chargers: editChargers,
+        status: newSubStatus,
+        chargers: updatedChargers,
       };
 
       setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
       setSelectedSubmission(updated);
       setIsEditing(false);
-      toast.success("Submission updated");
+
+      const serviceChargers = updatedChargers.filter(ch => ch.service_needed === true);
+      if (serviceChargers.length > 0) {
+        toast.success(`Saved — ${serviceChargers.length} charger(s) flagged for Service Desk.`, { duration: 5000 });
+      } else {
+        toast.success("Changes saved");
+      }
     } catch (err: any) {
       toast.error(`Failed to save: ${err.message}`);
     } finally {
@@ -290,9 +283,11 @@ export default function Submissions() {
   const photoLabels = ["Front", "Back", "Serial"];
 
   if (selectedSubmission) {
+    const currentChargerId = charger?.id || "";
+
     return (
       <div className="p-6 space-y-5">
-        {/* Header row: back + title + action buttons */}
+        {/* Header row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -318,9 +313,8 @@ export default function Submissions() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
-          {/* LEFT SIDEBAR */}
+          {/* LEFT SIDEBAR - Customer Info only */}
           <div className="space-y-4">
-            {/* Customer Info */}
             <Card className="border border-border/60">
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
@@ -368,13 +362,6 @@ export default function Submissions() {
                         <Input value={editForm.phone || ""} onChange={(e) => updateEditField("phone", e.target.value)} />
                       </div>
                     </div>
-                    <div className="flex gap-2 pt-1">
-                      <Button size="sm" className="gap-2" onClick={handleSaveEdit} disabled={savingEdit}>
-                        {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        {savingEdit ? "Saving..." : "Save Changes"}
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
-                    </div>
                   </div>
                 ) : (
                   <div className="space-y-3 text-sm">
@@ -404,73 +391,22 @@ export default function Submissions() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground shrink-0"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                       <p className="text-foreground">{format(new Date(selectedSubmission.created_at), "MMMM d, yyyy 'at' h:mm a")}</p>
                     </div>
+                    {selectedSubmission.noch_plus_member && (
+                      <Badge className="bg-primary/10 text-primary border-primary/20">Noch+ Member</Badge>
+                    )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Status */}
-            <Card className="border border-border/60">
-              <CardContent className="p-5 space-y-3">
-                <h3 className="font-semibold text-foreground">Status</h3>
-                <div className="flex items-center gap-3">
-                  <Badge className={STATUS_STYLES[selectedSubmission.status] || ""}>
-                    {STATUS_LABELS[selectedSubmission.status] || selectedSubmission.status}
-                  </Badge>
-                  <Select
-                    value={selectedSubmission.status}
-                    onValueChange={(v) => handleStatusChange(selectedSubmission.id, v)}
-                    disabled={updatingStatus}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending_review">Pending</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Notes */}
-            <Card className="border border-border/60">
-              <CardContent className="p-5 space-y-3">
-                <h3 className="font-semibold text-foreground">Notes</h3>
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={staffNotes}
-                    onChange={(e) => setStaffNotes(e.target.value)}
-                    placeholder="Add a note..."
-                    className="flex-1"
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSaveNotes(); }}
-                  />
-                  <Button
-                    size="icon"
-                    className="h-10 w-10 shrink-0"
-                    onClick={handleSaveNotes}
-                    disabled={savingNotes}
-                  >
-                    {savingNotes ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    )}
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           </div>
 
           {/* RIGHT CONTENT */}
-          <div className="space-y-0">
+          <div className="space-y-4">
             {/* Charger Tabs */}
             {selectedSubmission.chargers.length > 0 ? (
               <>
-                <div className="flex items-center gap-2 mb-4">
-                  {selectedSubmission.chargers.map((_, i) => (
+                <div className="flex items-center gap-2">
+                  {selectedSubmission.chargers.map((ch, i) => (
                     <button
                       key={i}
                       onClick={() => setActiveChargerIndex(i)}
@@ -488,7 +424,6 @@ export default function Submissions() {
                 {/* Charger Details Card */}
                 <Card className="border border-border/60">
                   <CardContent className="p-6 space-y-6">
-                    {/* Charger header with edit + nav */}
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-foreground">
                         Charger {activeChargerIndex + 1} Details
@@ -498,15 +433,7 @@ export default function Submissions() {
                           <Button variant="outline" size="icon" className="h-9 w-9" onClick={startEditing}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                        ) : (
-                          <>
-                            <Button size="sm" className="gap-2" onClick={handleSaveEdit} disabled={savingEdit}>
-                              {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                              Save
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
-                          </>
-                        )}
+                        ) : null}
                         <Button
                           variant="outline"
                           size="icon"
@@ -578,15 +505,126 @@ export default function Submissions() {
                           )}
                         </div>
 
-                        {/* Internal Notes */}
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Internal Notes</p>
-                          <p className="text-sm text-foreground">{charger.known_issues || "No notes"}</p>
-                        </div>
+                        {/* Customer-submitted notes */}
+                        {charger.known_issues && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Customer Notes</p>
+                            <p className="text-sm text-foreground">{charger.known_issues}</p>
+                          </div>
+                        )}
                       </>
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Per-charger Status + Service Request row */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Status */}
+                  <Card className="border border-border/60">
+                    <CardContent className="p-5 space-y-3">
+                      <h3 className="font-semibold text-foreground text-sm">Status</h3>
+                      {isEditing ? (
+                        <div className="flex items-center gap-3">
+                          <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending_review"] || ""}>
+                            {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending_review"] || "Pending"}
+                          </Badge>
+                          <Select
+                            value={chargerStatuses[currentChargerId] || "pending_review"}
+                            onValueChange={(v) => setChargerStatuses(prev => ({ ...prev, [currentChargerId]: v }))}
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending_review">Pending</SelectItem>
+                              <SelectItem value="approved">Approved</SelectItem>
+                              <SelectItem value="archived">Archived</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending_review"] || ""}>
+                          {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending_review"] || "Pending"}
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Service Request */}
+                  <Card className="border border-border/60">
+                    <CardContent className="p-5 space-y-3">
+                      <h3 className="font-semibold text-foreground text-sm">Service Request</h3>
+                      {isEditing ? (
+                        <div className="flex items-center gap-3">
+                          <Button
+                            size="sm"
+                            variant={chargerServiceNeeded[currentChargerId] === true ? "default" : "outline"}
+                            className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === true ? "bg-optimal text-optimal-foreground hover:bg-optimal/90" : ""}`}
+                            onClick={() => setChargerServiceNeeded(prev => ({ ...prev, [currentChargerId]: true }))}
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Yes
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={chargerServiceNeeded[currentChargerId] === false ? "default" : "outline"}
+                            className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === false ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}`}
+                            onClick={() => setChargerServiceNeeded(prev => ({ ...prev, [currentChargerId]: false }))}
+                          >
+                            <XCircle className="h-4 w-4" />
+                            No
+                          </Button>
+                        </div>
+                      ) : (
+                        <div>
+                          {chargerServiceNeeded[currentChargerId] === true && (
+                            <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
+                              <CheckCircle className="h-3 w-3" /> Yes — Send to Service Desk
+                            </Badge>
+                          )}
+                          {chargerServiceNeeded[currentChargerId] === false && (
+                            <Badge className="bg-muted text-muted-foreground gap-1">
+                              <XCircle className="h-3 w-3" /> No
+                            </Badge>
+                          )}
+                          {chargerServiceNeeded[currentChargerId] == null && (
+                            <p className="text-sm text-muted-foreground">Not decided</p>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Per-charger Notes */}
+                <Card className="border border-border/60">
+                  <CardContent className="p-5 space-y-3">
+                    <h3 className="font-semibold text-foreground text-sm">Notes — Charger {activeChargerIndex + 1}</h3>
+                    {isEditing ? (
+                      <Textarea
+                        value={chargerNotes[currentChargerId] || ""}
+                        onChange={(e) => setChargerNotes(prev => ({ ...prev, [currentChargerId]: e.target.value }))}
+                        placeholder="Add notes for this charger..."
+                        rows={3}
+                      />
+                    ) : (
+                      <p className="text-sm text-foreground">
+                        {chargerNotes[currentChargerId] || "No notes"}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Save / Cancel bar when editing */}
+                {isEditing && (
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                    <Button className="gap-2" onClick={handleSaveEdit} disabled={savingEdit}>
+                      {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      {savingEdit ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                )}
               </>
             ) : (
               <Card className="border border-border/60">
@@ -659,22 +697,6 @@ export default function Submissions() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        {/* Service Desk Prompt */}
-        <AlertDialog open={servicePromptOpen} onOpenChange={setServicePromptOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Does this charger need service?</AlertDialogTitle>
-              <AlertDialogDescription>
-                If yes, the submission will be sent to the Service Desk for further action.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex gap-2 sm:gap-0">
-              <AlertDialogCancel onClick={() => handleServicePromptAnswer(false)}>No</AlertDialogCancel>
-              <AlertDialogAction onClick={() => handleServicePromptAnswer(true)}>Yes, Send to Service Desk</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
 
         {/* Photo Lightbox */}
         {lightboxUrl && (
@@ -812,18 +834,6 @@ export default function Submissions() {
           </Table>
         </Card>
       )}
-    </div>
-  );
-}
-
-function TimelineItem({ icon, label, time, active }: { icon: React.ReactNode; label: string; time: string; active: boolean }) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="mt-0.5">{icon}</div>
-      <div className="flex-1">
-        <p className={`text-sm ${active ? "font-medium" : "text-muted-foreground"}`}>{label}</p>
-        <p className="text-xs text-muted-foreground">{time}</p>
-      </div>
     </div>
   );
 }
