@@ -79,9 +79,9 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
           </div>
           {/* Inverted arc below person */}
-          <svg width="260" height="60" viewBox="0 0 300 70" fill="none" className="mx-auto -mt-4">
+        <svg width="260" height="80" viewBox="0 0 300 90" fill="none" className="mx-auto -mt-4">
             <path
-              d="M 30 10 Q 150 70 270 10"
+              d="M 30 10 Q 150 90 270 10"
               stroke="white"
               strokeWidth="2"
               fill="none"
@@ -92,8 +92,8 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
             <circle cx="30" cy="10" r="8" fill="white" opacity={stage >= 4 ? 0.9 : 0} style={{ transition: "opacity 0.4s ease-out 0.3s" }} />
             <text x="30" y="15" fill="#25b3a5" textAnchor="middle" fontSize="12" fontWeight="700" opacity={stage >= 4 ? 1 : 0} style={{ transition: "opacity 0.4s ease-out 0.3s" }}>1</text>
-            <circle cx="150" cy="60" r="8" fill="white" opacity={stage >= 4 ? 0.9 : 0} style={{ transition: "opacity 0.4s ease-out 0.6s" }} />
-            <text x="150" y="65" fill="#25b3a5" textAnchor="middle" fontSize="12" fontWeight="700" opacity={stage >= 4 ? 1 : 0} style={{ transition: "opacity 0.4s ease-out 0.6s" }}>2</text>
+            <circle cx="150" cy="50" r="8" fill="white" opacity={stage >= 4 ? 0.9 : 0} style={{ transition: "opacity 0.4s ease-out 0.6s" }} />
+            <text x="150" y="55" fill="#25b3a5" textAnchor="middle" fontSize="12" fontWeight="700" opacity={stage >= 4 ? 1 : 0} style={{ transition: "opacity 0.4s ease-out 0.6s" }}>2</text>
             <circle cx="270" cy="10" r="8" fill="white" opacity={stage >= 4 ? 0.9 : 0} style={{ transition: "opacity 0.4s ease-out 0.9s" }} />
             <text x="270" y="15" fill="#25b3a5" textAnchor="middle" fontSize="12" fontWeight="700" opacity={stage >= 4 ? 1 : 0} style={{ transition: "opacity 0.4s ease-out 0.9s" }}>3</text>
           </svg>
