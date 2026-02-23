@@ -100,8 +100,8 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         </div>
 
         {/* Value proposition + CTA centered between arc and footer */}
-        <div className="flex flex-col items-center flex-1 -mt-4 gap-10 pt-0">
-          <div className={`text-center transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+        <div className="flex flex-col items-center flex-1 -mt-4">
+          <div className={`text-center mt-4 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
             <p className="text-white text-lg sm:text-xl font-extralight leading-relaxed md:text-4xl">
               Fast. Simple. Reliable.
             </p>
@@ -110,7 +110,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
             </p>
           </div>
 
-          <div className={`transition-all duration-700 ease-out ${stage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          <div className={`mt-10 transition-all duration-700 ease-out ${stage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <button
               onClick={onStart}
               className="px-8 py-3 rounded-full bg-white/20 backdrop-blur-md text-white text-lg font-light hover:bg-white/30 active:scale-95 transition-all duration-300 tracking-widest"
