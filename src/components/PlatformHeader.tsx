@@ -14,7 +14,7 @@ import { useFilters } from "@/contexts/FilterContext";
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/dataset": "Dataset",
-  "/issues": "Issues Queue",
+  "/issues": "Flagged",
   "/schedule": "Schedule",
   "/settings": "Settings",
   "/field-reports": "Field Reports",
