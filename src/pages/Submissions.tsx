@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -85,6 +86,8 @@ export default function Submissions() {
   const [requestInfoOpen, setRequestInfoOpen] = useState(false);
   const [requestInfoMessage, setRequestInfoMessage] = useState("");
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [servicePromptOpen, setServicePromptOpen] = useState(false);
+  const [pendingApprovalId, setPendingApprovalId] = useState<string | null>(null);
 
   const fetchSubmissions = async () => {
     setLoading(true);
@@ -143,6 +146,15 @@ export default function Submissions() {
   const hasPhotos = (s: Submission) => s.chargers.some((c) => c.photo_urls && c.photo_urls.length > 0);
 
   const handleStatusChange = async (submissionId: string, newStatus: string) => {
+    if (newStatus === "approved") {
+      setPendingApprovalId(submissionId);
+      setServicePromptOpen(true);
+      return;
+    }
+    await applyStatusChange(submissionId, newStatus);
+  };
+
+  const applyStatusChange = async (submissionId: string, newStatus: string) => {
     setUpdatingStatus(true);
     const { error } = await supabase.from("submissions").update({ status: newStatus }).eq("id", submissionId);
     if (error) {
@@ -157,6 +169,17 @@ export default function Submissions() {
       }
     }
     setUpdatingStatus(false);
+  };
+
+  const handleServicePromptAnswer = async (needsService: boolean) => {
+    setServicePromptOpen(false);
+    if (!pendingApprovalId) return;
+    await applyStatusChange(pendingApprovalId, "approved");
+    if (needsService) {
+      toast.success("Submission approved — send to Service Desk to continue.", { duration: 5000 });
+      // TODO: wire up actual service desk ticket creation
+    }
+    setPendingApprovalId(null);
   };
 
   const handleSaveNotes = async () => {
@@ -636,6 +659,22 @@ export default function Submissions() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Service Desk Prompt */}
+        <AlertDialog open={servicePromptOpen} onOpenChange={setServicePromptOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Does this charger need service?</AlertDialogTitle>
+              <AlertDialogDescription>
+                If yes, the submission will be sent to the Service Desk for further action.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex gap-2 sm:gap-0">
+              <AlertDialogCancel onClick={() => handleServicePromptAnswer(false)}>No</AlertDialogCancel>
+              <AlertDialogAction onClick={() => handleServicePromptAnswer(true)}>Yes, Send to Service Desk</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Photo Lightbox */}
         {lightboxUrl && (
