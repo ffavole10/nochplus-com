@@ -66,7 +66,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
         {/* Hero image - no circle background */}
         <div className={`relative mb-4 transition-all duration-1000 ease-out ${stage >= 3 ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}>
-          <div className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 mx-auto">
+          <div className="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 mx-auto">
             <img
               src={heroPerson}
               alt="Happy customer"
