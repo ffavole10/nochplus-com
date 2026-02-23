@@ -99,25 +99,25 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
           </svg>
         </div>
 
-        {/* Value proposition */}
-        <div className={`text-center mb-0 -mt-4 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-          <p className="text-white text-lg sm:text-xl font-extralight leading-relaxed md:text-4xl">
-            Fast. Simple. Reliable.
-          </p>
-          <p className="text-white/80 text-lg sm:text-xl font-extralight md:text-xl">Your peace of mind is just minutes away
+        {/* Value proposition + CTA centered between arc and footer */}
+        <div className="flex flex-col items-center justify-center flex-1 -mt-4 gap-4">
+          <div className={`text-center transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+            <p className="text-white text-lg sm:text-xl font-extralight leading-relaxed md:text-4xl">
+              Fast. Simple. Reliable.
+            </p>
+            <p className="text-white/80 text-lg sm:text-xl font-extralight md:text-xl">
+              Your peace of mind is just minutes away
+            </p>
+          </div>
 
-          </p>
-        </div>
-
-        {/* CTA - simple text button */}
-        <div className={`transition-all duration-700 ease-out ${stage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <button
-            onClick={onStart}
-            className="px-8 py-3 rounded-full bg-white/20 backdrop-blur-md text-white text-lg font-light hover:bg-white/30 active:scale-95 transition-all duration-300 tracking-widest"
-            aria-label="Start assessment">
-
-            Get Started &gt;&gt;
-          </button>
+          <div className={`transition-all duration-700 ease-out ${stage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+            <button
+              onClick={onStart}
+              className="px-8 py-3 rounded-full bg-white/20 backdrop-blur-md text-white text-lg font-light hover:bg-white/30 active:scale-95 transition-all duration-300 tracking-widest"
+              aria-label="Start assessment">
+              Get Started &gt;&gt;
+            </button>
+          </div>
         </div>
       </div>
 
