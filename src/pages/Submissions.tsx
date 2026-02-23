@@ -465,28 +465,32 @@ export default function Submissions() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Charger selector buttons in sidebar */}
+            {selectedSubmission.chargers.length > 0 && (
+              <div className="flex flex-col gap-2">
+                {selectedSubmission.chargers.map((ch, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveChargerIndex(i)}
+                    className={`w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
+                      i === activeChargerIndex
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card border border-border text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    Charger {i + 1}
+                    {ch.brand && <span className="ml-1 opacity-70">— {ch.brand}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* RIGHT CONTENT */}
           <div className="space-y-4">
-            {/* Charger Tabs */}
             {selectedSubmission.chargers.length > 0 ? (
               <>
-                <div className="flex items-center gap-2">
-                  {selectedSubmission.chargers.map((ch, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveChargerIndex(i)}
-                      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                        i === activeChargerIndex
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-card border border-border text-foreground hover:bg-accent"
-                      }`}
-                    >
-                      Charger {i + 1}
-                    </button>
-                  ))}
-                </div>
 
                 {/* Charger Details Card */}
                 <Card className="border border-border/60">
