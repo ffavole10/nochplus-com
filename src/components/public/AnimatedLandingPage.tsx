@@ -119,7 +119,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
             className="px-8 py-3 rounded-full bg-white/20 backdrop-blur-md text-white text-lg font-light hover:bg-white/30 active:scale-95 transition-all duration-300 tracking-widest"
             aria-label="Start assessment">
 
-            START &gt;
+            Get Started &gt;&gt;
           </button>
         </div>
       </div>
