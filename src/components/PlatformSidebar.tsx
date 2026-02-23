@@ -132,7 +132,7 @@ export function PlatformSidebar() {
   const campaignPages = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Dataset", url: "/dataset", icon: Database },
-  { title: "Issues Queue", url: "/issues", icon: SearchIcon },
+  { title: "Flagged", url: "/issues", icon: SearchIcon },
   { title: "Schedule", url: "/schedule", icon: CalendarDays },
   { title: "Field Reports", url: "/field-reports", icon: FolderOpen }];
 
