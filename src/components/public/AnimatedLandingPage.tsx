@@ -66,7 +66,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
         {/* Hero image - no circle background */}
         <div className={`relative mb-4 transition-all duration-1000 ease-out ${stage >= 3 ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}>
-          <div className="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 mx-auto">
+          <div className="relative w-72 h-72 sm:w-80 sm:h-80 md:w-[22rem] md:h-[22rem] mx-auto">
             <img
               src={heroPerson}
               alt="Happy customer"
@@ -100,7 +100,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         </div>
 
         {/* Value proposition */}
-        <div className={`text-center mb-6 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+        <div className={`text-center mb-6 -mt-2 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
           <p className="text-white text-lg sm:text-xl font-extralight leading-relaxed md:text-3xl">
             Fast. Simple. Reliable.
           </p>
