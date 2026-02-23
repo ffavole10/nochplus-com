@@ -112,6 +112,6 @@ export const DEFAULT_CONFIG: CampaignConfig = {
   excludedDates: [],
   includePhases: ["Needs Assessment"],
   includePriorities: ["Critical", "High", "Medium", "Low"],
-  includeTypes: ["DCFC", "L2", "HPCD"],
+  includeTypes: ["AC | Level 2", "DC | Level 3"],
   sortBy: "priority",
 };

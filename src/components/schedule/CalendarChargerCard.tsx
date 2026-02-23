@@ -15,9 +15,8 @@ interface CalendarChargerCardProps {
 }
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
-  DCFC: <Zap className="h-3 w-3" />,
-  L2: <Plug className="h-3 w-3" />,
-  HPCD: <Battery className="h-3 w-3" />,
+  "DC | Level 3": <Zap className="h-3 w-3" />,
+  "AC | Level 2": <Plug className="h-3 w-3" />,
 };
 
 const STATUS_CONFIG: Record<ScheduleItemStatus, { icon: React.ReactNode; bg: string }> = {

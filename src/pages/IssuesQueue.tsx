@@ -32,7 +32,7 @@ const IssuesQueue = () => {
     const now = new Date().toISOString();
 
     // Determine charger type for the service ticket
-    const chargerType = charger.assetRecordType === "DCFC" ? "DC_L3" : "AC_L2";
+    const chargerType = charger.assetRecordType === "DC | Level 3" ? "DC_L3" : "AC_L2";
 
     // Determine priority mapping
     const priorityMap: Record<string, "Critical" | "High" | "Medium" | "Low"> = {

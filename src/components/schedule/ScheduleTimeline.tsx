@@ -187,7 +187,7 @@ export function ScheduleTimeline({ campaign, chargers, onMarkStatus, onSelectCha
                                 <p className="text-[10px] text-muted-foreground truncate">{charger.city}, {charger.state}</p>
                                 <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                                   <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">
-                                    {charger.assetRecordType === "DCFC" ? <Zap className="h-2 w-2 mr-0.5" /> : <Plug className="h-2 w-2 mr-0.5" />}
+                                    {charger.assetRecordType === "DC | Level 3" ? <Zap className="h-2 w-2 mr-0.5" /> : <Plug className="h-2 w-2 mr-0.5" />}
                                     {charger.assetRecordType}
                                   </Badge>
                                   <span className="text-[10px] text-muted-foreground">{item.estimatedHours}h</span>

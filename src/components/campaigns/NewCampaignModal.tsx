@@ -204,18 +204,14 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
 
             <div className="bg-muted/50 rounded-lg p-4">
               <h4 className="text-sm font-medium mb-2">Charger Breakdown</h4>
-              <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">DCFC</span>
-                  <p className="font-semibold">{stats.dcfcCount}</p>
+                  <span className="text-muted-foreground">DC | Level 3</span>
+                  <p className="font-semibold">{stats.dcL3Count}</p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">L2</span>
-                  <p className="font-semibold">{stats.l2Count}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">HPCD</span>
-                  <p className="font-semibold">{stats.hpcdCount}</p>
+                  <span className="text-muted-foreground">AC | Level 2</span>
+                  <p className="font-semibold">{stats.acL2Count}</p>
                 </div>
               </div>
             </div>
