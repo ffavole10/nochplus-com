@@ -101,14 +101,14 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
         {/* Value proposition */}
         <div className={`text-center mb-6 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-          <p className="text-white text-lg sm:text-xl md:text-2xl font-extralight leading-relaxed">
+          <p className="text-white text-lg sm:text-xl font-extralight leading-relaxed md:text-3xl">
             Fast. Simple. Reliable.
           </p>
-          <p className="text-white/80 text-lg sm:text-xl md:text-2xl font-extralight">
+          <p className="text-white/80 text-lg sm:text-xl font-extralight md:text-xl">
             Your peace of mind
           </p>
-          <p className="text-white text-lg sm:text-xl md:text-2xl font-extralight">
-            is just <span className="font-light text-white">2 minutes</span> away
+          <p className="text-white text-lg sm:text-xl font-extralight md:text-xl">
+            is just <span className="font-light text-white">minutes</span> away
           </p>
         </div>
 
