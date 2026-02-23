@@ -12,7 +12,7 @@ interface ChargerRecord {
   serialNumber: string;
   brand: string;
   model: string;
-  type: "L2" | "DCFC" | "HPCD";
+  type: "AC | Level 2" | "DC | Level 3";
   campaign: string | null;
   nochPlusEnrolled: boolean;
   ticketCount: number;
@@ -29,16 +29,16 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const MOCK_CHARGERS: ChargerRecord[] = [
-  { id: "ch1", serialNumber: "BTC-2024-00142", brand: "BTC Power", model: "GEN3 180kW", type: "DCFC", campaign: "BTC Portfolio Q1", nochPlusEnrolled: true, ticketCount: 3, status: "Medium", lastServiceDate: "2025-01-20", location: "Los Angeles, CA" },
-  { id: "ch2", serialNumber: "BTC-2024-00387", brand: "BTC Power", model: "GEN3 180kW", type: "DCFC", campaign: "BTC Portfolio Q1", nochPlusEnrolled: false, ticketCount: 1, status: "Low", lastServiceDate: "2025-02-05", location: "San Diego, CA" },
-  { id: "ch3", serialNumber: "TRI-2023-01205", brand: "Tritium", model: "RT175-S", type: "DCFC", campaign: "EVConnect Network", nochPlusEnrolled: true, ticketCount: 5, status: "Critical", lastServiceDate: "2024-12-10", location: "Phoenix, AZ" },
-  { id: "ch4", serialNumber: "ABB-2023-00891", brand: "ABB", model: "Terra 360", type: "HPCD", campaign: null, nochPlusEnrolled: true, ticketCount: 2, status: "Low", lastServiceDate: "2025-01-30", location: "Austin, TX" },
-  { id: "ch5", serialNumber: "CPI-2024-02104", brand: "ChargePoint", model: "CT4025", type: "L2", campaign: "ChargePoint Retail", nochPlusEnrolled: false, ticketCount: 0, status: "Low", lastServiceDate: "2025-02-10", location: "Seattle, WA" },
-  { id: "ch6", serialNumber: "BTC-2024-00561", brand: "BTC Power", model: "GEN3 180kW", type: "DCFC", campaign: "BTC Portfolio Q1", nochPlusEnrolled: true, ticketCount: 4, status: "High", lastServiceDate: "2025-01-05", location: "Denver, CO" },
-  { id: "ch7", serialNumber: "TRI-2023-01402", brand: "Tritium", model: "PKM150", type: "DCFC", campaign: null, nochPlusEnrolled: false, ticketCount: 1, status: "Medium", lastServiceDate: "2024-11-20", location: "Atlanta, GA" },
-  { id: "ch8", serialNumber: "ABB-2024-01003", brand: "ABB", model: "Terra 184", type: "DCFC", campaign: "EVConnect Network", nochPlusEnrolled: true, ticketCount: 2, status: "Low", lastServiceDate: "2025-02-15", location: "Portland, OR" },
-  { id: "ch9", serialNumber: "CPI-2024-02398", brand: "ChargePoint", model: "CPE250", type: "DCFC", campaign: "ChargePoint Retail", nochPlusEnrolled: true, ticketCount: 6, status: "Critical", lastServiceDate: "2024-10-30", location: "Chicago, IL" },
-  { id: "ch10", serialNumber: "BTC-2024-00789", brand: "BTC Power", model: "GEN2 60kW", type: "DCFC", campaign: null, nochPlusEnrolled: false, ticketCount: 0, status: "Low", lastServiceDate: "2025-02-18", location: "Miami, FL" },
+  { id: "ch1", serialNumber: "BTC-2024-00142", brand: "BTC Power", model: "GEN3 180kW", type: "DC | Level 3", campaign: "BTC Portfolio Q1", nochPlusEnrolled: true, ticketCount: 3, status: "Medium", lastServiceDate: "2025-01-20", location: "Los Angeles, CA" },
+  { id: "ch2", serialNumber: "BTC-2024-00387", brand: "BTC Power", model: "GEN3 180kW", type: "DC | Level 3", campaign: "BTC Portfolio Q1", nochPlusEnrolled: false, ticketCount: 1, status: "Low", lastServiceDate: "2025-02-05", location: "San Diego, CA" },
+  { id: "ch3", serialNumber: "TRI-2023-01205", brand: "Tritium", model: "RT175-S", type: "DC | Level 3", campaign: "EVConnect Network", nochPlusEnrolled: true, ticketCount: 5, status: "Critical", lastServiceDate: "2024-12-10", location: "Phoenix, AZ" },
+  { id: "ch4", serialNumber: "ABB-2023-00891", brand: "ABB", model: "Terra 360", type: "DC | Level 3", campaign: null, nochPlusEnrolled: true, ticketCount: 2, status: "Low", lastServiceDate: "2025-01-30", location: "Austin, TX" },
+  { id: "ch5", serialNumber: "CPI-2024-02104", brand: "ChargePoint", model: "CT4025", type: "AC | Level 2", campaign: "ChargePoint Retail", nochPlusEnrolled: false, ticketCount: 0, status: "Low", lastServiceDate: "2025-02-10", location: "Seattle, WA" },
+  { id: "ch6", serialNumber: "BTC-2024-00561", brand: "BTC Power", model: "GEN3 180kW", type: "DC | Level 3", campaign: "BTC Portfolio Q1", nochPlusEnrolled: true, ticketCount: 4, status: "High", lastServiceDate: "2025-01-05", location: "Denver, CO" },
+  { id: "ch7", serialNumber: "TRI-2023-01402", brand: "Tritium", model: "PKM150", type: "DC | Level 3", campaign: null, nochPlusEnrolled: false, ticketCount: 1, status: "Medium", lastServiceDate: "2024-11-20", location: "Atlanta, GA" },
+  { id: "ch8", serialNumber: "ABB-2024-01003", brand: "ABB", model: "Terra 184", type: "DC | Level 3", campaign: "EVConnect Network", nochPlusEnrolled: true, ticketCount: 2, status: "Low", lastServiceDate: "2025-02-15", location: "Portland, OR" },
+  { id: "ch9", serialNumber: "CPI-2024-02398", brand: "ChargePoint", model: "CPE250", type: "DC | Level 3", campaign: "ChargePoint Retail", nochPlusEnrolled: true, ticketCount: 6, status: "Critical", lastServiceDate: "2024-10-30", location: "Chicago, IL" },
+  { id: "ch10", serialNumber: "BTC-2024-00789", brand: "BTC Power", model: "GEN2 60kW", type: "DC | Level 3", campaign: null, nochPlusEnrolled: false, ticketCount: 0, status: "Low", lastServiceDate: "2025-02-18", location: "Miami, FL" },
 ];
 
 export default function AllChargers() {
@@ -115,9 +115,8 @@ export default function AllChargers() {
           <SelectTrigger className="w-32"><Zap className="h-3.5 w-3.5 mr-1" /><SelectValue placeholder="Type" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="L2">L2</SelectItem>
-            <SelectItem value="DCFC">DCFC</SelectItem>
-            <SelectItem value="HPCD">HPCD</SelectItem>
+            <SelectItem value="AC | Level 2">AC | Level 2</SelectItem>
+            <SelectItem value="DC | Level 3">DC | Level 3</SelectItem>
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>

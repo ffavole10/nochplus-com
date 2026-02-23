@@ -5,7 +5,7 @@ export function classifyTicketPriority(charger: AssessmentCharger): TicketPriori
   const { priorityLevel, hasOpenTicket, ticketCreatedDate, assetRecordType } = charger;
   const ageDays = ticketCreatedDate ? differenceInDays(new Date(), new Date(ticketCreatedDate)) : 0;
 
-  if (priorityLevel === "Critical" || (hasOpenTicket && ageDays > 30 && assetRecordType === "DCFC")) {
+  if (priorityLevel === "Critical" || (hasOpenTicket && ageDays > 30 && assetRecordType === "DC | Level 3")) {
     return "P1-Critical";
   }
   if (priorityLevel === "High" || (hasOpenTicket && ageDays > 14)) {

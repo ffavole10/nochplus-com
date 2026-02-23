@@ -88,7 +88,7 @@ function toRecord(raw: BtcRawRecord): ChargerDatabaseRecord {
     serialNumber: raw.assetName,
     brand: "BTC Power",
     model: raw.model || "Unknown",
-    chargerType: raw.assetRecordType === "DCFC" ? "DC | Level 3" : "AC | Level 2",
+    chargerType: raw.assetRecordType === "DC | Level 3" ? "DC | Level 3" : "AC | Level 2",
     installationDate: formattedInstall,
     ageInYears: calcAge(installStr),
     warrantyStatus: deriveWarrantyStatus(pwEnd),

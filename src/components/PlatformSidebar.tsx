@@ -45,7 +45,7 @@ const STATUS_LEVELS: {value: StatusLevel;label: string;colorClass: string;}[] = 
 { value: "Low", label: "Low", colorClass: "bg-low" }];
 
 
-const CHARGER_TYPES = ["DCFC", "L2", "HPCD"];
+const CHARGER_TYPES = ["AC | Level 2", "DC | Level 3"];
 const SWI_OPTIONS = ["With SWI", "Without SWI"];
 const ACCOUNT_MANAGERS = [
 { value: "jrose", label: "Joe Rose" },

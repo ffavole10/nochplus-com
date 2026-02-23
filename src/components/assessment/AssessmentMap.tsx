@@ -135,7 +135,7 @@ export function AssessmentMap({ chargers, onSelectCharger, onGeocodeRequest, isG
 
     withCoords.forEach(charger => {
       const color = getPriorityColor(charger.priorityLevel);
-      const isLarge = charger.assetRecordType === "DCFC";
+      const isLarge = charger.assetRecordType === "DC | Level 3";
       const size = isLarge ? 14 : 10;
       const icon = L.divIcon({
         className: "custom-marker",

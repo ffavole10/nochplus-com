@@ -21,7 +21,7 @@ interface CampaignConfigPanelProps {
 
 const ALL_PHASES: Phase[] = ["Needs Assessment", "Scheduled", "In Progress", "Completed", "Deferred"];
 const ALL_PRIORITIES: PriorityLevel[] = ["Critical", "High", "Medium", "Low"];
-const ALL_TYPES: ChargerType[] = ["DCFC", "L2", "HPCD"];
+const ALL_TYPES: ChargerType[] = ["AC | Level 2", "DC | Level 3"];
 const DAY_NAMES = ["S", "M", "T", "W", "T", "F", "S"];
 
 const PRIORITY_COLORS: Record<PriorityLevel, string> = {
@@ -32,9 +32,8 @@ const PRIORITY_COLORS: Record<PriorityLevel, string> = {
 };
 
 const TYPE_ICONS: Record<ChargerType, React.ReactNode> = {
-  DCFC: <Zap className="h-3 w-3" />,
-  L2: <Plug className="h-3 w-3" />,
-  HPCD: <Battery className="h-3 w-3" />,
+  "AC | Level 2": <Plug className="h-3 w-3" />,
+  "DC | Level 3": <Zap className="h-3 w-3" />,
 };
 
 export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConfigPanelProps) {

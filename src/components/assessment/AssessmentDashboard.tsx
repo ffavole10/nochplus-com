@@ -26,9 +26,8 @@ interface AssessmentDashboardProps {
 }
 
 const TYPE_COLORS: Record<ChargerType, string> = {
-  DCFC: "bg-secondary text-secondary-foreground",
-  L2: "bg-chart-6 text-white",
-  HPCD: "bg-chart-1 text-white",
+  "AC | Level 2": "bg-chart-6 text-white",
+  "DC | Level 3": "bg-secondary text-secondary-foreground",
 };
 
 const PRIORITY_BADGE: Record<PriorityLevel, string> = {
@@ -67,9 +66,8 @@ export function AssessmentDashboard({
             <p className="text-sm text-muted-foreground">Total Chargers</p>
             <p className="text-3xl font-bold text-foreground">{stats.total}</p>
             <div className="flex gap-2 mt-1">
-              <span className="text-xs text-muted-foreground">DCFC: {stats.dcfcCount}</span>
-              <span className="text-xs text-muted-foreground">L2: {stats.l2Count}</span>
-              <span className="text-xs text-muted-foreground">HPCD: {stats.hpcdCount}</span>
+              <span className="text-xs text-muted-foreground">DC | Level 3: {stats.dcL3Count}</span>
+              <span className="text-xs text-muted-foreground">AC | Level 2: {stats.acL2Count}</span>
             </div>
           </CardContent>
         </Card>
@@ -129,7 +127,7 @@ export function AssessmentDashboard({
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-semibold text-foreground truncate">{charger.assetName}</p>
                     <Badge className={TYPE_COLORS[charger.assetRecordType]} variant="secondary">
-                      {charger.assetRecordType === "DCFC" ? <Zap className="h-3 w-3 mr-1" /> : <Plug className="h-3 w-3 mr-1" />}
+                      {charger.assetRecordType === "DC | Level 3" ? <Zap className="h-3 w-3 mr-1" /> : <Plug className="h-3 w-3 mr-1" />}
                       {charger.assetRecordType}
                     </Badge>
                     <Badge className={PRIORITY_BADGE[charger.priorityLevel]} variant="secondary">

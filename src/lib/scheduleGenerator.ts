@@ -33,7 +33,7 @@ export function filterChargers(chargers: AssessmentCharger[], config: CampaignCo
 export function sortChargers(chargers: AssessmentCharger[], sortBy: string): AssessmentCharger[] {
   const copy = [...chargers];
   const priorityOrder: Record<PriorityLevel, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 };
-  const typeOrder: Record<ChargerType, number> = { DCFC: 0, HPCD: 1, L2: 2 };
+  const typeOrder: Record<ChargerType, number> = { "DC | Level 3": 0, "AC | Level 2": 1 };
 
   switch (sortBy) {
     case "priority":

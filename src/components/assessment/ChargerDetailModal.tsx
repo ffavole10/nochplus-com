@@ -66,7 +66,7 @@ export function ChargerDetailModal({ charger, open, onOpenChange, onUpdate }: Ch
           <div className="flex items-center gap-3 flex-wrap">
             <DialogTitle className="text-lg">{charger.assetName}</DialogTitle>
             <Badge variant="secondary" className="gap-1">
-              {charger.assetRecordType === "DCFC" ? <Zap className="h-3 w-3" /> : <Plug className="h-3 w-3" />}
+              {charger.assetRecordType === "DC | Level 3" ? <Zap className="h-3 w-3" /> : <Plug className="h-3 w-3" />}
               {charger.assetRecordType}
             </Badge>
             <Badge className={PRIORITY_BADGE[charger.priorityLevel]}>

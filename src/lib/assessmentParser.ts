@@ -20,9 +20,8 @@ function parseDate(value: unknown): string | null {
 
 function normalizeType(value: string): ChargerType {
   const v = value?.toUpperCase().trim() || "";
-  if (v.includes("DCFC") || v.includes("DC FAST")) return "DCFC";
-  if (v.includes("HPCD") || v.includes("HIGH POWER")) return "HPCD";
-  return "L2";
+  if (v.includes("DCFC") || v.includes("DC FAST") || v.includes("HPCD") || v.includes("HIGH POWER") || v.includes("DC") || v.includes("L3") || v.includes("LEVEL 3")) return "DC | Level 3";
+  return "AC | Level 2";
 }
 
 export function calculatePriorityScore(charger: {
@@ -36,8 +35,7 @@ export function calculatePriorityScore(charger: {
   const now = new Date();
 
   // Charger Type
-  if (charger.assetRecordType === "DCFC") score += 50;
-  else if (charger.assetRecordType === "HPCD") score += 30;
+  if (charger.assetRecordType === "DC | Level 3") score += 50;
   else score += 10;
 
   // Age
@@ -176,7 +174,7 @@ export function parseAssessmentExcel(file: File): Promise<AssessmentCharger[]> {
             }
           }
 
-          const assetRecordType = normalizeType(String(mapped.assetRecordType || "L2"));
+          const assetRecordType = normalizeType(String(mapped.assetRecordType || "AC | Level 2"));
           const inServiceDate = parseDate(mapped.inServiceDate);
           const partsWarrantyEndDate = parseDate(mapped.partsWarrantyEndDate);
           const serviceContractEndDate = parseDate(mapped.serviceContractEndDate);
@@ -248,8 +246,8 @@ export function parseAssessmentExcel(file: File): Promise<AssessmentCharger[]> {
           };
         });
 
-        // Default sort: DCFC first, then by oldest in-service date
-        const typeOrder: Record<ChargerType, number> = { DCFC: 0, HPCD: 1, L2: 2 };
+        // Default sort: DC Level 3 first, then by oldest in-service date
+        const typeOrder: Record<ChargerType, number> = { "DC | Level 3": 0, "AC | Level 2": 1 };
         chargers.sort((a, b) => {
           const typeDiff = typeOrder[a.assetRecordType] - typeOrder[b.assetRecordType];
           if (typeDiff !== 0) return typeDiff;
@@ -279,9 +277,8 @@ export function getAssessmentStats(chargers: AssessmentCharger[]) {
     inProgress: chargers.filter(c => c.phase === "In Progress").length,
     completed,
     completionPercent: chargers.length > 0 ? Math.round((completed / chargers.length) * 100) : 0,
-    dcfcCount: chargers.filter(c => c.assetRecordType === "DCFC").length,
-    l2Count: chargers.filter(c => c.assetRecordType === "L2").length,
-    hpcdCount: chargers.filter(c => c.assetRecordType === "HPCD").length,
+    acL2Count: chargers.filter(c => c.assetRecordType === "AC | Level 2").length,
+    dcL3Count: chargers.filter(c => c.assetRecordType === "DC | Level 3").length,
   };
 }
 

@@ -1,4 +1,4 @@
-export type ChargerType = "DCFC" | "L2" | "HPCD";
+export type ChargerType = "AC | Level 2" | "DC | Level 3";
 export type PriorityLevel = "Critical" | "High" | "Medium" | "Low";
 export type Phase = "Needs Assessment" | "Scheduled" | "In Progress" | "Completed" | "Deferred";
 
@@ -46,9 +46,8 @@ export interface AssessmentStats {
   inProgress: number;
   completed: number;
   completionPercent: number;
-  dcfcCount: number;
-  l2Count: number;
-  hpcdCount: number;
+  acL2Count: number;
+  dcL3Count: number;
 }
 
 export interface AssessmentTicketStats {

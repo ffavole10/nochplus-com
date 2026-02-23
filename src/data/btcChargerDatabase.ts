@@ -5,7 +5,7 @@
 
 export interface BtcRawRecord {
   assetName: string;
-  assetRecordType: "L2" | "DCFC";
+  assetRecordType: "AC | Level 2" | "DC | Level 3";
   administrator: string;
   accountName: string;
   address: string;
@@ -37,7 +37,8 @@ function r(
   pwStart: string, pwEnd: string, scStart: string, scEnd: string,
   contact: string, wNotes: string
 ): BtcRawRecord {
-  return { assetName, assetRecordType: type, administrator: admin, accountName: account, address, city, state, zip, status, model, evseId, ocppChargeboxId: ocpp, customerAssetName: custName, customerStationId: custStation, customerAssetId: custAsset, installDate, inServiceDate: inService, partsWarrantyStart: pwStart, partsWarrantyEnd: pwEnd, serviceContractStart: scStart, serviceContractEnd: scEnd, contactInfo: contact, warrantyNotes: wNotes };
+  const mappedType: "AC | Level 2" | "DC | Level 3" = type === "DCFC" ? "DC | Level 3" : "AC | Level 2";
+  return { assetName, assetRecordType: mappedType, administrator: admin, accountName: account, address, city, state, zip, status, model, evseId, ocppChargeboxId: ocpp, customerAssetName: custName, customerStationId: custStation, customerAssetId: custAsset, installDate, inServiceDate: inService, partsWarrantyStart: pwStart, partsWarrantyEnd: pwEnd, serviceContractStart: scStart, serviceContractEnd: scEnd, contactInfo: contact, warrantyNotes: wNotes };
 }
 
 export const BTC_CHARGER_DATABASE: BtcRawRecord[] = [
