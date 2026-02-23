@@ -24,19 +24,21 @@ export interface EstimateRecord {
 
 export function useEstimates(campaignId: string | null) {
   return useQuery({
-    queryKey: ["estimates", campaignId],
+    queryKey: ["estimates", campaignId ?? "all"],
     queryFn: async () => {
-      if (!campaignId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("estimates")
         .select("*")
-        .eq("campaign_id", campaignId)
         .order("created_at", { ascending: false });
 
+      if (campaignId) {
+        query = query.eq("campaign_id", campaignId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as EstimateRecord[];
     },
-    enabled: !!campaignId,
   });
 }
 
