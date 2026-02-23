@@ -107,9 +107,6 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
           <p className="text-white/80 text-lg sm:text-xl font-extralight md:text-xl">Your peace of mind is just minutes away
 
           </p>
-          <p className="text-white text-lg sm:text-xl font-extralight md:text-xl">
-            is just <span className="font-light text-white">minutes</span> away
-          </p>
         </div>
 
         {/* CTA - simple text button */}
