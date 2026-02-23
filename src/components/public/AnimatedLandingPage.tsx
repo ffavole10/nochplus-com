@@ -59,7 +59,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
         {/* Welcome subtitle */}
         <div className={`mb-8 transition-all duration-1000 ease-out delay-200 ${stage >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-          <p className="text-white/50 text-sm sm:text-base tracking-[0.35em] uppercase font-light">
+          <p className="text-white/50 text-sm tracking-[0.35em] uppercase font-light sm:text-xl">
             W E L C O M E
           </p>
         </div>
