@@ -101,7 +101,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
         {/* Value proposition + CTA centered between arc and footer */}
         <div className="flex flex-col items-center flex-1 -mt-4">
-          <div className={`text-center mt-1 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+          <div className={`text-center -mt-2 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
             <p className="text-white text-lg sm:text-xl font-extralight leading-relaxed md:text-4xl">
               Fast. Simple. Reliable.
             </p>
