@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X } from "lucide-react";
+import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
+import type { TicketChargerInfo, ChargerBrand } from "@/types/ticket";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -257,9 +259,74 @@ export default function Submissions() {
       setSelectedSubmission(updated);
       setIsEditing(false);
 
+      // Create service tickets for chargers flagged with service_needed=true
+      // Only create tickets for chargers that are newly flagged (weren't already flagged before)
       const serviceChargers = updatedChargers.filter(ch => ch.service_needed === true);
-      if (serviceChargers.length > 0) {
-        toast.success(`Saved — ${serviceChargers.length} charger(s) flagged for Service Desk.`, { duration: 5000 });
+      const previouslyFlagged = selectedSubmission.chargers
+        .filter(ch => ch.service_needed === true)
+        .map(ch => ch.id);
+      const newServiceChargers = serviceChargers.filter(ch => !previouslyFlagged.includes(ch.id));
+
+      if (newServiceChargers.length > 0) {
+        const store = useServiceTicketsStore.getState();
+        const customerInfo = {
+          name: updated.full_name,
+          company: updated.company_name,
+          email: updated.email,
+          phone: updated.phone,
+          address: `${updated.street_address}, ${updated.city}, ${updated.state} ${updated.zip_code}`,
+        };
+
+        const validBrands: ChargerBrand[] = ["BTC", "ABB", "Delta", "Tritium", "Signet", "Other"];
+        const mapBrand = (b: string): ChargerBrand | "" => {
+          const upper = b?.toUpperCase() || "";
+          const found = validBrands.find(v => upper.includes(v.toUpperCase()));
+          return found || (b ? "Other" : "");
+        };
+
+        const chargerData = newServiceChargers.map(ch => ({
+          charger: {
+            brand: mapBrand(ch.brand),
+            serialNumber: ch.serial_number || "",
+            type: (ch.charger_type === "DC" || ch.charger_type === "DC | Level 3" ? "DC_L3" : "AC_L2") as TicketChargerInfo["type"],
+            location: `${updated.city}, ${updated.state}`,
+          },
+          issue: {
+            description: ch.known_issues || chargerNotes[ch.id] || "Service requested via Noch+ submission.",
+          },
+        }));
+
+        if (chargerData.length === 1) {
+          // Single charger → standalone ticket
+          const now = new Date().toISOString();
+          const ticketId = store.getNextTicketId();
+          const cd = chargerData[0];
+          store.addTicket({
+            id: `st-${Date.now()}`,
+            ticketId,
+            source: "noch_plus",
+            customer: customerInfo,
+            charger: cd.charger,
+            photos: [],
+            issue: cd.issue,
+            priority: "Medium",
+            status: "pending_review",
+            currentStep: 1,
+            workflowSteps: makeSteps(1),
+            createdAt: now,
+            updatedAt: now,
+            history: [{ id: `h-${Date.now()}`, timestamp: now, action: "Ticket created from Noch+ submission", performedBy: "System" }],
+            metadata: { campaignName: `Submission ${updated.submission_id}` },
+          });
+          toast.success(`Service ticket ${ticketId} created in Service Desk.`, { duration: 5000 });
+        } else {
+          // Multiple chargers → parent-child
+          const parentId = store.createParentWithChildren(customerInfo, chargerData, "noch_plus", `Submission ${updated.submission_id}`);
+          const parent = store.getTicketById(parentId);
+          toast.success(`${newServiceChargers.length} service tickets created under ${parent?.ticketId || "new parent"}.`, { duration: 5000 });
+        }
+      } else if (serviceChargers.length > 0) {
+        toast.success("Changes saved (service tickets already created for flagged chargers).");
       } else {
         toast.success("Changes saved");
       }
