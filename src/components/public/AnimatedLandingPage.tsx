@@ -66,7 +66,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
         {/* Hero image - no circle background */}
         <div className={`relative mb-4 transition-all duration-1000 ease-out ${stage >= 3 ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}>
-          <div className="relative w-72 h-72 sm:w-80 sm:h-80 md:w-[22rem] md:h-[22rem] mx-auto">
+          <div className="relative w-80 h-80 sm:w-96 sm:h-96 md:w-[26rem] md:h-[26rem] mx-auto">
             <img
               src={heroPerson}
               alt="Happy customer"
@@ -100,7 +100,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         </div>
 
         {/* Value proposition */}
-        <div className={`text-center mb-6 -mt-2 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+        <div className={`text-center mb-6 -mt-4 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
           <p className="text-white text-lg sm:text-xl font-extralight leading-relaxed md:text-3xl">
             Fast. Simple. Reliable.
           </p>
@@ -126,7 +126,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
 
       {/* Footer */}
-      <div className={`pb-6 flex flex-col items-center gap-2 relative z-10 transition-all duration-700 ${stage >= 6 ? "opacity-100" : "opacity-0"}`}>
+      <div className={`pb-6 pt-8 flex flex-col items-center gap-2 relative z-10 transition-all duration-700 ${stage >= 6 ? "opacity-100" : "opacity-0"}`}>
         <button
           onClick={() => navigate("/login")}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/10 transition-all text-sm"
