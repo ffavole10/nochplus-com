@@ -1,4 +1,4 @@
-import { Bell, AlertTriangle, FolderPlus, Check } from "lucide-react";
+import { Bell, AlertTriangle, FolderPlus, Check, FileText, UserPlus, CheckCircle, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,11 +9,17 @@ import { formatDistanceToNow } from "date-fns";
 const typeIcons: Record<string, typeof AlertTriangle> = {
   campaign_created: FolderPlus,
   charger_critical: AlertTriangle,
+  estimate_approved: CheckCircle,
+  new_submission: ClipboardList,
+  submission_approved: UserPlus,
 };
 
 const typeColors: Record<string, string> = {
   campaign_created: "text-primary",
   charger_critical: "text-critical",
+  estimate_approved: "text-optimal",
+  new_submission: "text-primary",
+  submission_approved: "text-optimal",
 };
 
 export function NotificationBell() {
@@ -31,7 +37,7 @@ export function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-96 p-0" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <h3 className="font-semibold text-sm">Notifications</h3>
           {unreadCount > 0 && (
@@ -65,7 +71,7 @@ export function NotificationBell() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className={cn("text-sm", !n.is_read && "font-semibold")}>{n.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{n.message}</p>
+                      <p className="text-xs text-muted-foreground break-words">{n.message}</p>
                       <p className="text-[10px] text-muted-foreground/60 mt-1">
                         {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
                       </p>
