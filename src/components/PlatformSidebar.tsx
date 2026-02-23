@@ -36,7 +36,7 @@ import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { cn } from "@/lib/utils";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
-import { supabase } from "@/integrations/supabase/client";
+import { useEstimates } from "@/hooks/useEstimates";
 
 type SectionKey = "campaigns" | "service-desk" | "noch-plus" | null;
 
@@ -139,17 +139,13 @@ export function PlatformSidebar() {
   { title: "Field Reports", url: "/field-reports", icon: FolderOpen }];
 
 
-  // Total ticket count matching the KPI "Total Tickets" card
+  // Ticket count matching KPI "Total Tickets" = non-parent tickets
   const allTickets = useServiceTicketsStore((s) => s.tickets);
-  const totalTicketCount = useMemo(() => allTickets.length, [allTickets]);
+  const totalTicketCount = useMemo(() => allTickets.filter(t => !t.isParent).length, [allTickets]);
 
-  // Real estimate count from DB
-  const [estimateCount, setEstimateCount] = useState<number>(0);
-  useEffect(() => {
-    supabase.from("estimates").select("id", { count: "exact", head: true }).then(({ count }) => {
-      if (count != null) setEstimateCount(count);
-    });
-  }, []);
+  // Estimate count matching Estimates page KPI "Total"
+  const { data: allEstimates = [] } = useEstimates(null);
+  const estimateCount = allEstimates.length;
 
   const serviceDeskPages = [
   { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: totalTicketCount },
