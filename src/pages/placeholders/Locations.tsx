@@ -299,9 +299,13 @@ function TechCard({ tech, onView, onEdit, onDelete }: { tech: Technician; onView
       <CardContent className="pt-4">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0">
-              {tech.first_name[0]}{tech.last_name[0]}
-            </div>
+            {tech.photo_url ? (
+              <img src={tech.photo_url} alt={`${tech.first_name} ${tech.last_name}`} className="w-10 h-10 rounded-full object-cover shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0">
+                {tech.first_name[0]}{tech.last_name[0]}
+              </div>
+            )}
             <div>
               <div className="font-semibold">{tech.first_name} {tech.last_name}</div>
               <Badge className={`${getLevelColor(tech.level)} text-xs mt-0.5`}>{getLevelDisplay(tech.level)}</Badge>
@@ -373,7 +377,18 @@ function TechTable({ techs, onView, onEdit, onDelete }: { techs: Technician[]; o
             const status = getStatusInfo(tech.status);
             return (
               <tr key={tech.id} className="border-b hover:bg-muted/30 transition-colors">
-                <td className="p-3 font-medium">{tech.first_name} {tech.last_name}</td>
+                <td className="p-3 font-medium">
+                  <div className="flex items-center gap-2">
+                    {tech.photo_url ? (
+                      <img src={tech.photo_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0">
+                        {tech.first_name[0]}{tech.last_name[0]}
+                      </div>
+                    )}
+                    {tech.first_name} {tech.last_name}
+                  </div>
+                </td>
                 <td className="p-3 text-muted-foreground truncate max-w-[180px]">{tech.email}</td>
                 <td className="p-3 text-muted-foreground">{tech.home_base_city}, {tech.home_base_state}</td>
                 <td className="p-3"><Badge className={`${getLevelColor(tech.level)} text-xs`}>{getLevelDisplay(tech.level)}</Badge></td>
