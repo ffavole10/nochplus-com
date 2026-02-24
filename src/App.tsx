@@ -28,6 +28,9 @@ import NochPlusDashboard from "./pages/placeholders/NochPlusDashboard";
 import NochPlusChargers from "./pages/placeholders/NochPlusChargers";
 import NochPlusMembers from "./pages/placeholders/NochPlusMembers";
 import NochPlusAssessments from "./pages/placeholders/NochPlusAssessments";
+import AIAgent from "./pages/placeholders/AIAgent";
+import SWILibrary from "./pages/SWILibrary";
+import Locations from "./pages/placeholders/Locations";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +62,11 @@ const App = () => (
             <Route path="/noch-plus/members" element={<NochPlusMembers />} />
             <Route path="/noch-plus/chargers" element={<NochPlusChargers />} />
             <Route path="/noch-plus/assessments" element={<NochPlusAssessments />} />
+
+            {/* AutoHeal section */}
+            <Route path="/autoheal/ai-agent" element={<AIAgent />} />
+            <Route path="/autoheal/swi-library" element={<SWILibrary />} />
+            <Route path="/autoheal/locations" element={<Locations />} />
 
             {/* Settings */}
             <Route path="/settings" element={<Settings />} />
