@@ -8,17 +8,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import {
-  CheckCircle2, Clock, Pause, Search, ChevronDown, Camera, Mail, Phone, Loader2, MapPin
+  CheckCircle2, Clock, Pause, Search, ChevronDown, Camera, Loader2, MapPin
 } from "lucide-react";
 
-interface Submission {
-  id: string;
+interface TrackingSubmission {
   submission_id: string;
   status: string;
   full_name: string;
   company_name: string;
-  email: string;
-  phone: string;
   city: string;
   state: string;
   noch_plus_member: boolean;
@@ -27,12 +24,12 @@ interface Submission {
   updated_at: string;
 }
 
-interface ChargerSubmission {
+interface TrackingCharger {
   id: string;
   brand: string;
   serial_number: string | null;
   charger_type: string;
-  photo_urls: string[];
+  photo_count: number;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; description: string }> = {
@@ -49,8 +46,8 @@ export default function TrackSubmission() {
   const { submissionId: paramId } = useParams();
   const navigate = useNavigate();
   const [searchId, setSearchId] = useState(paramId || "");
-  const [submission, setSubmission] = useState<Submission | null>(null);
-  const [chargers, setChargers] = useState<ChargerSubmission[]>([]);
+  const [submission, setSubmission] = useState<TrackingSubmission | null>(null);
+  const [chargers, setChargers] = useState<TrackingCharger[]>([]);
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [chargersOpen, setChargersOpen] = useState(false);
@@ -58,26 +55,26 @@ export default function TrackSubmission() {
   const fetchSubmission = async (id: string) => {
     setLoading(true);
     setNotFound(false);
-    const { data, error } = await supabase
-      .from("submissions")
-      .select("*")
-      .eq("submission_id", id.trim().toUpperCase())
-      .single();
+    try {
+      const { data, error } = await supabase.functions.invoke("track-submission", {
+        body: { submission_id: id.trim().toUpperCase() },
+      });
 
-    if (error || !data) {
+      if (error || data?.error) {
+        setNotFound(true);
+        setSubmission(null);
+        setChargers([]);
+        setLoading(false);
+        return;
+      }
+
+      setSubmission(data.submission);
+      setChargers(data.chargers || []);
+    } catch {
       setNotFound(true);
       setSubmission(null);
-      setLoading(false);
-      return;
+      setChargers([]);
     }
-
-    setSubmission(data as Submission);
-
-    const { data: cData } = await supabase
-      .from("charger_submissions")
-      .select("*")
-      .eq("submission_id", data.id);
-    setChargers((cData || []) as ChargerSubmission[]);
     setLoading(false);
   };
 
@@ -113,7 +110,6 @@ export default function TrackSubmission() {
         <h1 className="text-3xl font-bold text-center mb-2">Track Your Submission</h1>
         <p className="text-center text-muted-foreground mb-8">Enter your submission ID to check status</p>
 
-        {/* Search */}
         <div className="flex gap-2 mb-8">
           <Input
             value={searchId}
@@ -138,7 +134,6 @@ export default function TrackSubmission() {
 
         {submission && config && (
           <>
-            {/* Status Card */}
             <Card className="mb-6">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -148,8 +143,6 @@ export default function TrackSubmission() {
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
                   <div><span className="text-muted-foreground">Customer:</span> <span className="font-medium">{submission.full_name}</span></div>
                   <div><span className="text-muted-foreground">Company:</span> <span className="font-medium">{submission.company_name}</span></div>
-                  <div className="flex items-center gap-1"><Mail className="h-3.5 w-3.5 text-muted-foreground" /> {submission.email}</div>
-                  <div className="flex items-center gap-1"><Phone className="h-3.5 w-3.5 text-muted-foreground" /> {submission.phone}</div>
                   <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-muted-foreground" /> {submission.city}, {submission.state}</div>
                   <div className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-muted-foreground" /> {format(new Date(submission.created_at), "MMM d, yyyy 'at' h:mm a")}</div>
                 </div>
@@ -159,14 +152,12 @@ export default function TrackSubmission() {
               </CardContent>
             </Card>
 
-            {/* Status Description */}
             <Card className="mb-6">
               <CardContent className="p-6">
                 <p className="text-muted-foreground text-sm">{config.description}</p>
               </CardContent>
             </Card>
 
-            {/* Chargers */}
             <Collapsible open={chargersOpen} onOpenChange={setChargersOpen}>
               <Card className="mb-6">
                 <CardContent className="p-6">
@@ -179,9 +170,9 @@ export default function TrackSubmission() {
                       <div key={c.id} className="p-3 bg-muted/50 rounded-lg text-sm">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">Charger {i + 1}: {c.brand}, {c.charger_type}</span>
-                          {c.photo_urls?.length > 0 && (
+                          {c.photo_count > 0 && (
                             <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Camera className="h-3 w-3" /> {c.photo_urls.length}
+                              <Camera className="h-3 w-3" /> {c.photo_count}
                             </span>
                           )}
                         </div>
@@ -193,7 +184,6 @@ export default function TrackSubmission() {
               </Card>
             </Collapsible>
 
-            {/* Timeline */}
             <Card className="mb-6">
               <CardContent className="p-6">
                 <h3 className="font-semibold mb-4">Timeline</h3>
@@ -222,7 +212,6 @@ export default function TrackSubmission() {
               </CardContent>
             </Card>
 
-            {/* Staff Notes */}
             {submission.staff_notes && (
               <Card className="mb-6 border-primary/30">
                 <CardContent className="p-6">
@@ -231,14 +220,6 @@ export default function TrackSubmission() {
                 </CardContent>
               </Card>
             )}
-
-            {/* Contact */}
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-3">Have questions about your submission?</p>
-              <Button variant="outline" className="gap-2">
-                <Mail className="h-4 w-4" /> Contact Us
-              </Button>
-            </div>
           </>
         )}
       </div>
