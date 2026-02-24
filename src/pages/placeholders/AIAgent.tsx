@@ -152,7 +152,7 @@ const AIAgent = () => {
                 AutoHeal™ uses a multi-agent system to analyze service tickets, match SWIs, and generate professional assessments.
               </p>
               <p className="text-blue-600 dark:text-blue-400 text-xs mt-1">
-                Note: The AI engine is powered by Lovable AI. You can test and execute prompts directly from this page.
+                Note: The AI engine is powered by Noch Power. You can test and execute prompts directly from this page.
               </p>
             </div>
           </div>
