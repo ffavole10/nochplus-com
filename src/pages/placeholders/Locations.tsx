@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +27,8 @@ type ViewMode = "card" | "list";
 type TabFilter = "all" | "employee" | "subcontractor" | "available" | "on_job" | "inactive";
 
 const Locations = () => {
+  const qc = useQueryClient();
+
   const { data: technicians = [], isLoading } = useTechnicians();
   const { data: regions = [] } = useServiceRegions();
   const createTech = useCreateTechnician();
@@ -47,6 +51,9 @@ const Locations = () => {
   const [editRegion, setEditRegion] = useState<ServiceRegion | null>(null);
   const [newRegionPrompt, setNewRegionPrompt] = useState<{ city: string; state: string } | null>(null);
   const [newRegionName, setNewRegionName] = useState("");
+
+  const [recalcRunning, setRecalcRunning] = useState(false);
+  const [recalcProgress, setRecalcProgress] = useState<{ done: number; total: number } | null>(null);
 
   const filtered = useMemo(() => {
     let list = technicians;
@@ -131,6 +138,93 @@ const Locations = () => {
     }
   };
 
+  const TECH_GEOCODE_CACHE_KEY = "tech-geocode-cache-v1";
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const loadGeoCache = () => {
+    try {
+      const raw = localStorage.getItem(TECH_GEOCODE_CACHE_KEY);
+      return raw ? (JSON.parse(raw) as Record<string, { lat: number; lng: number } | null>) : {};
+    } catch {
+      return {} as Record<string, { lat: number; lng: number } | null>;
+    }
+  };
+
+  const saveGeoCache = (cache: Record<string, { lat: number; lng: number } | null>) => {
+    try {
+      localStorage.setItem(TECH_GEOCODE_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+      // ignore
+    }
+  };
+
+  const geoKey = (city: string, state: string) => `${city.trim().toLowerCase()}|${state.trim().toLowerCase()}`;
+
+  const geocodeCityState = async (city: string, state: string) => {
+    const q = `${city}, ${state}, USA`;
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&limit=1&q=${encodeURIComponent(q)}`,
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data?.[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    return null;
+  };
+
+  const handleRecalculateLocations = async () => {
+    if (recalcRunning) return;
+    const techs = technicians.filter(t => (t.home_base_city || "").trim() && (t.home_base_state || "").trim());
+    if (techs.length === 0) return;
+
+    setRecalcRunning(true);
+    setRecalcProgress({ done: 0, total: techs.length });
+    toast.message("Recalculating technician map locations…");
+
+    try {
+      const cache = loadGeoCache();
+
+      // Geocode unique city/state combos (rate limit: 1 req/sec)
+      const unique = new Map<string, { city: string; state: string }>();
+      for (const t of techs) {
+        const key = geoKey(t.home_base_city, t.home_base_state);
+        if (!unique.has(key)) unique.set(key, { city: t.home_base_city, state: t.home_base_state });
+      }
+
+      const entries = Array.from(unique.entries());
+      for (let i = 0; i < entries.length; i++) {
+        const [key, loc] = entries[i];
+        if (!(key in cache)) {
+          cache[key] = await geocodeCityState(loc.city, loc.state);
+          saveGeoCache(cache);
+          if (i < entries.length - 1) await sleep(1100);
+        }
+      }
+
+      // Apply results to each technician (overwrite to ensure accuracy)
+      for (let i = 0; i < techs.length; i++) {
+        const t = techs[i];
+        const coords = cache[geoKey(t.home_base_city, t.home_base_state)];
+        if (coords) {
+          const { error } = await supabase
+            .from("technicians")
+            .update({ home_base_lat: coords.lat, home_base_lng: coords.lng })
+            .eq("id", t.id);
+          if (error) throw error;
+        }
+        setRecalcProgress({ done: i + 1, total: techs.length });
+      }
+
+      await qc.invalidateQueries({ queryKey: ["technicians"] });
+      toast.success("Technician locations recalculated");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to recalculate locations");
+    } finally {
+      setRecalcRunning(false);
+      setRecalcProgress(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
@@ -138,7 +232,19 @@ const Locations = () => {
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" size="sm"><Upload className="h-4 w-4 mr-1" /> Import</Button>
           <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" /> Export</Button>
-          <Button variant="outline" size="sm" onClick={() => setRegionFormOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={recalcRunning}
+            onClick={handleRecalculateLocations}
+            title="Re-geocode all technicians from their city/state and refresh map pins"
+          >
+            <MapPin className="h-4 w-4 mr-1" />
+            {recalcRunning && recalcProgress
+              ? `Recalculating (${recalcProgress.done}/${recalcProgress.total})`
+              : "Recalculate Map"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => { setEditRegion(null); setRegionFormOpen(true); }}>
             <Plus className="h-4 w-4 mr-1" /> Add Region
           </Button>
           <Button size="sm" onClick={() => { setEditTech(null); setFormOpen(true); }}>
