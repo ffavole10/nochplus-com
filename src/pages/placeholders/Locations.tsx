@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Search, Upload, Download, Users, MapPinned, Gauge, Clock, LayoutGrid, List, MoreHorizontal, Pencil, Trash2, Eye, MapPin, Mail, Phone } from "lucide-react";
 import {
   useTechnicians, useServiceRegions, useCreateTechnician, useUpdateTechnician, useDeleteTechnician,
-  useCreateRegion, useDeleteRegion,
+  useCreateRegion, useUpdateRegion, useDeleteRegion,
   getLevelDisplay, getLevelColor, getStatusInfo,
   type Technician, type ServiceRegion,
 } from "@/hooks/useTechnicians";
@@ -31,6 +31,7 @@ const Locations = () => {
   const updateTech = useUpdateTechnician();
   const deleteTech = useDeleteTechnician();
   const createRegion = useCreateRegion();
+  const updateRegion = useUpdateRegion();
   const deleteRegion = useDeleteRegion();
 
   const [search, setSearch] = useState("");
@@ -43,6 +44,7 @@ const Locations = () => {
   const [editTech, setEditTech] = useState<Technician | null>(null);
   const [detailTech, setDetailTech] = useState<Technician | null>(null);
   const [regionFormOpen, setRegionFormOpen] = useState(false);
+  const [editRegion, setEditRegion] = useState<ServiceRegion | null>(null);
   const [newRegionPrompt, setNewRegionPrompt] = useState<{ city: string; state: string } | null>(null);
   const [newRegionName, setNewRegionName] = useState("");
 
@@ -123,7 +125,7 @@ const Locations = () => {
 
   const handleSaveRegion = (data: any) => {
     if (data.id) {
-      // No update hook yet, just re-create approach or add one
+      updateRegion.mutate(data);
     } else {
       createRegion.mutate(data);
     }
@@ -246,9 +248,14 @@ const Locations = () => {
                   <CardContent className="pt-4">
                     <div className="flex justify-between items-start">
                       <h3 className="font-semibold">{r.name}</h3>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { if (confirm(`Delete region "${r.name}"?`)) deleteRegion.mutate(r.id); }}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditRegion(r); setRegionFormOpen(true); }}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { if (confirm(`Delete region "${r.name}"?`)) deleteRegion.mutate(r.id); }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                     {r.description && <p className="text-xs text-muted-foreground mt-1">{r.description}</p>}
                     {(r.cities || []).length > 0 && (
@@ -266,7 +273,7 @@ const Locations = () => {
 
       <TechnicianFormModal open={formOpen} onOpenChange={setFormOpen} technician={editTech} onSave={handleSaveTech} availableRegions={availableRegionNames} />
       <TechnicianDetailModal technician={detailTech} open={!!detailTech} onOpenChange={open => !open && setDetailTech(null)} />
-      <RegionFormModal open={regionFormOpen} onOpenChange={setRegionFormOpen} region={null} onSave={handleSaveRegion} />
+      <RegionFormModal open={regionFormOpen} onOpenChange={open => { setRegionFormOpen(open); if (!open) setEditRegion(null); }} region={editRegion} onSave={handleSaveRegion} />
 
       {/* New Region Naming Dialog */}
       <Dialog open={!!newRegionPrompt} onOpenChange={open => { if (!open) { setNewRegionPrompt(null); setNewRegionName(""); } }}>

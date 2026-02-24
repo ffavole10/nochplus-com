@@ -152,6 +152,18 @@ export function useCreateRegion() {
   });
 }
 
+export function useUpdateRegion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<ServiceRegion> & { id: string }) => {
+      const { error } = await supabase.from("service_regions").update(updates as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["service_regions"] }); toast.success("Region updated"); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
 export function useDeleteRegion() {
   const qc = useQueryClient();
   return useMutation({
