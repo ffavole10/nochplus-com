@@ -361,3 +361,32 @@
     @apply bg-gradient-to-br from-primary to-secondary;
   }
 }
+
+/* ═══ Print styles for Assessment Report ═══ */
+@media print {
+  .print\\:hidden,
+  nav, header, aside,
+  [data-radix-dialog-overlay],
+  .print-hide {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  .assessment-report .print\\:break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .assessment-report {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+  }
+
+  @page {
+    margin: 0.5in;
+  }
+}

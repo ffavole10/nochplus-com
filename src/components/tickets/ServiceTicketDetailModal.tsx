@@ -12,8 +12,9 @@ import { getSWIPublicUrl } from "@/lib/swiStorage";
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
   MapPin, Wrench, FileText, Send, Eye, Calendar, ChevronDown, ChevronUp, ExternalLink, Download,
-  Image as ImageIcon, AlertTriangle
+  Image as ImageIcon, AlertTriangle, Clipboard
 } from "lucide-react";
+import { AssessmentReportTab } from "@/components/assessment-report/AssessmentReportTab";
 import { useState } from "react";
 
 interface ServiceTicketDetailModalProps {
@@ -77,9 +78,12 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
         </DialogHeader>
 
         <Tabs defaultValue="charger" className="mt-2">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="customer">Customer</TabsTrigger>
             <TabsTrigger value="charger">Charger</TabsTrigger>
+            <TabsTrigger value="report" className="gap-1">
+              <Clipboard className="h-3 w-3" /> Report
+            </TabsTrigger>
             <TabsTrigger value="estimate">Estimate</TabsTrigger>
             <TabsTrigger value="workflow">Workflow</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
@@ -282,6 +286,11 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
                 <p className="text-sm text-muted-foreground">SWI matching not yet completed.</p>
               )}
             </div>
+          </TabsContent>
+
+          {/* Assessment Report */}
+          <TabsContent value="report" className="mt-4">
+            <AssessmentReportTab ticket={ticket} />
           </TabsContent>
 
           {/* Workflow */}
