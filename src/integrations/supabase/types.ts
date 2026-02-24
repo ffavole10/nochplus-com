@@ -791,6 +791,36 @@ export type Database = {
         }
         Relationships: []
       }
+      service_regions: {
+        Row: {
+          cities: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          technician_ids: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          cities?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          technician_ids?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          cities?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          technician_ids?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stock_movements: {
         Row: {
           balance_after: number
@@ -984,6 +1014,111 @@ export type Database = {
           id?: string
           name?: string
           sort_order?: number
+        }
+        Relationships: []
+      }
+      technicians: {
+        Row: {
+          active: boolean
+          active_jobs_count: number
+          charger_types: string[] | null
+          company_name: string | null
+          contract_terms: string | null
+          coverage_radius_miles: number
+          created_at: string
+          email: string
+          employee_type: string
+          first_name: string
+          home_base_city: string
+          home_base_lat: number | null
+          home_base_lng: number | null
+          home_base_state: string
+          hourly_rate: number
+          hours_logged_30d: number
+          id: string
+          insurance_expiration: string | null
+          jobs_completed_30d: number
+          last_name: string
+          level: string
+          max_jobs_per_day: number
+          payment_terms: string | null
+          phone: string
+          photo_url: string | null
+          preferred_contact: string
+          revenue_generated_30d: number
+          service_regions: string[] | null
+          status: string
+          travel_rate: number
+          updated_at: string
+          work_schedule: Json
+        }
+        Insert: {
+          active?: boolean
+          active_jobs_count?: number
+          charger_types?: string[] | null
+          company_name?: string | null
+          contract_terms?: string | null
+          coverage_radius_miles?: number
+          created_at?: string
+          email: string
+          employee_type?: string
+          first_name: string
+          home_base_city?: string
+          home_base_lat?: number | null
+          home_base_lng?: number | null
+          home_base_state?: string
+          hourly_rate?: number
+          hours_logged_30d?: number
+          id?: string
+          insurance_expiration?: string | null
+          jobs_completed_30d?: number
+          last_name: string
+          level?: string
+          max_jobs_per_day?: number
+          payment_terms?: string | null
+          phone?: string
+          photo_url?: string | null
+          preferred_contact?: string
+          revenue_generated_30d?: number
+          service_regions?: string[] | null
+          status?: string
+          travel_rate?: number
+          updated_at?: string
+          work_schedule?: Json
+        }
+        Update: {
+          active?: boolean
+          active_jobs_count?: number
+          charger_types?: string[] | null
+          company_name?: string | null
+          contract_terms?: string | null
+          coverage_radius_miles?: number
+          created_at?: string
+          email?: string
+          employee_type?: string
+          first_name?: string
+          home_base_city?: string
+          home_base_lat?: number | null
+          home_base_lng?: number | null
+          home_base_state?: string
+          hourly_rate?: number
+          hours_logged_30d?: number
+          id?: string
+          insurance_expiration?: string | null
+          jobs_completed_30d?: number
+          last_name?: string
+          level?: string
+          max_jobs_per_day?: number
+          payment_terms?: string | null
+          phone?: string
+          photo_url?: string | null
+          preferred_contact?: string
+          revenue_generated_30d?: number
+          service_regions?: string[] | null
+          status?: string
+          travel_rate?: number
+          updated_at?: string
+          work_schedule?: Json
         }
         Relationships: []
       }
