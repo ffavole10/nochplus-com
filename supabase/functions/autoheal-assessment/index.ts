@@ -111,7 +111,7 @@ serve(async (req) => {
     }
 
     const { ticketData } = await req.json();
-    if (!ticketData || typeof ticketData !== "object") {
+    if (!ticketData || typeof ticketData !== "object" || Array.isArray(ticketData)) {
       return new Response(JSON.stringify({ error: "ticketData is required and must be an object" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -122,6 +122,62 @@ serve(async (req) => {
     const ticketDataStr = JSON.stringify(ticketData);
     if (ticketDataStr.length > 100000) {
       return new Response(JSON.stringify({ error: "ticketData exceeds maximum size" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate expected field types and enforce limits
+    const stringFields = ["ticket_id", "station_id", "site_name", "charger_model", "issue_description", "notes"];
+    for (const field of stringFields) {
+      if (ticketData[field] !== undefined) {
+        if (typeof ticketData[field] !== "string") {
+          return new Response(JSON.stringify({ error: `${field} must be a string` }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (ticketData[field].length > 5000) {
+          return new Response(JSON.stringify({ error: `${field} exceeds 5000 character limit` }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+    }
+
+    const arrayFields = ["symptoms", "error_codes", "dataSources"];
+    for (const field of arrayFields) {
+      if (ticketData[field] !== undefined) {
+        if (!Array.isArray(ticketData[field]) || ticketData[field].length > 20) {
+          return new Response(JSON.stringify({ error: `${field} must be an array with at most 20 items` }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        for (const item of ticketData[field]) {
+          if (typeof item !== "string" || item.length > 500) {
+            return new Response(JSON.stringify({ error: `Each item in ${field} must be a string under 500 chars` }), {
+              status: 400,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
+      }
+    }
+
+    // Reject deeply nested objects (max 2 levels)
+    function checkDepth(obj: unknown, depth: number): boolean {
+      if (depth > 3) return false;
+      if (typeof obj === "object" && obj !== null) {
+        for (const v of Object.values(obj)) {
+          if (!checkDepth(v, depth + 1)) return false;
+        }
+      }
+      return true;
+    }
+    if (!checkDepth(ticketData, 0)) {
+      return new Response(JSON.stringify({ error: "ticketData is too deeply nested" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

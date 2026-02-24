@@ -28,7 +28,7 @@ serve(async (req) => {
 
     const { data: submission, error } = await supabase
       .from("submissions")
-      .select("id, submission_id, status, full_name, company_name, city, state, noch_plus_member, staff_notes, created_at, updated_at")
+      .select("id, submission_id, status, full_name, company_name, city, state, noch_plus_member, created_at, updated_at")
       .eq("submission_id", submission_id.trim().toUpperCase())
       .single();
 
@@ -56,7 +56,6 @@ serve(async (req) => {
           city: submission.city,
           state: submission.state,
           noch_plus_member: submission.noch_plus_member,
-          staff_notes: submission.staff_notes,
           created_at: submission.created_at,
           updated_at: submission.updated_at,
         },
