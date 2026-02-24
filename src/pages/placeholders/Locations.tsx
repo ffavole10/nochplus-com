@@ -16,6 +16,7 @@ import {
 import { TechnicianFormModal } from "@/components/technicians/TechnicianFormModal";
 import { TechnicianDetailModal } from "@/components/technicians/TechnicianDetailModal";
 import { RegionFormModal } from "@/components/technicians/RegionFormModal";
+import { TechnicianMap } from "@/components/technicians/TechnicianMap";
 
 type ViewMode = "card" | "list";
 type TabFilter = "all" | "employee" | "subcontractor" | "available" | "on_job" | "inactive";
@@ -134,6 +135,9 @@ const Locations = () => {
             <div className="text-xs text-muted-foreground">Avg Response Time</div>
           </CardContent></Card>
         </div>
+
+        {/* Coverage Map */}
+        <TechnicianMap technicians={technicians} onTechSelect={setDetailTech} />
 
         {/* Filters */}
         <div className="space-y-3">
