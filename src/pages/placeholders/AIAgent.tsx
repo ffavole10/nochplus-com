@@ -20,10 +20,10 @@ const AIAgent = () => {
   const [isNewPrompt, setIsNewPrompt] = useState(false);
 
   const loadAgents = async () => {
-    const { data, error } = await supabase
-      .from("ai_agent_prompts")
-      .select("*")
-      .order("config->order", { ascending: true });
+    const { data, error } = await supabase.
+    from("ai_agent_prompts").
+    select("*").
+    order("config->order", { ascending: true });
 
     if (error) {
       toast.error("Failed to load agents");
@@ -40,10 +40,10 @@ const AIAgent = () => {
 
   const handleToggleStatus = async (agent: AgentPrompt) => {
     const newStatus = agent.status === "active" ? "inactive" : "active";
-    const { error } = await supabase
-      .from("ai_agent_prompts")
-      .update({ status: newStatus })
-      .eq("id", agent.id);
+    const { error } = await supabase.
+    from("ai_agent_prompts").
+    update({ status: newStatus }).
+    eq("id", agent.id);
 
     if (error) {
       toast.error("Failed to update status");
@@ -75,7 +75,7 @@ const AIAgent = () => {
         max_tokens: agent.max_tokens,
         model: agent.model,
         status: agent.status,
-        config: agent.config as any,
+        config: agent.config as any
       });
       if (error) {
         toast.error("Failed to create prompt: " + error.message);
@@ -83,18 +83,18 @@ const AIAgent = () => {
       }
       toast.success("Prompt created");
     } else {
-      const { error } = await supabase
-        .from("ai_agent_prompts")
-        .update({
-          name: agent.name,
-          description: agent.description,
-          template: agent.template,
-          temperature: agent.temperature,
-          max_tokens: agent.max_tokens,
-          model: agent.model,
-          config: agent.config as any,
-        })
-        .eq("id", agent.id);
+      const { error } = await supabase.
+      from("ai_agent_prompts").
+      update({
+        name: agent.name,
+        description: agent.description,
+        template: agent.template,
+        temperature: agent.temperature,
+        max_tokens: agent.max_tokens,
+        model: agent.model,
+        config: agent.config as any
+      }).
+      eq("id", agent.id);
       if (error) {
         toast.error("Failed to update prompt");
         return;
@@ -114,8 +114,8 @@ const AIAgent = () => {
           <div className="flex gap-5">
             <img src={aiAgentAvatar} alt="AI Agent" className="w-24 h-24 rounded-xl object-cover shrink-0" />
             <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                AI Agent
+              <h1 className="text-2xl font-bold text-foreground">AutoHeal™
+
               </h1>
               <p className="text-sm text-muted-foreground mt-1">Manage AI prompts and templates for charging station analysis</p>
               <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
@@ -137,10 +137,10 @@ const AIAgent = () => {
                 max_tokens: 1500,
                 model: "google/gemini-2.5-flash",
                 status: "active",
-                config: {},
+                config: {}
               });
-            }}
-          >
+            }}>
+
             <Plus className="h-4 w-4" />
             Create Prompt
           </Button>
@@ -164,27 +164,27 @@ const AIAgent = () => {
         {/* Agent Cards */}
         <div>
           <h2 className="text-lg font-bold text-foreground mb-4">Agent Prompts</h2>
-          {loading ? (
-            <div className="flex justify-center py-8">
+          {loading ?
+          <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div> :
+
+          <div className="space-y-3">
+              {agents.map((agent) =>
+            <AgentCard
+              key={agent.id}
+              agent={agent}
+              onTest={setTestAgent}
+              onEdit={(a) => {setIsNewPrompt(false);setEditAgent(a);}}
+              onDelete={handleDelete}
+              onToggleStatus={handleToggleStatus} />
+
+            )}
+              {agents.length === 0 &&
+            <p className="text-center text-sm text-muted-foreground py-8">No agent prompts configured yet.</p>
+            }
             </div>
-          ) : (
-            <div className="space-y-3">
-              {agents.map((agent) => (
-                <AgentCard
-                  key={agent.id}
-                  agent={agent}
-                  onTest={setTestAgent}
-                  onEdit={(a) => { setIsNewPrompt(false); setEditAgent(a); }}
-                  onDelete={handleDelete}
-                  onToggleStatus={handleToggleStatus}
-                />
-              ))}
-              {agents.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-8">No agent prompts configured yet.</p>
-              )}
-            </div>
-          )}
+          }
         </div>
 
         {/* ML Section */}
@@ -213,12 +213,12 @@ const AIAgent = () => {
       <AgentEditModal
         agent={editAgent}
         open={!!editAgent}
-        onOpenChange={(open) => { if (!open) { setEditAgent(null); setIsNewPrompt(false); } }}
+        onOpenChange={(open) => {if (!open) {setEditAgent(null);setIsNewPrompt(false);}}}
         onSave={handleSave}
-        isNew={isNewPrompt}
-      />
-    </div>
-  );
+        isNew={isNewPrompt} />
+
+    </div>);
+
 };
 
 export default AIAgent;
