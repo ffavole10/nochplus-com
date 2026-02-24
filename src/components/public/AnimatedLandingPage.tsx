@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Monitor } from "lucide-react";
 import heroPerson from "@/assets/hero-person.png";
+import nochLogoWhite from "@/assets/noch-logo-white.png";
 
 interface AnimatedLandingPageProps {
   onStart: () => void;
@@ -45,10 +46,19 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
       </div>
 
 
+      {/* Logo */}
+      <div className={`relative z-10 transition-all duration-700 ${stage >= 1 ? "opacity-100" : "opacity-0"}`}>
+        <img
+          src={nochLogoWhite}
+          alt="Noch Power"
+          className="h-6 sm:h-5 mx-auto sm:mx-0 sm:absolute sm:top-4 sm:left-6 mt-4 sm:mt-0"
+        />
+      </div>
+
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10">
         {/* Headline */}
-        <div className={`text-center mb-2 pt-12 transition-all duration-1000 ease-out ${stage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+        <div className={`text-center mb-2 transition-all duration-1000 ease-out ${stage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white/50 tracking-wide leading-none lg:text-7xl">
             RELIABILITY
           </h1>
