@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Plus, Search, Upload, Download, Users, MapPinned, Gauge, Clock, LayoutGrid, List, MoreHorizontal, Pencil, Trash2, Eye, MapPin, Mail, Phone } from "lucide-react";
 import {
   useTechnicians, useServiceRegions, useCreateTechnician, useUpdateTechnician, useDeleteTechnician,
@@ -17,6 +19,7 @@ import { TechnicianFormModal } from "@/components/technicians/TechnicianFormModa
 import { TechnicianDetailModal } from "@/components/technicians/TechnicianDetailModal";
 import { RegionFormModal } from "@/components/technicians/RegionFormModal";
 import { TechnicianMap } from "@/components/technicians/TechnicianMap";
+import { toast } from "sonner";
 
 type ViewMode = "card" | "list";
 type TabFilter = "all" | "employee" | "subcontractor" | "available" | "on_job" | "inactive";
@@ -40,6 +43,8 @@ const Locations = () => {
   const [editTech, setEditTech] = useState<Technician | null>(null);
   const [detailTech, setDetailTech] = useState<Technician | null>(null);
   const [regionFormOpen, setRegionFormOpen] = useState(false);
+  const [newRegionPrompt, setNewRegionPrompt] = useState<{ city: string; state: string } | null>(null);
+  const [newRegionName, setNewRegionName] = useState("");
 
   const filtered = useMemo(() => {
     let list = technicians;
@@ -78,10 +83,38 @@ const Locations = () => {
     inactive: technicians.filter(t => !t.active).length,
   }), [technicians]);
 
+  // Check if a city is already covered by any service region
+  const isCityCovered = useCallback((city: string) => {
+    return regions.some(r => (r.cities || []).some(c => c.toLowerCase() === city.toLowerCase()));
+  }, [regions]);
+
   const handleSaveTech = (data: any) => {
     if (data.id) updateTech.mutate(data);
     else createTech.mutate(data);
+
+    // Check if technician's city is new and not covered by any region
+    const city = data.home_base_city?.trim();
+    const state = data.home_base_state?.trim();
+    if (city && !isCityCovered(city)) {
+      setNewRegionName(`${city} Region`);
+      setNewRegionPrompt({ city, state: state || "" });
+    }
   };
+
+  const handleConfirmNewRegion = () => {
+    if (!newRegionPrompt || !newRegionName.trim()) return;
+    createRegion.mutate({
+      name: newRegionName.trim(),
+      description: `Auto-created region for ${newRegionPrompt.city}, ${newRegionPrompt.state}`,
+      cities: [newRegionPrompt.city],
+      technician_ids: [],
+    });
+    toast.success(`Region "${newRegionName.trim()}" created`);
+    setNewRegionPrompt(null);
+    setNewRegionName("");
+  };
+
+  const availableRegionNames = useMemo(() => regions.map(r => r.name), [regions]);
 
   const handleDeleteTech = (t: Technician) => {
     if (!confirm(`Delete ${t.first_name} ${t.last_name}?`)) return;
@@ -231,9 +264,29 @@ const Locations = () => {
         )}
       </div>
 
-      <TechnicianFormModal open={formOpen} onOpenChange={setFormOpen} technician={editTech} onSave={handleSaveTech} />
+      <TechnicianFormModal open={formOpen} onOpenChange={setFormOpen} technician={editTech} onSave={handleSaveTech} availableRegions={availableRegionNames} />
       <TechnicianDetailModal technician={detailTech} open={!!detailTech} onOpenChange={open => !open && setDetailTech(null)} />
       <RegionFormModal open={regionFormOpen} onOpenChange={setRegionFormOpen} region={null} onSave={handleSaveRegion} />
+
+      {/* New Region Naming Dialog */}
+      <Dialog open={!!newRegionPrompt} onOpenChange={open => { if (!open) { setNewRegionPrompt(null); setNewRegionName(""); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>New City Detected</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            <strong>{newRegionPrompt?.city}, {newRegionPrompt?.state}</strong> isn't covered by any existing service region. Would you like to create one?
+          </p>
+          <div className="space-y-2">
+            <Label>Region Name</Label>
+            <Input value={newRegionName} onChange={e => setNewRegionName(e.target.value)} placeholder="e.g. Southern California" />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setNewRegionPrompt(null); setNewRegionName(""); }}>Skip</Button>
+            <Button onClick={handleConfirmNewRegion} disabled={!newRegionName.trim()}>Create Region</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
