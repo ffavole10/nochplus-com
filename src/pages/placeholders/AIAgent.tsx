@@ -115,7 +115,7 @@ const AIAgent = () => {
             <img src={aiAgentAvatar} alt="AI Agent" className="w-24 h-24 rounded-xl object-cover shrink-0" />
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                AI Agent Settings
+                AI Agent
               </h1>
               <p className="text-sm text-muted-foreground mt-1">Manage AI prompts and templates for charging station analysis</p>
               <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
