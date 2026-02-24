@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Database, Search as SearchIcon, CalendarDays, Settings, Plus,
   AlertTriangle, ChevronDown, ChevronRight,
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
-  Users, HardDrive, Diamond, FolderOpen, Minus,
+  Users, HardDrive, Diamond, FolderOpen, Minus, Package,
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned } from
 "lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
@@ -165,7 +165,7 @@ export function PlatformSidebar() {
   const autohealPages = [
   { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
   { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen },
-  { title: "Parts", url: "/autoheal/parts", icon: HardDrive },
+  { title: "Parts", url: "/autoheal/parts", icon: Package },
   { title: "Locations", url: "/autoheal/locations", icon: MapPinned }];
 
 
