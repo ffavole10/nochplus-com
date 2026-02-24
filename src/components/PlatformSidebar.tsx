@@ -31,6 +31,7 @@ import {
   useSidebar } from
 "@/components/ui/sidebar";
 import nochLogo from "@/assets/noch-logo-white.png";
+import autohealBadge from "@/assets/autoheal-badge-logo.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
 import { useCampaignContext } from "@/contexts/CampaignContext";
@@ -38,7 +39,7 @@ import { cn } from "@/lib/utils";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useEstimates } from "@/hooks/useEstimates";
 
-type SectionKey = "campaigns" | "service-desk" | "noch-plus" | "autoheal" | null;
+type SectionKey = "campaigns" | "service-desk" | "noch-plus" | null;
 
 const STATUS_LEVELS: {value: StatusLevel;label: string;colorClass: string;}[] = [
 { value: "Critical", label: "Critical", colorClass: "bg-critical" },
@@ -60,7 +61,6 @@ function getActiveSection(pathname: string): SectionKey {
   if (pathname.startsWith("/campaigns")) return "campaigns";
   if (pathname.startsWith("/service-desk")) return "service-desk";
   if (pathname.startsWith("/noch-plus")) return "noch-plus";
-  if (pathname.startsWith("/autoheal")) return "autoheal";
   // Legacy root routes map to campaigns
   if (["/dashboard", "/dataset", "/tickets", "/issues", "/schedule", "/field-reports"].includes(pathname)) return "campaigns";
   return null;
@@ -323,18 +323,6 @@ export function PlatformSidebar() {
           </div>
         }
 
-        {/* ─── AUTOHEAL SECTION ─── */}
-        <SectionHeader label={<span>AUTOHEAL<sup className="text-[8px] align-super ml-0.5">TM</sup></span>} icon={Zap} section="autoheal" />
-        {expandedSection === "autoheal" &&
-        <div className="pl-1">
-            <SidebarMenu className="px-1">
-              {autohealPages.map((item) =>
-            <NavItem key={item.title} item={item} />
-            )}
-            </SidebarMenu>
-          </div>
-        }
-
         {/* ─── FILTERS SECTION ─── */}
         <div className="border-t border-sidebar-border mt-2 pt-2">
           <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
@@ -451,34 +439,45 @@ export function PlatformSidebar() {
         </div>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-3">
-        <SidebarMenu>
-          {hasRole("super_admin") &&
-          <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <NavLink
-                to="/settings"
-                className="hover:bg-sidebar-accent/50"
-                activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
+      <SidebarFooter className="border-t border-sidebar-border p-3 space-y-3">
+        {/* AutoHeal Badge Logo */}
+        <div className="flex justify-center px-2">
+          <img src={autohealBadge} alt="AutoHeal AI Engine" className="w-20 h-20 opacity-90" />
+        </div>
 
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </NavLink>
+        <SidebarMenu>
+          {autohealPages.map((item) =>
+            <NavItem key={item.title} item={item} />
+          )}
+        </SidebarMenu>
+
+        <div className="border-t border-sidebar-border pt-2">
+          <SidebarMenu>
+            {hasRole("super_admin") &&
+            <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                  to="/settings"
+                  className="hover:bg-sidebar-accent/50"
+                  activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            }
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <a
+                  href="/"
+                  className="flex items-center gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
+                  <Home className="mr-2 h-4 w-4" />
+                  <span>Home</span>
+                </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          }
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <a
-                href="/"
-                className="flex items-center gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-
-                <Home className="mr-2 h-4 w-4" />
-                <span>Home</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+          </SidebarMenu>
+        </div>
       </SidebarFooter>
 
       <NewCampaignModal
