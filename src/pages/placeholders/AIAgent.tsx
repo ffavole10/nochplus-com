@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Info, Bot } from "lucide-react";
+import { Plus, Info } from "lucide-react";
+import aiAgentAvatar from "@/assets/ai-agent-avatar.png";
 import { toast } from "sonner";
 import { AgentCard, type AgentPrompt } from "@/components/ai-agent/AgentCard";
 import { AgentTestModal } from "@/components/ai-agent/AgentTestModal";
@@ -110,15 +111,17 @@ const AIAgent = () => {
       <div className="container mx-auto px-4 py-8 max-w-5xl space-y-8">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Bot className="h-6 w-6 text-primary" />
-              AI Settings
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage AI prompts and templates for charging station analysis</p>
-            <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
-              AI prompts define how different agents analyze incidents and generate responses. Each prompt uses Jinja2 templates and validates output against JSON schemas. Changes take effect immediately for new executions.
-            </p>
+          <div className="flex gap-5">
+            <img src={aiAgentAvatar} alt="AI Agent" className="w-24 h-24 rounded-xl object-cover shrink-0" />
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                AI Agent Settings
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">Manage AI prompts and templates for charging station analysis</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
+                AI prompts define how different agents analyze incidents and generate responses. Each prompt uses Jinja2 templates and validates output against JSON schemas. Changes take effect immediately for new executions.
+              </p>
+            </div>
           </div>
           <Button
             className="gap-1.5"
