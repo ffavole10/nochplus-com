@@ -132,7 +132,7 @@ export function TechnicianFormModal({ open, onOpenChange, technician, onSave, av
   const geocodeCity = async (city: string, state: string): Promise<{ lat: number; lng: number } | null> => {
     try {
       const q = encodeURIComponent(`${city}, ${state}, USA`);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&limit=1&q=${q}`);
       const data = await res.json();
       if (data?.[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
     } catch {}
