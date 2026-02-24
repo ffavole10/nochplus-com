@@ -31,6 +31,7 @@ import NochPlusAssessments from "./pages/placeholders/NochPlusAssessments";
 import AIAgent from "./pages/placeholders/AIAgent";
 import SWILibrary from "./pages/SWILibrary";
 import Locations from "./pages/placeholders/Locations";
+import Parts from "./pages/placeholders/Parts";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
             {/* AutoHeal section */}
             <Route path="/autoheal/ai-agent" element={<AIAgent />} />
             <Route path="/autoheal/swi-library" element={<SWILibrary />} />
+            <Route path="/autoheal/parts" element={<Parts />} />
             <Route path="/autoheal/locations" element={<Locations />} />
 
             {/* Settings */}
