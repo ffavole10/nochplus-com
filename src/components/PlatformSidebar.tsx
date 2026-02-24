@@ -5,7 +5,7 @@ import {
   AlertTriangle, ChevronDown, ChevronRight,
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus,
-  Filter, Crosshair, Home } from
+  Filter, Crosshair, Home, Bot, BookOpen, MapPinned } from
 "lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useEstimates } from "@/hooks/useEstimates";
 
-type SectionKey = "campaigns" | "service-desk" | "noch-plus" | null;
+type SectionKey = "campaigns" | "service-desk" | "noch-plus" | "autoheal" | null;
 
 const STATUS_LEVELS: {value: StatusLevel;label: string;colorClass: string;}[] = [
 { value: "Critical", label: "Critical", colorClass: "bg-critical" },
@@ -60,6 +60,7 @@ function getActiveSection(pathname: string): SectionKey {
   if (pathname.startsWith("/campaigns")) return "campaigns";
   if (pathname.startsWith("/service-desk")) return "service-desk";
   if (pathname.startsWith("/noch-plus")) return "noch-plus";
+  if (pathname.startsWith("/autoheal")) return "autoheal";
   // Legacy root routes map to campaigns
   if (["/dashboard", "/dataset", "/tickets", "/issues", "/schedule", "/field-reports"].includes(pathname)) return "campaigns";
   return null;
@@ -161,6 +162,11 @@ export function PlatformSidebar() {
   { title: "Members", url: "/noch-plus/members", icon: Users },
   { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
 
+  const autohealPages = [
+  { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
+  { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen },
+  { title: "Locations", url: "/autoheal/locations", icon: MapPinned }];
+
 
   const SectionHeader = ({
     label,
@@ -170,7 +176,7 @@ export function PlatformSidebar() {
 
 
 
-  }: {label: string;icon: React.ElementType;section: SectionKey;}) => {
+  }: {label: React.ReactNode;icon: React.ElementType;section: SectionKey;}) => {
     const isOpen = expandedSection === section;
     return (
       <button
@@ -310,6 +316,18 @@ export function PlatformSidebar() {
         <div className="pl-1">
             <SidebarMenu className="px-1">
               {nochPlusPages.map((item) =>
+            <NavItem key={item.title} item={item} />
+            )}
+            </SidebarMenu>
+          </div>
+        }
+
+        {/* ─── AUTOHEAL SECTION ─── */}
+        <SectionHeader label={<span>AUTOHEAL<sup className="text-[8px] align-super ml-0.5">TM</sup></span>} icon={Zap} section="autoheal" />
+        {expandedSection === "autoheal" &&
+        <div className="pl-1">
+            <SidebarMenu className="px-1">
+              {autohealPages.map((item) =>
             <NavItem key={item.title} item={item} />
             )}
             </SidebarMenu>
