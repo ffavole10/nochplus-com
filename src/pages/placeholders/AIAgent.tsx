@@ -112,7 +112,7 @@ const AIAgent = () => {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex gap-3 items-end">
-            <img src={aiAgentAvatar} alt="AI Agent" className="w-24 h-24 rounded-xl object-cover shrink-0" />
+            <img src={aiAgentAvatar} alt="AI Agent" className="w-[115px] h-[115px] rounded-xl object-cover shrink-0" />
             <div>
               <h1 className="text-2xl font-bold text-foreground">AutoHeal™</h1>
               <p className="text-sm text-muted-foreground mt-1">Manage AI prompts and templates for charging station analysis</p>
