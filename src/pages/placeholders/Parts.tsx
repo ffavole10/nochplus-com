@@ -86,7 +86,7 @@ const Parts = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Parts Inventory</h1>
+          <h1 className="text-2xl font-bold text-foreground">Parts</h1>
           <p className="text-muted-foreground mt-1">Manage replacement parts, stock levels, and costs for all charger service operations</p>
         </div>
         <div className="flex gap-2">

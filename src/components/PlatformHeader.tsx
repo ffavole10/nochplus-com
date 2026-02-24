@@ -18,7 +18,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/schedule": "Schedule",
   "/settings": "Settings",
   "/autoheal/ai-agent": "AI Agent",
-  "/autoheal/parts": "Parts Inventory",
+  "/autoheal/parts": "Parts",
   "/autoheal/swi-library": "SWI Library",
   "/autoheal/locations": "Locations",
   "/field-reports": "Field Reports",
