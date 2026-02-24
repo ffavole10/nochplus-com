@@ -3,7 +3,22 @@ import { supabase } from "@/integrations/supabase/client";
 const BUCKET = "swi-documents";
 
 /**
- * Get the public URL for an SWI document stored in the storage bucket
+ * Get a signed URL for an SWI document stored in the storage bucket (private bucket)
+ */
+export async function getSWISignedUrl(filePath: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(filePath, 3600); // 1 hour expiry
+  if (error || !data?.signedUrl) {
+    // Fallback to constructing URL (will fail if bucket is private, but keeps backward compat)
+    const { data: pubData } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
+    return pubData.publicUrl;
+  }
+  return data.signedUrl;
+}
+
+/**
+ * Get the public URL for an SWI document (deprecated - use getSWISignedUrl)
  */
 export function getSWIPublicUrl(filePath: string): string {
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
@@ -26,7 +41,7 @@ export async function uploadSWIDocument(
 
   if (error) throw error;
 
-  return getSWIPublicUrl(path);
+  return getSWISignedUrl(path);
 }
 
 /**
