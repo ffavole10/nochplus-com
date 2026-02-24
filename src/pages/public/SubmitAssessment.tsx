@@ -325,8 +325,8 @@ export default function SubmitAssessment() {
 
     try {
       const year = new Date().getFullYear();
-      const seq = Math.floor(1000 + Math.random() * 9000);
-      const submissionId = `NP-${year}-${seq}`;
+      const hex = crypto.randomUUID().replace(/-/g, '').substring(0, 8).toUpperCase();
+      const submissionId = `NP-${year}-${hex}`;
 
       const { data: submission, error: subError } = await supabase
         .from("submissions")
