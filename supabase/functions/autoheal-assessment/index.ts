@@ -87,9 +87,41 @@ serve(async (req) => {
   }
 
   try {
+    // Validate JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Invalid authentication" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { ticketData } = await req.json();
-    if (!ticketData) {
-      return new Response(JSON.stringify({ error: "ticketData is required" }), {
+    if (!ticketData || typeof ticketData !== "object") {
+      return new Response(JSON.stringify({ error: "ticketData is required and must be an object" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate ticketData size to prevent abuse
+    const ticketDataStr = JSON.stringify(ticketData);
+    if (ticketDataStr.length > 100000) {
+      return new Response(JSON.stringify({ error: "ticketData exceeds maximum size" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

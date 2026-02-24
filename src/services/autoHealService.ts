@@ -1,4 +1,5 @@
 import { lookupCharger, ChargerDatabaseRecord } from "./BtcDatabaseService";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface AutoHealAssessment {
   riskLevel: "Critical" | "High" | "Medium" | "Low";
@@ -122,11 +123,15 @@ export async function runAutoHealAssessment(
   // Call the autoheal-assessment edge function via SSE
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/autoheal-assessment`;
 
+  // Get user session token for authenticated request
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
   const resp = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ ticketData }),
   });
