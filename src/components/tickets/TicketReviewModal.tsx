@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { ServiceTicket } from "@/types/serviceTicket";
-import { AutoHealResult, runAutoHealAssessment } from "@/services/autoHealService";
+import { AutoHealResult, AgentStep, runAutoHealAssessment } from "@/services/autoHealService";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -36,7 +36,7 @@ const SOURCE_LABELS: Record<string, string> = {
   manual: "Manual Entry",
 };
 
-type ProgressStep = { label: string; status: "pending" | "running" | "done" | "error" };
+type ProgressStep = AgentStep;
 
 export function TicketReviewModal({ ticket, open, onClose, onApprove, onReject }: TicketReviewModalProps) {
   const [notes, setNotes] = useState("");
@@ -81,10 +81,12 @@ export function TicketReviewModal({ ticket, open, onClose, onApprove, onReject }
     setError(null);
 
     const steps: ProgressStep[] = [
-      { label: "Analyzing ticket data...", status: "pending" },
-      { label: "Querying BTC database...", status: "pending" },
-      { label: "Generating assessment...", status: "pending" },
-      { label: "Matching SWI...", status: "pending" },
+      { agentId: "intake-validator", label: "Validating ticket data...", status: "pending" },
+      { agentId: "diagnostic-agent", label: "Running diagnostics...", status: "pending" },
+      { agentId: "swi-matcher", label: "Matching SWI documents...", status: "pending" },
+      { agentId: "resolution-agent", label: "Generating resolution...", status: "pending" },
+      { agentId: "learning-agent", label: "Processing learning patterns...", status: "pending" },
+      { agentId: "validation-agent", label: "Running quality validation...", status: "pending" },
     ];
     setProgressSteps([...steps]);
 
@@ -93,10 +95,14 @@ export function TicketReviewModal({ ticket, open, onClose, onApprove, onReject }
         const next = [...prev];
         const runningIdx = next.findIndex(s => s.status === "running");
         if (runningIdx >= 0) next[runningIdx].status = "done";
-        const targetIdx = next.findIndex(s => s.label.startsWith(label.split("...")[0]));
+        const targetIdx = next.findIndex(s => s.label.toLowerCase().includes(label.split("...")[0].toLowerCase()));
         if (targetIdx >= 0) next[targetIdx].status = "running";
         return next;
       });
+    };
+
+    const handleStepUpdate = (updatedSteps: AgentStep[]) => {
+      setProgressSteps(updatedSteps.map(s => ({ ...s, label: s.label + "..." })));
     };
 
     try {
@@ -113,6 +119,7 @@ export function TicketReviewModal({ ticket, open, onClose, onApprove, onReject }
           notes: notes.trim() || undefined,
         },
         updateStep,
+        handleStepUpdate,
       );
 
       // Mark all done

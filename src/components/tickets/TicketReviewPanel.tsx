@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ServiceTicket } from "@/types/serviceTicket";
-import { AutoHealResult, runAutoHealAssessment } from "@/services/autoHealService";
+import { AutoHealResult, AgentStep, runAutoHealAssessment } from "@/services/autoHealService";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -25,7 +25,7 @@ interface TicketReviewPanelProps {
   onCollapse: () => void;
 }
 
-type ProgressStep = { label: string; status: "pending" | "running" | "done" | "error" };
+type ProgressStep = AgentStep;
 
 const SOURCE_LABELS: Record<string, string> = {
   campaign: "Campaign",
@@ -133,10 +133,12 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
     setError(null);
 
     const steps: ProgressStep[] = [
-      { label: "Analyzing ticket data...", status: "pending" },
-      { label: "Querying BTC database...", status: "pending" },
-      { label: "Generating assessment...", status: "pending" },
-      { label: "Matching SWI...", status: "pending" },
+      { agentId: "intake-validator", label: "Validating ticket data...", status: "pending" },
+      { agentId: "diagnostic-agent", label: "Running diagnostics...", status: "pending" },
+      { agentId: "swi-matcher", label: "Matching SWI documents...", status: "pending" },
+      { agentId: "resolution-agent", label: "Generating resolution...", status: "pending" },
+      { agentId: "learning-agent", label: "Processing learning patterns...", status: "pending" },
+      { agentId: "validation-agent", label: "Running quality validation...", status: "pending" },
     ];
     setProgressSteps([...steps]);
 
@@ -145,10 +147,14 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
         const next = [...prev];
         const runningIdx = next.findIndex(s => s.status === "running");
         if (runningIdx >= 0) next[runningIdx].status = "done";
-        const targetIdx = next.findIndex(s => s.label.startsWith(label.split("...")[0]));
+        const targetIdx = next.findIndex(s => s.label.toLowerCase().includes(label.split("...")[0].toLowerCase()));
         if (targetIdx >= 0) next[targetIdx].status = "running";
         return next;
       });
+    };
+
+    const handleStepUpdate = (updatedSteps: AgentStep[]) => {
+      setProgressSteps(updatedSteps.map(s => ({ ...s, label: s.label + "..." })));
     };
 
     try {
@@ -165,6 +171,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
           notes: notes.trim() || undefined,
         },
         updateStep,
+        handleStepUpdate,
       );
 
       setProgressSteps(prev => prev.map(s => ({ ...s, status: "done" as const })));
