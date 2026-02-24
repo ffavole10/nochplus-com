@@ -525,6 +525,102 @@ export type Database = {
         }
         Relationships: []
       }
+      parts: {
+        Row: {
+          active: boolean
+          category: string
+          charger_type: string
+          compatible_models: string[] | null
+          compatible_swis: string[] | null
+          created_at: string
+          datasheet_url: string | null
+          description: string | null
+          dimensions: string | null
+          id: string
+          last_price_update: string | null
+          last_used_date: string | null
+          lead_time_days: number | null
+          location_bin: string | null
+          manufacturer: string
+          notes: string | null
+          part_name: string
+          part_number: string
+          photo_url: string | null
+          qty_in_stock: number
+          reorder_point: number
+          reorder_quantity: number
+          supplier: string | null
+          supplier_part_number: string | null
+          tags: string[] | null
+          unit_cost: number
+          updated_at: string
+          usage_count_30d: number | null
+          weight_lbs: number | null
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          charger_type?: string
+          compatible_models?: string[] | null
+          compatible_swis?: string[] | null
+          created_at?: string
+          datasheet_url?: string | null
+          description?: string | null
+          dimensions?: string | null
+          id?: string
+          last_price_update?: string | null
+          last_used_date?: string | null
+          lead_time_days?: number | null
+          location_bin?: string | null
+          manufacturer?: string
+          notes?: string | null
+          part_name: string
+          part_number: string
+          photo_url?: string | null
+          qty_in_stock?: number
+          reorder_point?: number
+          reorder_quantity?: number
+          supplier?: string | null
+          supplier_part_number?: string | null
+          tags?: string[] | null
+          unit_cost?: number
+          updated_at?: string
+          usage_count_30d?: number | null
+          weight_lbs?: number | null
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          charger_type?: string
+          compatible_models?: string[] | null
+          compatible_swis?: string[] | null
+          created_at?: string
+          datasheet_url?: string | null
+          description?: string | null
+          dimensions?: string | null
+          id?: string
+          last_price_update?: string | null
+          last_used_date?: string | null
+          lead_time_days?: number | null
+          location_bin?: string | null
+          manufacturer?: string
+          notes?: string | null
+          part_name?: string
+          part_number?: string
+          photo_url?: string | null
+          qty_in_stock?: number
+          reorder_point?: number
+          reorder_quantity?: number
+          supplier?: string | null
+          supplier_part_number?: string | null
+          tags?: string[] | null
+          unit_cost?: number
+          updated_at?: string
+          usage_count_30d?: number | null
+          weight_lbs?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -555,6 +651,63 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      purchase_orders: {
+        Row: {
+          actual_delivery: string | null
+          created_at: string
+          created_by: string | null
+          expected_delivery: string | null
+          id: string
+          line_items: Json
+          notes: string | null
+          order_date: string | null
+          po_number: string
+          shipping: number
+          status: string
+          subtotal: number
+          supplier: string
+          tax: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          actual_delivery?: string | null
+          created_at?: string
+          created_by?: string | null
+          expected_delivery?: string | null
+          id?: string
+          line_items?: Json
+          notes?: string | null
+          order_date?: string | null
+          po_number: string
+          shipping?: number
+          status?: string
+          subtotal?: number
+          supplier: string
+          tax?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          actual_delivery?: string | null
+          created_at?: string
+          created_by?: string | null
+          expected_delivery?: string | null
+          id?: string
+          line_items?: Json
+          notes?: string | null
+          order_date?: string | null
+          po_number?: string
+          shipping?: number
+          status?: string
+          subtotal?: number
+          supplier?: string
+          tax?: number
+          total?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -637,6 +790,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          balance_after: number
+          created_at: string
+          created_by: string | null
+          id: string
+          movement_type: string
+          notes: string | null
+          part_id: string
+          purchase_order_id: string | null
+          quantity: number
+          reason: string
+          technician: string | null
+          ticket_id: string | null
+        }
+        Insert: {
+          balance_after?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_type?: string
+          notes?: string | null
+          part_id: string
+          purchase_order_id?: string | null
+          quantity?: number
+          reason?: string
+          technician?: string | null
+          ticket_id?: string | null
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_type?: string
+          notes?: string | null
+          part_id?: string
+          purchase_order_id?: string | null
+          quantity?: number
+          reason?: string
+          technician?: string | null
+          ticket_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       submissions: {
         Row: {
