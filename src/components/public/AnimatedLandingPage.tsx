@@ -102,10 +102,10 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         {/* Value proposition + CTA centered between arc and footer */}
         <div className="flex flex-col items-center flex-1 -mt-4">
           <div className={`text-center -mt-2 transition-all duration-1000 ease-out ${stage >= 5 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            <p className="text-white text-lg sm:text-xl font-extralight leading-relaxed md:text-4xl">
+            <p className="text-white text-3xl sm:text-4xl md:text-4xl font-extralight leading-relaxed">
               Fast. Simple. Reliable.
             </p>
-            <p className="text-white/80 text-lg sm:text-xl font-extralight md:text-xl">
+            <p className="text-white/80 text-base sm:text-lg md:text-xl font-extralight">
               Your peace of mind is just minutes away
             </p>
           </div>
