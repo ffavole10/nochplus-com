@@ -129,9 +129,30 @@ export function TechnicianFormModal({ open, onOpenChange, technician, onSave, av
     }));
   };
 
-  const handleSubmit = () => {
+  const geocodeCity = async (city: string, state: string): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      const q = encodeURIComponent(`${city}, ${state}, USA`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`);
+      const data = await res.json();
+      if (data?.[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    } catch {}
+    return null;
+  };
+
+  const handleSubmit = async () => {
     if (!form.first_name || !form.last_name || !form.email) return;
-    onSave({ ...(isEdit ? { id: technician!.id } : {}), ...form, photo_url: photoUrl });
+
+    let lat = technician?.home_base_lat ?? null;
+    let lng = technician?.home_base_lng ?? null;
+
+    // Re-geocode if city or state changed (or no coords yet)
+    const cityChanged = !technician || technician.home_base_city !== form.home_base_city || technician.home_base_state !== form.home_base_state;
+    if (form.home_base_city && form.home_base_state && (cityChanged || !lat)) {
+      const coords = await geocodeCity(form.home_base_city, form.home_base_state);
+      if (coords) { lat = coords.lat; lng = coords.lng; }
+    }
+
+    onSave({ ...(isEdit ? { id: technician!.id } : {}), ...form, photo_url: photoUrl, home_base_lat: lat, home_base_lng: lng });
     onOpenChange(false);
   };
 
