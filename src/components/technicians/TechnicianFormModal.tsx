@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Camera, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { Technician } from "@/hooks/useTechnicians";
 
 const US_STATES = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"];
@@ -26,6 +30,9 @@ interface Props {
 export function TechnicianFormModal({ open, onOpenChange, technician, onSave, availableRegions }: Props) {
   const REGIONS = availableRegions && availableRegions.length > 0 ? availableRegions : DEFAULT_REGIONS;
   const isEdit = !!technician?.id;
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   const defaults = {
     first_name: "", last_name: "", email: "", phone: "",
@@ -45,6 +52,7 @@ export function TechnicianFormModal({ open, onOpenChange, technician, onSave, av
 
   useEffect(() => {
     if (technician) {
+      setPhotoUrl(technician.photo_url || null);
       setForm({
         first_name: technician.first_name,
         last_name: technician.last_name,
@@ -69,11 +77,43 @@ export function TechnicianFormModal({ open, onOpenChange, technician, onSave, av
         work_schedule: technician.work_schedule || defaults.work_schedule,
       });
     } else {
+      setPhotoUrl(null);
       setForm(defaults);
     }
   }, [technician, open]);
 
   const set = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image"); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error("Image must be under 2MB"); return; }
+
+    setUploading(true);
+    try {
+      const techId = technician?.id || crypto.randomUUID();
+      const ext = file.name.split(".").pop();
+      const path = `technicians/${techId}/photo.${ext}`;
+
+      const { data: existing } = await supabase.storage.from("avatars").list(`technicians/${techId}`);
+      if (existing?.length) {
+        await supabase.storage.from("avatars").remove(existing.map(f => `technicians/${techId}/${f.name}`));
+      }
+
+      const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      setPhotoUrl(`${urlData.publicUrl}?t=${Date.now()}`);
+      toast.success("Photo uploaded");
+    } catch (err: any) {
+      toast.error("Upload failed: " + err.message);
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
   const toggleRegion = (r: string) => {
     setForm(prev => ({
@@ -91,7 +131,7 @@ export function TechnicianFormModal({ open, onOpenChange, technician, onSave, av
 
   const handleSubmit = () => {
     if (!form.first_name || !form.last_name || !form.email) return;
-    onSave({ ...(isEdit ? { id: technician!.id } : {}), ...form });
+    onSave({ ...(isEdit ? { id: technician!.id } : {}), ...form, photo_url: photoUrl });
     onOpenChange(false);
   };
 
@@ -111,6 +151,26 @@ export function TechnicianFormModal({ open, onOpenChange, technician, onSave, av
           </TabsList>
 
           <TabsContent value="basic" className="space-y-4 mt-4">
+            {/* Profile Photo */}
+            <div className="flex items-center gap-4">
+              <div className="relative group cursor-pointer" onClick={() => fileRef.current?.click()}>
+                <Avatar className={`h-16 w-16 ${uploading ? "opacity-50" : ""}`}>
+                  <AvatarImage src={photoUrl || undefined} alt="Technician" />
+                  <AvatarFallback className="bg-muted text-muted-foreground text-lg">
+                    {form.first_name && form.last_name ? `${form.first_name[0]}${form.last_name[0]}` : <User className="w-6 h-6" />}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Profile Photo</p>
+                <p className="text-xs text-muted-foreground">Click to upload (max 2MB)</p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>First Name *</Label>
