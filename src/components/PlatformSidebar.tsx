@@ -31,7 +31,6 @@ import {
   useSidebar } from
 "@/components/ui/sidebar";
 import nochLogo from "@/assets/noch-logo-white.png";
-import autohealBadge from "@/assets/autoheal-badge-logo.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
 import { useCampaignContext } from "@/contexts/CampaignContext";
@@ -324,6 +323,18 @@ export function PlatformSidebar() {
           </div>
         }
 
+        {/* ─── AUTOHEAL SECTION ─── */}
+        <SectionHeader label={<span>AUTOHEAL<sup className="text-[8px] align-super ml-0.5">TM</sup></span>} icon={Zap} section="autoheal" />
+        {expandedSection === "autoheal" &&
+        <div className="pl-1">
+            <SidebarMenu className="px-1">
+              {autohealPages.map((item) =>
+            <NavItem key={item.title} item={item} />
+            )}
+            </SidebarMenu>
+          </div>
+        }
+
         {/* ─── FILTERS SECTION ─── */}
         <div className="border-t border-sidebar-border mt-2 pt-2">
           <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
@@ -440,45 +451,34 @@ export function PlatformSidebar() {
         </div>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-3 space-y-3">
-        {/* AutoHeal Badge Logo */}
-        <div className="flex justify-center px-2">
-          <img src={autohealBadge} alt="AutoHeal AI Engine" className="w-20 h-20 opacity-90" />
-        </div>
-
+      <SidebarFooter className="border-t border-sidebar-border p-3">
         <SidebarMenu>
-          {autohealPages.map((item) =>
-            <NavItem key={item.title} item={item} />
-          )}
-        </SidebarMenu>
-
-        <div className="border-t border-sidebar-border pt-2">
-          <SidebarMenu>
-            {hasRole("super_admin") &&
-            <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink
-                  to="/settings"
-                  className="hover:bg-sidebar-accent/50"
-                  activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            }
-            <SidebarMenuItem>
+          {hasRole("super_admin") &&
+          <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <a
-                  href="/"
-                  className="flex items-center gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-                  <Home className="mr-2 h-4 w-4" />
-                  <span>Home</span>
-                </a>
+                <NavLink
+                to="/settings"
+                className="hover:bg-sidebar-accent/50"
+                activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
+
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </div>
+          }
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <a
+                href="/"
+                className="flex items-center gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
+
+                <Home className="mr-2 h-4 w-4" />
+                <span>Home</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
 
       <NewCampaignModal
