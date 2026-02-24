@@ -84,11 +84,7 @@ const Parts = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Parts</h1>
-          <p className="text-muted-foreground mt-1">Manage replacement parts, stock levels, and costs for all charger service operations</p>
-        </div>
+      <div className="flex items-center justify-end">
         <div className="flex gap-2">
           <Button variant="outline" size="sm"><Upload className="h-4 w-4 mr-1" /> Import</Button>
           <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" /> Export</Button>
