@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useEstimates } from "@/hooks/useEstimates";
 
-type SectionKey = "campaigns" | "service-desk" | "noch-plus" | null;
+type SectionKey = "campaigns" | "service-desk" | "noch-plus" | "autoheal" | null;
 
 const STATUS_LEVELS: {value: StatusLevel;label: string;colorClass: string;}[] = [
 { value: "Critical", label: "Critical", colorClass: "bg-critical" },
@@ -61,6 +61,7 @@ function getActiveSection(pathname: string): SectionKey {
   if (pathname.startsWith("/campaigns")) return "campaigns";
   if (pathname.startsWith("/service-desk")) return "service-desk";
   if (pathname.startsWith("/noch-plus")) return "noch-plus";
+  if (pathname.startsWith("/autoheal")) return "autoheal";
   // Legacy root routes map to campaigns
   if (["/dashboard", "/dataset", "/tickets", "/issues", "/schedule", "/field-reports"].includes(pathname)) return "campaigns";
   return null;
