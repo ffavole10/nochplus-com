@@ -111,12 +111,10 @@ const AIAgent = () => {
       <div className="container mx-auto px-4 py-8 max-w-5xl space-y-8">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="flex gap-5">
+          <div className="flex gap-3 items-end">
             <img src={aiAgentAvatar} alt="AI Agent" className="w-24 h-24 rounded-xl object-cover shrink-0" />
             <div>
-              <h1 className="text-2xl font-bold text-foreground">AutoHeal™
-
-              </h1>
+              <h1 className="text-2xl font-bold text-foreground">AutoHeal™</h1>
               <p className="text-sm text-muted-foreground mt-1">Manage AI prompts and templates for charging station analysis</p>
               <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
                 AI prompts define how different agents analyze incidents and generate responses. Each prompt uses Jinja2 templates and validates output against JSON schemas. Changes take effect immediately for new executions.
