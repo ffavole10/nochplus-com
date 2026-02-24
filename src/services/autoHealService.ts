@@ -1,6 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
 import { lookupCharger, ChargerDatabaseRecord } from "./BtcDatabaseService";
-import { SWI_CATALOG } from "@/data/swiCatalog";
 
 export interface AutoHealAssessment {
   riskLevel: "Critical" | "High" | "Medium" | "Low";
@@ -11,6 +9,17 @@ export interface AutoHealAssessment {
   dataSources: string[];
   timestamp: string;
   btcData: ChargerDatabaseRecord | null;
+  confidence?: number;
+  flags?: string[];
+  swiMatchDetail?: {
+    code: string;
+    title: string;
+    confidence: number;
+    estimatedHours: string;
+    partsRequired: unknown[];
+    safetyWarnings: string[];
+  } | null;
+  costEstimate?: Record<string, unknown> | null;
 }
 
 export interface AutoHealResult {
@@ -38,192 +47,214 @@ interface TicketInput {
   notes?: string;
 }
 
-async function invokeAI(prompt: string, maxTokens = 2048): Promise<string> {
-  const { data, error } = await supabase.functions.invoke("ai-chat", {
-    body: {
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: maxTokens,
-    },
-  });
+export type AgentStepStatus = "pending" | "running" | "done" | "error" | "skipped";
 
-  if (error) throw new Error(`AI API error: ${error.message}`);
-  return data?.content || "";
+export interface AgentStep {
+  agentId: string;
+  label: string;
+  status: AgentStepStatus;
+  error?: string;
 }
 
-function parseJSON<T>(text: string): T {
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("Failed to parse AI response as JSON");
-  return JSON.parse(jsonMatch[0]);
-}
+const AGENT_STEPS: { agentId: string; label: string }[] = [
+  { agentId: "intake-validator", label: "Validating ticket data" },
+  { agentId: "diagnostic-agent", label: "Running diagnostics" },
+  { agentId: "swi-matcher", label: "Matching SWI documents" },
+  { agentId: "resolution-agent", label: "Generating resolution" },
+  { agentId: "learning-agent", label: "Processing learning patterns" },
+  { agentId: "validation-agent", label: "Running quality validation" },
+];
 
 export async function runAutoHealAssessment(
   ticket: TicketInput,
   onProgress?: (step: string) => void,
+  onStepUpdate?: (steps: AgentStep[]) => void,
 ): Promise<AutoHealResult> {
   const dataSources: string[] = ["Customer submission"];
 
-  // Step 1: Analyze ticket data
-  onProgress?.("Analyzing ticket data...");
-  await new Promise((r) => setTimeout(r, 600));
-
-  if (ticket.photoCount > 0) {
-    dataSources.push(`Photos analyzed (${ticket.photoCount})`);
-  }
-
-  // Step 2: Query BTC database
+  // BTC database lookup
   onProgress?.("Querying BTC database...");
   let btcData: ChargerDatabaseRecord | null = null;
   try {
     btcData = await lookupCharger(ticket.serialNumber);
-    if (btcData) {
-      dataSources.push("BTC database (warranty, installation, service history)");
-    }
+    if (btcData) dataSources.push("BTC database (warranty, installation, service history)");
   } catch (err) {
     console.warn("BTC database lookup failed:", err);
   }
 
-  // Step 3: Generate assessment
-  onProgress?.("Generating assessment...");
-
-  const warrantyNotes: string[] = [];
-  let warrantyContext = "";
-  let historyContext = "";
-  let ageContext = "";
-
-  if (btcData) {
-    if (btcData.warrantyStatus === "active") {
-      warrantyNotes.push(`ℹ️ Unit under warranty until ${btcData.warrantyExpirationDate} — parts covered`);
-      warrantyContext = `WARRANTY: Active until ${btcData.warrantyExpirationDate}. Provider: ${btcData.warrantyProvider}. Parts and labor covered under ${btcData.slaTier || "standard"} SLA.`;
-    } else if (btcData.warrantyStatus === "expired") {
-      warrantyNotes.push(`⚠️ Warranty expired ${btcData.warrantyExpirationDate} — full cost applies`);
-      warrantyContext = `WARRANTY: EXPIRED on ${btcData.warrantyExpirationDate}. All parts and labor at customer cost.`;
-    }
-
-    if (btcData.ageInYears > 5) {
-      warrantyNotes.push(`⚠️ Unit age: ${btcData.ageInYears} years — consider replacement cost analysis`);
-      ageContext = `CHARGER AGE: ${btcData.ageInYears} years. This is an aging unit — consider total cost of ownership vs replacement.`;
-    } else {
-      ageContext = `CHARGER AGE: ${btcData.ageInYears} years.`;
-    }
-
-    if (btcData.serviceCount > 2) {
-      warrantyNotes.push(`⚠️ ${btcData.serviceCount} prior repairs on record — monitor for chronic issues`);
-      historyContext = `SERVICE HISTORY: ${btcData.serviceCount} prior service events. Recent: ${btcData.serviceHistory.slice(0, 3).map(h => `${h.date}: ${h.workPerformed} ($${h.cost})`).join("; ")}`;
-    } else if (btcData.serviceCount > 0) {
-      historyContext = `SERVICE HISTORY: ${btcData.serviceCount} prior service event(s). ${btcData.serviceHistory[0] ? `Last: ${btcData.serviceHistory[0].date} — ${btcData.serviceHistory[0].workPerformed}` : ""}`;
-    }
-
-    if (btcData.knownIssues.length > 0) {
-      warrantyNotes.push(`ℹ️ Known model issues: ${btcData.knownIssues.join("; ")}`);
-    }
-
-    if (btcData.recallStatus) {
-      warrantyNotes.push(`ℹ️ Recall: ${btcData.recallStatus}`);
-    }
-  }
+  if (ticket.photoCount > 0) dataSources.push(`Photos analyzed (${ticket.photoCount})`);
+  if (ticket.notes) dataSources.push("Account manager notes");
 
   const chargerTypeLabel = btcData?.chargerType || (ticket.chargerType.includes("DC") ? "DC | Level 3" : "AC | Level 2");
 
-  try {
-    const prompt = `You are an expert EV charger service technician performing an AutoHeal assessment.
+  // Build ticket data for edge function
+  const ticketData: Record<string, unknown> = {
+    ticket_id: ticket.ticketId,
+    customer_name: ticket.customerName,
+    customer_company: ticket.customerCompany,
+    charger_brand: btcData?.brand || "Unknown",
+    charger_model: btcData?.model || "",
+    charger_type: chargerTypeLabel,
+    serial_number: ticket.serialNumber,
+    issue_description: ticket.issueDescription,
+    photos_count: ticket.photoCount,
+    priority: ticket.priority,
+    location: "See ticket details",
+    warranty_status: btcData?.warrantyStatus || "unknown",
+    warranty_expiration: btcData?.warrantyExpirationDate || "N/A",
+    charger_age_years: btcData?.ageInYears || "unknown",
+    service_count: btcData?.serviceCount || 0,
+    service_history: btcData?.serviceHistory || [],
+    known_issues: btcData?.knownIssues?.join(", ") || "None",
+    installation_date: btcData?.installationDate || "N/A",
+    climate_zone: "N/A",
+    environment_type: "N/A",
+    telemetry_data: "N/A",
+    photos: [],
+    dataSources,
+    notes: ticket.notes || "",
+  };
 
-TICKET:
-- ID: ${ticket.ticketId}
-- Charger: ${ticket.serialNumber} (${chargerTypeLabel})
-- Issue: ${ticket.issueDescription}
-- Priority: ${ticket.priority}
-- Customer: ${ticket.customerName} (${ticket.customerCompany})
-- Photos: ${ticket.photoCount} uploaded
+  // Initialize steps
+  const steps: AgentStep[] = AGENT_STEPS.map((s) => ({ ...s, status: "pending" as AgentStepStatus }));
+  onStepUpdate?.(steps);
 
-${btcData ? `BTC DATABASE RECORD:
-- Brand: ${btcData.brand} ${btcData.model}
-- ${warrantyContext}
-- ${ageContext}
-- ${historyContext || "No prior service history."}
-- Known Issues: ${btcData.knownIssues.length > 0 ? btcData.knownIssues.join(", ") : "None"}
-${btcData.recallStatus ? `- Recall: ${btcData.recallStatus}` : ""}` : "No BTC database record found for this serial number."}
+  // Call the autoheal-assessment edge function via SSE
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/autoheal-assessment`;
 
-${ticket.notes ? `ACCOUNT MANAGER NOTES: ${ticket.notes}` : ""}
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({ ticketData }),
+  });
 
-TASK: Provide a risk assessment considering warranty status, charger age, service history, and the reported issue. Include charger type context (${chargerTypeLabel}).
-
-Respond with ONLY valid JSON:
-{
-  "risk_level": "Critical|High|Medium|Low",
-  "assessment_text": "Detailed assessment (3-5 sentences including warranty/age context, charger type)",
-  "recommendation": "Specific recommended action (1-2 sentences)"
-}`;
-
-    const response = await invokeAI(prompt, 1024);
-    const parsed = parseJSON<{ risk_level: string; assessment_text: string; recommendation: string }>(response);
-
-    // Step 4: Match SWI
-    onProgress?.("Matching SWI...");
-
-    let swiMatch = null;
-    try {
-      const swiPrompt = `You are matching an EV charger service ticket with the correct Service Work Instruction (SWI).
-
-TICKET:
-- Charger: ${ticket.serialNumber} (${btcData?.brand || "Unknown"} ${btcData?.model || ""})
-- Type: ${chargerTypeLabel}
-- Issue: ${ticket.issueDescription}
-- Priority: ${ticket.priority}
-${btcData ? `- Age: ${btcData.ageInYears} years
-- Warranty: ${btcData.warrantyStatus}
-- Known Issues: ${btcData.knownIssues.join(", ") || "None"}` : ""}
-
-SWI CATALOG:
-${JSON.stringify(SWI_CATALOG.slice(0, 50), null, 2)}
-
-Match the most appropriate SWI. If warranty is active, note that in warnings.
-
-Respond with ONLY valid JSON:
-{
-  "matched_swi_id": "swi_xxx",
-  "confidence": 85,
-  "reasoning": "Why this SWI matches (2-3 sentences)",
-  "key_factors": ["factor 1", "factor 2"],
-  "estimated_service_time": "2-4 hours",
-  "required_parts": ["part 1"],
-  "warnings": ["warning 1"]
-}`;
-
-      const swiResponse = await invokeAI(swiPrompt, 1024);
-      swiMatch = parseJSON<AutoHealResult["swiMatch"]>(swiResponse);
-    } catch (err) {
-      console.warn("SWI matching failed:", err);
-    }
-
-    if (ticket.notes) {
-      dataSources.push("Account manager notes");
-    }
-
-    const assessment: AutoHealAssessment = {
-      riskLevel: (parsed.risk_level || ticket.priority) as AutoHealAssessment["riskLevel"],
-      assessmentText: parsed.assessment_text,
-      recommendation: parsed.recommendation,
-      chargerType: chargerTypeLabel as AutoHealAssessment["chargerType"],
-      warrantyNotes,
-      dataSources,
-      timestamp: new Date().toISOString(),
-      btcData,
-    };
-
-    return { assessment, swiMatch };
-  } catch (err) {
-    // Fallback to basic assessment
-    const assessment: AutoHealAssessment = {
-      riskLevel: ticket.priority as AutoHealAssessment["riskLevel"],
-      assessmentText: `${chargerTypeLabel} charger ${ticket.serialNumber} reported: ${ticket.issueDescription}. ${btcData ? `Unit is ${btcData.ageInYears} years old with ${btcData.serviceCount} prior service events. Warranty: ${btcData.warrantyStatus}.` : "No BTC database record found."}`,
-      recommendation: "Schedule on-site diagnostic to verify reported issue and determine required repairs.",
-      chargerType: chargerTypeLabel as AutoHealAssessment["chargerType"],
-      warrantyNotes,
-      dataSources,
-      timestamp: new Date().toISOString(),
-      btcData,
-    };
-
-    return { assessment, swiMatch: null };
+  if (!resp.ok || !resp.body) {
+    const errText = await resp.text().catch(() => "Unknown error");
+    throw new Error(`AutoHeal API error (${resp.status}): ${errText}`);
   }
+
+  // Parse SSE stream
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let finalResult: Record<string, unknown> | null = null;
+  let errorMsg: string | null = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    let newlineIdx: number;
+    while ((newlineIdx = buffer.indexOf("\n\n")) !== -1) {
+      const block = buffer.slice(0, newlineIdx);
+      buffer = buffer.slice(newlineIdx + 2);
+
+      let eventType = "";
+      let eventData = "";
+      for (const line of block.split("\n")) {
+        if (line.startsWith("event: ")) eventType = line.slice(7).trim();
+        else if (line.startsWith("data: ")) eventData = line.slice(6);
+      }
+
+      if (!eventType || !eventData) continue;
+
+      try {
+        const parsed = JSON.parse(eventData);
+
+        if (eventType === "step") {
+          const idx = steps.findIndex((s) => s.agentId === parsed.agentId);
+          if (idx >= 0) {
+            steps[idx] = { ...steps[idx], status: parsed.status, error: parsed.error };
+            onStepUpdate?.([...steps]);
+            onProgress?.(parsed.label + "...");
+          }
+        } else if (eventType === "complete") {
+          finalResult = parsed;
+        } else if (eventType === "error") {
+          errorMsg = parsed.message || "AutoHeal assessment failed";
+        } else if (eventType === "warning") {
+          console.warn("AutoHeal warning:", parsed);
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
+  }
+
+  if (errorMsg && !finalResult) {
+    throw new Error(errorMsg);
+  }
+
+  if (!finalResult) {
+    throw new Error("No result received from AutoHeal");
+  }
+
+  // Map edge function result to AutoHealResult
+  const assessment = finalResult.assessment as Record<string, unknown> || {};
+  const swiMatchData = finalResult.swiMatch as Record<string, unknown> | null;
+
+  const warrantyNotes: string[] = [];
+  if (btcData) {
+    if (btcData.warrantyStatus === "active") {
+      warrantyNotes.push(`ℹ️ Unit under warranty until ${btcData.warrantyExpirationDate} — parts covered`);
+    } else if (btcData.warrantyStatus === "expired") {
+      warrantyNotes.push(`⚠️ Warranty expired ${btcData.warrantyExpirationDate} — full cost applies`);
+    }
+    if (btcData.ageInYears > 5) {
+      warrantyNotes.push(`⚠️ Unit age: ${btcData.ageInYears} years — consider replacement cost analysis`);
+    }
+    if (btcData.serviceCount > 2) {
+      warrantyNotes.push(`⚠️ ${btcData.serviceCount} prior repairs on record — monitor for chronic issues`);
+    }
+    if (btcData.knownIssues?.length > 0) {
+      warrantyNotes.push(`ℹ️ Known model issues: ${btcData.knownIssues.join("; ")}`);
+    }
+  }
+
+  const riskMap: Record<string, string> = {
+    critical: "Critical",
+    high: "High",
+    medium: "Medium",
+    low: "Low",
+  };
+
+  const riskLevel = riskMap[String(assessment.riskLevel || "medium").toLowerCase()] || "Medium";
+
+  const autoHealAssessment: AutoHealAssessment = {
+    riskLevel: riskLevel as AutoHealAssessment["riskLevel"],
+    assessmentText: String(assessment.detailedAssessment || assessment.summary || "Assessment generated by AutoHeal"),
+    recommendation: String(assessment.recommendation || "Schedule on-site diagnostic"),
+    chargerType: chargerTypeLabel as AutoHealAssessment["chargerType"],
+    warrantyNotes,
+    dataSources: (assessment.dataSources as string[]) || dataSources,
+    timestamp: String(assessment.generatedAt || new Date().toISOString()),
+    btcData,
+    confidence: Number(assessment.confidence) || 75,
+    flags: (finalResult.flags as string[]) || [],
+    swiMatchDetail: swiMatchData ? {
+      code: String(swiMatchData.code || ""),
+      title: String(swiMatchData.title || ""),
+      confidence: Number(swiMatchData.confidence) || 0,
+      estimatedHours: String(swiMatchData.estimatedHours || "N/A"),
+      partsRequired: (swiMatchData.partsRequired as unknown[]) || [],
+      safetyWarnings: (swiMatchData.safetyWarnings as string[]) || [],
+    } : null,
+    costEstimate: (finalResult.costEstimate as Record<string, unknown>) || null,
+  };
+
+  const swiMatch = swiMatchData ? {
+    matched_swi_id: String(swiMatchData.code || null),
+    confidence: Number(swiMatchData.confidence) || 0,
+    reasoning: `AutoHeal matched SWI: ${swiMatchData.title}`,
+    key_factors: [],
+    estimated_service_time: String(swiMatchData.estimatedHours || "N/A"),
+    required_parts: ((swiMatchData.partsRequired as any[]) || []).map((p: any) => typeof p === "string" ? p : p?.name || String(p)),
+    warnings: (swiMatchData.safetyWarnings as string[]) || [],
+  } : null;
+
+  return { assessment: autoHealAssessment, swiMatch };
 }
