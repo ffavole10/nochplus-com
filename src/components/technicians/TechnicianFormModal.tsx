@@ -11,7 +11,7 @@ import type { Technician } from "@/hooks/useTechnicians";
 
 const US_STATES = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"];
 
-const REGIONS = ["Southern California","Northern California","Orange County","San Diego","Los Angeles Metro","Bay Area","Central Valley","Pacific Northwest","Southwest","Mountain West"];
+const DEFAULT_REGIONS = ["Southern California","Northern California","Orange County","San Diego","Los Angeles Metro","Bay Area","Central Valley","Pacific Northwest","Southwest","Mountain West"];
 
 const DAYS = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
 
@@ -20,9 +20,11 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   technician: Technician | null;
   onSave: (data: any) => void;
+  availableRegions?: string[];
 }
 
-export function TechnicianFormModal({ open, onOpenChange, technician, onSave }: Props) {
+export function TechnicianFormModal({ open, onOpenChange, technician, onSave, availableRegions }: Props) {
+  const REGIONS = availableRegions && availableRegions.length > 0 ? availableRegions : DEFAULT_REGIONS;
   const isEdit = !!technician?.id;
 
   const defaults = {
