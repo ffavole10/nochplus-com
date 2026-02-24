@@ -14,6 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_agent_prompts: {
+        Row: {
+          agent_id: string
+          config: Json
+          created_at: string
+          description: string
+          id: string
+          max_tokens: number
+          model: string
+          name: string
+          status: string
+          temperature: number
+          template: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          config?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          max_tokens?: number
+          model?: string
+          name: string
+          status?: string
+          temperature?: number
+          template?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          config?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          max_tokens?: number
+          model?: string
+          name?: string
+          status?: string
+          temperature?: number
+          template?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_execution_log: {
+        Row: {
+          agent_id: string
+          confidence_score: number | null
+          created_at: string
+          execution_time_ms: number | null
+          id: string
+          input_data: Json | null
+          output_data: Json | null
+          status: string
+          ticket_id: string | null
+          tokens_used: number | null
+        }
+        Insert: {
+          agent_id: string
+          confidence_score?: number | null
+          created_at?: string
+          execution_time_ms?: number | null
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          status?: string
+          ticket_id?: string | null
+          tokens_used?: number | null
+        }
+        Update: {
+          agent_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          execution_time_ms?: number | null
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          status?: string
+          ticket_id?: string | null
+          tokens_used?: number | null
+        }
+        Relationships: []
+      }
+      ai_learning_patterns: {
+        Row: {
+          confidence_boost: number | null
+          created_at: string
+          environmental_factor: string | null
+          id: string
+          pattern_name: string
+          recommended_swi: string | null
+          sample_count: number | null
+          symptom_cluster: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          confidence_boost?: number | null
+          created_at?: string
+          environmental_factor?: string | null
+          id?: string
+          pattern_name: string
+          recommended_swi?: string | null
+          sample_count?: number | null
+          symptom_cluster?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          confidence_boost?: number | null
+          created_at?: string
+          environmental_factor?: string | null
+          id?: string
+          pattern_name?: string
+          recommended_swi?: string | null
+          sample_count?: number | null
+          symptom_cluster?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           created_at: string
