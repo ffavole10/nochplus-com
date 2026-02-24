@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useParts, useCreatePart, useUpdatePart, useDeletePart, useAddStock, useUseStock, PART_CATEGORIES, CHARGER_TYPES, MANUFACTURERS, type Part } from "@/hooks/useParts";
+import { useStockMovementsAll } from "@/hooks/useStockMovementsAll";
 import { PartFormModal } from "@/components/parts/PartFormModal";
 import { StockAdjustModal } from "@/components/parts/StockAdjustModal";
 import { PartDetailModal } from "@/components/parts/PartDetailModal";
+import { PartsAnalyticsDashboard } from "@/components/parts/PartsAnalyticsDashboard";
 
 type StatusFilter = "all" | "in_stock" | "low_stock" | "out_of_stock";
 type ViewMode = "table" | "grid";
@@ -30,6 +32,7 @@ function StatusBadge({ part }: { part: Part }) {
 
 const Parts = () => {
   const { data: parts = [], isLoading } = useParts();
+  const { data: movements = [] } = useStockMovementsAll();
   const createPart = useCreatePart();
   const updatePart = useUpdatePart();
   const deletePart = useDeletePart();
@@ -64,11 +67,6 @@ const Parts = () => {
     return list;
   }, [parts, search, statusFilter, categoryFilter, typeFilter, mfrFilter]);
 
-  // Stats
-  const totalParts = parts.length;
-  const inStock = parts.filter(p => getStatus(p) === "in_stock").length;
-  const lowStock = parts.filter(p => getStatus(p) === "low_stock").length;
-  const outOfStock = parts.filter(p => getStatus(p) === "out_of_stock").length;
 
   const handleSave = (data: any) => {
     if (data.id) {
@@ -94,30 +92,13 @@ const Parts = () => {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: "Total Parts", value: totalParts, color: "text-foreground" },
-          { label: "In Stock", value: inStock, color: "text-emerald-600" },
-          { label: "Low Stock", value: lowStock, color: "text-yellow-600" },
-          { label: "Out of Stock", value: outOfStock, color: "text-red-600" },
-        ].map(s => (
-          <Card key={s.label}>
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{s.label}</p>
-              <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Low stock alert */}
-      {lowStock + outOfStock > 0 && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-4 py-2 text-sm text-yellow-700 flex items-center justify-between">
-          <span>⚠️ {lowStock + outOfStock} parts at or below reorder point</span>
-          <Button variant="ghost" size="sm" onClick={() => setStatusFilter("low_stock")} className="text-yellow-700">View Low Stock</Button>
-        </div>
-      )}
+      {/* Analytics Dashboard */}
+      <PartsAnalyticsDashboard
+        parts={parts}
+        movements={movements}
+        onFilterLowStock={() => setStatusFilter("low_stock")}
+        onViewPart={(p) => setDetailPart(p)}
+      />
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
