@@ -91,6 +91,26 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
     update({ includePriorities: priorities });
   };
 
+  // Map schedule priority keys to underlying PriorityLevel for filtering
+  const SCHEDULE_TO_PRIORITY: Record<SchedulePriority, PriorityLevel | null> = {
+    "P1-Critical": "Critical",
+    "P2-High": "High",
+    "P3-Medium": "Medium",
+    "P4-Low": "Low",
+    "Optimal": null, // Optimal chargers don't have a matching priority filter
+  };
+
+  const toggleSchedulePriority = (sp: SchedulePriority) => {
+    const pl = SCHEDULE_TO_PRIORITY[sp];
+    if (pl) togglePriority(pl);
+  };
+
+  const isSchedulePriorityChecked = (sp: SchedulePriority): boolean => {
+    const pl = SCHEDULE_TO_PRIORITY[sp];
+    if (!pl) return true; // Optimal is always included
+    return config.includePriorities.includes(pl);
+  };
+
   const toggleType = (type: ChargerType) => {
     const types = config.includeTypes.includes(type)
       ? config.includeTypes.filter(t => t !== type)
@@ -120,7 +140,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
 
   // Count chargers by type and priority from selection
   const typeCounts = useMemo(() => {
-    const counts: Record<string, number> = { DCFC: 0, L2: 0, HPCD: 0 };
+    const counts: Record<string, number> = { "AC | Level 2": 0, "DC | Level 3": 0 };
     selected.forEach(c => counts[c.assetRecordType]++);
     return counts;
   }, [selected]);
@@ -140,7 +160,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
 
   // All available counts for filters
   const allTypeCounts = useMemo(() => {
-    const counts: Record<string, number> = { DCFC: 0, L2: 0, HPCD: 0 };
+    const counts: Record<string, number> = { "AC | Level 2": 0, "DC | Level 3": 0 };
     chargers.forEach(c => counts[c.assetRecordType]++);
     return counts;
   }, [chargers]);
@@ -331,7 +351,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
               <div className="space-y-1 mt-1">
                 {ALL_SCHEDULE_PRIORITIES.map(p => (
                   <label key={p} className="flex items-center gap-2 text-xs cursor-pointer">
-                    <Checkbox checked={true} className="h-3.5 w-3.5" disabled />
+                    <Checkbox checked={isSchedulePriorityChecked(p)} onCheckedChange={() => toggleSchedulePriority(p)} className="h-3.5 w-3.5" disabled={p === "Optimal"} />
                     <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${SCHEDULE_PRIORITY_CONFIG[p].bg}`}>{SCHEDULE_PRIORITY_LABELS[p]}</Badge>
                     <span className="text-muted-foreground ml-auto">({allPriorityCounts[p]})</span>
                   </label>
