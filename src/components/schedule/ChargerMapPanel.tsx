@@ -37,6 +37,7 @@ export type { CityCluster };
 export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster }: ChargerMapPanelProps) {
   const [hoveredCluster, setHoveredCluster] = useState<CityCluster | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
 
   const clusters = useMemo(() => {
     const map = new Map<string, CityCluster>();
@@ -71,9 +72,8 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
   }, [chargers]);
 
   const getDotSize = (count: number) => {
-    if (count <= 1) return 4;
-    if (count >= 50) return 14;
-    return 4 + (count / 50) * 10;
+    const base = count <= 1 ? 4 : count >= 50 ? 14 : 4 + (count / 50) * 10;
+    return base / Math.sqrt(zoom);
   };
 
   return (
@@ -84,7 +84,7 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
         className="w-full h-full"
         style={{ width: "100%", height: "100%" }}
       >
-        <ZoomableGroup>
+        <ZoomableGroup onMoveEnd={({ zoom: z }) => setZoom(z)}>
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
               geographies.map(geo => (
@@ -131,7 +131,7 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
                     textAnchor="middle"
                     y={size * 0.35}
                     style={{
-                      fontSize: Math.max(8, size * 0.8),
+                      fontSize: Math.max(6, size * 0.8),
                       fill: "#fff",
                       fontWeight: 700,
                       pointerEvents: "none",
