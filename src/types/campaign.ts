@@ -53,6 +53,7 @@ export interface CampaignConfig {
   includePriorities: PriorityLevel[];
   includeTypes: ChargerType[];
   includeRegions: Region[];
+  includeOptimal: boolean;
   sortBy: SortMethod;
 }
 
@@ -116,5 +117,6 @@ export const DEFAULT_CONFIG: CampaignConfig = {
   includePriorities: ["Critical", "High", "Medium", "Low"],
   includeTypes: ["AC | Level 2", "DC | Level 3"],
   includeRegions: [],
+  includeOptimal: true,
   sortBy: "priority",
 };

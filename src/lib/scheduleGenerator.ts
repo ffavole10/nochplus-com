@@ -41,8 +41,8 @@ export function filterChargers(chargers: AssessmentCharger[], config: CampaignCo
     }
     const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
     if (!hasTicket) {
-      // Optimal charger — included by default (controlled separately by config panel)
-      return true;
+      // Optimal charger — respect includeOptimal config
+      return config.includeOptimal !== false;
     }
     const sp = classifyTicketPriority(c);
     const pl = SCHEDULE_TO_PRIORITY[sp];
