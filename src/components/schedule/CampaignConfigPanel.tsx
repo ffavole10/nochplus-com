@@ -66,7 +66,7 @@ const TYPE_ICONS: Record<ChargerType, React.ReactNode> = {
 };
 
 export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConfigPanelProps) {
-  const [includeOptimal, setIncludeOptimal] = useState(true);
+  const includeOptimal = config.includeOptimal !== false;
   const { data: dbTechnicians = [] } = useTechnicians();
 
   const update = (partial: Partial<CampaignConfig>) => onChange({ ...config, ...partial });
@@ -98,7 +98,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
 
   const toggleSchedulePriority = (sp: SchedulePriority) => {
     if (sp === "Optimal") {
-      setIncludeOptimal(prev => !prev);
+      update({ includeOptimal: !includeOptimal });
       return;
     }
     const pl = SCHEDULE_TO_PRIORITY[sp];

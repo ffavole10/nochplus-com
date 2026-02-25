@@ -71,12 +71,14 @@ export function ScheduleView({
     }
   }, [onImport]);
 
+  // Filtered chargers based on config
+  const filteredChargers = useMemo(() => filterChargers(chargers, config), [chargers, config]);
+
   // Auto-generate preview whenever config changes and there are matching chargers
   const autoPreview = useMemo(() => {
-    const selected = filterChargers(chargers, config);
-    if (selected.length === 0) return null;
+    if (filteredChargers.length === 0) return null;
     return createCampaign(chargers, config);
-  }, [chargers, config]);
+  }, [chargers, config, filteredChargers.length]);
 
   const handleSaveDraft = useCallback(() => {
     if (!autoPreview) {
@@ -144,7 +146,7 @@ export function ScheduleView({
         {displayCampaign ? (
           <CampaignCalendar
             campaign={displayCampaign}
-            chargers={chargers}
+            chargers={activeCampaign ? chargers : filteredChargers}
             onMarkStatus={activeCampaign ? (chargerId, status) => {
               onUpdateStatus(activeCampaign.id, chargerId, status);
               if (status === "completed") onUpdateChargerPhase(chargerId, "Completed");
