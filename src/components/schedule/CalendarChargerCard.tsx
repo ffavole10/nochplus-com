@@ -71,7 +71,7 @@ export function CalendarChargerCard({
               {charger.assetRecordType}
             </Badge>
             <span className="text-[10px] text-muted-foreground">
-              ● {charger.priorityLevel}
+              ● {charger.priorityLevel === "Critical" ? "P1" : charger.priorityLevel === "High" ? "P2" : charger.priorityLevel === "Medium" ? "P3" : "P4"} {charger.priorityLevel}
             </span>
             <span className="text-[10px] text-muted-foreground">⏱ {item.estimatedHours}h</span>
           </div>
