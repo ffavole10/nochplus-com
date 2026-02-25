@@ -260,7 +260,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
       d.setDate(d.getDate() + days);
       if (config.workingDays.includes(d.getDay())) working++;
       days++;
-      if (days > 365) break;
+      if (days > 3650) break;
     }
     const end = new Date(start);
     end.setDate(end.getDate() + days - 1);
