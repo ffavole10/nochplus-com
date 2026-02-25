@@ -21,26 +21,14 @@ const PRIORITY_BADGE: Record<string, string> = {
 
 interface MapSchedulePanelProps {
   selectedCluster: CityCluster | null;
+  visibleClusters?: CityCluster[];
   allChargers: AssessmentCharger[];
   hoursPerCharger?: number;
 }
 
-export function MapSchedulePanel({ selectedCluster, allChargers, hoursPerCharger = 2 }: MapSchedulePanelProps) {
+export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allChargers, hoursPerCharger = 2 }: MapSchedulePanelProps) {
   const [tripMode, setTripMode] = useState(false);
 
-  const chargers = selectedCluster?.chargers || [];
-  const totalHours = chargers.length * hoursPerCharger;
-
-  // Group by region
-  const grouped = useMemo(() => {
-    const map = new Map<Region, AssessmentCharger[]>();
-    chargers.forEach(c => {
-      const r = getRegion(c.city, c.state);
-      if (!map.has(r)) map.set(r, []);
-      map.get(r)!.push(c);
-    });
-    return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
-  }, [chargers]);
 
   const getPriority = (c: AssessmentCharger) => {
     const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
@@ -53,14 +41,41 @@ export function MapSchedulePanel({ selectedCluster, allChargers, hoursPerCharger
     return { travelDays: 2, workingDays, totalDays: workingDays + 2 };
   };
 
-  if (!selectedCluster) {
+  // Chargers to display: selected cluster chargers, or all visible chargers from viewport
+  const displayChargers = useMemo(() => {
+    if (selectedCluster) return selectedCluster.chargers;
+    return visibleClusters.flatMap(cl => cl.chargers);
+  }, [selectedCluster, visibleClusters]);
+
+  const displayTitle = selectedCluster
+    ? `${selectedCluster.city}, ${selectedCluster.state}`
+    : `Chargers in View`;
+
+  const displaySubtitle = selectedCluster
+    ? selectedCluster.region
+    : `${visibleClusters.length} location${visibleClusters.length !== 1 ? "s" : ""}`;
+
+  const totalHours = displayChargers.length * hoursPerCharger;
+
+  // Group by region
+  const grouped = useMemo(() => {
+    const map = new Map<Region, AssessmentCharger[]>();
+    displayChargers.forEach(c => {
+      const r = getRegion(c.city, c.state);
+      if (!map.has(r)) map.set(r, []);
+      map.get(r)!.push(c);
+    });
+    return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
+  }, [displayChargers]);
+
+  if (displayChargers.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="text-center max-w-[200px]">
           <MapPin className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-          <p className="text-sm font-medium text-foreground">Select a location</p>
+          <p className="text-sm font-medium text-foreground">No chargers in view</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Click a dot on the map to view chargers at that location
+            Zoom or pan the map to see chargers in this area
           </p>
         </div>
       </div>
@@ -74,14 +89,14 @@ export function MapSchedulePanel({ selectedCluster, allChargers, hoursPerCharger
         <div>
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5" />
-            {selectedCluster.city}, {selectedCluster.state}
+            {displayTitle}
           </h3>
-          <p className="text-[11px] text-muted-foreground">{selectedCluster.region}</p>
+          <p className="text-[11px] text-muted-foreground">{displaySubtitle}</p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div>
             <span className="text-muted-foreground">Chargers: </span>
-            <span className="font-semibold">{chargers.length}</span>
+            <span className="font-semibold">{displayChargers.length}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Est. hours: </span>
@@ -90,7 +105,7 @@ export function MapSchedulePanel({ selectedCluster, allChargers, hoursPerCharger
         </div>
         <Button size="sm" className="w-full h-8 text-xs bg-[#00b388] hover:bg-[#00b388]/90 text-white">
           <CalendarPlus className="h-3.5 w-3.5 mr-1.5" />
-          Schedule All Selected
+          Schedule All {selectedCluster ? "Selected" : "in View"}
         </Button>
       </div>
 
