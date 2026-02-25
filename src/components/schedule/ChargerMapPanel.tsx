@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
+import { geoAlbersUsa } from "d3-geo";
 import { AssessmentCharger } from "@/types/assessment";
 import { getCityCoords } from "@/lib/cityCoordinates";
 import { getRegion, REGION_COLORS, Region } from "@/lib/regionMapping";
@@ -83,6 +84,30 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster,
     return Array.from(map.values());
   }, [chargers]);
 
+  // Create a matching projection for viewport calculations
+  const projection = useMemo(() => geoAlbersUsa().scale(1000).translate([400, 300]), []);
+
+  // Default SVG dimensions for ComposableMap
+  const MAP_WIDTH = 800;
+  const MAP_HEIGHT = 600;
+
+  const computeVisibleClusters = useCallback((centerCoords: [number, number], z: number) => {
+    if (!projection) return [];
+    const projectedCenter = projection(centerCoords);
+    if (!projectedCenter) return [];
+    const [pcx, pcy] = projectedCenter;
+    const halfW = MAP_WIDTH / (2 * z);
+    const halfH = MAP_HEIGHT / (2 * z);
+    return clusters.filter(cl => {
+      const [lat, lng] = cl.coords;
+      if (lat < 24 || lat > 50 || lng < -130 || lng > -65) return false;
+      const projected = projection([lng, lat]);
+      if (!projected) return false;
+      const [px, py] = projected;
+      return Math.abs(px - pcx) <= halfW && Math.abs(py - pcy) <= halfH;
+    });
+  }, [clusters, projection]);
+
   const getDotSize = (count: number) => {
     const base = count <= 1 ? 3 : count >= 50 ? 14 : 3 + (count / 50) * 11;
     return Math.max(1.25, base / Math.pow(zoom, 1.2));
@@ -100,17 +125,8 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster,
             setZoom(z);
             setCenter(coordinates as [number, number]);
             if (onViewportChange) {
-              // Estimate visible bounds based on zoom and center
-              // Base span at zoom=1 is roughly 60° lng, 30° lat for this projection scale
-              const lngSpan = 60 / z;
-              const latSpan = 30 / z;
-              const [cx, cy] = coordinates;
-              const visibleClusters = clusters.filter(cl => {
-                const [lat, lng] = cl.coords;
-                if (lat < 24 || lat > 50 || lng < -130 || lng > -65) return false;
-                return Math.abs(lng - cx) <= lngSpan / 2 && Math.abs(lat - cy) <= latSpan / 2;
-              });
-              onViewportChange({ center: coordinates as [number, number], zoom: z }, visibleClusters);
+              const visible = computeVisibleClusters(coordinates as [number, number], z);
+              onViewportChange({ center: coordinates as [number, number], zoom: z }, visible);
             }
           }}>
           <Geographies geography={GEO_URL}>
