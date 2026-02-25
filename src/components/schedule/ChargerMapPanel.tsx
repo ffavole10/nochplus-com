@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
 import { geoAlbersUsa } from "d3-geo";
 import { AssessmentCharger } from "@/types/assessment";
@@ -107,6 +107,14 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster,
       return Math.abs(px - pcx) <= halfW && Math.abs(py - pcy) <= halfH;
     });
   }, [clusters, projection]);
+
+  // Re-compute visible clusters when chargers/clusters change (e.g. priority filter toggled)
+  useEffect(() => {
+    if (onViewportChange) {
+      const visible = computeVisibleClusters(center, zoom);
+      onViewportChange({ center, zoom }, visible);
+    }
+  }, [clusters]); // intentionally only depends on clusters changing
 
   const getDotSize = (count: number) => {
     const base = count <= 1 ? 3 : count >= 50 ? 14 : 3 + (count / 50) * 11;
