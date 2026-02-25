@@ -321,11 +321,26 @@ export function chargerRecordToAssessment(r: {
 }): AssessmentCharger {
   const assetRecordType = normalizeType(r.model || "");
 
-  // Map DB status to priority
+  // Map DB status to priority using offline-duration logic
+  // Critical: offline 1+ year, 2+ years, 3+ years, or no comms history
+  // High: offline 3-6 months or 6 months-1 year
+  // Medium: offline 1-3 months or 1-29 days or < 1 day
+  // Low: online or null
   let priorityLevel: PriorityLevel = "Low";
-  if (r.status === "Critical") priorityLevel = "Critical";
-  else if (r.status === "Degraded" || r.status === "High") priorityLevel = "High";
-  else if (r.status === "Medium") priorityLevel = "Medium";
+  const status = (r.status || "").toLowerCase();
+  if (status.includes("3+ year") || status.includes("2+ year") || status.includes("1+ year") || status.includes("no comms")) {
+    priorityLevel = "Critical";
+  } else if (status.includes("6 month") || status.includes("3–6") || status.includes("3-6")) {
+    priorityLevel = "High";
+  } else if (status.includes("1–3 month") || status.includes("1-3 month") || status.includes("1–29") || status.includes("1-29") || status.includes("< 1 day")) {
+    priorityLevel = "Medium";
+  } else if (status === "critical") {
+    priorityLevel = "Critical";
+  } else if (status === "degraded" || status === "high") {
+    priorityLevel = "High";
+  } else if (status === "medium") {
+    priorityLevel = "Medium";
+  }
 
   // Determine phase from serviced_qty
   let phase: Phase = "Needs Assessment";
