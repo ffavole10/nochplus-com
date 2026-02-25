@@ -4,7 +4,7 @@ import { AssessmentCharger } from "@/types/assessment";
 import { CalendarDayView } from "./CalendarDayView";
 import { CalendarWeekView } from "./CalendarWeekView";
 import { CalendarMonthView } from "./CalendarMonthView";
-import { ChargerMapPanel, CityCluster } from "./ChargerMapPanel";
+import { ChargerMapPanel, CityCluster, MapViewport } from "./ChargerMapPanel";
 import { MapSchedulePanel } from "./MapSchedulePanel";
 import { CapacityDashboard } from "./CapacityDashboard";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
   const [calendarView, setCalendarView] = useState<CalendarViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedCluster, setSelectedCluster] = useState<CityCluster | null>(null);
+  const [visibleClusters, setVisibleClusters] = useState<CityCluster[]>([]);
 
   const chargerMap = useMemo(() => {
     const m = new Map<string, AssessmentCharger>();
@@ -158,11 +159,13 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
                 chargers={chargers}
                 selectedClusterKey={selectedCluster?.key || null}
                 onSelectCluster={setSelectedCluster}
+                onViewportChange={(viewport, visible) => setVisibleClusters(visible)}
               />
             </div>
             <div className="w-[40%] h-full flex flex-col">
               <MapSchedulePanel
                 selectedCluster={selectedCluster}
+                visibleClusters={visibleClusters}
                 allChargers={chargers}
                 hoursPerCharger={campaign?.configuration.hoursPerCharger || 2}
               />

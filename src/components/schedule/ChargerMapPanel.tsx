@@ -26,19 +26,25 @@ interface CityCluster {
   dominantPriority: string;
 }
 
+export interface MapViewport {
+  center: [number, number];
+  zoom: number;
+}
+
 interface ChargerMapPanelProps {
   chargers: AssessmentCharger[];
   selectedClusterKey: string | null;
   onSelectCluster: (cluster: CityCluster | null) => void;
+  onViewportChange?: (viewport: MapViewport, visibleClusters: CityCluster[]) => void;
 }
 
 export type { CityCluster };
 
-export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster }: ChargerMapPanelProps) {
+export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster, onViewportChange }: ChargerMapPanelProps) {
   const [hoveredCluster, setHoveredCluster] = useState<CityCluster | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-
+  const [center, setCenter] = useState<[number, number]>([-96, 38]);
   const clusters = useMemo(() => {
     const map = new Map<string, CityCluster>();
     chargers.forEach(c => {
@@ -90,7 +96,23 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
         className="w-full h-full"
         style={{ width: "100%", height: "100%" }}
       >
-        <ZoomableGroup maxZoom={20} onMoveEnd={({ coordinates, zoom: z }) => setZoom(z)}>
+        <ZoomableGroup maxZoom={20} onMoveEnd={({ coordinates, zoom: z }) => {
+            setZoom(z);
+            setCenter(coordinates as [number, number]);
+            if (onViewportChange) {
+              // Estimate visible bounds based on zoom and center
+              // Base span at zoom=1 is roughly 60° lng, 30° lat for this projection scale
+              const lngSpan = 60 / z;
+              const latSpan = 30 / z;
+              const [cx, cy] = coordinates;
+              const visibleClusters = clusters.filter(cl => {
+                const [lat, lng] = cl.coords;
+                if (lat < 24 || lat > 50 || lng < -130 || lng > -65) return false;
+                return Math.abs(lng - cx) <= lngSpan / 2 && Math.abs(lat - cy) <= latSpan / 2;
+              });
+              onViewportChange({ center: coordinates as [number, number], zoom: z }, visibleClusters);
+            }
+          }}>
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
               geographies.map(geo => (
