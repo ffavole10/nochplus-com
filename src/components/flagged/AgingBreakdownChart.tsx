@@ -1,10 +1,31 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { TicketPriority } from "@/types/assessment";
-import { AGE_BANDS, AgeBand, PRIORITY_KEYS, PRIORITY_COLORS, getAgeBand } from "./slaConstants";
+import { AGE_BANDS, AgeBand, PRIORITY_KEYS, getAgeBand } from "./slaConstants";
 import { X } from "lucide-react";
+
+const AGE_BAND_COLORS: Record<AgeBand, string> = {
+  "90+": "hsl(0, 72%, 45%)",
+  "61-90": "hsl(0, 65%, 58%)",
+  "31-60": "hsl(25, 90%, 55%)",
+  "0-30": "hsl(40, 90%, 60%)",
+};
+
+const AGE_BAND_LABELS: Record<AgeBand, string> = {
+  "0-30": "0–30 days",
+  "31-60": "31–60 days",
+  "61-90": "61–90 days",
+  "90+": "90+ days",
+};
+
+const PRIORITY_LABELS: Record<TicketPriority, string> = {
+  "P1-Critical": "P1 Critical",
+  "P2-High": "P2 High",
+  "P3-Medium": "P3 Medium",
+  "P4-Low": "P4 Low",
+};
 
 interface TicketItem {
   ticketPriority: TicketPriority;
@@ -19,21 +40,22 @@ interface Props {
 }
 
 export function AgingBreakdownChart({ tickets, activeFilter, onFilter, onClear }: Props) {
+  // Data: one row per priority, stacked by age band
   const data = useMemo(() => {
-    const buckets: Record<AgeBand, Record<TicketPriority, number>> = {
-      "0-30": { "P1-Critical": 0, "P2-High": 0, "P3-Medium": 0, "P4-Low": 0 },
-      "31-60": { "P1-Critical": 0, "P2-High": 0, "P3-Medium": 0, "P4-Low": 0 },
-      "61-90": { "P1-Critical": 0, "P2-High": 0, "P3-Medium": 0, "P4-Low": 0 },
-      "90+": { "P1-Critical": 0, "P2-High": 0, "P3-Medium": 0, "P4-Low": 0 },
+    const buckets: Record<TicketPriority, Record<AgeBand, number>> = {
+      "P1-Critical": { "0-30": 0, "31-60": 0, "61-90": 0, "90+": 0 },
+      "P2-High": { "0-30": 0, "31-60": 0, "61-90": 0, "90+": 0 },
+      "P3-Medium": { "0-30": 0, "31-60": 0, "61-90": 0, "90+": 0 },
+      "P4-Low": { "0-30": 0, "31-60": 0, "61-90": 0, "90+": 0 },
     };
     for (const t of tickets) {
       const band = getAgeBand(t.ageDays);
-      buckets[band][t.ticketPriority]++;
+      buckets[t.ticketPriority][band]++;
     }
-    return AGE_BANDS.map(band => ({
-      band,
-      label: band === "90+" ? "90+ days" : `${band} days`,
-      ...buckets[band],
+    return PRIORITY_KEYS.map(pk => ({
+      priority: pk,
+      label: PRIORITY_LABELS[pk],
+      ...buckets[pk],
     }));
   }, [tickets]);
 
@@ -45,7 +67,7 @@ export function AgingBreakdownChart({ tickets, activeFilter, onFilter, onClear }
         {payload.map((entry: any) => (
           <div key={entry.dataKey} className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: entry.fill }} />
-            <span className="text-muted-foreground">{entry.dataKey}:</span>
+            <span className="text-muted-foreground">{AGE_BAND_LABELS[entry.dataKey as AgeBand]}:</span>
             <span className="font-medium">{entry.value}</span>
           </div>
         ))}
@@ -70,16 +92,16 @@ export function AgingBreakdownChart({ tickets, activeFilter, onFilter, onClear }
               <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="label" tick={{ fontSize: 11 }} width={80} />
               <Tooltip content={<CustomTooltip />} />
-              {PRIORITY_KEYS.map(pk => (
+              {AGE_BANDS.map(band => (
                 <Bar
-                  key={pk}
-                  dataKey={pk}
+                  key={band}
+                  dataKey={band}
                   stackId="a"
-                  fill={PRIORITY_COLORS[pk]}
+                  fill={AGE_BAND_COLORS[band]}
                   cursor="pointer"
                   onClick={(barData: any) => {
-                    if (barData && barData.band) {
-                      onFilter(barData.band as AgeBand, pk);
+                    if (barData && barData.priority) {
+                      onFilter(band, barData.priority as TicketPriority);
                     }
                   }}
                 />
@@ -88,10 +110,10 @@ export function AgingBreakdownChart({ tickets, activeFilter, onFilter, onClear }
           </ResponsiveContainer>
         </div>
         <div className="flex items-center gap-4 mt-2 justify-center">
-          {PRIORITY_KEYS.map(pk => (
-            <div key={pk} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: PRIORITY_COLORS[pk] }} />
-              {pk.split("-")[0]}
+          {AGE_BANDS.map(band => (
+            <div key={band} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: AGE_BAND_COLORS[band] }} />
+              {AGE_BAND_LABELS[band]}
             </div>
           ))}
         </div>
