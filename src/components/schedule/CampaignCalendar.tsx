@@ -6,9 +6,11 @@ import { CalendarWeekView } from "./CalendarWeekView";
 import { CalendarMonthView } from "./CalendarMonthView";
 import { ChargerMapPanel, CityCluster } from "./ChargerMapPanel";
 import { MapSchedulePanel } from "./MapSchedulePanel";
+import { CapacityDashboard } from "./CapacityDashboard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Map as MapIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Map as MapIcon, BarChart3 } from "lucide-react";
+import { Region } from "@/lib/regionMapping";
 import {
   addDays,
   addWeeks,
@@ -21,7 +23,7 @@ import {
   format,
 } from "date-fns";
 
-export type CalendarViewMode = "day" | "week" | "month" | "map";
+export type CalendarViewMode = "day" | "week" | "month" | "map" | "capacity";
 
 interface CampaignCalendarProps {
   campaign: Campaign | null;
@@ -84,14 +86,15 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
   }, [calendarView, currentDate]);
 
   const isMapView = calendarView === "map";
-  const viewModes: CalendarViewMode[] = ["day", "week", "month", "map"];
+  const isCapacityView = calendarView === "capacity";
+  const viewModes: CalendarViewMode[] = ["day", "week", "month", "map", "capacity"];
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-card">
       {/* Calendar Header */}
       <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          {!isMapView && (
+          {!isMapView && !isCapacityView && (
             <>
               <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(-1)}>
@@ -102,7 +105,9 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
               </Button>
             </>
           )}
-          <h2 className="text-sm font-semibold text-foreground ml-1">{headerLabel}</h2>
+          <h2 className="text-sm font-semibold text-foreground ml-1">
+            {isCapacityView ? "Regional Capacity" : headerLabel}
+          </h2>
           {isMapView && (
             <Badge variant="secondary" className="text-xs">{chargers.length} chargers</Badge>
           )}
@@ -127,6 +132,7 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
                 }`}
               >
                 {v === "map" && <MapIcon className="h-3 w-3" />}
+                {v === "capacity" && <BarChart3 className="h-3 w-3" />}
                 {v}
               </button>
             ))}
@@ -136,7 +142,16 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
 
       {/* Content */}
       <div className="flex-1 overflow-auto">
-        {isMapView ? (
+        {isCapacityView ? (
+          <CapacityDashboard
+            chargers={chargers}
+            campaign={campaign}
+            onSwitchToCluster={(region?: Region) => {
+              setCalendarView("map");
+              // Could pass region filter in future
+            }}
+          />
+        ) : isMapView ? (
           <div className="flex h-full">
             <div className="w-[60%] h-full border-r border-border">
               <ChargerMapPanel
