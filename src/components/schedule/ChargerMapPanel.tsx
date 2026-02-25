@@ -110,17 +110,20 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
             }
           </Geographies>
           {clusters.map(cluster => {
+            const [lat, lng] = cluster.coords;
+            // geoAlbersUsa returns null for coords outside continental US — skip to avoid crash
+            if (lat < 24 || lat > 50 || lng < -130 || lng > -65) return null;
             const size = getDotSize(cluster.chargers.length);
             const isSelected = selectedClusterKey === cluster.key;
             const color = PRIORITY_DOT_COLORS[cluster.dominantPriority] || "#22c55e";
             return (
-              <Marker key={cluster.key} coordinates={[cluster.coords[1], cluster.coords[0]]}>
+              <Marker key={cluster.key} coordinates={[lng, lat]}>
                 <circle
                   r={size}
                   fill={color}
                   fillOpacity={isSelected ? 1 : 0.75}
                   stroke={isSelected ? "hsl(var(--primary))" : "#fff"}
-                  strokeWidth={isSelected ? 2.5 : 1}
+                  strokeWidth={isSelected ? 2.5 / zoom : 1 / zoom}
                   className="cursor-pointer transition-all"
                   onMouseEnter={(e) => {
                     setHoveredCluster(cluster);
@@ -137,7 +140,7 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
                     textAnchor="middle"
                     y={size * 0.35}
                     style={{
-                      fontSize: Math.max(6, size * 0.8),
+                      fontSize: Math.max(2, size * 0.8),
                       fill: "#fff",
                       fontWeight: 700,
                       pointerEvents: "none",
