@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AssessmentCharger } from "@/types/assessment";
 import { Campaign } from "@/types/campaign";
+import { classifyTicketPriority } from "@/lib/ticketPriority";
 import { getRegion, ALL_REGIONS, Region, REGION_COLORS } from "@/lib/regionMapping";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -101,7 +102,7 @@ export function CapacityDashboard({ chargers, campaign, onSwitchToCluster }: Cap
       if (regionChargers.length === 0) return;
 
       const total = regionChargers.length;
-      const p1 = regionChargers.filter(c => c.priorityLevel === "Critical").length;
+      const p1 = regionChargers.filter(c => classifyTicketPriority(c) === "P1-Critical").length;
       const scheduled = scheduledByRegion.get(region) || 0;
       const unscheduled = total - scheduled;
       const trips = tripsByRegion.get(region)?.length || 0;
