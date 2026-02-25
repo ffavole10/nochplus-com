@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTechnicians } from "@/hooks/useTechnicians";
 import { CampaignConfig, DEFAULT_CONFIG, SortMethod } from "@/types/campaign";
 import { PriorityLevel, ChargerType, AssessmentCharger } from "@/types/assessment";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
@@ -64,8 +65,8 @@ const TYPE_ICONS: Record<ChargerType, React.ReactNode> = {
 };
 
 export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConfigPanelProps) {
-  const [techInput, setTechInput] = useState("");
   const [includeOptimal, setIncludeOptimal] = useState(true);
+  const { data: dbTechnicians = [] } = useTechnicians();
 
   const update = (partial: Partial<CampaignConfig>) => onChange({ ...config, ...partial });
 
@@ -117,15 +118,21 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
     update({ includeTypes: types });
   };
 
-  const addTechnician = () => {
-    if (!techInput.trim()) return;
-    update({ technicians: [...config.technicians, techInput.trim()] });
-    setTechInput("");
+  const addTechnician = (name: string) => {
+    if (!name || config.technicians.includes(name)) return;
+    update({ technicians: [...config.technicians, name] });
   };
 
   const removeTechnician = (index: number) => {
     update({ technicians: config.technicians.filter((_, i) => i !== index) });
   };
+
+  // Available technicians not yet added
+  const availableTechnicians = useMemo(() => {
+    return dbTechnicians
+      .filter(t => t.active)
+      .filter(t => !config.technicians.includes(`${t.first_name} ${t.last_name}`));
+  }, [dbTechnicians, config.technicians]);
 
   // Helper: classify a charger into SchedulePriority
   const getSchedulePriority = (c: AssessmentCharger): SchedulePriority => {
@@ -148,7 +155,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
   const selectedCount = selected.length;
   const effectiveHours = config.workingHoursPerDay - config.breakTime;
   const chargersPerDay = Math.max(1, Math.floor(effectiveHours / (config.hoursPerCharger + config.travelBuffer)));
-  const totalPerDay = chargersPerDay * config.numberOfTechnicians;
+  const totalPerDay = chargersPerDay * Math.max(1, config.technicians.length);
   const estimatedDays = Math.ceil(selectedCount / totalPerDay);
   const estimatedWeeks = Math.ceil(estimatedDays / config.workingDays.length);
   const totalHours = selectedCount * config.hoursPerCharger;
@@ -310,22 +317,19 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-2 space-y-2">
               <div>
-                <Label className="text-[11px]">Technicians</Label>
-                <div className="flex items-center gap-0.5 mt-0.5">
-                  <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => update({ numberOfTechnicians: Math.max(1, config.numberOfTechnicians - 1) })}>
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <Input className="text-center h-7 w-12 text-xs" value={config.numberOfTechnicians} readOnly />
-                  <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => update({ numberOfTechnicians: Math.min(10, config.numberOfTechnicians + 1) })}>
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <div className="flex gap-1 mt-1">
-                  <Input className="h-7 text-xs" placeholder="Add name..." value={techInput} onChange={e => setTechInput(e.target.value)} onKeyDown={e => e.key === "Enter" && addTechnician()} />
-                  <Button size="sm" variant="outline" className="h-7 px-2" onClick={addTechnician}><Plus className="h-3 w-3" /></Button>
-                </div>
+                <Label className="text-[11px]">Assign Technicians</Label>
+                <Select onValueChange={(v) => addTechnician(v)} value="">
+                  <SelectTrigger className="h-8 mt-0.5 text-xs">
+                    <SelectValue placeholder={availableTechnicians.length > 0 ? "Select technician..." : "All assigned"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {availableTechnicians.map(t => (
+                      <SelectItem key={t.id} value={`${t.first_name} ${t.last_name}`} className="text-xs">
+                        {t.first_name} {t.last_name} — {t.home_base_city}, {t.home_base_state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {config.technicians.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1.5">
                     {config.technicians.map((name, i) => (
