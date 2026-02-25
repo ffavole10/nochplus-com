@@ -4,9 +4,11 @@ import { AssessmentCharger } from "@/types/assessment";
 import { CalendarDayView } from "./CalendarDayView";
 import { CalendarWeekView } from "./CalendarWeekView";
 import { CalendarMonthView } from "./CalendarMonthView";
+import { ChargerMapPanel, CityCluster } from "./ChargerMapPanel";
+import { MapSchedulePanel } from "./MapSchedulePanel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Map as MapIcon } from "lucide-react";
 import {
   addDays,
   addWeeks,
@@ -16,15 +18,10 @@ import {
   subMonths,
   startOfWeek,
   endOfWeek,
-  startOfMonth,
-  endOfMonth,
   format,
-  isSameDay,
-  isToday,
-  parseISO,
 } from "date-fns";
 
-export type CalendarViewMode = "day" | "week" | "month";
+export type CalendarViewMode = "day" | "week" | "month" | "map";
 
 interface CampaignCalendarProps {
   campaign: Campaign | null;
@@ -36,6 +33,7 @@ interface CampaignCalendarProps {
 export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCharger }: CampaignCalendarProps) {
   const [calendarView, setCalendarView] = useState<CalendarViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedCluster, setSelectedCluster] = useState<CityCluster | null>(null);
 
   const chargerMap = useMemo(() => {
     const m = new Map<string, AssessmentCharger>();
@@ -43,7 +41,6 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
     return m;
   }, [chargers]);
 
-  // Build a map of date -> ScheduleDay for quick lookup
   const scheduleDayMap = useMemo(() => {
     const m = new Map<string, ScheduleDay>();
     if (campaign) {
@@ -55,7 +52,8 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
   const totalScheduled = campaign?.statistics.totalChargers ?? 0;
 
   const navigate = (direction: -1 | 1) => {
-    switch (calendarView) {
+    const calView = calendarView === "map" ? "week" : calendarView;
+    switch (calView) {
       case "day":
         setCurrentDate(prev => direction === 1 ? addDays(prev, 1) : subDays(prev, 1));
         break;
@@ -71,6 +69,7 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
   const goToToday = () => setCurrentDate(new Date());
 
   const headerLabel = useMemo(() => {
+    if (calendarView === "map") return "Map View";
     switch (calendarView) {
       case "day":
         return format(currentDate, "EEEE, MMMM d, yyyy");
@@ -84,36 +83,50 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
     }
   }, [calendarView, currentDate]);
 
+  const isMapView = calendarView === "map";
+  const viewModes: CalendarViewMode[] = ["day", "week", "month", "map"];
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-card">
       {/* Calendar Header */}
       <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(-1)}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(1)}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          {!isMapView && (
+            <>
+              <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(-1)}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(1)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </>
+          )}
           <h2 className="text-sm font-semibold text-foreground ml-1">{headerLabel}</h2>
+          {isMapView && (
+            <Badge variant="secondary" className="text-xs">{chargers.length} chargers</Badge>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
-          {totalScheduled > 0 && (
+          {!isMapView && totalScheduled > 0 && (
             <Badge variant="secondary" className="text-xs">{totalScheduled} chargers scheduled</Badge>
           )}
           <div className="flex rounded-lg border border-border overflow-hidden">
-            {(["day", "week", "month"] as CalendarViewMode[]).map(v => (
+            {viewModes.map(v => (
               <button
                 key={v}
-                onClick={() => setCalendarView(v)}
-                className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+                onClick={() => {
+                  setCalendarView(v);
+                  if (v !== "map") setSelectedCluster(null);
+                }}
+                className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors flex items-center gap-1 ${
                   calendarView === v
                     ? "bg-primary text-primary-foreground"
                     : "bg-card text-muted-foreground hover:bg-muted"
                 }`}
               >
+                {v === "map" && <MapIcon className="h-3 w-3" />}
                 {v}
               </button>
             ))}
@@ -121,40 +134,61 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
         </div>
       </div>
 
-      {/* Calendar Content */}
+      {/* Content */}
       <div className="flex-1 overflow-auto">
-        {calendarView === "day" && (
-          <CalendarDayView
-            date={currentDate}
-            scheduleDayMap={scheduleDayMap}
-            chargerMap={chargerMap}
-            campaign={campaign}
-            onMarkStatus={onMarkStatus}
-            onSelectCharger={onSelectCharger}
-          />
-        )}
-        {calendarView === "week" && (
-          <CalendarWeekView
-            currentDate={currentDate}
-            scheduleDayMap={scheduleDayMap}
-            chargerMap={chargerMap}
-            campaign={campaign}
-            onMarkStatus={onMarkStatus}
-            onSelectCharger={onSelectCharger}
-          />
-        )}
-        {calendarView === "month" && (
-          <CalendarMonthView
-            currentDate={currentDate}
-            scheduleDayMap={scheduleDayMap}
-            chargerMap={chargerMap}
-            campaign={campaign}
-            onSelectCharger={onSelectCharger}
-            onDayClick={(date) => {
-              setCurrentDate(date);
-              setCalendarView("day");
-            }}
-          />
+        {isMapView ? (
+          <div className="flex h-full">
+            <div className="w-[60%] h-full border-r border-border">
+              <ChargerMapPanel
+                chargers={chargers}
+                selectedClusterKey={selectedCluster?.key || null}
+                onSelectCluster={setSelectedCluster}
+              />
+            </div>
+            <div className="w-[40%] h-full flex flex-col">
+              <MapSchedulePanel
+                selectedCluster={selectedCluster}
+                allChargers={chargers}
+                hoursPerCharger={campaign?.configuration.hoursPerCharger || 2}
+              />
+            </div>
+          </div>
+        ) : (
+          <>
+            {calendarView === "day" && (
+              <CalendarDayView
+                date={currentDate}
+                scheduleDayMap={scheduleDayMap}
+                chargerMap={chargerMap}
+                campaign={campaign}
+                onMarkStatus={onMarkStatus}
+                onSelectCharger={onSelectCharger}
+              />
+            )}
+            {calendarView === "week" && (
+              <CalendarWeekView
+                currentDate={currentDate}
+                scheduleDayMap={scheduleDayMap}
+                chargerMap={chargerMap}
+                campaign={campaign}
+                onMarkStatus={onMarkStatus}
+                onSelectCharger={onSelectCharger}
+              />
+            )}
+            {calendarView === "month" && (
+              <CalendarMonthView
+                currentDate={currentDate}
+                scheduleDayMap={scheduleDayMap}
+                chargerMap={chargerMap}
+                campaign={campaign}
+                onSelectCharger={onSelectCharger}
+                onDayClick={(date) => {
+                  setCurrentDate(date);
+                  setCalendarView("day");
+                }}
+              />
+            )}
+          </>
         )}
       </div>
     </div>
