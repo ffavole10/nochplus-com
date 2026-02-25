@@ -1,5 +1,6 @@
 import { AssessmentCharger, PriorityLevel, ChargerType } from "@/types/assessment";
 import { CampaignConfig, ScheduleDay, ScheduleItem, Campaign, CampaignStatistics } from "@/types/campaign";
+import { classifyTicketPriority } from "@/lib/ticketPriority";
 
 function isWorkingDay(date: Date, config: CampaignConfig): boolean {
   const day = date.getDay();
@@ -22,12 +23,26 @@ function getWeekNumber(date: Date, startDate: Date): number {
   return Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
 }
 
+const SCHEDULE_TO_PRIORITY: Record<string, PriorityLevel | null> = {
+  "P1-Critical": "Critical",
+  "P2-High": "High",
+  "P3-Medium": "Medium",
+  "P4-Low": "Low",
+};
+
 export function filterChargers(chargers: AssessmentCharger[], config: CampaignConfig): AssessmentCharger[] {
-  return chargers.filter(c =>
-    config.includePhases.includes(c.phase) &&
-    config.includePriorities.includes(c.priorityLevel) &&
-    config.includeTypes.includes(c.assetRecordType)
-  );
+  return chargers.filter(c => {
+    if (!config.includeTypes.includes(c.assetRecordType)) return false;
+    const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
+    if (!hasTicket) {
+      // Optimal charger — included by default (controlled separately by config panel)
+      return true;
+    }
+    const sp = classifyTicketPriority(c);
+    const pl = SCHEDULE_TO_PRIORITY[sp];
+    if (pl && !config.includePriorities.includes(pl)) return false;
+    return true;
+  });
 }
 
 export function sortChargers(chargers: AssessmentCharger[], sortBy: string): AssessmentCharger[] {
