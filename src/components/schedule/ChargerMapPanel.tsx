@@ -42,7 +42,8 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
   const clusters = useMemo(() => {
     const map = new Map<string, CityCluster>();
     chargers.forEach(c => {
-      const hasPreciseCoords = c.latitude !== null && c.longitude !== null;
+      const hasPreciseCoords = typeof c.latitude === "number" && typeof c.longitude === "number"
+        && isFinite(c.latitude) && isFinite(c.longitude);
       const coords: [number, number] | null = hasPreciseCoords
         ? [c.latitude as number, c.longitude as number]
         : getCityCoords(c.city, c.state);
@@ -89,7 +90,7 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
         className="w-full h-full"
         style={{ width: "100%", height: "100%" }}
       >
-        <ZoomableGroup minZoom={1} maxZoom={24} onMoveEnd={({ zoom: z }) => setZoom(z)}>
+        <ZoomableGroup maxZoom={8} onMoveEnd={({ coordinates, zoom: z }) => setZoom(z)}>
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
               geographies.map(geo => (
