@@ -3,6 +3,7 @@ import { useTechnicians } from "@/hooks/useTechnicians";
 import { CampaignConfig, DEFAULT_CONFIG, SortMethod } from "@/types/campaign";
 import { PriorityLevel, ChargerType, AssessmentCharger } from "@/types/assessment";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
+import { getRegion, ALL_REGIONS, REGION_COLORS, Region } from "@/lib/regionMapping";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Settings2, Users, Calendar, Clock, Filter, Plus, Minus, ChevronDown, Zap, Plug, Battery, BarChart3, MapPin } from "lucide-react";
+import { Settings2, Users, Calendar, Clock, Filter, Plus, Minus, ChevronDown, Zap, Plug, Battery, BarChart3, MapPin, Globe } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CampaignConfigPanelProps {
@@ -141,17 +142,22 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
     return classifyTicketPriority(c);
   };
 
-  // Computed metrics — custom filtering by type + priority (no phase)
+  // Computed metrics — custom filtering by type + priority + region
   const selected = useMemo(() => {
     return chargers.filter(c => {
       if (!config.includeTypes.includes(c.assetRecordType)) return false;
+      // Region filter
+      if (config.includeRegions.length > 0) {
+        const region = getRegion(c.city, c.state);
+        if (!config.includeRegions.includes(region)) return false;
+      }
       const sp = getSchedulePriority(c);
       if (sp === "Optimal") return includeOptimal;
       const pl = SCHEDULE_TO_PRIORITY[sp];
       if (pl && !config.includePriorities.includes(pl)) return false;
       return true;
     });
-  }, [chargers, config.includeTypes, config.includePriorities, includeOptimal]);
+  }, [chargers, config.includeTypes, config.includePriorities, config.includeRegions, includeOptimal]);
   const selectedCount = selected.length;
   const effectiveHours = config.workingHoursPerDay - config.breakTime;
   const chargersPerDay = Math.max(1, Math.floor(effectiveHours / (config.hoursPerCharger + config.travelBuffer)));
@@ -206,7 +212,44 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
   }, [chargers, config.includeTypes]);
 
 
-  // Estimated end date
+  // Region counts (respecting type + priority filters)
+  const regionCounts = useMemo(() => {
+    const counts: Record<Region, number> = {} as Record<Region, number>;
+    ALL_REGIONS.forEach(r => counts[r] = 0);
+    chargers.forEach(c => {
+      if (!config.includeTypes.includes(c.assetRecordType)) return;
+      const sp = getSchedulePriority(c);
+      if (sp === "Optimal" && !includeOptimal) return;
+      if (sp !== "Optimal") {
+        const pl = SCHEDULE_TO_PRIORITY[sp];
+        if (pl && !config.includePriorities.includes(pl)) return;
+      }
+      const region = getRegion(c.city, c.state);
+      counts[region]++;
+    });
+    return counts;
+  }, [chargers, config.includeTypes, config.includePriorities, includeOptimal]);
+
+  // Region counts for selected chargers (for summary)
+  const selectedRegionCounts = useMemo(() => {
+    const counts: Record<Region, number> = {} as Record<Region, number>;
+    ALL_REGIONS.forEach(r => counts[r] = 0);
+    selected.forEach(c => {
+      const region = getRegion(c.city, c.state);
+      counts[region]++;
+    });
+    return counts;
+  }, [selected]);
+
+  const toggleRegion = (region: Region) => {
+    const regions = config.includeRegions.includes(region)
+      ? config.includeRegions.filter(r => r !== region)
+      : [...config.includeRegions, region];
+    update({ includeRegions: regions });
+  };
+
+  const clearRegions = () => update({ includeRegions: [] });
+
   const estimatedEndDate = useMemo(() => {
     if (!config.startDate || selectedCount === 0) return null;
     const start = new Date(config.startDate + "T00:00:00");
@@ -343,6 +386,42 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
 
           <Separator />
 
+          {/* REGION FILTER */}
+          <Collapsible defaultOpen>
+            <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground w-full">
+              <Globe className="h-3.5 w-3.5" /> Region
+              {config.includeRegions.length > 0 && (
+                <Badge variant="secondary" className="text-[9px] h-4 px-1 ml-1">{config.includeRegions.length}</Badge>
+              )}
+              <ChevronDown className="h-3 w-3 ml-auto" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              {config.includeRegions.length > 0 && (
+                <button onClick={clearRegions} className="text-[10px] text-primary hover:underline mb-1">Clear</button>
+              )}
+              <div className="space-y-1">
+                {ALL_REGIONS.map(r => {
+                  const count = regionCounts[r];
+                  if (count === 0) return null;
+                  return (
+                    <label key={r} className="flex items-center gap-2 text-xs cursor-pointer">
+                      <Checkbox
+                        checked={config.includeRegions.length === 0 || config.includeRegions.includes(r)}
+                        onCheckedChange={() => toggleRegion(r)}
+                        className="h-3.5 w-3.5"
+                      />
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: REGION_COLORS[r] }} />
+                      <span className="truncate">{r}</span>
+                      <span className="text-muted-foreground ml-auto flex-shrink-0">({count})</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          <Separator />
+
           {/* FILTERS */}
           <div>
             <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
@@ -376,7 +455,6 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
                 ))}
               </div>
             </div>
-
 
             {/* Sort By */}
             <div className="mt-3">
@@ -422,6 +500,19 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
                   <span className="font-medium ml-auto">{priorityCounts[p]} ({selectedCount > 0 ? Math.round((priorityCounts[p] / selectedCount) * 100) : 0}%)</span>
                 </div>
               ))}
+              <div className="text-muted-foreground mt-1">By Region:</div>
+              <div></div>
+              {ALL_REGIONS.map(r => {
+                const count = selectedRegionCounts[r];
+                if (count === 0) return null;
+                return (
+                  <div key={r} className="flex items-center gap-1 col-span-2">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: REGION_COLORS[r] }} />
+                    <span className="truncate">{r}:</span>
+                    <span className="font-medium ml-auto">{count}</span>
+                  </div>
+                );
+              })}
             </div>
             <Separator className="my-2" />
             <div className="text-[11px] space-y-0.5">
