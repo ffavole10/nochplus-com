@@ -3,11 +3,26 @@ import { ScheduleView } from "@/components/schedule/ScheduleView";
 import { useAssessmentData } from "@/hooks/useAssessmentData";
 import { useCampaignManager } from "@/hooks/useCampaignManager";
 import { useAuth } from "@/hooks/useAuth";
+import { useCampaignContext } from "@/contexts/CampaignContext";
+import { useChargerRecords } from "@/hooks/useCampaigns";
+import { chargerRecordToAssessment } from "@/lib/assessmentParser";
+import { AssessmentCharger } from "@/types/assessment";
 import { toast } from "sonner";
 
 const Schedule = () => {
-  const { chargers, importChargers, updateCharger, moveChargerToPhase, clearData } = useAssessmentData();
+  const { chargers: localChargers, importChargers, updateCharger, moveChargerToPhase, clearData } = useAssessmentData();
   const { session } = useAuth();
+  const { selectedCampaignId, selectedCampaignName } = useCampaignContext();
+  const { data: chargerRecords = [] } = useChargerRecords(selectedCampaignId || null);
+
+  // Convert DB charger records to AssessmentCharger format
+  const dbChargers: AssessmentCharger[] = useMemo(() => {
+    return chargerRecords.map(chargerRecordToAssessment);
+  }, [chargerRecords]);
+
+  // Use DB chargers when a campaign is selected, otherwise fall back to local
+  const chargers = selectedCampaignId ? dbChargers : localChargers;
+
   const {
     campaigns,
     activeCampaign,
@@ -33,7 +48,7 @@ const Schedule = () => {
         chargers={chargers}
         activeCampaign={activeCampaign}
         campaigns={campaigns}
-        campaignName=""
+        campaignName={selectedCampaignName || ""}
         onCreateCampaign={addCampaign}
         onStartCampaign={startCampaign}
         onEndCampaign={(id) => {
