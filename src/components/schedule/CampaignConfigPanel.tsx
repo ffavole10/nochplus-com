@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { CampaignConfig, DEFAULT_CONFIG, SortMethod } from "@/types/campaign";
-import { Phase, PriorityLevel, ChargerType, AssessmentCharger } from "@/types/assessment";
+import { Phase, PriorityLevel, ChargerType, AssessmentCharger, TicketPriority } from "@/types/assessment";
 import { filterChargers } from "@/lib/scheduleGenerator";
+import { classifyTicketPriority } from "@/lib/ticketPriority";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,26 @@ const PRIORITY_LABELS: Record<PriorityLevel, string> = {
   Medium: "P3 Medium",
   Low: "P4 Low",
 };
+
+type SchedulePriority = "P1-Critical" | "P2-High" | "P3-Medium" | "P4-Low" | "Optimal";
+
+const SCHEDULE_PRIORITY_CONFIG: Record<SchedulePriority, { color: string; bg: string; dotColor: string }> = {
+  "P1-Critical": { color: "text-critical", bg: "bg-critical/10 text-critical border-critical/30", dotColor: "hsl(var(--critical))" },
+  "P2-High": { color: "text-orange-500", bg: "bg-degraded/10 text-degraded border-degraded/30", dotColor: "hsl(var(--degraded))" },
+  "P3-Medium": { color: "text-yellow-500", bg: "bg-yellow-500/10 text-yellow-600 border-yellow-500/30", dotColor: "#eab308" },
+  "P4-Low": { color: "text-optimal", bg: "bg-optimal/10 text-optimal border-optimal/30", dotColor: "hsl(var(--optimal))" },
+  "Optimal": { color: "text-blue-500", bg: "bg-blue-500/10 text-blue-600 border-blue-500/30", dotColor: "hsl(210, 80%, 55%)" },
+};
+
+const SCHEDULE_PRIORITY_LABELS: Record<SchedulePriority, string> = {
+  "P1-Critical": "P1 Critical",
+  "P2-High": "P2 High",
+  "P3-Medium": "P3 Medium",
+  "P4-Low": "P4 Low",
+  "Optimal": "Optimal",
+};
+
+const ALL_SCHEDULE_PRIORITIES: SchedulePriority[] = ["P1-Critical", "P2-High", "P3-Medium", "P4-Low", "Optimal"];
 
 const TYPE_ICONS: Record<ChargerType, React.ReactNode> = {
   "AC | Level 2": <Plug className="h-3 w-3" />,
@@ -105,8 +126,15 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
   }, [selected]);
 
   const priorityCounts = useMemo(() => {
-    const counts: Record<string, number> = { Critical: 0, High: 0, Medium: 0, Low: 0 };
-    selected.forEach(c => counts[c.priorityLevel]++);
+    const counts: Record<SchedulePriority, number> = { "P1-Critical": 0, "P2-High": 0, "P3-Medium": 0, "P4-Low": 0, "Optimal": 0 };
+    selected.forEach(c => {
+      const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
+      if (hasTicket) {
+        counts[classifyTicketPriority(c)]++;
+      } else {
+        counts["Optimal"]++;
+      }
+    });
     return counts;
   }, [selected]);
 
@@ -118,8 +146,15 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
   }, [chargers]);
 
   const allPriorityCounts = useMemo(() => {
-    const counts: Record<string, number> = { Critical: 0, High: 0, Medium: 0, Low: 0 };
-    chargers.forEach(c => counts[c.priorityLevel]++);
+    const counts: Record<SchedulePriority, number> = { "P1-Critical": 0, "P2-High": 0, "P3-Medium": 0, "P4-Low": 0, "Optimal": 0 };
+    chargers.forEach(c => {
+      const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
+      if (hasTicket) {
+        counts[classifyTicketPriority(c)]++;
+      } else {
+        counts["Optimal"]++;
+      }
+    });
     return counts;
   }, [chargers]);
 
@@ -294,10 +329,10 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
             <div className="mt-3">
               <Label className="text-[11px]">Priority Level</Label>
               <div className="space-y-1 mt-1">
-                {ALL_PRIORITIES.map(p => (
+                {ALL_SCHEDULE_PRIORITIES.map(p => (
                   <label key={p} className="flex items-center gap-2 text-xs cursor-pointer">
-                    <Checkbox checked={config.includePriorities.includes(p)} onCheckedChange={() => togglePriority(p)} className="h-3.5 w-3.5" />
-                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${PRIORITY_COLORS[p]}`}>{PRIORITY_LABELS[p]}</Badge>
+                    <Checkbox checked={true} className="h-3.5 w-3.5" disabled />
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${SCHEDULE_PRIORITY_CONFIG[p].bg}`}>{SCHEDULE_PRIORITY_LABELS[p]}</Badge>
                     <span className="text-muted-foreground ml-auto">({allPriorityCounts[p]})</span>
                   </label>
                 ))}
@@ -355,10 +390,10 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
               ))}
               <div className="text-muted-foreground mt-1">By Priority:</div>
               <div></div>
-              {ALL_PRIORITIES.map(p => (
+              {ALL_SCHEDULE_PRIORITIES.map(p => (
                 <div key={p} className="flex items-center gap-1 col-span-2">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: p === "Critical" ? "hsl(var(--critical))" : p === "High" ? "hsl(var(--degraded))" : p === "Medium" ? "#eab308" : "hsl(var(--optimal))" }} />
-                  <span>{PRIORITY_LABELS[p]}:</span>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: SCHEDULE_PRIORITY_CONFIG[p].dotColor }} />
+                  <span>{SCHEDULE_PRIORITY_LABELS[p]}:</span>
                   <span className="font-medium ml-auto">{priorityCounts[p]} ({selectedCount > 0 ? Math.round((priorityCounts[p] / selectedCount) * 100) : 0}%)</span>
                 </div>
               ))}
