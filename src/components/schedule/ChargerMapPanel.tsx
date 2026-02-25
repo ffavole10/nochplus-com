@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
 import { AssessmentCharger } from "@/types/assessment";
 import { getCityCoords } from "@/lib/cityCoordinates";
 import { getRegion, REGION_COLORS, Region } from "@/lib/regionMapping";
@@ -84,64 +84,66 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
         className="w-full h-full"
         style={{ width: "100%", height: "100%" }}
       >
-        <Geographies geography={GEO_URL}>
-          {({ geographies }) =>
-            geographies.map(geo => (
-              <Geography
-                key={geo.rpiid}
-                geography={geo}
-                fill="hsl(var(--muted))"
-                stroke="hsl(var(--border))"
-                strokeWidth={0.5}
-                style={{
-                  default: { outline: "none" },
-                  hover: { fill: "hsl(var(--muted-foreground) / 0.2)", outline: "none" },
-                  pressed: { outline: "none" },
-                }}
-              />
-            ))
-          }
-        </Geographies>
-        {clusters.map(cluster => {
-          const size = getDotSize(cluster.chargers.length);
-          const isSelected = selectedClusterKey === cluster.key;
-          const color = PRIORITY_DOT_COLORS[cluster.dominantPriority] || "#22c55e";
-          return (
-            <Marker key={cluster.key} coordinates={[cluster.coords[1], cluster.coords[0]]}>
-              <circle
-                r={size}
-                fill={color}
-                fillOpacity={isSelected ? 1 : 0.75}
-                stroke={isSelected ? "hsl(var(--primary))" : "#fff"}
-                strokeWidth={isSelected ? 2.5 : 1}
-                className="cursor-pointer transition-all"
-                onMouseEnter={(e) => {
-                  setHoveredCluster(cluster);
-                  setTooltipPos({ x: e.clientX, y: e.clientY });
-                }}
-                onMouseMove={(e) => {
-                  setTooltipPos({ x: e.clientX, y: e.clientY });
-                }}
-                onMouseLeave={() => setHoveredCluster(null)}
-                onClick={() => onSelectCluster(isSelected ? null : cluster)}
-              />
-              {cluster.chargers.length >= 10 && (
-                <text
-                  textAnchor="middle"
-                  y={size * 0.35}
+        <ZoomableGroup>
+          <Geographies geography={GEO_URL}>
+            {({ geographies }) =>
+              geographies.map(geo => (
+                <Geography
+                  key={geo.rpiid}
+                  geography={geo}
+                  fill="hsl(var(--muted))"
+                  stroke="hsl(var(--border))"
+                  strokeWidth={0.5}
                   style={{
-                    fontSize: Math.max(8, size * 0.8),
-                    fill: "#fff",
-                    fontWeight: 700,
-                    pointerEvents: "none",
+                    default: { outline: "none" },
+                    hover: { fill: "hsl(var(--muted-foreground) / 0.2)", outline: "none" },
+                    pressed: { outline: "none" },
                   }}
-                >
-                  {cluster.chargers.length}
-                </text>
-              )}
-            </Marker>
-          );
-        })}
+                />
+              ))
+            }
+          </Geographies>
+          {clusters.map(cluster => {
+            const size = getDotSize(cluster.chargers.length);
+            const isSelected = selectedClusterKey === cluster.key;
+            const color = PRIORITY_DOT_COLORS[cluster.dominantPriority] || "#22c55e";
+            return (
+              <Marker key={cluster.key} coordinates={[cluster.coords[1], cluster.coords[0]]}>
+                <circle
+                  r={size}
+                  fill={color}
+                  fillOpacity={isSelected ? 1 : 0.75}
+                  stroke={isSelected ? "hsl(var(--primary))" : "#fff"}
+                  strokeWidth={isSelected ? 2.5 : 1}
+                  className="cursor-pointer transition-all"
+                  onMouseEnter={(e) => {
+                    setHoveredCluster(cluster);
+                    setTooltipPos({ x: e.clientX, y: e.clientY });
+                  }}
+                  onMouseMove={(e) => {
+                    setTooltipPos({ x: e.clientX, y: e.clientY });
+                  }}
+                  onMouseLeave={() => setHoveredCluster(null)}
+                  onClick={() => onSelectCluster(isSelected ? null : cluster)}
+                />
+                {cluster.chargers.length >= 10 && (
+                  <text
+                    textAnchor="middle"
+                    y={size * 0.35}
+                    style={{
+                      fontSize: Math.max(8, size * 0.8),
+                      fill: "#fff",
+                      fontWeight: 700,
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {cluster.chargers.length}
+                  </text>
+                )}
+              </Marker>
+            );
+          })}
+        </ZoomableGroup>
       </ComposableMap>
 
       {/* Tooltip */}
