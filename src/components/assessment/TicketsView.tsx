@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, ExternalLink, PauseCircle } from "lucide-react";
+import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, ExternalLink, PauseCircle, ShieldAlert } from "lucide-react";
 import { AssessmentCharger, TicketPriority } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
@@ -13,11 +13,15 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { AgingBreakdownChart } from "@/components/flagged/AgingBreakdownChart";
+import { GeographicMapView } from "@/components/flagged/GeographicMapView";
+import { GroupBreakdownChart } from "@/components/flagged/GroupBreakdownChart";
+import { getSlaStatus, SlaStatus, AgeBand, getAgeBand } from "@/components/flagged/slaConstants";
 
 interface TicketsViewProps {
   chargers: AssessmentCharger[];
   onSelectCharger: (charger: AssessmentCharger) => void;
-  onApproveToServiceDesk?: (charger: AssessmentCharger) => string | null; // returns ticketId or null
+  onApproveToServiceDesk?: (charger: AssessmentCharger) => string | null;
 }
 
 const PRIORITY_CONFIG: Record<TicketPriority, { color: string; bg: string; label: string }> = {
@@ -27,14 +31,11 @@ const PRIORITY_CONFIG: Record<TicketPriority, { color: string; bg: string; label
   "P4-Low": { color: "text-optimal", bg: "bg-optimal text-optimal-foreground", label: "P4 — Low" },
 };
 
-// classifyTicketPriority is now imported from @/lib/ticketPriority
-
 function generateRecommendation(charger: AssessmentCharger, priority: TicketPriority, ageDays: number): string {
   const subject = charger.ticketSubject?.toLowerCase() || "";
   const group = charger.ticketGroup?.toLowerCase() || "";
   const parts: string[] = [];
 
-  // Subject-based recommendations
   if (subject.includes("offline") || subject.includes("not communicating") || subject.includes("communication")) {
     parts.push("Verify network connectivity and modem/SIM status. Check if the charger has power and the communication module is active. Consider a remote reboot if supported.");
   } else if (subject.includes("error") || subject.includes("fault")) {
@@ -51,26 +52,41 @@ function generateRecommendation(charger: AssessmentCharger, priority: TicketPrio
     parts.push("Conduct a full diagnostic assessment including power systems, communication, and physical inspection.");
   }
 
-  // Priority-based urgency
   if (priority === "P1-Critical") {
     parts.push("URGENT: Escalate immediately. Assign senior technician for same-day dispatch.");
   } else if (priority === "P2-High") {
     parts.push("Schedule priority service within 48 hours. Notify account manager.");
   }
 
-  // Age-based recommendation
   if (ageDays > 30) {
     parts.push(`Ticket has been open for ${ageDays} days — consider escalation to engineering team.`);
   } else if (ageDays > 14) {
     parts.push(`Ticket aging at ${ageDays} days — follow up with assigned group.`);
   }
 
-  // Group-based
   if (group && group !== "unknown") {
     parts.push(`Currently assigned to: ${charger.ticketGroup}. Verify group has bandwidth.`);
   }
 
   return parts.join(" ");
+}
+
+function SlaBadge({ status }: { status: SlaStatus }) {
+  if (status === "breached") {
+    return (
+      <Badge className="bg-critical text-critical-foreground gap-1 text-[10px] h-5">
+        <ShieldAlert className="h-3 w-3" /> SLA Breach
+      </Badge>
+    );
+  }
+  if (status === "at_risk") {
+    return (
+      <Badge className="bg-degraded text-degraded-foreground gap-1 text-[10px] h-5">
+        <AlertTriangle className="h-3 w-3" /> At Risk
+      </Badge>
+    );
+  }
+  return null;
 }
 
 export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk }: TicketsViewProps) {
@@ -93,7 +109,12 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
   const [createdTicketIds, setCreatedTicketIds] = useState<Record<string, string>>(() => {
     try { const s = localStorage.getItem("ticket-created-ids"); return s ? JSON.parse(s) : {}; } catch { return {}; }
   });
-  
+
+  // New filter states for the 3 new components
+  const [agingFilter, setAgingFilter] = useState<{ band: AgeBand; priority: TicketPriority } | null>(null);
+  const [locationFilter, setLocationFilter] = useState<string | null>(null); // "city|state" or just state
+  const [locationFilterType, setLocationFilterType] = useState<"city" | "state" | null>(null);
+  const [groupFilter, setGroupFilter] = useState<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem("ticket-review-statuses", JSON.stringify(reviewStatuses));
@@ -103,10 +124,8 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
     localStorage.setItem("ticket-account-managers", JSON.stringify(accountManagers));
   }, [accountManagers]);
 
-  // Helper: extract city/state from address if not set
   const enrichLocation = useCallback((c: AssessmentCharger) => {
     if (c.city && c.state) return c;
-    // Try parsing from address: "123 Main St, Jacksonville, FL 32221"
     const parts = c.address?.split(",").map(p => p.trim()) || [];
     let city = c.city;
     let state = c.state;
@@ -131,10 +150,12 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
         const enriched = enrichLocation(c);
         const priority = classifyTicketPriority(enriched);
         const ageDays = enriched.ticketCreatedDate ? differenceInDays(new Date(), new Date(enriched.ticketCreatedDate)) : 0;
+        const slaStatus = getSlaStatus(priority, ageDays);
         return {
           charger: enriched,
           ticketPriority: priority,
           ageDays,
+          slaStatus,
           recommendation: generateRecommendation(enriched, priority, ageDays),
         };
       })
@@ -181,11 +202,36 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
         return reviewFilter === status;
       });
     }
+
+    // Aging filter
+    if (agingFilter) {
+      result = result.filter(t =>
+        getAgeBand(t.ageDays) === agingFilter.band && t.ticketPriority === agingFilter.priority
+      );
+    }
+
+    // Location filter
+    if (locationFilter && locationFilterType === "city") {
+      const [city, state] = locationFilter.split("|");
+      result = result.filter(t =>
+        t.charger.city?.toLowerCase() === city.toLowerCase() &&
+        t.charger.state?.toLowerCase() === state.toLowerCase()
+      );
+    } else if (locationFilter && locationFilterType === "state") {
+      result = result.filter(t => t.charger.state === locationFilter);
+    }
+
+    // Group filter
+    if (groupFilter) {
+      result = result.filter(t => (t.charger.ticketGroup || "Uncategorized") === groupFilter);
+    }
+
     return result;
-  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, typeFilter, amFilter, reviewFilter, accountManagers, reviewStatuses]);
+  }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, typeFilter, amFilter, reviewFilter, accountManagers, reviewStatuses, agingFilter, locationFilter, locationFilterType, groupFilter]);
 
   const stats = useMemo(() => {
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
+    const breached = open.filter(t => t.slaStatus === "breached");
     return {
       total: ticketChargers.length,
       open: open.length,
@@ -194,12 +240,26 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
       p2: open.filter(t => t.ticketPriority === "P2-High").length,
       p3: open.filter(t => t.ticketPriority === "P3-Medium").length,
       p4: open.filter(t => t.ticketPriority === "P4-Low").length,
+      slaBreached: breached.length,
+      slaBreachedPct: open.length > 0 ? Math.round(breached.length / open.length * 100) : 0,
     };
   }, [ticketChargers]);
 
+  // Data for the new chart components (only open tickets)
+  const openTickets = useMemo(() => ticketChargers.filter(t => t.charger.hasOpenTicket), [ticketChargers]);
+
+  const hasAnyActiveChartFilter = agingFilter || locationFilter || groupFilter;
+
+  const clearAllChartFilters = () => {
+    setAgingFilter(null);
+    setLocationFilter(null);
+    setLocationFilterType(null);
+    setGroupFilter(null);
+  };
+
   return (
     <div className="space-y-6 p-6">
-      {/* KPI Cards */}
+      {/* KPI Cards — 7 cards including SLA Breached */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <Card className="metric-card border-l-4 border-l-critical">
           <CardContent className="p-4 text-center">
@@ -238,7 +298,81 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
             <p className="text-2xl font-bold text-optimal">{stats.p4}</p>
           </CardContent>
         </Card>
+        {/* NEW: SLA Breached stat card */}
+        <Card className={`metric-card border-l-4 border-l-critical ${stats.slaBreached > 0 ? "bg-critical/5" : ""}`}>
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              <ShieldAlert className="h-3.5 w-3.5" /> SLA Breached
+            </p>
+            <p className="text-2xl font-bold text-critical">{stats.slaBreached}</p>
+            <p className="text-xs text-muted-foreground mt-1">{stats.slaBreachedPct}% of open</p>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Aging Breakdown Chart */}
+      <AgingBreakdownChart
+        tickets={openTickets}
+        activeFilter={agingFilter}
+        onFilter={(band, priority) => {
+          setAgingFilter({ band, priority });
+          setLocationFilter(null);
+          setLocationFilterType(null);
+          setGroupFilter(null);
+        }}
+        onClear={() => setAgingFilter(null)}
+      />
+
+      {/* Geographic Map View */}
+      <GeographicMapView
+        tickets={openTickets.map(t => ({
+          city: t.charger.city,
+          state: t.charger.state,
+          ticketPriority: t.ticketPriority,
+          ticketId: t.charger.ticketId,
+        }))}
+        activeLocationFilter={locationFilter}
+        onFilterCity={(city, state) => {
+          setLocationFilter(`${city}|${state}`);
+          setLocationFilterType("city");
+          setAgingFilter(null);
+          setGroupFilter(null);
+        }}
+        onFilterState={(state) => {
+          setLocationFilter(state);
+          setLocationFilterType("state");
+          setAgingFilter(null);
+          setGroupFilter(null);
+        }}
+        onClear={() => { setLocationFilter(null); setLocationFilterType(null); }}
+      />
+
+      {/* Group / Category Breakdown */}
+      <GroupBreakdownChart
+        tickets={openTickets.map(t => ({
+          ticketPriority: t.ticketPriority,
+          group: t.charger.ticketGroup,
+        }))}
+        activeGroupFilter={groupFilter}
+        onFilter={(group) => {
+          setGroupFilter(group);
+          setAgingFilter(null);
+          setLocationFilter(null);
+          setLocationFilterType(null);
+        }}
+        onClear={() => setGroupFilter(null)}
+      />
+
+      {/* Active chart filter indicator */}
+      {hasAnyActiveChartFilter && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-4 py-2">
+          <AlertTriangle className="h-4 w-4 text-primary" />
+          <span>Ticket list filtered by chart selection.</span>
+          <Button size="sm" variant="ghost" className="text-xs h-6 ml-auto" onClick={clearAllChartFilters}>
+            Clear all chart filters
+          </Button>
+        </div>
+      )}
 
       {/* Review Status Filter Tabs */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -250,7 +384,6 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
           </TabsList>
         </Tabs>
-
       </div>
 
       {/* Ticket List */}
@@ -258,7 +391,7 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
         <TicketsEmptyState />
       ) : (
         <div className="grid gap-3">
-          {filtered.map(({ charger, ticketPriority, ageDays, recommendation }) => {
+          {filtered.map(({ charger, ticketPriority, ageDays, slaStatus, recommendation }) => {
             const config = PRIORITY_CONFIG[ticketPriority];
             const isExpanded = expandedId === charger.id;
             return (
@@ -287,6 +420,8 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
                         {charger.ticketId && (
                           <Badge variant="outline" className="text-xs">#{charger.ticketId}</Badge>
                         )}
+                        {/* SLA Breach / At Risk badge */}
+                        <SlaBadge status={slaStatus} />
                         {/* Review status badge */}
                         {reviewStatuses[charger.id] === "approved" && (
                           <Badge className="bg-optimal text-optimal-foreground gap-1">
