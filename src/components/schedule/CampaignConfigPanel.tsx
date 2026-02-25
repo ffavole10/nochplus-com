@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { CampaignConfig, DEFAULT_CONFIG, SortMethod } from "@/types/campaign";
-import { Phase, PriorityLevel, ChargerType, AssessmentCharger, TicketPriority } from "@/types/assessment";
-import { filterChargers } from "@/lib/scheduleGenerator";
+import { PriorityLevel, ChargerType, AssessmentCharger } from "@/types/assessment";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +19,7 @@ interface CampaignConfigPanelProps {
   onChange: (config: CampaignConfig) => void;
 }
 
-const ALL_PHASES: Phase[] = ["Needs Assessment", "Scheduled", "In Progress", "Completed", "Deferred"];
+
 const ALL_PRIORITIES: PriorityLevel[] = ["Critical", "High", "Medium", "Low"];
 const ALL_TYPES: ChargerType[] = ["AC | Level 2", "DC | Level 3"];
 const DAY_NAMES = ["S", "M", "T", "W", "T", "F", "S"];
@@ -78,12 +77,6 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
     update({ workingDays: days });
   };
 
-  const togglePhase = (phase: Phase) => {
-    const phases = config.includePhases.includes(phase)
-      ? config.includePhases.filter(p => p !== phase)
-      : [...config.includePhases, phase];
-    update({ includePhases: phases });
-  };
 
   const togglePriority = (priority: PriorityLevel) => {
     const priorities = config.includePriorities.includes(priority)
@@ -134,14 +127,24 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
     update({ technicians: config.technicians.filter((_, i) => i !== index) });
   };
 
-  // Computed metrics — filter by config then apply Optimal toggle
+  // Helper: classify a charger into SchedulePriority
+  const getSchedulePriority = (c: AssessmentCharger): SchedulePriority => {
+    const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
+    if (!hasTicket) return "Optimal";
+    return classifyTicketPriority(c);
+  };
+
+  // Computed metrics — custom filtering by type + priority (no phase)
   const selected = useMemo(() => {
-    const base = filterChargers(chargers, config);
-    if (!includeOptimal) {
-      return base.filter(c => !!(c.ticketId || c.ticketCreatedDate));
-    }
-    return base;
-  }, [chargers, config, includeOptimal]);
+    return chargers.filter(c => {
+      if (!config.includeTypes.includes(c.assetRecordType)) return false;
+      const sp = getSchedulePriority(c);
+      if (sp === "Optimal") return includeOptimal;
+      const pl = SCHEDULE_TO_PRIORITY[sp];
+      if (pl && !config.includePriorities.includes(pl)) return false;
+      return true;
+    });
+  }, [chargers, config.includeTypes, config.includePriorities, includeOptimal]);
   const selectedCount = selected.length;
   const effectiveHours = config.workingHoursPerDay - config.breakTime;
   const chargersPerDay = Math.max(1, Math.floor(effectiveHours / (config.hoursPerCharger + config.travelBuffer)));
@@ -170,32 +173,31 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
     return counts;
   }, [selected]);
 
-  // All available counts for filters
+  // Type counts filtered by current priority selection
   const allTypeCounts = useMemo(() => {
     const counts: Record<string, number> = { "AC | Level 2": 0, "DC | Level 3": 0 };
-    chargers.forEach(c => counts[c.assetRecordType]++);
+    chargers.forEach(c => {
+      const sp = getSchedulePriority(c);
+      if (sp === "Optimal" && !includeOptimal) return;
+      if (sp !== "Optimal") {
+        const pl = SCHEDULE_TO_PRIORITY[sp];
+        if (pl && !config.includePriorities.includes(pl)) return;
+      }
+      counts[c.assetRecordType]++;
+    });
     return counts;
-  }, [chargers]);
+  }, [chargers, config.includePriorities, includeOptimal]);
 
+  // Priority counts filtered by current type selection
   const allPriorityCounts = useMemo(() => {
     const counts: Record<SchedulePriority, number> = { "P1-Critical": 0, "P2-High": 0, "P3-Medium": 0, "P4-Low": 0, "Optimal": 0 };
     chargers.forEach(c => {
-      const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
-      if (hasTicket) {
-        counts[classifyTicketPriority(c)]++;
-      } else {
-        counts["Optimal"]++;
-      }
+      if (!config.includeTypes.includes(c.assetRecordType)) return;
+      counts[getSchedulePriority(c)]++;
     });
     return counts;
-  }, [chargers]);
+  }, [chargers, config.includeTypes]);
 
-  const allPhaseCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    ALL_PHASES.forEach(p => counts[p] = 0);
-    chargers.forEach(c => counts[c.phase]++);
-    return counts;
-  }, [chargers]);
 
   // Estimated end date
   const estimatedEndDate = useMemo(() => {
@@ -371,19 +373,6 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
               </div>
             </div>
 
-            {/* Phase */}
-            <div className="mt-3">
-              <Label className="text-[11px]">Current Phase</Label>
-              <div className="space-y-1 mt-1">
-                {ALL_PHASES.map(phase => (
-                  <label key={phase} className="flex items-center gap-2 text-xs cursor-pointer">
-                    <Checkbox checked={config.includePhases.includes(phase)} onCheckedChange={() => togglePhase(phase)} className="h-3.5 w-3.5" />
-                    {phase}
-                    <span className="text-muted-foreground ml-auto">({allPhaseCounts[phase]})</span>
-                  </label>
-                ))}
-              </div>
-            </div>
 
             {/* Sort By */}
             <div className="mt-3">
