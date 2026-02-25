@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import { TicketPriority } from "@/types/assessment";
 import { AGE_BANDS, AgeBand, getAgeBand, PRIORITY_COLORS } from "./slaConstants";
-import { X } from "lucide-react";
+import { X, Clock } from "lucide-react";
 
 const BUCKET_COLORS: Record<AgeBand, string> = {
   "0-30": PRIORITY_COLORS["P4-Low"],
@@ -94,7 +94,9 @@ export function AgingBreakdownChart({ tickets, activeFilter, onFilter, onClear }
   return (
     <Card className="border-border/60">
       <CardHeader className="pb-1 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold">Ticket Aging Overview</CardTitle>
+        <CardTitle className="text-sm font-semibold text-primary flex items-center gap-2">
+          <Clock className="h-4 w-4" /> Ticket Aging Overview
+        </CardTitle>
         {activeFilter && (
           <Button size="sm" variant="ghost" className="gap-1 text-xs h-7" onClick={onClear}>
             <X className="h-3 w-3" /> Clear filter
