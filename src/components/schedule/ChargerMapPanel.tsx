@@ -49,7 +49,7 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
         : getCityCoords(c.city, c.state);
       if (!coords) return;
       const key = hasPreciseCoords
-        ? `${(c.latitude as number).toFixed(4)},${(c.longitude as number).toFixed(4)}`
+        ? `${(c.latitude as number).toFixed(6)},${(c.longitude as number).toFixed(6)}`
         : `${(c.city || "").toLowerCase()},${(c.state || "").toLowerCase()}`;
       if (!map.has(key)) {
         map.set(key, {
@@ -78,8 +78,8 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
   }, [chargers]);
 
   const getDotSize = (count: number) => {
-    const base = count <= 1 ? 4 : count >= 50 ? 14 : 4 + (count / 50) * 10;
-    return Math.max(2, base / zoom);
+    const base = count <= 1 ? 3 : count >= 50 ? 14 : 3 + (count / 50) * 11;
+    return Math.max(1.25, base / Math.pow(zoom, 1.2));
   };
 
   return (
@@ -90,7 +90,7 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster 
         className="w-full h-full"
         style={{ width: "100%", height: "100%" }}
       >
-        <ZoomableGroup maxZoom={8} onMoveEnd={({ coordinates, zoom: z }) => setZoom(z)}>
+        <ZoomableGroup maxZoom={20} onMoveEnd={({ coordinates, zoom: z }) => setZoom(z)}>
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
               geographies.map(geo => (
