@@ -118,36 +118,35 @@ export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allCha
         <Switch checked={tripMode} onCheckedChange={setTripMode} className="scale-75" />
       </div>
 
-      {/* Charger list grouped by region */}
+      {/* Charger list */}
       <ScrollArea className="flex-1">
-        <div className="p-3 space-y-4">
-          {grouped.map(([region, regionChargers]) => {
-            const trip = tripEstimate(regionChargers.length);
-            return (
-              <div key={region}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: REGION_COLORS[region] }} />
-                  <span className="text-xs font-semibold text-foreground">{region}</span>
-                  <Badge variant="secondary" className="text-[9px] h-4 px-1">{regionChargers.length}</Badge>
-                </div>
-
-                {tripMode && (
-                  <div className="mb-2 p-2 rounded-md bg-muted/50 border border-border text-[10px] flex items-center gap-3">
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Plane className="h-3 w-3" />
-                      <span>{trip.travelDays}d travel</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{trip.workingDays}d work</span>
-                    </div>
-                    <div className="font-medium text-foreground ml-auto">
-                      {trip.totalDays} days total
-                    </div>
+        <div className="p-3 space-y-1">
+          {selectedCluster ? (
+            // Grouped by region when a specific cluster is selected
+            grouped.map(([region, regionChargers]) => {
+              const trip = tripEstimate(regionChargers.length);
+              return (
+                <div key={region} className="space-y-1 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: REGION_COLORS[region] }} />
+                    <span className="text-xs font-semibold text-foreground">{region}</span>
+                    <Badge variant="secondary" className="text-[9px] h-4 px-1">{regionChargers.length}</Badge>
                   </div>
-                )}
-
-                <div className="space-y-1">
+                  {tripMode && (
+                    <div className="mb-2 p-2 rounded-md bg-muted/50 border border-border text-[10px] flex items-center gap-3">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Plane className="h-3 w-3" />
+                        <span>{trip.travelDays}d travel</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>{trip.workingDays}d work</span>
+                      </div>
+                      <div className="font-medium text-foreground ml-auto">
+                        {trip.totalDays} days total
+                      </div>
+                    </div>
+                  )}
                   {regionChargers.map(c => {
                     const priority = getPriority(c);
                     return (
@@ -156,9 +155,7 @@ export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allCha
                           <p className="text-[11px] font-medium text-foreground truncate">{c.assetName || c.evseId || c.id.slice(0, 8)}</p>
                           <p className="text-[10px] text-muted-foreground">{c.city}, {c.state}</p>
                         </div>
-                        <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>
-                          {priority}
-                        </Badge>
+                        <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>{priority}</Badge>
                         <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                           {c.assetRecordType === "DC | Level 3" ? <Zap className="h-2.5 w-2.5" /> : <Plug className="h-2.5 w-2.5" />}
                         </span>
@@ -168,11 +165,31 @@ export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allCha
                       </div>
                     );
                   })}
+                  <Separator className="mt-3" />
                 </div>
-                <Separator className="mt-3" />
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            // Flat list when viewing viewport chargers (no region headers)
+            displayChargers.map(c => {
+              const priority = getPriority(c);
+              return (
+                <div key={c.id} className="flex items-center gap-2 p-2 rounded-md border border-border bg-card hover:bg-muted/50 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-medium text-foreground truncate">{c.assetName || c.evseId || c.id.slice(0, 8)}</p>
+                    <p className="text-[10px] text-muted-foreground">{c.city}, {c.state}</p>
+                  </div>
+                  <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>{priority}</Badge>
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                    {c.assetRecordType === "DC | Level 3" ? <Zap className="h-2.5 w-2.5" /> : <Plug className="h-2.5 w-2.5" />}
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" title="Add to Schedule">
+                    <CalendarPlus className="h-3 w-3" />
+                  </Button>
+                </div>
+              );
+            })
+          )}
         </div>
       </ScrollArea>
     </div>
