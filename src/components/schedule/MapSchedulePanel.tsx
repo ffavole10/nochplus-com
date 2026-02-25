@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AssessmentCharger } from "@/types/assessment";
 import { getRegion, REGION_COLORS, Region } from "@/lib/regionMapping";
+import { getCityCoords } from "@/lib/cityCoordinates";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalendarPlus, Plane, Clock, MapPin, Zap, Plug } from "lucide-react";
+import { CalendarPlus, Plane, Clock, MapPin, Zap, Plug, AlertTriangle } from "lucide-react";
 import type { CityCluster } from "./ChargerMapPanel";
 
 const PRIORITY_BADGE: Record<string, string> = {
@@ -57,6 +58,18 @@ export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allCha
 
   const totalHours = displayChargers.length * hoursPerCharger;
 
+  // Count chargers that can't be mapped (no coords and no city lookup match)
+  const unmappableCount = useMemo(() => {
+    return allChargers.filter(c => {
+      const hasPrecise = typeof c.latitude === "number" && typeof c.longitude === "number"
+        && isFinite(c.latitude) && isFinite(c.longitude);
+      if (hasPrecise) {
+        // Check continental US bounds
+        return c.latitude! < 24 || c.latitude! > 50 || c.longitude! < -130 || c.longitude! > -65;
+      }
+      return !getCityCoords(c.city, c.state);
+    }).length;
+  }, [allChargers]);
   // Group by region
   const grouped = useMemo(() => {
     const map = new Map<Region, AssessmentCharger[]>();
@@ -192,6 +205,14 @@ export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allCha
           )}
         </div>
       </ScrollArea>
+
+      {/* Unmappable chargers note */}
+      {unmappableCount > 0 && (
+        <div className="px-4 py-2 border-t border-border bg-muted/30 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+          <span>{unmappableCount} charger{unmappableCount !== 1 ? "s" : ""} not shown — missing or invalid coordinates</span>
+        </div>
+      )}
     </div>
   );
 }
