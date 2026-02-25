@@ -66,6 +66,7 @@ const TYPE_ICONS: Record<ChargerType, React.ReactNode> = {
 
 export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConfigPanelProps) {
   const [techInput, setTechInput] = useState("");
+  const [includeOptimal, setIncludeOptimal] = useState(true);
 
   const update = (partial: Partial<CampaignConfig>) => onChange({ ...config, ...partial });
 
@@ -101,13 +102,18 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
   };
 
   const toggleSchedulePriority = (sp: SchedulePriority) => {
+    if (sp === "Optimal") {
+      setIncludeOptimal(prev => !prev);
+      return;
+    }
     const pl = SCHEDULE_TO_PRIORITY[sp];
     if (pl) togglePriority(pl);
   };
 
   const isSchedulePriorityChecked = (sp: SchedulePriority): boolean => {
+    if (sp === "Optimal") return includeOptimal;
     const pl = SCHEDULE_TO_PRIORITY[sp];
-    if (!pl) return true; // Optimal is always included
+    if (!pl) return true;
     return config.includePriorities.includes(pl);
   };
 
@@ -128,8 +134,14 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
     update({ technicians: config.technicians.filter((_, i) => i !== index) });
   };
 
-  // Computed metrics
-  const selected = useMemo(() => filterChargers(chargers, config), [chargers, config]);
+  // Computed metrics — filter by config then apply Optimal toggle
+  const selected = useMemo(() => {
+    const base = filterChargers(chargers, config);
+    if (!includeOptimal) {
+      return base.filter(c => !!(c.ticketId || c.ticketCreatedDate));
+    }
+    return base;
+  }, [chargers, config, includeOptimal]);
   const selectedCount = selected.length;
   const effectiveHours = config.workingHoursPerDay - config.breakTime;
   const chargersPerDay = Math.max(1, Math.floor(effectiveHours / (config.hoursPerCharger + config.travelBuffer)));
@@ -351,7 +363,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
               <div className="space-y-1 mt-1">
                 {ALL_SCHEDULE_PRIORITIES.map(p => (
                   <label key={p} className="flex items-center gap-2 text-xs cursor-pointer">
-                    <Checkbox checked={isSchedulePriorityChecked(p)} onCheckedChange={() => toggleSchedulePriority(p)} className="h-3.5 w-3.5" disabled={p === "Optimal"} />
+                    <Checkbox checked={isSchedulePriorityChecked(p)} onCheckedChange={() => toggleSchedulePriority(p)} className="h-3.5 w-3.5" />
                     <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${SCHEDULE_PRIORITY_CONFIG[p].bg}`}>{SCHEDULE_PRIORITY_LABELS[p]}</Badge>
                     <span className="text-muted-foreground ml-auto">({allPriorityCounts[p]})</span>
                   </label>
