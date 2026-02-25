@@ -1,4 +1,5 @@
 import { PriorityLevel, ChargerType, Phase } from "./assessment";
+import { Region } from "@/lib/regionMapping";
 
 export type CampaignStatus = "draft" | "active" | "paused" | "completed" | "cancelled";
 export type ScheduleItemStatus = "not_started" | "in_progress" | "completed" | "cancelled" | "rescheduled";
@@ -51,6 +52,7 @@ export interface CampaignConfig {
   includePhases: Phase[];
   includePriorities: PriorityLevel[];
   includeTypes: ChargerType[];
+  includeRegions: Region[];
   sortBy: SortMethod;
 }
 
@@ -113,5 +115,6 @@ export const DEFAULT_CONFIG: CampaignConfig = {
   includePhases: ["Needs Assessment"],
   includePriorities: ["Critical", "High", "Medium", "Low"],
   includeTypes: ["AC | Level 2", "DC | Level 3"],
+  includeRegions: [],
   sortBy: "priority",
 };

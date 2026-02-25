@@ -1,6 +1,7 @@
 import { AssessmentCharger, PriorityLevel, ChargerType } from "@/types/assessment";
 import { CampaignConfig, ScheduleDay, ScheduleItem, Campaign, CampaignStatistics } from "@/types/campaign";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
+import { getRegion } from "@/lib/regionMapping";
 
 function isWorkingDay(date: Date, config: CampaignConfig): boolean {
   const day = date.getDay();
@@ -33,6 +34,11 @@ const SCHEDULE_TO_PRIORITY: Record<string, PriorityLevel | null> = {
 export function filterChargers(chargers: AssessmentCharger[], config: CampaignConfig): AssessmentCharger[] {
   return chargers.filter(c => {
     if (!config.includeTypes.includes(c.assetRecordType)) return false;
+    // Region filter
+    if (config.includeRegions.length > 0) {
+      const region = getRegion(c.city, c.state);
+      if (!config.includeRegions.includes(region)) return false;
+    }
     const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
     if (!hasTicket) {
       // Optimal charger — included by default (controlled separately by config panel)
