@@ -31,6 +31,13 @@ const PRIORITY_COLORS: Record<PriorityLevel, string> = {
   Low: "bg-optimal/10 text-optimal border-optimal/30",
 };
 
+const PRIORITY_LABELS: Record<PriorityLevel, string> = {
+  Critical: "P1 Critical",
+  High: "P2 High",
+  Medium: "P3 Medium",
+  Low: "P4 Low",
+};
+
 const TYPE_ICONS: Record<ChargerType, React.ReactNode> = {
   "AC | Level 2": <Plug className="h-3 w-3" />,
   "DC | Level 3": <Zap className="h-3 w-3" />,
@@ -290,7 +297,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
                 {ALL_PRIORITIES.map(p => (
                   <label key={p} className="flex items-center gap-2 text-xs cursor-pointer">
                     <Checkbox checked={config.includePriorities.includes(p)} onCheckedChange={() => togglePriority(p)} className="h-3.5 w-3.5" />
-                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${PRIORITY_COLORS[p]}`}>{p}</Badge>
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${PRIORITY_COLORS[p]}`}>{PRIORITY_LABELS[p]}</Badge>
                     <span className="text-muted-foreground ml-auto">({allPriorityCounts[p]})</span>
                   </label>
                 ))}
@@ -351,7 +358,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
               {ALL_PRIORITIES.map(p => (
                 <div key={p} className="flex items-center gap-1 col-span-2">
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: p === "Critical" ? "hsl(var(--critical))" : p === "High" ? "hsl(var(--degraded))" : p === "Medium" ? "#eab308" : "hsl(var(--optimal))" }} />
-                  <span>{p}:</span>
+                  <span>{PRIORITY_LABELS[p]}:</span>
                   <span className="font-medium ml-auto">{priorityCounts[p]} ({selectedCount > 0 ? Math.round((priorityCounts[p] / selectedCount) * 100) : 0}%)</span>
                 </div>
               ))}
