@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import { TicketPriority } from "@/types/assessment";
-import { AGE_BANDS, AgeBand, getAgeBand } from "./slaConstants";
+import { AGE_BANDS, AgeBand, getAgeBand, PRIORITY_COLORS } from "./slaConstants";
 import { X } from "lucide-react";
 
 const BUCKET_COLORS: Record<AgeBand, string> = {
-  "0-30": "#4ade80",
-  "31-60": "#facc15",
-  "61-90": "#fb923c",
-  "90+": "#ef4444",
+  "0-30": PRIORITY_COLORS["P4-Low"],
+  "31-60": PRIORITY_COLORS["P3-Medium"],
+  "61-90": PRIORITY_COLORS["P2-High"],
+  "90+": PRIORITY_COLORS["P1-Critical"],
 };
 
 const BUCKET_LABELS: Record<AgeBand, string> = {
@@ -48,7 +48,6 @@ export function AgingBreakdownChart({ tickets, activeFilter, onFilter, onClear }
       color: BUCKET_COLORS[band],
     }));
 
-    // Find the most impactful insight
     let headline = "";
     if (total > 0) {
       const over90Pct = Math.round((counts["90+"] / total) * 100);
@@ -88,13 +87,12 @@ export function AgingBreakdownChart({ tickets, activeFilter, onFilter, onClear }
 
   const handleBarClick = (entry: any) => {
     if (entry && entry.band) {
-      // Filter by band with first priority as placeholder — the parent filters by band
       onFilter(entry.band as AgeBand, "P1-Critical");
     }
   };
 
   return (
-    <Card>
+    <Card className="border-border/60">
       <CardHeader className="pb-1 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold">Ticket Aging Overview</CardTitle>
         {activeFilter && (
@@ -105,15 +103,15 @@ export function AgingBreakdownChart({ tickets, activeFilter, onFilter, onClear }
       </CardHeader>
       <CardContent className="pt-0">
         {headline && (
-          <p className="text-sm font-bold text-foreground mb-3">{headline}</p>
+          <p className="text-xs font-semibold text-muted-foreground mb-3">{headline}</p>
         )}
         <div className="h-[200px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+              <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted) / 0.3)" }} />
-              <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="4 4" label={{ value: "Target", position: "right", fontSize: 10, fill: "#9ca3af" }} />
+              <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="4 4" label={{ value: "Target", position: "right", fontSize: 9, fill: "#9ca3af" }} />
               <Bar dataKey="count" radius={[4, 4, 0, 0]} cursor="pointer" onClick={handleBarClick}>
                 {data.map((entry, idx) => (
                   <Cell key={idx} fill={entry.color} />
@@ -121,6 +119,14 @@ export function AgingBreakdownChart({ tickets, activeFilter, onFilter, onClear }
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+        </div>
+        <div className="flex items-center gap-4 mt-2 justify-center">
+          {AGE_BANDS.map(band => (
+            <div key={band} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: BUCKET_COLORS[band] }} />
+              {BUCKET_LABELS[band]}
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
