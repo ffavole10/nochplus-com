@@ -127,8 +127,20 @@ export function PlatformSidebar() {
     setSelectedCustomer(campaign?.customer || "");
   };
 
+  const sectionFirstPage: Record<NonNullable<SectionKey>, string> = {
+    "campaigns": "/dashboard",
+    "service-desk": "/service-desk/tickets",
+    "noch-plus": "/noch-plus/dashboard",
+    "autoheal": "/autoheal/ai-agent",
+  };
+
   const toggleSection = (section: SectionKey) => {
-    setExpandedSection((prev) => prev === section ? null : section);
+    if (section && expandedSection !== section) {
+      setExpandedSection(section);
+      navigate(sectionFirstPage[section]);
+    } else {
+      setExpandedSection((prev) => prev === section ? null : section);
+    }
   };
 
   // Campaign nav items - use existing routes for backward compat
