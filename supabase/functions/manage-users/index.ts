@@ -49,10 +49,10 @@ serve(async (req) => {
       });
     }
 
-    const { action, email, password, role, display_name, company, user_id } = await req.json();
+    const body = await req.json();
+    const { action, email, password, role, display_name, company, user_id } = body;
 
     if (action === "create_user") {
-      // Create user in auth
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
@@ -60,13 +60,11 @@ serve(async (req) => {
       });
       if (createError) throw createError;
 
-      // Update profile
       await supabaseAdmin
         .from("profiles")
         .update({ display_name, company })
         .eq("user_id", newUser.user.id);
 
-      // Assign role
       await supabaseAdmin
         .from("user_roles")
         .insert({ user_id: newUser.user.id, role });
@@ -77,7 +75,6 @@ serve(async (req) => {
     }
 
     if (action === "update_role") {
-      // Delete existing roles and assign new one
       await supabaseAdmin
         .from("user_roles")
         .delete()
@@ -86,6 +83,49 @@ serve(async (req) => {
       await supabaseAdmin
         .from("user_roles")
         .insert({ user_id, role });
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "add_role") {
+      const { error: insertError } = await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id, role });
+
+      if (insertError) {
+        if (insertError.code === "23505") {
+          return new Response(JSON.stringify({ error: "User already has this role" }), {
+            status: 409,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        throw insertError;
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "remove_role") {
+      await supabaseAdmin
+        .from("user_roles")
+        .delete()
+        .eq("user_id", user_id)
+        .eq("role", role);
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "send_reset") {
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email,
+      });
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -108,9 +148,18 @@ serve(async (req) => {
         .from("user_roles")
         .select("*");
 
+      // Group roles by user_id
+      const rolesByUser: Record<string, string[]> = {};
+      for (const r of roles || []) {
+        if (!rolesByUser[r.user_id]) rolesByUser[r.user_id] = [];
+        rolesByUser[r.user_id].push(r.role);
+      }
+
       const users = (profiles || []).map((p: any) => ({
         ...p,
-        role: roles?.find((r: any) => r.user_id === p.user_id)?.role || "employee",
+        roles: rolesByUser[p.user_id] || [],
+        // Keep backward compat
+        role: (rolesByUser[p.user_id] || ["employee"])[0],
       }));
 
       return new Response(JSON.stringify({ users }), {

@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2, Users } from "lucide-react";
+import { Crown, Pencil, Users, UserPlus, Trash2, Send } from "lucide-react";
 import { toast } from "sonner";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { CampaignManagement } from "@/components/settings/CampaignManagement";
 import { PartnerManagement } from "@/components/settings/PartnerManagement";
@@ -25,26 +25,40 @@ type UserWithRole = {
   company: string | null;
   avatar_url: string | null;
   role: string;
+  roles: string[];
   created_at: string;
 };
 
 const ROLE_COLORS: Record<string, string> = {
   super_admin: "bg-destructive text-destructive-foreground",
   admin: "bg-primary text-primary-foreground",
-  manager: "bg-chart-4 text-primary-foreground",
+  manager: "bg-primary text-primary-foreground",
   employee: "bg-secondary text-secondary-foreground",
   customer: "bg-muted text-muted-foreground",
   partner: "bg-accent text-accent-foreground",
+  dispatcher: "bg-muted-foreground text-background",
+  technician: "bg-chart-4 text-primary-foreground",
 };
 
 const ROLE_LABELS: Record<string, string> = {
-  super_admin: "Super Admin",
-  admin: "Admin",
-  manager: "Manager",
-  employee: "Employee",
-  customer: "Customer",
-  partner: "Partner",
+  super_admin: "super admin",
+  admin: "admin",
+  manager: "manager",
+  employee: "employee",
+  customer: "customer",
+  partner: "partner",
 };
+
+const ROLE_ICONS: Record<string, string> = {
+  super_admin: "👑",
+  admin: "🛡️",
+  manager: "👤",
+  employee: "🔧",
+  customer: "📋",
+  partner: "🤝",
+};
+
+const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner"];
 
 type SettingsTab = "campaigns" | "data" | "partners" | "users";
 
@@ -69,11 +83,11 @@ const Settings = () => {
   const [newCompany, setNewCompany] = useState("");
   const [newRole, setNewRole] = useState<string>("employee");
   const [creating, setCreating] = useState(false);
+  // Per-user "add role" selector state
+  const [addRoleSelections, setAddRoleSelections] = useState<Record<string, string>>({});
 
   const callManageUsers = async (body: any) => {
-    const { data, error } = await supabase.functions.invoke("manage-users", {
-      body,
-    });
+    const { data, error } = await supabase.functions.invoke("manage-users", { body });
     if (error) throw error;
     return data;
   };
@@ -136,13 +150,32 @@ const Settings = () => {
     }
   };
 
-  const handleUpdateRole = async (userId: string, role: string) => {
+  const handleAddRole = async (userId: string) => {
+    const role = addRoleSelections[userId];
+    if (!role) return;
     try {
-      await callManageUsers({ action: "update_role", user_id: userId, role });
-      toast.success("Role updated");
+      await callManageUsers({ action: "add_role", user_id: userId, role });
+      toast.success("Role added");
+      setAddRoleSelections((prev) => ({ ...prev, [userId]: "" }));
       loadUsers();
     } catch (err: any) {
-      toast.error("Failed to update role: " + err.message);
+      toast.error(err.message || "Failed to add role");
+    }
+  };
+
+  const handleRemoveRole = async (userId: string, role: string) => {
+    const user = users.find((u) => u.user_id === userId);
+    if (!user) return;
+    if (user.roles.length <= 1) {
+      toast.error("User must have at least one role");
+      return;
+    }
+    try {
+      await callManageUsers({ action: "remove_role", user_id: userId, role });
+      toast.success("Role removed");
+      loadUsers();
+    } catch (err: any) {
+      toast.error("Failed to remove role: " + err.message);
     }
   };
 
@@ -161,9 +194,23 @@ const Settings = () => {
     }
   };
 
+  const handleSendReset = async (email: string) => {
+    try {
+      await callManageUsers({ action: "send_reset", email });
+      toast.success(`Password reset sent to ${email}`);
+    } catch (err: any) {
+      toast.error("Failed to send reset: " + err.message);
+    }
+  };
+
   useEffect(() => {
     checkAccess();
   }, [session]);
+
+  const getInitials = (name: string | null, email: string) => {
+    if (name) return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    return email.slice(0, 2).toUpperCase();
+  };
 
   if (!isSuperAdmin) {
     return (
@@ -177,7 +224,7 @@ const Settings = () => {
     <div className="min-h-screen bg-background">
       {/* Tab Toggle */}
       <div className="border-b border-border bg-muted/30">
-        <div className="container mx-auto max-w-5xl px-4">
+        <div className="container mx-auto max-w-6xl px-4">
           <div className="flex gap-1 py-2">
             {TABS.map((tab) => (
               <button
@@ -196,41 +243,43 @@ const Settings = () => {
         </div>
       </div>
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl space-y-6">
+      <main className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
         {activeTab === "campaigns" && <CampaignManagement />}
         {activeTab === "data" && <DataManagement />}
         {activeTab === "partners" && <PartnerManagement />}
         {activeTab === "users" && (
           <>
-            {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {["super_admin", "admin", "manager", "employee", "customer", "partner"].map((role) => (
-                <Card key={role}>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-foreground">
-                      {users.filter((u) => u.role === role).length}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{ROLE_LABELS[role]}s</p>
-                  </CardContent>
-                </Card>
-              ))}
+            {/* Header */}
+            <div className="flex items-start gap-4">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Crown className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+                  <Badge variant="outline" className="text-xs font-medium">Super Admin</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">Manage users and access permissions</p>
+              </div>
             </div>
 
-            {/* Users Table */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+            {/* User Management Card */}
+            <Card className="border-border/60">
+              <CardHeader className="flex flex-row items-center justify-between pb-6">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    All Users
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <UserPlus className="h-5 w-5" />
+                    User Management
                   </CardTitle>
-                  <CardDescription>{users.length} total users</CardDescription>
+                  <CardDescription>
+                    Assign roles to control what each user can see and do in the application.
+                  </CardDescription>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add User
+                    <Button className="gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      Create User
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -261,11 +310,9 @@ const Settings = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="manager">Manager</SelectItem>
-                            <SelectItem value="employee">Employee</SelectItem>
-                            <SelectItem value="customer">Customer</SelectItem>
-                            <SelectItem value="partner">Partner</SelectItem>
+                            {ASSIGNABLE_ROLES.map((r) => (
+                              <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -285,67 +332,143 @@ const Settings = () => {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[60px]">Photo</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Company</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>
-                            <AvatarUpload
-                              userId={user.user_id}
-                              avatarUrl={user.avatar_url}
-                              displayName={user.display_name}
+                  <div className="space-y-0">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-[1fr_100px_180px_200px_120px] gap-4 px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border">
+                      <span>User</span>
+                      <span>Status</span>
+                      <span>Current Roles</span>
+                      <span>Add Role</span>
+                      <span className="text-right">Actions</span>
+                    </div>
+
+                    {/* User Rows */}
+                    {users.map((user) => {
+                      const userRoles = user.roles || [user.role];
+                      const availableRoles = ASSIGNABLE_ROLES.filter((r) => !userRoles.includes(r));
+
+                      return (
+                        <div
+                          key={user.user_id}
+                          className="grid grid-cols-[1fr_100px_180px_200px_120px] gap-4 px-4 py-4 items-center border-b border-border/50 hover:bg-muted/30 transition-colors"
+                        >
+                          {/* User info */}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="relative group">
+                              <AvatarUpload
+                                userId={user.user_id}
+                                avatarUrl={user.avatar_url}
+                                displayName={user.display_name}
+                                size="sm"
+                                onUploaded={(url) => {
+                                  setUsers((prev) =>
+                                    prev.map((u) =>
+                                      u.user_id === user.user_id ? { ...u, avatar_url: url } : u
+                                    )
+                                  );
+                                }}
+                              />
+                              <div className="absolute -top-1 -right-1 bg-background rounded-full p-0.5 shadow-sm border border-border opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Pencil className="h-2.5 w-2.5 text-muted-foreground" />
+                              </div>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {user.display_name || user.email.split("@")[0]}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                            </div>
+                          </div>
+
+                          {/* Status */}
+                          <div>
+                            <Badge className="bg-primary/15 text-primary border-primary/20 text-xs font-medium">
+                              Active
+                            </Badge>
+                          </div>
+
+                          {/* Current Roles */}
+                          <div className="flex flex-wrap gap-1.5">
+                            {userRoles.map((r) => (
+                              <Badge
+                                key={r}
+                                className={`${ROLE_COLORS[r] || "bg-muted text-muted-foreground"} text-xs gap-1 pr-1`}
+                              >
+                                <span>{ROLE_ICONS[r] || "👤"}</span>
+                                <span>{ROLE_LABELS[r] || r}</span>
+                                {user.user_id !== session?.user.id && userRoles.length > 1 && (
+                                  <button
+                                    onClick={() => handleRemoveRole(user.user_id, r)}
+                                    className="ml-0.5 hover:bg-background/20 rounded px-0.5 text-xs leading-none"
+                                    title="Remove role"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </Badge>
+                            ))}
+                          </div>
+
+                          {/* Add Role */}
+                          <div className="flex items-center gap-1.5">
+                            <Select
+                              value={addRoleSelections[user.user_id] || ""}
+                              onValueChange={(val) =>
+                                setAddRoleSelections((prev) => ({ ...prev, [user.user_id]: val }))
+                              }
+                            >
+                              <SelectTrigger className="h-8 text-xs flex-1">
+                                <SelectValue placeholder={availableRoles.length ? "Select" : "All assigned"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableRoles.map((r) => (
+                                  <SelectItem key={r} value={r}>
+                                    {ROLE_ICONS[r]} {ROLE_LABELS[r]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
                               size="sm"
-                              onUploaded={(url) => {
-                                setUsers((prev) =>
-                                  prev.map((u) =>
-                                    u.user_id === user.user_id ? { ...u, avatar_url: url } : u
-                                  )
-                                );
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">{user.email}</TableCell>
-                          <TableCell>{user.display_name || "—"}</TableCell>
-                          <TableCell>{user.company || "—"}</TableCell>
-                          <TableCell>
-                            {user.user_id === session?.user.id ? (
-                              <Badge className={ROLE_COLORS[user.role]}>{ROLE_LABELS[user.role]}</Badge>
-                            ) : (
-                              <Select value={user.role} onValueChange={(val) => handleUpdateRole(user.user_id, val)}>
-                                <SelectTrigger className="w-[140px] h-8">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="manager">Manager</SelectItem>
-                                  <SelectItem value="employee">Employee</SelectItem>
-                                  <SelectItem value="customer">Customer</SelectItem>
-                                  <SelectItem value="partner">Partner</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
+                              variant="outline"
+                              className="h-8 px-2 text-xs gap-1"
+                              disabled={!addRoleSelections[user.user_id]}
+                              onClick={() => handleAddRole(user.user_id)}
+                            >
+                              <UserPlus className="h-3 w-3" />
+                              Add
+                            </Button>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center justify-end gap-1">
                             {user.user_id !== session?.user.id && (
-                              <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user.user_id, user.email)} className="text-destructive hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                  title="Send password reset"
+                                  onClick={() => handleSendReset(user.email)}
+                                >
+                                  <Send className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                  title="Delete user"
+                                  onClick={() => handleDeleteUser(user.user_id, user.email)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
                             )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </CardContent>
             </Card>
