@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.autoheal-assessment]
 verify_jwt = false
+
+[functions.track-submission]
+verify_jwt = false
