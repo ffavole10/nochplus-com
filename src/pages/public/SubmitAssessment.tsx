@@ -482,7 +482,7 @@ export default function SubmitAssessment() {
               </div>
 
               <p className="text-xs text-muted-foreground text-center mb-6 italic">
-                For less than $0.65 a day, get peace of mind for your entire charging setup.
+                For less than $0.30 a day, get peace of mind for your entire charging setup.
               </p>
 
               {/* Subscribe Button */}
