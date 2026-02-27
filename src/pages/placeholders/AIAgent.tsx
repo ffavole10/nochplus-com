@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, Info } from "lucide-react";
-import aiAgentAvatar from "@/assets/ai-agent-avatar.png";
+import aiAgentHero from "@/assets/ai-agent-hero.mp4";
 import { toast } from "sonner";
 import { AgentCard, type AgentPrompt } from "@/components/ai-agent/AgentCard";
 import { AgentTestModal } from "@/components/ai-agent/AgentTestModal";
