@@ -393,13 +393,12 @@
 
 /* Nod animation for AI agent avatar */
 @keyframes nod {
-  0%, 100% { transform: rotate(0deg); }
-  15% { transform: rotate(8deg); }
-  30% { transform: rotate(-2deg); }
-  45% { transform: rotate(5deg); }
-  55% { transform: rotate(0deg); }
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-6px) rotate(-2deg); }
+  50% { transform: translateY(-3px) rotate(1deg); }
+  75% { transform: translateY(-5px) rotate(-1deg); }
 }
 
 .animate-nod {
-  animation: nod 3s ease-in-out infinite;
+  animation: nod 4s ease-in-out infinite;
 }
