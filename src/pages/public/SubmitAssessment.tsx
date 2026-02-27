@@ -495,7 +495,7 @@ export default function SubmitAssessment() {
                 {membershipLoading ? (
                   <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
                 ) : (
-                  <><CreditCard className="h-5 w-5" /> Subscribe — ${chargers.length * 19}/mo</>
+                  <><CreditCard className="h-5 w-5" /> Subscribe — ${chargers.length * 9}/mo</>
                 )}
               </Button>
 
