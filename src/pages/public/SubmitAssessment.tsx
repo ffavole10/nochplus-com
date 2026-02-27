@@ -456,10 +456,10 @@ export default function SubmitAssessment() {
             <CardContent className="p-6">
               <div className="text-center mb-6">
                 <div className="text-4xl font-bold text-foreground">
-                  $19<span className="text-lg font-normal text-muted-foreground">/mo per charger</span>
+                  $9<span className="text-lg font-normal text-muted-foreground">/mo per charger</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {chargers.length} charger{chargers.length > 1 ? "s" : ""} × $19 = <span className="font-semibold text-foreground">${chargers.length * 19}/mo</span>
+                  {chargers.length} charger{chargers.length > 1 ? "s" : ""} × $9 = <span className="font-semibold text-foreground">${chargers.length * 9}/mo</span>
                 </p>
               </div>
 
@@ -482,7 +482,7 @@ export default function SubmitAssessment() {
               </div>
 
               <p className="text-xs text-muted-foreground text-center mb-6 italic">
-                For less than $0.65 a day, get peace of mind for your entire charging setup.
+                For less than $0.30 a day, get peace of mind for your entire charging setup.
               </p>
 
               {/* Subscribe Button */}
@@ -495,7 +495,7 @@ export default function SubmitAssessment() {
                 {membershipLoading ? (
                   <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
                 ) : (
-                  <><CreditCard className="h-5 w-5" /> Subscribe — ${chargers.length * 19}/mo</>
+                  <><CreditCard className="h-5 w-5" /> Subscribe — ${chargers.length * 9}/mo</>
                 )}
               </Button>
 
