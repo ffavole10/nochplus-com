@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, Info } from "lucide-react";
-import aiAgentHero from "@/assets/ai-agent-hero.mp4";
+import aiAgentAvatar from "@/assets/ai-agent-avatar.png";
 import { toast } from "sonner";
 import { AgentCard, type AgentPrompt } from "@/components/ai-agent/AgentCard";
 import { AgentTestModal } from "@/components/ai-agent/AgentTestModal";
@@ -112,7 +112,7 @@ const AIAgent = () => {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex gap-3 items-end">
-            <video src={aiAgentHero} autoPlay loop muted playsInline className="w-[115px] h-[115px] rounded-xl object-cover shrink-0" width={115} height={115} />
+            <img src={aiAgentAvatar} alt="AI Agent" className="w-[115px] h-[115px] rounded-xl object-cover shrink-0" loading="lazy" width={115} height={115} decoding="async" />
             <div>
               <h1 className="text-2xl font-bold text-foreground">Hi, I'm Max! | AutoHeal™</h1>
               <p className="text-sm text-muted-foreground mt-1">Manage AI prompts and templates for charging station analysis</p>
