@@ -254,6 +254,7 @@ const Settings = () => {
         {activeTab === "campaigns" && <CampaignManagement />}
         {activeTab === "data" && <DataManagement />}
         {activeTab === "partners" && <PartnerManagement />}
+        {activeTab === "quoting" && <QuotingAndRatesSection />}
         {activeTab === "users" && (
           <>
             {/* Header */}
