@@ -390,6 +390,44 @@ export type Database = {
           },
         ]
       }
+      customer_rate_overrides: {
+        Row: {
+          created_at: string
+          customer_name: string
+          id: string
+          notes: string | null
+          override_items: Json
+          rate_card_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          id?: string
+          notes?: string | null
+          override_items?: Json
+          rate_card_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          id?: string
+          notes?: string | null
+          override_items?: Json
+          rate_card_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_rate_overrides_rate_card_id_fkey"
+            columns: ["rate_card_id"]
+            isOneToOne: false
+            referencedRelation: "rate_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estimates: {
         Row: {
           account_manager: string | null
@@ -707,6 +745,122 @@ export type Database = {
           supplier?: string
           tax?: number
           total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quote_rules: {
+        Row: {
+          action_type: string
+          action_value: string
+          category: string
+          condition_operator: string
+          condition_type: string
+          condition_value: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          priority: number
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          action_value: string
+          category: string
+          condition_operator: string
+          condition_type: string
+          condition_value: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          priority?: number
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          action_value?: string
+          category?: string
+          condition_operator?: string
+          condition_type?: string
+          condition_value?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          priority?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rate_card_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          label: string
+          rate: number
+          rate_card_id: string
+          sort_order: number
+          unit: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          label: string
+          rate?: number
+          rate_card_id: string
+          sort_order?: number
+          unit?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          label?: string
+          rate?: number
+          rate_card_id?: string
+          sort_order?: number
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_card_items_rate_card_id_fkey"
+            columns: ["rate_card_id"]
+            isOneToOne: false
+            referencedRelation: "rate_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_cards: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
           updated_at?: string
         }
         Relationships: []
