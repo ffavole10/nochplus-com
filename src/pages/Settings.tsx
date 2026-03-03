@@ -76,6 +76,35 @@ const TABS: { value: SettingsTab; label: string }[] = [
   { value: "users", label: "All Users" },
 ];
 
+function QuotingAndRatesSection() {
+  const { data: cards = [] } = useRateCards();
+  const { data: rules = [] } = useQuoteRules();
+  const { data: overrides = [] } = useCustomerOverrides();
+  const [quotingTab, setQuotingTab] = useState("rate-cards");
+
+  return (
+    <div className="space-y-4">
+      <Tabs value={quotingTab} onValueChange={setQuotingTab}>
+        <TabsList>
+          <TabsTrigger value="rate-cards" className="gap-1.5">
+            Rate Cards <Badge variant="secondary" className="ml-1 text-xs h-5 px-1.5">{cards.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="quote-rules" className="gap-1.5">
+            Quote Rules <Badge variant="secondary" className="ml-1 text-xs h-5 px-1.5">{rules.filter(r => r.is_active).length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="customer-overrides" className="gap-1.5">
+            Customer Overrides <Badge variant="secondary" className="ml-1 text-xs h-5 px-1.5">{overrides.length}</Badge>
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="rate-cards"><RateCardsTab /></TabsContent>
+        <TabsContent value="quote-rules"><QuoteRulesTab /></TabsContent>
+        <TabsContent value="customer-overrides"><CustomerOverridesTab /></TabsContent>
+      </Tabs>
+      <QuoteFlowDiagram />
+    </div>
+  );
+}
+
 const Settings = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
