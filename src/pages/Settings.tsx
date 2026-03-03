@@ -66,12 +66,13 @@ const ROLE_ICONS: Record<string, string> = {
 
 const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner"];
 
-type SettingsTab = "campaigns" | "data" | "partners" | "users";
+type SettingsTab = "campaigns" | "data" | "partners" | "users" | "quoting";
 
 const TABS: { value: SettingsTab; label: string }[] = [
   { value: "campaigns", label: "Campaigns" },
   { value: "data", label: "Data Management" },
   { value: "partners", label: "Partners" },
+  { value: "quoting", label: "Quoting & Rates" },
   { value: "users", label: "All Users" },
 ];
 
