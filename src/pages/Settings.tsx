@@ -16,6 +16,12 @@ import { AvatarUpload } from "@/components/AvatarUpload";
 import { CampaignManagement } from "@/components/settings/CampaignManagement";
 import { PartnerManagement } from "@/components/settings/PartnerManagement";
 import { DataManagement } from "@/components/settings/DataManagement";
+import { RateCardsTab } from "@/components/settings/RateCardsTab";
+import { QuoteRulesTab } from "@/components/settings/QuoteRulesTab";
+import { CustomerOverridesTab } from "@/components/settings/CustomerOverridesTab";
+import { QuoteFlowDiagram } from "@/components/settings/QuoteFlowDiagram";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useRateCards, useQuoteRules, useCustomerOverrides } from "@/hooks/useQuotingSettings";
 
 type UserWithRole = {
   id: string;
