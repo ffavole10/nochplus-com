@@ -53,8 +53,12 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
   const [terms, setTerms] = useState("Net 30");
   const [poNumber, setPoNumber] = useState("");
 
+  // Track whether we've initialized from the estimate prop
+  const initializedRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (estimate) {
+    if (estimate && estimate.id !== initializedRef.current) {
+      initializedRef.current = estimate.id;
       setItems((estimate.line_items || []).map((i: any) => ({
         description: i.description || "",
         qty: Number(i.qty) || 0,
@@ -62,7 +66,7 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
         rate: Number(i.rate) || 0,
         amount: Number(i.amount) || 0,
       })));
-      setTaxRate(Number(estimate.tax_rate) || 0.08);
+      setTaxRate(Number(estimate.tax_rate) || 0);
       setNotes(estimate.notes || "");
       setSiteName(estimate.site_name || "");
       setCustomerEmail(estimate.customer_email || "");
@@ -74,6 +78,53 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
       setEditing(false);
     }
   }, [estimate]);
+
+  // Autosave: debounce changes when editing
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstRenderRef = useRef(true);
+
+  const doSave = useCallback(() => {
+    if (!estimate || estimate.status === "approved") return;
+    const currentSubtotal = items.reduce((s, i) => s + i.amount, 0);
+    const currentTax = currentSubtotal * taxRate;
+    const currentTotal = currentSubtotal + currentTax;
+    updateEstimate.mutate({
+      id: estimate.id,
+      line_items: items as any,
+      subtotal: currentSubtotal,
+      tax_rate: taxRate,
+      tax: currentTax,
+      total: currentTotal,
+      notes: notes || null,
+      site_name: siteName || null,
+      customer_email: customerEmail || null,
+      account_manager: accountManager || null,
+      customer_name: customerName || null,
+      customer_address: customerAddress || null,
+      terms: terms || "Net 30",
+      po_number: poNumber || null,
+    }, {
+      onSuccess: (data) => {
+        onUpdated?.(data);
+      },
+    });
+  }, [estimate, items, taxRate, notes, siteName, customerEmail, accountManager, customerName, customerAddress, terms, poNumber, updateEstimate, onUpdated]);
+
+  // Trigger autosave when any field changes while editing
+  useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+    if (!editing || !estimate || estimate.status === "approved") return;
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      doSave();
+    }, 1500);
+    return () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    };
+  }, [items, taxRate, notes, siteName, customerEmail, accountManager, customerName, customerAddress, terms, poNumber, editing]);
 
   if (!estimate) return null;
   const isReadOnly = estimate.status === "approved";
