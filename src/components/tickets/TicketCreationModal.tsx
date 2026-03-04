@@ -355,6 +355,24 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
               ) : (
                 <Card>
                   <CardContent className="p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">New Location</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={handleUseCurrentLocation}
+                            disabled={geoLoading}
+                          >
+                            <LocateFixed className={cn("h-4 w-4", geoLoading && "animate-pulse")} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">Use current location</TooltipContent>
+                      </Tooltip>
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="col-span-2">
                         <Input placeholder="Site name" value={newLocName} onChange={(e) => setNewLocName(e.target.value)} />
