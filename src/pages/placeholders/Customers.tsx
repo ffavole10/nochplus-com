@@ -1,66 +1,53 @@
 import { useState, useMemo } from "react";
-import { Plus, Users, Search, ArrowUpDown, Mail, Phone, DollarSign, Ticket, Eye, X, Building2, MapPin, StickyNote } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Users, Search, ArrowUpDown, Mail, Phone, DollarSign, Ticket, Eye, X, Building2, MapPin, StickyNote, FileText, CreditCard, ExternalLink, AlertTriangle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { format } from "date-fns";
-
-interface Customer {
-  id: string;
-  company: string;
-  contactName: string;
-  email: string;
-  phone: string;
-  address: string;
-  notes: string;
-  ticketCount: number;
-  totalRevenue: number;
-  lastServiceDate: string;
-  status: "active" | "inactive";
-  createdAt: string;
-}
-
-const MOCK_CUSTOMERS: Customer[] = [
-  { id: "c1", company: "ChargePoint Inc.", contactName: "Sarah Chen", email: "sarah.chen@chargepoint.com", phone: "(415) 555-0101", address: "240 E Hacienda Ave, Campbell, CA 95008", notes: "Premium partner. Quarterly maintenance.", ticketCount: 34, totalRevenue: 127500, lastServiceDate: "2025-01-15", status: "active", createdAt: "2024-03-10" },
-  { id: "c2", company: "EVgo Services", contactName: "Marcus Johnson", email: "mjohnson@evgo.com", phone: "(213) 555-0202", address: "11835 W Olympic Blvd, Los Angeles, CA 90064", notes: "West coast fleet.", ticketCount: 28, totalRevenue: 98200, lastServiceDate: "2025-02-01", status: "active", createdAt: "2024-04-22" },
-  { id: "c3", company: "Electrify America", contactName: "Lisa Park", email: "lpark@ea.com", phone: "(703) 555-0303", address: "1950 Opportunity Way, Reston, VA 20190", notes: "", ticketCount: 19, totalRevenue: 72000, lastServiceDate: "2025-01-28", status: "active", createdAt: "2024-06-15" },
-  { id: "c4", company: "Blink Charging", contactName: "David Torres", email: "dtorres@blinkcharging.com", phone: "(305) 555-0404", address: "605 Lincoln Rd, Miami Beach, FL 33139", notes: "Expanding network Q2 2025.", ticketCount: 12, totalRevenue: 45800, lastServiceDate: "2024-12-20", status: "active", createdAt: "2024-07-01" },
-  { id: "c5", company: "FreeWire Technologies", contactName: "Amy Nguyen", email: "anguyen@freewire.com", phone: "(510) 555-0505", address: "1933 Davis St, San Leandro, CA 94577", notes: "Battery-integrated chargers. Special handling.", ticketCount: 8, totalRevenue: 31200, lastServiceDate: "2024-11-15", status: "active", createdAt: "2024-08-10" },
-  { id: "c6", company: "SemaConnect", contactName: "Robert Kim", email: "rkim@semaconnect.com", phone: "(301) 555-0606", address: "4961 Tesla Dr, Bowie, MD 20715", notes: "", ticketCount: 3, totalRevenue: 9800, lastServiceDate: "2024-09-30", status: "inactive", createdAt: "2024-05-20" },
-  { id: "c7", company: "Volta Charging", contactName: "Jessica Rivera", email: "jrivera@voltacharging.com", phone: "(415) 555-0707", address: "155 De Haro St, San Francisco, CA 94103", notes: "Media display chargers — handle screens carefully.", ticketCount: 15, totalRevenue: 56700, lastServiceDate: "2025-01-10", status: "active", createdAt: "2024-04-05" },
-];
+import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer, type Customer } from "@/hooks/useCustomers";
+import { useRateCards } from "@/hooks/useQuotingSettings";
+import { useCustomerRateSheetsList } from "@/hooks/useCustomerRateSheets";
 
 export default function Customers() {
-  const [customers, setCustomers] = useState<Customer[]>(MOCK_CUSTOMERS);
+  const { data: customers = [], isLoading } = useCustomers();
+  const { data: rateCards = [] } = useRateCards();
+  const { data: rateSheets = [] } = useCustomerRateSheetsList();
+  const createCustomer = useCreateCustomer();
+  const updateCustomer = useUpdateCustomer();
+  const navigate = useNavigate();
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"name" | "tickets" | "revenue" | "recent">("name");
   const [formOpen, setFormOpen] = useState(false);
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
+  const [pricingConfirmOpen, setPricingConfirmOpen] = useState(false);
+  const [pendingPricingType, setPendingPricingType] = useState<string | null>(null);
 
-  // Form state
-  const [form, setForm] = useState({ company: "", contactName: "", email: "", phone: "", address: "", notes: "" });
+  const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "" });
 
   const filtered = useMemo(() => {
     let result = [...customers];
     if (statusFilter !== "all") result = result.filter(c => c.status === statusFilter);
     if (search) {
       const q = search.toLowerCase();
-      result = result.filter(c => c.company.toLowerCase().includes(q) || c.contactName.toLowerCase().includes(q) || c.email.toLowerCase().includes(q));
+      result = result.filter(c => c.company.toLowerCase().includes(q) || c.contact_name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q));
     }
     result.sort((a, b) => {
       switch (sortBy) {
-        case "tickets": return b.ticketCount - a.ticketCount;
-        case "revenue": return b.totalRevenue - a.totalRevenue;
-        case "recent": return new Date(b.lastServiceDate).getTime() - new Date(a.lastServiceDate).getTime();
+        case "tickets": return b.ticket_count - a.ticket_count;
+        case "revenue": return b.total_revenue - a.total_revenue;
+        case "recent": return new Date(b.last_service_date || 0).getTime() - new Date(a.last_service_date || 0).getTime();
         default: return a.company.localeCompare(b.company);
       }
     });
@@ -70,21 +57,47 @@ export default function Customers() {
   const stats = useMemo(() => ({
     total: customers.length,
     active: customers.filter(c => c.status === "active").length,
-    totalRevenue: customers.reduce((s, c) => s + c.totalRevenue, 0),
-    totalTickets: customers.reduce((s, c) => s + c.ticketCount, 0),
+    totalRevenue: customers.reduce((s, c) => s + Number(c.total_revenue), 0),
+    totalTickets: customers.reduce((s, c) => s + c.ticket_count, 0),
   }), [customers]);
 
   const handleAdd = () => {
-    if (!form.company || !form.contactName || !form.email) { toast.error("Fill required fields"); return; }
-    const newCustomer: Customer = {
-      id: `c-${Date.now()}`, ...form, ticketCount: 0, totalRevenue: 0,
-      lastServiceDate: "", status: "active", createdAt: new Date().toISOString(),
-    };
-    setCustomers(prev => [newCustomer, ...prev]);
-    toast.success(`${form.company} added`);
-    setFormOpen(false);
-    setForm({ company: "", contactName: "", email: "", phone: "", address: "", notes: "" });
+    if (!form.company || !form.contact_name || !form.email) { toast.error("Fill required fields"); return; }
+    createCustomer.mutate({ company: form.company, contact_name: form.contact_name, email: form.email, phone: form.phone, address: form.address, notes: form.notes, status: "active", pricing_type: "rate_card" }, {
+      onSuccess: () => {
+        setFormOpen(false);
+        setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "" });
+      },
+    });
   };
+
+  const handlePricingTypeChange = (newType: string) => {
+    if (!detailCustomer || newType === detailCustomer.pricing_type) return;
+    setPendingPricingType(newType);
+    setPricingConfirmOpen(true);
+  };
+
+  const confirmPricingChange = () => {
+    if (!detailCustomer || !pendingPricingType) return;
+    updateCustomer.mutate({ id: detailCustomer.id, pricing_type: pendingPricingType }, {
+      onSuccess: () => {
+        setDetailCustomer(prev => prev ? { ...prev, pricing_type: pendingPricingType! } : null);
+        setPricingConfirmOpen(false);
+        setPendingPricingType(null);
+      },
+    });
+  };
+
+  const getCustomerRateSheets = (customerName: string) =>
+    rateSheets.filter(rs => rs.customer_name.toLowerCase() === customerName.toLowerCase());
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -96,7 +109,7 @@ export default function Customers() {
         <Card className="border-l-4 border-l-medium"><CardContent className="p-4 text-center"><p className="text-sm text-muted-foreground">Total Revenue</p><p className="text-2xl font-bold text-medium">${stats.totalRevenue.toLocaleString()}</p></CardContent></Card>
       </div>
 
-      {/* Filters + Add Button */}
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 flex-wrap items-center">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -132,17 +145,18 @@ export default function Customers() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-foreground">{c.company}</span>
                       <Badge variant={c.status === "active" ? "default" : "secondary"}>{c.status}</Badge>
+                      <PricingTypeBadge pricingType={c.pricing_type} />
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                      <span className="font-medium text-foreground">{c.contactName}</span>
+                      <span className="font-medium text-foreground">{c.contact_name}</span>
                       <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{c.email}</span>
                       <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{c.phone}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-sm shrink-0">
-                    <div className="text-center"><p className="text-xs text-muted-foreground">Tickets</p><p className="font-bold text-foreground">{c.ticketCount}</p></div>
-                    <div className="text-center"><p className="text-xs text-muted-foreground">Revenue</p><p className="font-bold text-foreground">${c.totalRevenue.toLocaleString()}</p></div>
-                    <div className="text-center"><p className="text-xs text-muted-foreground">Last Service</p><p className="font-medium text-foreground">{c.lastServiceDate ? format(new Date(c.lastServiceDate), "MMM d, yyyy") : "—"}</p></div>
+                    <div className="text-center"><p className="text-xs text-muted-foreground">Tickets</p><p className="font-bold text-foreground">{c.ticket_count}</p></div>
+                    <div className="text-center"><p className="text-xs text-muted-foreground">Revenue</p><p className="font-bold text-foreground">${Number(c.total_revenue).toLocaleString()}</p></div>
+                    <div className="text-center"><p className="text-xs text-muted-foreground">Last Service</p><p className="font-medium text-foreground">{c.last_service_date ? format(new Date(c.last_service_date), "MMM d, yyyy") : "—"}</p></div>
                     <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setDetailCustomer(c)}><Eye className="h-3.5 w-3.5" />View</Button>
                   </div>
                 </div>
@@ -158,14 +172,14 @@ export default function Customers() {
           <DialogHeader><DialogTitle>Add Customer</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label>Company Name *</Label><Input value={form.company} onChange={e => setForm(p => ({ ...p, company: e.target.value }))} /></div>
-            <div><Label>Contact Name *</Label><Input value={form.contactName} onChange={e => setForm(p => ({ ...p, contactName: e.target.value }))} /></div>
+            <div><Label>Contact Name *</Label><Input value={form.contact_name} onChange={e => setForm(p => ({ ...p, contact_name: e.target.value }))} /></div>
             <div><Label>Email *</Label><Input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} /></div>
             <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} /></div>
             <div><Label>Address</Label><Input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} /></div>
             <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} /></div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
-              <Button onClick={handleAdd}>Add Customer</Button>
+              <Button onClick={handleAdd} disabled={createCustomer.isPending}>{createCustomer.isPending ? "Adding..." : "Add Customer"}</Button>
             </div>
           </div>
         </DialogContent>
@@ -179,22 +193,97 @@ export default function Customers() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" />{detailCustomer.company}
+                  <PricingTypeBadge pricingType={detailCustomer.pricing_type} />
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-6">
                 {/* Contact Info */}
                 <div className="grid grid-cols-2 gap-4 bg-muted/30 rounded-lg p-4 border border-border/50">
-                  <div><p className="text-xs text-muted-foreground">Contact</p><p className="text-sm font-medium">{detailCustomer.contactName}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Contact</p><p className="text-sm font-medium">{detailCustomer.contact_name}</p></div>
                   <div><p className="text-xs text-muted-foreground">Email</p><p className="text-sm font-medium">{detailCustomer.email}</p></div>
                   <div><p className="text-xs text-muted-foreground">Phone</p><p className="text-sm font-medium">{detailCustomer.phone}</p></div>
                   <div><p className="text-xs text-muted-foreground">Address</p><p className="text-sm font-medium">{detailCustomer.address}</p></div>
                 </div>
+
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-4">
-                  <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Tickets</p><p className="text-2xl font-bold">{detailCustomer.ticketCount}</p></CardContent></Card>
-                  <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Revenue</p><p className="text-2xl font-bold text-primary">${detailCustomer.totalRevenue.toLocaleString()}</p></CardContent></Card>
-                  <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Last Service</p><p className="text-lg font-bold">{detailCustomer.lastServiceDate ? format(new Date(detailCustomer.lastServiceDate), "MMM d") : "—"}</p></CardContent></Card>
+                  <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Tickets</p><p className="text-2xl font-bold">{detailCustomer.ticket_count}</p></CardContent></Card>
+                  <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Revenue</p><p className="text-2xl font-bold text-primary">${Number(detailCustomer.total_revenue).toLocaleString()}</p></CardContent></Card>
+                  <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Last Service</p><p className="text-lg font-bold">{detailCustomer.last_service_date ? format(new Date(detailCustomer.last_service_date), "MMM d") : "—"}</p></CardContent></Card>
                 </div>
+
+                {/* Pricing Configuration */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
+                    <CreditCard className="h-4 w-4" /> Pricing Configuration
+                  </h4>
+                  <div className="space-y-3 bg-muted/30 rounded-lg p-4 border border-border/50">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Pricing Type</Label>
+                      <Select value={detailCustomer.pricing_type} onValueChange={handlePricingTypeChange}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="rate_card">
+                            <span className="flex items-center gap-1.5"><CreditCard className="h-3 w-3" /> Standard Rate Card</span>
+                          </SelectItem>
+                          <SelectItem value="rate_sheet">
+                            <span className="flex items-center gap-1.5"><FileText className="h-3 w-3" /> Customer Rate Sheet</span>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {detailCustomer.pricing_type === "rate_card" && (
+                      <div className="text-xs text-muted-foreground flex items-start gap-1.5">
+                        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                        <span>Uses the Rate Cards + Customer Overrides system. Manage rate card assignments in Settings → Quoting & Rates → Customer Overrides.</span>
+                      </div>
+                    )}
+
+                    {detailCustomer.pricing_type === "rate_sheet" && (() => {
+                      const sheets = getCustomerRateSheets(detailCustomer.company);
+                      const activeSheet = sheets.find(s => s.status === "active");
+                      if (sheets.length === 0) {
+                        return (
+                          <div className="flex items-center gap-3 p-3 bg-medium/10 border border-medium/20 rounded-md">
+                            <AlertTriangle className="h-4 w-4 text-medium shrink-0" />
+                            <div className="flex-1">
+                              <p className="text-xs font-medium text-foreground">No rate sheet found for this customer</p>
+                              <p className="text-xs text-muted-foreground">Create one in Settings to enable scope-based pricing.</p>
+                            </div>
+                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => navigate("/settings")}>
+                              <Plus className="h-3 w-3" /> Create Rate Sheet
+                            </Button>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="space-y-2">
+                          {sheets.map(rs => (
+                            <div key={rs.id} className="flex items-center justify-between p-2 rounded-md border border-border/50 bg-background">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <div className="min-w-0">
+                                  <p className="text-xs font-medium text-foreground truncate">{rs.name}</p>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Badge variant={rs.status === "active" ? "default" : "secondary"} className="text-[10px] h-4 px-1">{rs.status}</Badge>
+                                    {rs.effective_date && <span>Effective: {format(new Date(rs.effective_date), "MMM d, yyyy")}</span>}
+                                  </div>
+                                </div>
+                              </div>
+                              <Button size="sm" variant="ghost" className="text-xs h-7 gap-1" onClick={() => navigate("/settings")}>
+                                <ExternalLink className="h-3 w-3" /> View
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
                 {/* Notes */}
                 {detailCustomer.notes && (
                   <div>
@@ -202,16 +291,45 @@ export default function Customers() {
                     <p className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 border border-border/50">{detailCustomer.notes}</p>
                   </div>
                 )}
-                {/* Service History Placeholder */}
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">Service History</h4>
-                  <p className="text-sm text-muted-foreground">Service history timeline will appear here when connected to live data.</p>
-                </div>
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Pricing Type Change Confirmation */}
+      <AlertDialog open={pricingConfirmOpen} onOpenChange={setPricingConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Pricing Type</AlertDialogTitle>
+            <AlertDialogDescription>
+              Changing the pricing type affects how quotes are generated for this customer.
+              {pendingPricingType === "rate_sheet"
+                ? " Quotes will use scope-based pricing from the customer's rate sheet instead of the standard rate card."
+                : " Quotes will use the standard rate card system instead of the scope-based rate sheet."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingPricingType(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPricingChange}>Confirm Change</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+  );
+}
+
+export function PricingTypeBadge({ pricingType }: { pricingType: string }) {
+  if (pricingType === "rate_sheet") {
+    return (
+      <Badge variant="outline" className="text-[10px] h-5 px-1.5 gap-1 border-primary/30 text-primary">
+        <FileText className="h-2.5 w-2.5" /> Rate Sheet
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="text-[10px] h-5 px-1.5 gap-1 border-muted-foreground/30 text-muted-foreground">
+      <CreditCard className="h-2.5 w-2.5" /> Rate Card
+    </Badge>
   );
 }
