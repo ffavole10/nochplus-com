@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Upload, X, Camera, CreditCard, Plus, Check, ChevronDown, MapPin, Zap,
-  User, Building2, ArrowLeft, Image
+  User, Building2, ArrowLeft, Image, LocateFixed
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CompanyGrid } from "./CompanyGrid";
