@@ -48,6 +48,10 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
   const [siteName, setSiteName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [accountManager, setAccountManager] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [terms, setTerms] = useState("Net 30");
+  const [poNumber, setPoNumber] = useState("");
 
   useEffect(() => {
     if (estimate) {
@@ -63,6 +67,10 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
       setSiteName(estimate.site_name || "");
       setCustomerEmail(estimate.customer_email || "");
       setAccountManager(estimate.account_manager || "");
+      setCustomerName(estimate.customer_name || "");
+      setCustomerAddress(estimate.customer_address || "");
+      setTerms(estimate.terms || "Net 30");
+      setPoNumber(estimate.po_number || "");
       setEditing(false);
     }
   }, [estimate]);
@@ -106,6 +114,10 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
       site_name: siteName || null,
       customer_email: customerEmail || null,
       account_manager: accountManager || null,
+      customer_name: customerName || null,
+      customer_address: customerAddress || null,
+      terms: terms || "Net 30",
+      po_number: poNumber || null,
     }, {
       onSuccess: (data) => {
         toast.success("Estimate updated");
@@ -146,11 +158,15 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
                     setSiteName(estimate.site_name || "");
                     setCustomerEmail(estimate.customer_email || "");
                     setAccountManager(estimate.account_manager || "");
+                    setCustomerName(estimate.customer_name || "");
+                    setCustomerAddress(estimate.customer_address || "");
+                    setTerms(estimate.terms || "Net 30");
+                    setPoNumber(estimate.po_number || "");
                     setEditing(false);
                   }}>Cancel</Button>
                 </>
               )}
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { downloadEstimatePDF(estimate, partnerName); toast.success("PDF downloaded"); }}>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={async () => { await downloadEstimatePDF(estimate, partnerName); toast.success("PDF downloaded"); }}>
                 <Download className="h-3.5 w-3.5" />Download PDF
               </Button>
               <Badge variant="outline" className={config.className}>{config.label}</Badge>
@@ -163,8 +179,16 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
           {/* Header fields */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-muted/30 rounded-lg p-4 border border-border/50">
             <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Estimate No.</p>
+              <p className="text-sm font-semibold text-foreground">{estimate.estimate_number || "—"}</p>
+            </div>
+            <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Ticket</p>
               <p className="text-sm font-semibold text-foreground">#{estimate.ticket_id || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Customer Name</p>
+              {editing ? <Input value={customerName} onChange={e => setCustomerName(e.target.value)} className="h-8 text-sm" /> : <p className="text-sm font-semibold text-foreground">{customerName || "—"}</p>}
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Site</p>
@@ -178,8 +202,15 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Account Manager</p>
               {editing ? <Input value={accountManager} onChange={e => setAccountManager(e.target.value)} className="h-8 text-sm" /> : <p className="text-sm font-semibold text-foreground">{accountManager || "—"}</p>}
             </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Terms</p>
+              {editing ? <Input value={terms} onChange={e => setTerms(e.target.value)} className="h-8 text-sm" placeholder="Net 30" /> : <p className="text-sm font-semibold text-foreground">{terms}</p>}
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">PO Number</p>
+              {editing ? <Input value={poNumber} onChange={e => setPoNumber(e.target.value)} className="h-8 text-sm" placeholder="Optional" /> : <p className="text-sm font-semibold text-foreground">{poNumber || "—"}</p>}
+            </div>
           </div>
-
           {/* Line Items */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">Line Items</h3>
@@ -319,16 +350,16 @@ const Estimates = () => {
     });
   };
 
-  const handleDownloadSelected = () => {
+  const handleDownloadSelected = async () => {
     const selected = filteredEstimates.filter(e => selectedIds.has(e.id));
     if (selected.length === 0) { toast.error("No estimates selected"); return; }
-    downloadMultipleEstimatePDFs(selected, partnerName);
+    await downloadMultipleEstimatePDFs(selected, partnerName);
     toast.success(`Downloading ${selected.length} estimate${selected.length > 1 ? "s" : ""}`);
   };
 
-  const handleDownloadAll = () => {
+  const handleDownloadAll = async () => {
     if (filteredEstimates.length === 0) return;
-    downloadMultipleEstimatePDFs(filteredEstimates, partnerName);
+    await downloadMultipleEstimatePDFs(filteredEstimates, partnerName);
     toast.success(`Downloading all ${filteredEstimates.length} estimate${filteredEstimates.length > 1 ? "s" : ""}`);
   };
 
@@ -400,14 +431,16 @@ const Estimates = () => {
                 <TableRow>
                   <TableHead className="w-10">
                     <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" className={someSelected ? "data-[state=unchecked]:bg-primary/20" : ""} />
-                  </TableHead>
+                   </TableHead>
+                  <TableHead>Estimate #</TableHead>
                   <TableHead>Station / Site</TableHead>
                   <TableHead>Ticket</TableHead>
-                  <TableHead>Customer Email</TableHead>
+                  <TableHead>Customer</TableHead>
                   <TableHead>Account Manager</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -417,13 +450,19 @@ const Estimates = () => {
                   return (
                     <TableRow key={est.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedEstimate(est)}>
                       <TableCell onClick={(e) => e.stopPropagation()}><Checkbox checked={isChecked} onCheckedChange={() => toggleOne(est.id)} /></TableCell>
+                      <TableCell className="text-sm font-mono text-muted-foreground">{est.estimate_number || "—"}</TableCell>
                       <TableCell><div className="font-medium">{est.site_name || est.station_id || "—"}</div></TableCell>
                       <TableCell className="text-sm text-muted-foreground">{est.ticket_id || "—"}</TableCell>
-                      <TableCell className="text-sm">{est.customer_email || "—"}</TableCell>
+                      <TableCell className="text-sm">{est.customer_name || est.customer_email || "—"}</TableCell>
                       <TableCell className="text-sm">{est.account_manager || "—"}</TableCell>
                       <TableCell className="text-right font-semibold">${Number(est.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                       <TableCell><Badge variant="outline" className={config.className}>{config.label}</Badge></TableCell>
                       <TableCell className="text-sm text-muted-foreground">{format(new Date(est.created_at), "MMM d, yyyy")}</TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => { await downloadEstimatePDF(est); toast.success("PDF downloaded"); }}>
+                          <Download className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })}

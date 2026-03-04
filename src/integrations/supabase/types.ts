@@ -580,60 +580,81 @@ export type Database = {
           campaign_id: string | null
           charger_record_id: string | null
           created_at: string
+          customer_address: string | null
           customer_email: string | null
+          customer_name: string | null
+          estimate_number: string | null
           id: string
           line_items: Json
           notes: string | null
+          po_number: string | null
           sent_at: string | null
+          service_date_range: string | null
           site_name: string | null
           station_id: string | null
           status: string
           subtotal: number
           tax: number
           tax_rate: number
+          terms: string
           ticket_id: string | null
           total: number
           updated_at: string
+          valid_until: string | null
         }
         Insert: {
           account_manager?: string | null
           campaign_id?: string | null
           charger_record_id?: string | null
           created_at?: string
+          customer_address?: string | null
           customer_email?: string | null
+          customer_name?: string | null
+          estimate_number?: string | null
           id?: string
           line_items?: Json
           notes?: string | null
+          po_number?: string | null
           sent_at?: string | null
+          service_date_range?: string | null
           site_name?: string | null
           station_id?: string | null
           status?: string
           subtotal?: number
           tax?: number
           tax_rate?: number
+          terms?: string
           ticket_id?: string | null
           total?: number
           updated_at?: string
+          valid_until?: string | null
         }
         Update: {
           account_manager?: string | null
           campaign_id?: string | null
           charger_record_id?: string | null
           created_at?: string
+          customer_address?: string | null
           customer_email?: string | null
+          customer_name?: string | null
+          estimate_number?: string | null
           id?: string
           line_items?: Json
           notes?: string | null
+          po_number?: string | null
           sent_at?: string | null
+          service_date_range?: string | null
           site_name?: string | null
           station_id?: string | null
           status?: string
           subtotal?: number
           tax?: number
           tax_rate?: number
+          terms?: string
           ticket_id?: string | null
           total?: number
           updated_at?: string
+          valid_until?: string | null
         }
         Relationships: [
           {
