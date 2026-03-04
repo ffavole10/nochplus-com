@@ -428,6 +428,42 @@ export type Database = {
           },
         ]
       }
+      customer_rate_sheets: {
+        Row: {
+          created_at: string
+          customer_name: string
+          description: string | null
+          effective_date: string | null
+          expiration_date: string | null
+          id: string
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          description?: string | null
+          effective_date?: string | null
+          expiration_date?: string | null
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          description?: string | null
+          effective_date?: string | null
+          expiration_date?: string | null
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       estimates: {
         Row: {
           account_manager: string | null
@@ -917,6 +953,153 @@ export type Database = {
             columns: ["rate_sheet_id"]
             isOneToOne: false
             referencedRelation: "rate_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_sheet_scopes: {
+        Row: {
+          created_at: string
+          exhibit: string
+          hours_to_complete: number | null
+          id: string
+          price_192hr: number | null
+          price_24hr: number | null
+          price_48hr: number | null
+          price_72hr: number | null
+          price_96hr: number | null
+          rate_sheet_id: string
+          requires_ev_rental: boolean
+          scope_code: string
+          scope_name: string
+          sort_order: number
+          travel_note: string | null
+        }
+        Insert: {
+          created_at?: string
+          exhibit?: string
+          hours_to_complete?: number | null
+          id?: string
+          price_192hr?: number | null
+          price_24hr?: number | null
+          price_48hr?: number | null
+          price_72hr?: number | null
+          price_96hr?: number | null
+          rate_sheet_id: string
+          requires_ev_rental?: boolean
+          scope_code: string
+          scope_name: string
+          sort_order?: number
+          travel_note?: string | null
+        }
+        Update: {
+          created_at?: string
+          exhibit?: string
+          hours_to_complete?: number | null
+          id?: string
+          price_192hr?: number | null
+          price_24hr?: number | null
+          price_48hr?: number | null
+          price_72hr?: number | null
+          price_96hr?: number | null
+          rate_sheet_id?: string
+          requires_ev_rental?: boolean
+          scope_code?: string
+          scope_name?: string
+          sort_order?: number
+          travel_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_sheet_scopes_rate_sheet_id_fkey"
+            columns: ["rate_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "customer_rate_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_sheet_travel_fees: {
+        Row: {
+          created_at: string
+          fee_type: string
+          id: string
+          label: string
+          notes: string | null
+          rate: number
+          rate_sheet_id: string
+          sort_order: number
+          threshold: number | null
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          fee_type: string
+          id?: string
+          label: string
+          notes?: string | null
+          rate?: number
+          rate_sheet_id: string
+          sort_order?: number
+          threshold?: number | null
+          unit?: string
+        }
+        Update: {
+          created_at?: string
+          fee_type?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          rate?: number
+          rate_sheet_id?: string
+          sort_order?: number
+          threshold?: number | null
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_sheet_travel_fees_rate_sheet_id_fkey"
+            columns: ["rate_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "customer_rate_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_sheet_volume_discounts: {
+        Row: {
+          created_at: string
+          discount_percent: number
+          discount_type: string
+          id: string
+          max_stations: number | null
+          min_stations: number
+          rate_sheet_id: string
+        }
+        Insert: {
+          created_at?: string
+          discount_percent?: number
+          discount_type?: string
+          id?: string
+          max_stations?: number | null
+          min_stations?: number
+          rate_sheet_id: string
+        }
+        Update: {
+          created_at?: string
+          discount_percent?: number
+          discount_type?: string
+          id?: string
+          max_stations?: number | null
+          min_stations?: number
+          rate_sheet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_sheet_volume_discounts_rate_sheet_id_fkey"
+            columns: ["rate_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "customer_rate_sheets"
             referencedColumns: ["id"]
           },
         ]
