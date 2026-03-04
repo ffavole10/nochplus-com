@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { ServiceTicket, WORKFLOW_STEPS_TEMPLATE, WorkflowStepInfo } from "@/types/serviceTicket";
-import { MOCK_SERVICE_TICKETS } from "@/data/mockServiceTickets";
 
 function makeSteps(currentStep: number): WorkflowStepInfo[] {
   return WORKFLOW_STEPS_TEMPLATE.map((s) => ({
@@ -24,7 +23,6 @@ interface ServiceTicketsStore {
   updateTicket: (id: string, updates: Partial<ServiceTicket>) => void;
   getTicketById: (id: string) => ServiceTicket | undefined;
   getNextTicketId: () => string;
-  // Parent-child helpers
   getChildrenOf: (parentId: string) => ServiceTicket[];
   getParentOf: (childId: string) => ServiceTicket | undefined;
   getSiblings: (childId: string) => ServiceTicket[];
@@ -35,11 +33,11 @@ interface ServiceTicketsStore {
     chargers: Array<{ charger: ServiceTicket["charger"]; issue: ServiceTicket["issue"] }>,
     source: ServiceTicket["source"],
     sourceCampaignName?: string,
-  ) => string; // returns parent id
+  ) => string;
 }
 
 export const useServiceTicketsStore = create<ServiceTicketsStore>((set, get) => ({
-  tickets: MOCK_SERVICE_TICKETS,
+  tickets: [],
 
   addTicket: (ticket) =>
     set((state) => ({ tickets: [ticket, ...state.tickets] })),
