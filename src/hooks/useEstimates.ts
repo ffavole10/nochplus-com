@@ -65,6 +65,7 @@ export function useCreateEstimate() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["estimates", data.campaign_id] });
+      queryClient.invalidateQueries({ queryKey: ["estimates", "all"] });
     },
   });
 }
@@ -86,6 +87,7 @@ export function useUpdateEstimate() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["estimates", data.campaign_id] });
+      queryClient.invalidateQueries({ queryKey: ["estimates", "all"] });
     },
   });
 }

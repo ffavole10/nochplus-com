@@ -1,0 +1,1 @@
+ALTER TABLE public.estimates ALTER COLUMN tax_rate SET DEFAULT 0;
