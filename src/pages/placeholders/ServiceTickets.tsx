@@ -156,17 +156,27 @@ export default function ServiceTickets() {
   const addTicket = useServiceTicketsStore((s) => s.addTicket);
   const createParentWithChildren = useServiceTicketsStore((s) => s.createParentWithChildren);
 
-  const handleSubmit = (data: TicketData) => {
-    // Single charger: create standalone ticket
+  const handleSubmit = (data: TicketCreationData) => {
     const nextId = useServiceTicketsStore.getState().getNextTicketId();
     const newTicket: ServiceTicket = {
       id: `st-${Date.now()}`,
       ticketId: nextId,
       source: "manual",
-      customer: data.customer,
-      charger: data.charger,
+      customer: {
+        name: data.customerName,
+        company: data.customerCompany,
+        email: data.contactEmail || "",
+        phone: data.contactPhone || "",
+        address: data.chargerLocation,
+      },
+      charger: {
+        brand: (data.chargerBrand || "") as any,
+        serialNumber: data.chargerSerial,
+        type: (data.chargerType || "") as any,
+        location: data.chargerLocation,
+      },
       photos: [],
-      issue: data.issue,
+      issue: { description: data.issueDescription },
       priority: "Medium",
       status: "pending_review",
       currentStep: 1,
