@@ -130,6 +130,44 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
     setPhase("ticket_details");
   };
 
+  const handleUseCurrentLocation = useCallback(async () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            { headers: { "User-Agent": "NOCHPlatform/1.0" } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            const road = [addr.house_number, addr.road].filter(Boolean).join(" ");
+            if (road) setNewLocAddress(road);
+            if (addr.city || addr.town || addr.village) setNewLocCity(addr.city || addr.town || addr.village);
+            if (addr.state) setNewLocState(addr.state);
+            if (addr.postcode) setNewLocZip(addr.postcode);
+            toast.success("Location auto-filled");
+          }
+        } catch {
+          toast.error("Could not resolve address");
+        } finally {
+          setGeoLoading(false);
+        }
+      },
+      () => {
+        toast.error("Location access denied");
+        setGeoLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
   const handleSaveNewLocation = async () => {
     if (!newLocName.trim() || !selectedCustomer) return;
     const result = await createLocation.mutateAsync({
