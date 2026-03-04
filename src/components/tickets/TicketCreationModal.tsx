@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Upload, X, Camera, CreditCard, Plus, Check, ChevronDown, MapPin, Zap,
-  User, Building2, ArrowLeft, Image
+  User, Building2, ArrowLeft, Image, LocateFixed
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CompanyGrid } from "./CompanyGrid";
@@ -80,7 +81,7 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
   const [newLocCity, setNewLocCity] = useState("");
   const [newLocState, setNewLocState] = useState("");
   const [newLocZip, setNewLocZip] = useState("");
-
+  const [geoLoading, setGeoLoading] = useState(false);
   // New contact inline
   const [newContactName, setNewContactName] = useState("");
   const [newContactEmail, setNewContactEmail] = useState("");
@@ -128,6 +129,44 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
     setSelectedCustomer(customer);
     setPhase("ticket_details");
   };
+
+  const handleUseCurrentLocation = useCallback(async () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            { headers: { "User-Agent": "NOCHPlatform/1.0" } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            const road = [addr.house_number, addr.road].filter(Boolean).join(" ");
+            if (road) setNewLocAddress(road);
+            if (addr.city || addr.town || addr.village) setNewLocCity(addr.city || addr.town || addr.village);
+            if (addr.state) setNewLocState(addr.state);
+            if (addr.postcode) setNewLocZip(addr.postcode);
+            toast.success("Location auto-filled");
+          }
+        } catch {
+          toast.error("Could not resolve address");
+        } finally {
+          setGeoLoading(false);
+        }
+      },
+      () => {
+        toast.error("Location access denied");
+        setGeoLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   const handleSaveNewLocation = async () => {
     if (!newLocName.trim() || !selectedCustomer) return;
@@ -316,6 +355,24 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
               ) : (
                 <Card>
                   <CardContent className="p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">New Location</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={handleUseCurrentLocation}
+                            disabled={geoLoading}
+                          >
+                            <LocateFixed className={cn("h-4 w-4", geoLoading && "animate-pulse")} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">Use current location</TooltipContent>
+                      </Tooltip>
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="col-span-2">
                         <Input placeholder="Site name" value={newLocName} onChange={(e) => setNewLocName(e.target.value)} />
