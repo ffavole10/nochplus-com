@@ -40,7 +40,6 @@ export function ParentTicketDetail({ ticket, onCollapse, onNavigateToChild }: Pa
   const { data: dbCustomers = [] } = useCustomers();
   const matchedCustomer = dbCustomers.find(c => c.company.toLowerCase() === ticket.customer.company.toLowerCase());
   const children = useMemo(() => {
-  const children = useMemo(() => {
     if (!ticket.childTicketIds) return [];
     return ticket.childTicketIds
       .map((cid) => allTickets.find((t) => t.id === cid))
@@ -183,7 +182,7 @@ export function ParentTicketDetail({ ticket, onCollapse, onNavigateToChild }: Pa
   );
 }
 
-function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <div className="flex items-start gap-2">
       <Icon className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
