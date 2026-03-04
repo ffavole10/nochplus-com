@@ -307,7 +307,7 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
       if (!result) return; // customer uses rate_card — keep defaults
 
       setRateSheetPricing(result);
-      const parts = swiMatch?.required_parts ?? swiDoc?.requiredParts ?? [];
+      const parts = swiInfo.parts.length > 0 ? swiInfo.parts : (swiMatch?.required_parts ?? swiDoc?.requiredParts ?? []);
       const rateSheetItems = buildRateSheetLineItems(
         result,
         swiTitle || "General Service",

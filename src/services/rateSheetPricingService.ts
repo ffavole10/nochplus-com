@@ -207,7 +207,7 @@ export async function lookupRateSheetPricing(
 
   // 4. Match scope
   const slaTier = getSlaColumn(priority);
-  const matchedScope = findBestScope(scopes, swiTitle, swiId);
+  const matchedScope = findBestScope(scopes, swiTitle, swiId, ticketDescription || null);
 
   let scopeResult: RateSheetPricingResult["matchedScope"] = undefined;
   if (matchedScope) {
