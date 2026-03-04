@@ -11,7 +11,7 @@ import { CustomerLogo } from "@/components/CustomerLogo";
 import { TicketDetailPanel } from "@/components/tickets/TicketDetailPanel";
 import { TicketReviewPanel } from "@/components/tickets/TicketReviewPanel";
 import { ParentTicketDetail } from "@/components/tickets/ParentTicketDetail";
-import type { TicketData } from "@/types/ticket";
+
 import { ServiceTicket } from "@/types/serviceTicket";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { AutoHealResult } from "@/services/autoHealService";
