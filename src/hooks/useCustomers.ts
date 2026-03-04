@@ -15,6 +15,11 @@ export type Customer = {
   last_service_date: string | null;
   status: string;
   pricing_type: string;
+  website_url: string;
+  logo_url: string | null;
+  industry: string | null;
+  description: string | null;
+  headquarters_address: string | null;
   created_at: string;
   updated_at: string;
 };
