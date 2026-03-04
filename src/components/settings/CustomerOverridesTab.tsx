@@ -14,6 +14,7 @@ import {
   useCustomerOverrides, useCreateCustomerOverride, useUpdateCustomerOverride, useDeleteCustomerOverride,
   useRateCards, useRateCardItems, type CustomerOverride, type RateCardItem,
 } from "@/hooks/useQuotingSettings";
+import { useCustomers } from "@/hooks/useCustomers";
 
 export function CustomerOverridesTab() {
   const { data: overrides = [], isLoading } = useCustomerOverrides();
