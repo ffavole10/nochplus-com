@@ -195,11 +195,6 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
                             <Badge variant="outline" className={`text-[10px] shrink-0 ${getStatusBadge(campaign.status)}`}>
                               {campaign.status}
                             </Badge>
-                            {campaign.source === "sample" && (
-                              <Badge variant="outline" className="text-[10px] text-muted-foreground border-muted">
-                                Demo
-                              </Badge>
-                            )}
                           </div>
                           <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                             <span>{campaign.customer}</span>
