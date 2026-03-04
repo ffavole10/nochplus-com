@@ -54,9 +54,11 @@ function StepIcon({ status }: { status: StepStatus }) {
 export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: ServiceTicketDetailModalProps) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [swiPreviewOpen, setSwiPreviewOpen] = useState(false);
+  const { data: dbCustomers = [] } = useCustomers();
 
   if (!ticket) return null;
 
+  const matchedCustomer = dbCustomers.find(c => c.company.toLowerCase() === ticket.customer.company.toLowerCase());
   const progressPercent = ((ticket.currentStep - 1) / 10) * 100;
 
   return (
