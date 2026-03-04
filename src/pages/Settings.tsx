@@ -82,6 +82,7 @@ function QuotingAndRatesSection() {
   const { data: cards = [] } = useRateCards();
   const { data: rules = [] } = useQuoteRules();
   const { data: overrides = [] } = useCustomerOverrides();
+  const { data: rateSheets = [] } = useCustomerRateSheetsList();
   const [quotingTab, setQuotingTab] = useState("rate-cards");
 
   return (
@@ -97,10 +98,14 @@ function QuotingAndRatesSection() {
           <TabsTrigger value="customer-overrides" className="gap-1.5">
             Customer Overrides <Badge variant="secondary" className="ml-1 text-xs h-5 px-1.5">{overrides.length}</Badge>
           </TabsTrigger>
+          <TabsTrigger value="customer-rate-sheets" className="gap-1.5">
+            Customer Rate Sheets <Badge variant="secondary" className="ml-1 text-xs h-5 px-1.5">{rateSheets.length}</Badge>
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="rate-cards"><RateCardsTab /></TabsContent>
         <TabsContent value="quote-rules"><QuoteRulesTab /></TabsContent>
         <TabsContent value="customer-overrides"><CustomerOverridesTab /></TabsContent>
+        <TabsContent value="customer-rate-sheets"><CustomerRateSheetsTab /></TabsContent>
       </Tabs>
       <QuoteFlowDiagram />
     </div>
