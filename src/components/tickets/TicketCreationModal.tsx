@@ -81,7 +81,7 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
   const [newLocCity, setNewLocCity] = useState("");
   const [newLocState, setNewLocState] = useState("");
   const [newLocZip, setNewLocZip] = useState("");
-
+  const [geoLoading, setGeoLoading] = useState(false);
   // New contact inline
   const [newContactName, setNewContactName] = useState("");
   const [newContactEmail, setNewContactEmail] = useState("");
