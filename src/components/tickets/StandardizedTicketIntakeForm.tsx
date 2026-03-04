@@ -567,7 +567,6 @@ function FieldInput({
           </div>
         )}
       </div>
-      />
       {error && <p className="text-xs text-critical">{error}</p>}
     </div>
   );
