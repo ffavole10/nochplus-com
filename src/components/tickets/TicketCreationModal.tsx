@@ -251,6 +251,7 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
       chargerSerial,
       chargerType,
       chargerLocation: loc ? `${loc.site_name}, ${loc.address}` : "",
+      stationId,
       issueDescription,
       photos,
     });
