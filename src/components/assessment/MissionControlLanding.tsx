@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Campaign } from "@/types/campaign";
-import { SampleCampaign, sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
+import { SampleCampaign, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import nochLogo from "@/assets/noch-logo-white.png";
 
 interface MissionControlLandingProps {
@@ -61,16 +61,6 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
       startDate: c.startDate,
       endDate: c.endDate,
       source: "user" as const,
-    })),
-    ...sampleCampaigns.map(c => ({
-      id: `sample-${c.id}`,
-      name: c.name,
-      status: c.status,
-      customer: CUSTOMER_LABELS[c.customer] || c.customer,
-      totalChargers: c.totalChargers,
-      startDate: c.startDate,
-      endDate: c.endDate,
-      source: "sample" as const,
     })),
   ];
 
@@ -205,11 +195,6 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
                             <Badge variant="outline" className={`text-[10px] shrink-0 ${getStatusBadge(campaign.status)}`}>
                               {campaign.status}
                             </Badge>
-                            {campaign.source === "sample" && (
-                              <Badge variant="outline" className="text-[10px] text-muted-foreground border-muted">
-                                Demo
-                              </Badge>
-                            )}
                           </div>
                           <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                             <span>{campaign.customer}</span>
@@ -217,7 +202,7 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
                             <span>{campaign.startDate} → {campaign.endDate}</span>
                           </div>
                         </div>
-                        {campaign.source === "user" && onDeleteCampaign && (
+                        {onDeleteCampaign && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button

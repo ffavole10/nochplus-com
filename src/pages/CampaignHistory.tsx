@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CampaignUploadDialog } from "@/components/campaigns/CampaignUploadDialog";
 import { useCampaigns } from "@/hooks/useCampaigns";
-import { sampleCampaigns, CUSTOMER_LABELS, CampaignStatus } from "@/data/sampleCampaigns";
+import { CUSTOMER_LABELS, CampaignStatus } from "@/data/sampleCampaigns";
 
 const getStatusIcon = (status: CampaignStatus) => {
   switch (status) {
@@ -54,9 +54,7 @@ export default function CampaignHistory() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const { data: dbCampaigns } = useCampaigns();
 
-  // Combine database campaigns with sample data for display
   const allCampaigns = [
-    ...sampleCampaigns,
     ...(dbCampaigns?.map((c) => ({
       id: c.id,
       name: c.name,

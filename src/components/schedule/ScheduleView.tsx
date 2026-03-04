@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2, Upload, Loader2 } from "lucide-react";
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
-import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
+import { CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 
 interface ScheduleViewProps {
   chargers: AssessmentCharger[];

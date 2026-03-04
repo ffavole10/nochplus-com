@@ -10,7 +10,7 @@ import { AssessmentCharger, ViewMode } from "@/types/assessment";
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
 import nochLogo from "@/assets/noch-logo-white.png";
-import { sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
+import { CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
