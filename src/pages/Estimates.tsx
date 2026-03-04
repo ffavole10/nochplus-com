@@ -211,6 +211,8 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
               {editing ? <Input value={poNumber} onChange={e => setPoNumber(e.target.value)} className="h-8 text-sm" placeholder="Optional" /> : <p className="text-sm font-semibold text-foreground">{poNumber || "—"}</p>}
             </div>
           </div>
+          {/* Line Items */}
+          <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">Line Items</h3>
             <div className="border border-border rounded-lg overflow-hidden">
               <table className="w-full text-sm">
