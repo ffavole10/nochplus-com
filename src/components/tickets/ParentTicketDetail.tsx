@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useMemo } from "react";
+import { PricingTypeBadge } from "@/pages/placeholders/Customers";
+import { useCustomers } from "@/hooks/useCustomers";
 
 interface ParentTicketDetailProps {
   ticket: ServiceTicket;
