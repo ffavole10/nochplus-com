@@ -433,7 +433,7 @@ const Estimates = () => {
         </CardContent>
       </Card>
 
-      <EstimateDetailModal estimate={selectedEstimate} open={!!selectedEstimate} onOpenChange={(o) => { if (!o) setSelectedEstimate(null); }} partnerName={partnerName} />
+      <EstimateDetailModal estimate={selectedEstimate} open={!!selectedEstimate} onOpenChange={(o) => { if (!o) setSelectedEstimate(null); }} partnerName={partnerName} onUpdated={(updated) => setSelectedEstimate(updated)} />
     </div>
   );
 };
