@@ -238,6 +238,14 @@ serve(async (req) => {
               ...ticketData,
               // Pass previous agent results
               diagnostic_results: results["diagnostic-agent"] || "N/A",
+              // Extract specific fields from diagnostic results for SWI matcher
+              primary_issue: (results["diagnostic-agent"] as any)?.diagnosis?.primary_issue
+                || (results["diagnostic-agent"] as any)?.primary_issue
+                || ticketData.issue_description
+                || "N/A",
+              root_cause: (results["diagnostic-agent"] as any)?.diagnosis?.root_cause
+                || (results["diagnostic-agent"] as any)?.root_cause
+                || "N/A",
               swi_recommendations: results["swi-matcher"] || "N/A",
               swi_library_json: JSON.stringify(swiLibrary.slice(0, 80)),
               swi_count: swiLibrary.length,
