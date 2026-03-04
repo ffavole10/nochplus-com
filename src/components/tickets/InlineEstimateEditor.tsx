@@ -497,7 +497,7 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
           estimateId: savedEstimate.id,
           ticketId: ticket.ticketId,
           accountName: ticket.customer.company || "—",
-          chargerName: ticket.charger.serialNumber,
+          chargerName: ticket.charger.serialNumber || ticket.charger.brand || "Unknown",
           chargerType: ticket.charger.type === "DC_L3" ? "DC | Level 3" : "AC | Level 2",
           location: location || "—",
           swiTitle: swiDoc?.title || ticket.swiMatchData?.matched_swi_id || "General Service",
