@@ -68,36 +68,71 @@ function getPriceForTier(
 /*  Scope matching heuristic                                           */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Extract scope code patterns like "Scope 7A", "Scope 7-Dual-A", "7A Single"
+ * from free-text descriptions.
+ */
+function extractScopeCode(text: string): string | null {
+  // Match "Scope 7A", "Scope 7-Dual-A", "scope 12B", etc.
+  const scopeMatch = text.match(/scope\s+(\d+[A-Za-z]?(?:\s*-?\s*\w+)*)/i);
+  if (scopeMatch) return scopeMatch[1].trim();
+  // Match standalone codes like "7A Single", "12B"
+  const codeMatch = text.match(/\b(\d+[A-Za-z])\b/);
+  if (codeMatch) return codeMatch[1];
+  return null;
+}
+
 function findBestScope(
   scopes: Record<string, unknown>[],
   swiTitle: string | null,
-  swiId: string | null
+  swiId: string | null,
+  ticketDescription: string | null = null
 ): Record<string, unknown> | null {
   if (!scopes.length) return null;
 
-  const needle = (swiTitle || swiId || "").toLowerCase();
-  if (!needle) return scopes[0];
+  // Collect all text sources for matching
+  const sources = [swiTitle, swiId, ticketDescription].filter(Boolean) as string[];
+  if (!sources.length) return scopes[0];
 
-  // Try exact scope_name match
+  // 1. Try to extract a scope code from any source and match against scope_code
+  for (const src of sources) {
+    const extractedCode = extractScopeCode(src);
+    if (extractedCode) {
+      const codeLower = extractedCode.toLowerCase().replace(/[\s\-]+/g, "");
+      const codeMatch = scopes.find((s) => {
+        const sc = (s.scope_code as string).toLowerCase().replace(/[\s\-]+/g, "");
+        return sc === codeLower || sc.includes(codeLower) || codeLower.includes(sc);
+      });
+      if (codeMatch) return codeMatch;
+    }
+  }
+
+  const needle = sources.join(" ").toLowerCase();
+
+  // 2. Try exact scope_name match
   const exact = scopes.find(
     (s) => (s.scope_name as string).toLowerCase() === needle
   );
   if (exact) return exact;
 
-  // Try substring match (either direction)
+  // 3. Try substring match (either direction) on scope_name and scope_code
   const partial = scopes.find((s) => {
     const name = (s.scope_name as string).toLowerCase();
-    return name.includes(needle) || needle.includes(name);
+    const code = (s.scope_code as string).toLowerCase();
+    return name.includes(needle) || needle.includes(name) ||
+           code.includes(needle) || needle.includes(code);
   });
   if (partial) return partial;
 
-  // Keyword scoring
-  const keywords = needle.split(/[\s,\-—]+/).filter((w) => w.length > 3);
+  // 4. Keyword scoring across all sources
+  const keywords = needle.split(/[\s,\-—]+/).filter((w) => w.length > 2);
   let best: Record<string, unknown> | null = null;
   let bestScore = 0;
   for (const s of scopes) {
     const name = (s.scope_name as string).toLowerCase();
-    const score = keywords.filter((k) => name.includes(k)).length;
+    const code = (s.scope_code as string).toLowerCase();
+    const combined = `${name} ${code}`;
+    const score = keywords.filter((k) => combined.includes(k)).length;
     if (score > bestScore) {
       bestScore = score;
       best = s;
