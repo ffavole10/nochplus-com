@@ -158,6 +158,10 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
                     setSiteName(estimate.site_name || "");
                     setCustomerEmail(estimate.customer_email || "");
                     setAccountManager(estimate.account_manager || "");
+                    setCustomerName(estimate.customer_name || "");
+                    setCustomerAddress(estimate.customer_address || "");
+                    setTerms(estimate.terms || "Net 30");
+                    setPoNumber(estimate.po_number || "");
                     setEditing(false);
                   }}>Cancel</Button>
                 </>
