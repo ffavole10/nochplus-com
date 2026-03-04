@@ -421,6 +421,11 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
                   value={chargerSerial}
                   onChange={(e) => setChargerSerial(e.target.value)}
                 />
+                <Input
+                  placeholder="Station ID"
+                  value={stationId}
+                  onChange={(e) => setStationId(e.target.value)}
+                />
                 <Select value={chargerType} onValueChange={setChargerType}>
                   <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
                   <SelectContent>
