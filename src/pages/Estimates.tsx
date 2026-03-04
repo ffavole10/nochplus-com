@@ -179,8 +179,16 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
           {/* Header fields */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-muted/30 rounded-lg p-4 border border-border/50">
             <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Estimate No.</p>
+              <p className="text-sm font-semibold text-foreground">{estimate.estimate_number || "—"}</p>
+            </div>
+            <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Ticket</p>
               <p className="text-sm font-semibold text-foreground">#{estimate.ticket_id || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Customer Name</p>
+              {editing ? <Input value={customerName} onChange={e => setCustomerName(e.target.value)} className="h-8 text-sm" /> : <p className="text-sm font-semibold text-foreground">{customerName || "—"}</p>}
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Site</p>
@@ -194,10 +202,15 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Account Manager</p>
               {editing ? <Input value={accountManager} onChange={e => setAccountManager(e.target.value)} className="h-8 text-sm" /> : <p className="text-sm font-semibold text-foreground">{accountManager || "—"}</p>}
             </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Terms</p>
+              {editing ? <Input value={terms} onChange={e => setTerms(e.target.value)} className="h-8 text-sm" placeholder="Net 30" /> : <p className="text-sm font-semibold text-foreground">{terms}</p>}
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">PO Number</p>
+              {editing ? <Input value={poNumber} onChange={e => setPoNumber(e.target.value)} className="h-8 text-sm" placeholder="Optional" /> : <p className="text-sm font-semibold text-foreground">{poNumber || "—"}</p>}
+            </div>
           </div>
-
-          {/* Line Items */}
-          <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">Line Items</h3>
             <div className="border border-border rounded-lg overflow-hidden">
               <table className="w-full text-sm">
