@@ -3,12 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Upload, TrendingUp, Brain, Database } from "lucide-react";
 
-const MOCK_INSIGHTS = [
-  { pattern: "Cold weather power board failures", samples: 8, confidence: "+12%", date: "2 days ago" },
-  { pattern: "CCS connector wear > 3 years", samples: 15, confidence: "+8%", date: "5 days ago" },
-  { pattern: "Firmware E-003 after OTA update", samples: 4, confidence: "+5%", date: "1 week ago" },
-  { pattern: "Ground fault in coastal installs", samples: 6, confidence: "+10%", date: "2 weeks ago" },
-];
+const MOCK_INSIGHTS: { pattern: string; samples: number; confidence: string; date: string }[] = [];
 
 export function MLSection() {
   return (

@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CampaignUploadDialog } from "@/components/campaigns/CampaignUploadDialog";
 import { useCampaigns } from "@/hooks/useCampaigns";
-import { sampleCampaigns, CUSTOMER_LABELS, CampaignStatus } from "@/data/sampleCampaigns";
+import { CUSTOMER_LABELS, CampaignStatus } from "@/data/sampleCampaigns";
 
 const getStatusIcon = (status: CampaignStatus) => {
   switch (status) {
