@@ -6,8 +6,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Upload, X, Camera, Image, CreditCard, Plus, AlertCircle, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import CustomerAutoComplete, { type CustomerMatch } from "./CustomerAutoComplete";
 import type {
   TicketData,
   TicketCustomerInfo,
@@ -110,6 +122,11 @@ export default function StandardizedTicketIntakeForm({
 }: Props) {
   const [activeTab, setActiveTab] = useState("customer");
   const [submitted, setSubmitted] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [duplicateMatch, setDuplicateMatch] = useState<CustomerMatch | null>(null);
+  const [pendingSubmitData, setPendingSubmitData] = useState<TicketData | null>(null);
 
   const [customer, setCustomer] = useState<TicketCustomerInfo>(
     initialData?.customer ?? { name: "", company: "", email: "", phone: "", address: "" }
@@ -125,29 +142,118 @@ export default function StandardizedTicketIntakeForm({
   const errors = submitted ? validate(customer, charger, photos, issue) : { customer: [], charger: [], photos: [], issue: [] };
   const isReview = mode === "review";
 
-  const handleSubmit = () => {
+  // Handle auto-complete selection
+  const handleCustomerSelect = useCallback((match: CustomerMatch) => {
+    setSelectedCustomerId(match.id);
+    setCustomer({
+      name: match.contact_name,
+      company: match.company,
+      email: match.email,
+      phone: match.phone,
+      address: match.address,
+    });
+    setAutoFilledFields(new Set(["name", "company", "email", "phone", "address"]));
+  }, []);
+
+  // Clear auto-fill indicator when user manually edits a field
+  const handleManualEdit = useCallback((field: string, value: string) => {
+    setAutoFilledFields((prev) => {
+      const next = new Set(prev);
+      next.delete(field);
+      return next;
+    });
+    // If user edits name or company, clear the selected customer
+    if (field === "name" || field === "company") {
+      setSelectedCustomerId(null);
+    }
+    setCustomer((p) => ({ ...p, [field]: value }));
+  }, []);
+
+  const buildTicketData = useCallback((): TicketData => ({
+    customer,
+    charger,
+    photos,
+    issue,
+    metadata: {
+      source,
+      createdAt,
+      ...(initialData?.metadata?.campaignId && { campaignId: initialData.metadata.campaignId }),
+      ...(initialData?.metadata?.submissionId && { submissionId: initialData.metadata.submissionId }),
+      ...(initialData?.metadata?.createdBy && { createdBy: initialData.metadata.createdBy }),
+    },
+  }), [customer, charger, photos, issue, source, createdAt, initialData]);
+
+  const finalizeSubmit = useCallback(async (data: TicketData, customerId?: string | null) => {
+    // If no existing customer selected, create a new one
+    if (!customerId) {
+      try {
+        const { data: newCustomer, error } = await supabase
+          .from("customers")
+          .insert({
+            contact_name: data.customer.name,
+            company: data.customer.company,
+            email: data.customer.email,
+            phone: data.customer.phone,
+            address: data.customer.address,
+          } as any)
+          .select("id")
+          .single();
+        if (!error && newCustomer) {
+          setSelectedCustomerId((newCustomer as any).id);
+        }
+      } catch (err) {
+        console.warn("Failed to create customer record:", err);
+      }
+    }
+    onSubmit(data);
+  }, [onSubmit]);
+
+  const handleSubmit = async () => {
     setSubmitted(true);
     const errs = validate(customer, charger, photos, issue);
     if (hasErrors(errs)) {
-      // Navigate to first tab with errors
       const firstBad = (["customer", "charger", "photos", "issue"] as const).find((t) => errs[t].length > 0);
       if (firstBad) setActiveTab(firstBad);
       return;
     }
 
-    onSubmit({
-      customer,
-      charger,
-      photos,
-      issue,
-      metadata: {
-        source,
-        createdAt,
-        ...(initialData?.metadata?.campaignId && { campaignId: initialData.metadata.campaignId }),
-        ...(initialData?.metadata?.submissionId && { submissionId: initialData.metadata.submissionId }),
-        ...(initialData?.metadata?.createdBy && { createdBy: initialData.metadata.createdBy }),
-      },
-    });
+    const ticketData = buildTicketData();
+
+    // If a customer is already selected from auto-complete, submit directly
+    if (selectedCustomerId) {
+      finalizeSubmit(ticketData, selectedCustomerId);
+      return;
+    }
+
+    // Check for duplicate before creating new customer
+    try {
+      const searchTerm = `%${customer.name.trim()}%`;
+      const { data: matches } = await supabase
+        .from("customers")
+        .select("id, contact_name, company, email, phone, address")
+        .or(`contact_name.ilike.${searchTerm},company.ilike.%${customer.company.trim()}%`)
+        .limit(5);
+
+      const fuzzyMatch = (matches || [] as any[]).find((m: any) => {
+        const nameNorm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const nameMatch = nameNorm(m.contact_name).includes(nameNorm(customer.name)) ||
+          nameNorm(customer.name).includes(nameNorm(m.contact_name));
+        const companyMatch = nameNorm(m.company).includes(nameNorm(customer.company)) ||
+          nameNorm(customer.company).includes(nameNorm(m.company));
+        return nameMatch || companyMatch;
+      }) as CustomerMatch | undefined;
+
+      if (fuzzyMatch) {
+        setDuplicateMatch(fuzzyMatch);
+        setPendingSubmitData(ticketData);
+        setDuplicateDialogOpen(true);
+        return;
+      }
+    } catch (err) {
+      console.warn("Duplicate check failed:", err);
+    }
+
+    finalizeSubmit(ticketData, null);
   };
 
   // Photo helpers
@@ -205,23 +311,68 @@ export default function StandardizedTicketIntakeForm({
 
         {/* ─── Customer Tab ─── */}
         <TabsContent value="customer" className="space-y-4 mt-4">
+          {selectedCustomerId && (
+            <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+              <Check className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs text-primary font-medium">Existing customer selected — fields auto-filled</span>
+              <button
+                type="button"
+                className="ml-auto text-xs text-muted-foreground hover:text-foreground underline"
+                onClick={() => {
+                  setSelectedCustomerId(null);
+                  setAutoFilledFields(new Set());
+                }}
+              >
+                Clear
+              </button>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FieldInput label="Name" required value={customer.name} disabled={isReview}
-              onChange={(v) => setCustomer((p) => ({ ...p, name: v }))}
-              error={errors.customer.find((e) => e.includes("Name"))} />
-            <FieldInput label="Company" required value={customer.company} disabled={isReview}
-              onChange={(v) => setCustomer((p) => ({ ...p, company: v }))}
-              error={errors.customer.find((e) => e.includes("Company"))} />
+            {isReview ? (
+              <FieldInput label="Name" required value={customer.name} disabled
+                onChange={() => {}}
+                error={errors.customer.find((e) => e.includes("Name"))} />
+            ) : (
+              <CustomerAutoComplete
+                field="name"
+                label="Name"
+                value={customer.name}
+                onChange={(v) => handleManualEdit("name", v)}
+                onSelect={handleCustomerSelect}
+                required
+                error={errors.customer.find((e) => e.includes("Name"))}
+                isAutoFilled={autoFilledFields.has("name")}
+              />
+            )}
+            {isReview ? (
+              <FieldInput label="Company" required value={customer.company} disabled
+                onChange={() => {}}
+                error={errors.customer.find((e) => e.includes("Company"))} />
+            ) : (
+              <CustomerAutoComplete
+                field="company"
+                label="Company"
+                value={customer.company}
+                onChange={(v) => handleManualEdit("company", v)}
+                onSelect={handleCustomerSelect}
+                required
+                error={errors.customer.find((e) => e.includes("Company"))}
+                isAutoFilled={autoFilledFields.has("company")}
+              />
+            )}
             <FieldInput label="Email" required type="email" value={customer.email} disabled={isReview}
-              onChange={(v) => setCustomer((p) => ({ ...p, email: v }))}
-              error={errors.customer.find((e) => e.toLowerCase().includes("email"))} />
+              onChange={(v) => { handleManualEdit("email", v); }}
+              error={errors.customer.find((e) => e.toLowerCase().includes("email"))}
+              isAutoFilled={autoFilledFields.has("email")} />
             <FieldInput label="Phone" required type="tel" value={customer.phone} disabled={isReview}
-              onChange={(v) => setCustomer((p) => ({ ...p, phone: formatPhone(v) }))}
-              error={errors.customer.find((e) => e.toLowerCase().includes("phone"))} />
+              onChange={(v) => { handleManualEdit("phone", formatPhone(v)); }}
+              error={errors.customer.find((e) => e.toLowerCase().includes("phone"))}
+              isAutoFilled={autoFilledFields.has("phone")} />
             <div className="sm:col-span-2">
               <FieldInput label="Address" required value={customer.address} disabled={isReview}
-                onChange={(v) => setCustomer((p) => ({ ...p, address: v }))}
-                error={errors.customer.find((e) => e.includes("Address"))} />
+                onChange={(v) => { handleManualEdit("address", v); }}
+                error={errors.customer.find((e) => e.includes("Address"))}
+                isAutoFilled={autoFilledFields.has("address")} />
             </div>
           </div>
           <div className="text-xs text-muted-foreground">
@@ -342,6 +493,42 @@ export default function StandardizedTicketIntakeForm({
           </Button>
         )}
       </div>
+
+      {/* Duplicate Prevention Dialog */}
+      <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Similar customer found</AlertDialogTitle>
+            <AlertDialogDescription>
+              A customer named <span className="font-semibold">{duplicateMatch?.contact_name}</span> at{" "}
+              <span className="font-semibold">{duplicateMatch?.company}</span> already exists.
+              Do you want to use the existing customer or create a new one?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                // Create new customer
+                if (pendingSubmitData) finalizeSubmit(pendingSubmitData, null);
+                setDuplicateDialogOpen(false);
+              }}
+            >
+              Create New
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (duplicateMatch && pendingSubmitData) {
+                  handleCustomerSelect(duplicateMatch);
+                  finalizeSubmit(pendingSubmitData, duplicateMatch.id);
+                }
+                setDuplicateDialogOpen(false);
+              }}
+            >
+              Use Existing
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -349,25 +536,37 @@ export default function StandardizedTicketIntakeForm({
 /* ─── Sub-components ─── */
 
 function FieldInput({
-  label, required, value, onChange, error, disabled, type = "text", placeholder,
+  label, required, value, onChange, error, disabled, type = "text", placeholder, isAutoFilled,
 }: {
   label: string; required?: boolean; value: string;
   onChange: (v: string) => void; error?: string; disabled?: boolean;
-  type?: string; placeholder?: string;
+  type?: string; placeholder?: string; isAutoFilled?: boolean;
 }) {
   return (
     <div className="space-y-2">
       <Label className="text-sm font-medium">
         {label} {required && <span className="text-critical">*</span>}
       </Label>
-      <Input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        placeholder={placeholder}
-        className={cn(error && "border-critical")}
-      />
+      <div className="relative">
+        <Input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          placeholder={placeholder}
+          className={cn(
+            error && "border-critical",
+            isAutoFilled && "bg-primary/5 border-primary/30"
+          )}
+        />
+        {isAutoFilled && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <span className="text-[9px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+              Auto-filled
+            </span>
+          </div>
+        )}
+      </div>
       {error && <p className="text-xs text-critical">{error}</p>}
     </div>
   );
