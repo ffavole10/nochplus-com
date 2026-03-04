@@ -20,6 +20,7 @@ export function CustomerOverridesTab() {
   const { data: overrides = [], isLoading } = useCustomerOverrides();
   const { data: cards = [] } = useRateCards();
   const { data: allItems = [] } = useRateCardItems();
+  const { data: dbCustomers = [] } = useCustomers();
   const createOverride = useCreateCustomerOverride();
   const updateOverride = useUpdateCustomerOverride();
   const deleteOverride = useDeleteCustomerOverride();
