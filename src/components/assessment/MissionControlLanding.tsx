@@ -202,7 +202,7 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
                             <span>{campaign.startDate} → {campaign.endDate}</span>
                           </div>
                         </div>
-                        {campaign.source === "user" && onDeleteCampaign && (
+                        {onDeleteCampaign && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
