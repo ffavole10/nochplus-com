@@ -568,19 +568,11 @@ export default function ServiceTickets() {
       )}
 
       {/* Create Manual Ticket Modal */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Service Ticket</DialogTitle>
-          </DialogHeader>
-          <StandardizedTicketIntakeForm
-            mode="create"
-            source="manual"
-            onSubmit={handleSubmit}
-            onCancel={() => setFormOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <TicketCreationModal
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }
