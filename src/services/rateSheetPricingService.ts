@@ -153,7 +153,8 @@ export async function lookupRateSheetPricing(
   priority: string,
   swiTitle: string | null,
   swiId: string | null,
-  stationCount?: number
+  stationCount?: number,
+  ticketDescription?: string | null
 ): Promise<RateSheetPricingResult | null> {
   // 1. Look up customer
   const { data: customers } = await supabase
