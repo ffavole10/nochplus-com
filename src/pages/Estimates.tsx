@@ -43,7 +43,7 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
   const updateEstimate = useUpdateEstimate();
   const [editing, setEditing] = useState(false);
   const [items, setItems] = useState<LineItem[]>([]);
-  const [taxRate, setTaxRate] = useState(0.08);
+  const [taxRate, setTaxRate] = useState(0);
   const [notes, setNotes] = useState("");
   const [siteName, setSiteName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
