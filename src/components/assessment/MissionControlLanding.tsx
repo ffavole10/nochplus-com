@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Campaign } from "@/types/campaign";
-import { SampleCampaign, sampleCampaigns, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
+import { SampleCampaign, CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import nochLogo from "@/assets/noch-logo-white.png";
 
 interface MissionControlLandingProps {
