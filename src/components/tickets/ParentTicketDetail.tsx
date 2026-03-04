@@ -183,7 +183,7 @@ export function ParentTicketDetail({ ticket, onCollapse, onNavigateToChild }: Pa
   );
 }
 
-function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <div className="flex items-start gap-2">
       <Icon className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
