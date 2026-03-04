@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Users, Search, ArrowUpDown, Mail, Phone, DollarSign, Ticket, Eye, X, Building2, MapPin, StickyNote, FileText, CreditCard, ExternalLink, AlertTriangle, Info } from "lucide-react";
+import { Plus, Users, Search, ArrowUpDown, Mail, Phone, DollarSign, Ticket, Eye, X, Building2, MapPin, StickyNote, FileText, CreditCard, ExternalLink, AlertTriangle, Info, Pencil, Upload, Globe, Loader2 } from "lucide-react";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer, type Customer } from "@/hooks/useCustomers";
 import { useRateCards } from "@/hooks/useQuotingSettings";
 import { useCustomerRateSheetsList } from "@/hooks/useCustomerRateSheets";
@@ -32,6 +33,10 @@ export default function Customers() {
   const [sortBy, setSortBy] = useState<"name" | "tickets" | "revenue" | "recent">("name");
   const [formOpen, setFormOpen] = useState(false);
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Customer>>({});
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [pricingConfirmOpen, setPricingConfirmOpen] = useState(false);
   const [pendingPricingType, setPendingPricingType] = useState<string | null>(null);
 
@@ -91,6 +96,68 @@ export default function Customers() {
 
   const getCustomerRateSheets = (customerName: string) =>
     rateSheets.filter(rs => rs.customer_name.toLowerCase() === customerName.toLowerCase());
+
+  const startEditing = (c: Customer) => {
+    setEditing(true);
+    setEditForm({
+      company: c.company,
+      contact_name: c.contact_name,
+      email: c.email,
+      phone: c.phone,
+      address: c.address,
+      notes: c.notes,
+      website_url: c.website_url,
+      industry: c.industry || "",
+      description: c.description || "",
+      headquarters_address: c.headquarters_address || "",
+      logo_url: c.logo_url,
+    });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !detailCustomer) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image"); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error("Image must be under 2MB"); return; }
+
+    setLogoUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `logos/${detailCustomer.id}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      setEditForm(prev => ({ ...prev, logo_url: publicUrl }));
+      toast.success("Logo uploaded");
+    } catch (err: any) {
+      toast.error("Upload failed: " + err.message);
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!detailCustomer) return;
+    const { company, contact_name, email, phone, address, notes, website_url, industry, description, headquarters_address, logo_url } = editForm;
+    if (!company?.trim()) { toast.error("Company name is required"); return; }
+    updateCustomer.mutate({
+      id: detailCustomer.id,
+      company, contact_name, email, phone, address, notes,
+      website_url: website_url || "",
+      industry: industry || null,
+      description: description || null,
+      headquarters_address: headquarters_address || null,
+      logo_url: logo_url || null,
+    } as any, {
+      onSuccess: () => {
+        setDetailCustomer(prev => prev ? { ...prev, ...editForm } as Customer : null);
+        setEditing(false);
+        toast.success("Customer updated");
+      },
+    });
+  };
 
   if (isLoading) {
     return (
@@ -188,110 +255,193 @@ export default function Customers() {
       </Dialog>
 
       {/* Customer Detail Modal */}
-      <Dialog open={!!detailCustomer} onOpenChange={o => { if (!o) setDetailCustomer(null); }}>
+      <Dialog open={!!detailCustomer} onOpenChange={o => { if (!o) { setDetailCustomer(null); setEditing(false); } }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           {detailCustomer && (
             <>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-primary" />{detailCustomer.company}
-                  <PricingTypeBadge pricingType={detailCustomer.pricing_type} />
+                <DialogTitle className="flex items-center gap-3">
+                  {editing ? (
+                    <div className="relative group cursor-pointer" onClick={() => logoInputRef.current?.click()}>
+                      <CustomerLogo logoUrl={editForm.logo_url} companyName={editForm.company || "?"} size="lg" />
+                      <div className="absolute inset-0 rounded-md bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        {logoUploading ? <Loader2 className="h-4 w-4 text-white animate-spin" /> : <Upload className="h-4 w-4 text-white" />}
+                      </div>
+                      <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                    </div>
+                  ) : (
+                    <CustomerLogo logoUrl={detailCustomer.logo_url} companyName={detailCustomer.company} size="lg" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span>{detailCustomer.company}</span>
+                      <PricingTypeBadge pricingType={detailCustomer.pricing_type} />
+                    </div>
+                    {detailCustomer.website_url && !editing && (
+                      <a href={detailCustomer.website_url.startsWith("http") ? detailCustomer.website_url : `https://${detailCustomer.website_url}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5">
+                        <Globe className="h-3 w-3" />{detailCustomer.website_url}
+                      </a>
+                    )}
+                  </div>
+                  {!editing && (
+                    <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => startEditing(detailCustomer)}>
+                      <Pencil className="h-3.5 w-3.5" /> Edit
+                    </Button>
+                  )}
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-6">
-                {/* Contact Info */}
-                <div className="grid grid-cols-2 gap-4 bg-muted/30 rounded-lg p-4 border border-border/50">
-                  <div><p className="text-xs text-muted-foreground">Contact</p><p className="text-sm font-medium">{detailCustomer.contact_name}</p></div>
-                  <div><p className="text-xs text-muted-foreground">Email</p><p className="text-sm font-medium">{detailCustomer.email}</p></div>
-                  <div><p className="text-xs text-muted-foreground">Phone</p><p className="text-sm font-medium">{detailCustomer.phone}</p></div>
-                  <div><p className="text-xs text-muted-foreground">Address</p><p className="text-sm font-medium">{detailCustomer.address}</p></div>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4">
-                  <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Tickets</p><p className="text-2xl font-bold">{detailCustomer.ticket_count}</p></CardContent></Card>
-                  <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Revenue</p><p className="text-2xl font-bold text-primary">${Number(detailCustomer.total_revenue).toLocaleString()}</p></CardContent></Card>
-                  <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Last Service</p><p className="text-lg font-bold">{detailCustomer.last_service_date ? format(new Date(detailCustomer.last_service_date), "MMM d") : "—"}</p></CardContent></Card>
-                </div>
-
-                {/* Pricing Configuration */}
-                <div>
-                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
-                    <CreditCard className="h-4 w-4" /> Pricing Configuration
-                  </h4>
-                  <div className="space-y-3 bg-muted/30 rounded-lg p-4 border border-border/50">
-                    <div className="space-y-2">
-                      <Label className="text-xs">Pricing Type</Label>
-                      <Select value={detailCustomer.pricing_type} onValueChange={handlePricingTypeChange}>
-                        <SelectTrigger className="h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="rate_card">
-                            <span className="flex items-center gap-1.5"><CreditCard className="h-3 w-3" /> Standard Rate Card</span>
-                          </SelectItem>
-                          <SelectItem value="rate_sheet">
-                            <span className="flex items-center gap-1.5"><FileText className="h-3 w-3" /> Customer Rate Sheet</span>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                {editing ? (
+                  <>
+                    {/* Editable Fields */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Company Name *</Label>
+                        <Input value={editForm.company || ""} onChange={e => setEditForm(p => ({ ...p, company: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Website URL</Label>
+                        <Input value={editForm.website_url || ""} onChange={e => setEditForm(p => ({ ...p, website_url: e.target.value }))} placeholder="e.g. evconnect.com" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Contact Name</Label>
+                        <Input value={editForm.contact_name || ""} onChange={e => setEditForm(p => ({ ...p, contact_name: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Email</Label>
+                        <Input value={editForm.email || ""} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Phone</Label>
+                        <Input value={editForm.phone || ""} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Industry</Label>
+                        <Input value={editForm.industry || ""} onChange={e => setEditForm(p => ({ ...p, industry: e.target.value }))} />
+                      </div>
+                      <div className="sm:col-span-2 space-y-1.5">
+                        <Label className="text-xs">Description</Label>
+                        <Textarea value={editForm.description || ""} onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))} className="min-h-[60px] resize-y" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Address</Label>
+                        <Input value={editForm.address || ""} onChange={e => setEditForm(p => ({ ...p, address: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Headquarters Address</Label>
+                        <Input value={editForm.headquarters_address || ""} onChange={e => setEditForm(p => ({ ...p, headquarters_address: e.target.value }))} />
+                      </div>
+                      <div className="sm:col-span-2 space-y-1.5">
+                        <Label className="text-xs">Notes</Label>
+                        <Textarea value={editForm.notes || ""} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} className="min-h-[60px] resize-y" />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                      <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+                      <Button onClick={handleSaveEdit} disabled={updateCustomer.isPending}>
+                        {updateCustomer.isPending ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* View Mode */}
+                    <div className="grid grid-cols-2 gap-4 bg-muted/30 rounded-lg p-4 border border-border/50">
+                      <div><p className="text-xs text-muted-foreground">Contact</p><p className="text-sm font-medium">{detailCustomer.contact_name}</p></div>
+                      <div><p className="text-xs text-muted-foreground">Email</p><p className="text-sm font-medium">{detailCustomer.email}</p></div>
+                      <div><p className="text-xs text-muted-foreground">Phone</p><p className="text-sm font-medium">{detailCustomer.phone}</p></div>
+                      <div><p className="text-xs text-muted-foreground">Address</p><p className="text-sm font-medium">{detailCustomer.address}</p></div>
+                      {detailCustomer.industry && <div><p className="text-xs text-muted-foreground">Industry</p><p className="text-sm font-medium">{detailCustomer.industry}</p></div>}
+                      {detailCustomer.headquarters_address && <div><p className="text-xs text-muted-foreground">HQ Address</p><p className="text-sm font-medium">{detailCustomer.headquarters_address}</p></div>}
+                      {detailCustomer.description && <div className="col-span-2"><p className="text-xs text-muted-foreground">Description</p><p className="text-sm font-medium">{detailCustomer.description}</p></div>}
                     </div>
 
-                    {detailCustomer.pricing_type === "rate_card" && (
-                      <div className="text-xs text-muted-foreground flex items-start gap-1.5">
-                        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                        <span>Uses the Rate Cards + Customer Overrides system. Manage rate card assignments in Settings → Quoting & Rates → Customer Overrides.</span>
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Tickets</p><p className="text-2xl font-bold">{detailCustomer.ticket_count}</p></CardContent></Card>
+                      <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Revenue</p><p className="text-2xl font-bold text-primary">${Number(detailCustomer.total_revenue).toLocaleString()}</p></CardContent></Card>
+                      <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Last Service</p><p className="text-lg font-bold">{detailCustomer.last_service_date ? format(new Date(detailCustomer.last_service_date), "MMM d") : "—"}</p></CardContent></Card>
+                    </div>
+
+                    {/* Pricing Configuration */}
+                    <div>
+                      <h4 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
+                        <CreditCard className="h-4 w-4" /> Pricing Configuration
+                      </h4>
+                      <div className="space-y-3 bg-muted/30 rounded-lg p-4 border border-border/50">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Pricing Type</Label>
+                          <Select value={detailCustomer.pricing_type} onValueChange={handlePricingTypeChange}>
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="rate_card">
+                                <span className="flex items-center gap-1.5"><CreditCard className="h-3 w-3" /> Standard Rate Card</span>
+                              </SelectItem>
+                              <SelectItem value="rate_sheet">
+                                <span className="flex items-center gap-1.5"><FileText className="h-3 w-3" /> Customer Rate Sheet</span>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {detailCustomer.pricing_type === "rate_card" && (
+                          <div className="text-xs text-muted-foreground flex items-start gap-1.5">
+                            <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                            <span>Uses the Rate Cards + Customer Overrides system. Manage rate card assignments in Settings → Quoting & Rates → Customer Overrides.</span>
+                          </div>
+                        )}
+
+                        {detailCustomer.pricing_type === "rate_sheet" && (() => {
+                          const sheets = getCustomerRateSheets(detailCustomer.company);
+                          if (sheets.length === 0) {
+                            return (
+                              <div className="flex items-center gap-3 p-3 bg-medium/10 border border-medium/20 rounded-md">
+                                <AlertTriangle className="h-4 w-4 text-medium shrink-0" />
+                                <div className="flex-1">
+                                  <p className="text-xs font-medium text-foreground">No rate sheet found for this customer</p>
+                                  <p className="text-xs text-muted-foreground">Create one in Settings to enable scope-based pricing.</p>
+                                </div>
+                                <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => navigate("/settings")}>
+                                  <Plus className="h-3 w-3" /> Create Rate Sheet
+                                </Button>
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="space-y-2">
+                              {sheets.map(rs => (
+                                <div key={rs.id} className="flex items-center justify-between p-2 rounded-md border border-border/50 bg-background">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-medium text-foreground truncate">{rs.name}</p>
+                                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <Badge variant={rs.status === "active" ? "default" : "secondary"} className="text-[10px] h-4 px-1">{rs.status}</Badge>
+                                        {rs.effective_date && <span>Effective: {format(new Date(rs.effective_date), "MMM d, yyyy")}</span>}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <Button size="sm" variant="ghost" className="text-xs h-7 gap-1" onClick={() => navigate("/settings")}>
+                                    <ExternalLink className="h-3 w-3" /> View
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Notes */}
+                    {detailCustomer.notes && (
+                      <div>
+                        <h4 className="text-sm font-semibold mb-2 flex items-center gap-1"><StickyNote className="h-4 w-4" />Notes</h4>
+                        <p className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 border border-border/50">{detailCustomer.notes}</p>
                       </div>
                     )}
-
-                    {detailCustomer.pricing_type === "rate_sheet" && (() => {
-                      const sheets = getCustomerRateSheets(detailCustomer.company);
-                      const activeSheet = sheets.find(s => s.status === "active");
-                      if (sheets.length === 0) {
-                        return (
-                          <div className="flex items-center gap-3 p-3 bg-medium/10 border border-medium/20 rounded-md">
-                            <AlertTriangle className="h-4 w-4 text-medium shrink-0" />
-                            <div className="flex-1">
-                              <p className="text-xs font-medium text-foreground">No rate sheet found for this customer</p>
-                              <p className="text-xs text-muted-foreground">Create one in Settings to enable scope-based pricing.</p>
-                            </div>
-                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => navigate("/settings")}>
-                              <Plus className="h-3 w-3" /> Create Rate Sheet
-                            </Button>
-                          </div>
-                        );
-                      }
-                      return (
-                        <div className="space-y-2">
-                          {sheets.map(rs => (
-                            <div key={rs.id} className="flex items-center justify-between p-2 rounded-md border border-border/50 bg-background">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="text-xs font-medium text-foreground truncate">{rs.name}</p>
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <Badge variant={rs.status === "active" ? "default" : "secondary"} className="text-[10px] h-4 px-1">{rs.status}</Badge>
-                                    {rs.effective_date && <span>Effective: {format(new Date(rs.effective_date), "MMM d, yyyy")}</span>}
-                                  </div>
-                                </div>
-                              </div>
-                              <Button size="sm" variant="ghost" className="text-xs h-7 gap-1" onClick={() => navigate("/settings")}>
-                                <ExternalLink className="h-3 w-3" /> View
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                {/* Notes */}
-                {detailCustomer.notes && (
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2 flex items-center gap-1"><StickyNote className="h-4 w-4" />Notes</h4>
-                    <p className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 border border-border/50">{detailCustomer.notes}</p>
-                  </div>
+                  </>
                 )}
               </div>
             </>
