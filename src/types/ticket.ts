@@ -16,6 +16,7 @@ export interface TicketChargerInfo {
   serialNumber: string;
   type: ChargerType | "";
   location: string;
+  stationId?: string;
 }
 
 export interface TicketPhoto {

@@ -174,6 +174,7 @@ export default function ServiceTickets() {
         serialNumber: data.chargerSerial,
         type: (data.chargerType || "") as any,
         location: data.chargerLocation,
+        stationId: data.stationId || undefined,
       },
       photos: [],
       issue: { description: data.issueDescription },

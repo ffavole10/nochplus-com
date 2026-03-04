@@ -43,6 +43,7 @@ export interface TicketCreationData {
   chargerSerial: string;
   chargerType: string;
   chargerLocation: string;
+  stationId: string;
   issueDescription: string;
   photos: TicketPhoto[];
 }
@@ -92,6 +93,7 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
   const [chargerBrand, setChargerBrand] = useState("");
   const [chargerSerial, setChargerSerial] = useState("");
   const [chargerType, setChargerType] = useState("");
+  const [stationId, setStationId] = useState("");
 
   // Issue
   const [issueDescription, setIssueDescription] = useState("");
@@ -115,7 +117,7 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
     setShowNewContact(false);
     setNewLocName(""); setNewLocAddress(""); setNewLocCity(""); setNewLocState(""); setNewLocZip("");
     setNewContactName(""); setNewContactEmail(""); setNewContactPhone(""); setNewContactRole("");
-    setChargerBrand(""); setChargerSerial(""); setChargerType("");
+    setChargerBrand(""); setChargerSerial(""); setChargerType(""); setStationId("");
     setIssueDescription("");
     setPhotos([]);
   }, []);
@@ -249,6 +251,7 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
       chargerSerial,
       chargerType,
       chargerLocation: loc ? `${loc.site_name}, ${loc.address}` : "",
+      stationId,
       issueDescription,
       photos,
     });
@@ -417,6 +420,11 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
                   placeholder="Serial Number *"
                   value={chargerSerial}
                   onChange={(e) => setChargerSerial(e.target.value)}
+                />
+                <Input
+                  placeholder="Station ID"
+                  value={stationId}
+                  onChange={(e) => setStationId(e.target.value)}
                 />
                 <Select value={chargerType} onValueChange={setChargerType}>
                   <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
