@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { AssessmentReportTab } from "@/components/assessment-report/AssessmentReportTab";
 import { useState } from "react";
+import { PricingTypeBadge } from "@/pages/placeholders/Customers";
+import { useCustomers } from "@/hooks/useCustomers";
 
 interface ServiceTicketDetailModalProps {
   ticket: ServiceTicket | null;
@@ -52,9 +54,11 @@ function StepIcon({ status }: { status: StepStatus }) {
 export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: ServiceTicketDetailModalProps) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [swiPreviewOpen, setSwiPreviewOpen] = useState(false);
+  const { data: dbCustomers = [] } = useCustomers();
 
   if (!ticket) return null;
 
+  const matchedCustomer = dbCustomers.find(c => c.company.toLowerCase() === ticket.customer.company.toLowerCase());
   const progressPercent = ((ticket.currentStep - 1) / 10) * 100;
 
   return (
@@ -65,6 +69,7 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
             <DialogTitle className="text-lg">{ticket.ticketId}</DialogTitle>
             <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority}</Badge>
             <Badge variant="outline">{SOURCE_LABELS[ticket.source]}</Badge>
+            {matchedCustomer && <PricingTypeBadge pricingType={matchedCustomer.pricing_type} />}
             {ticket.sourceCampaignName && (
               <span className="text-xs text-muted-foreground">({ticket.sourceCampaignName})</span>
             )}

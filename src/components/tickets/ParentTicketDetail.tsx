@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useMemo } from "react";
+import { PricingTypeBadge } from "@/pages/placeholders/Customers";
+import { useCustomers } from "@/hooks/useCustomers";
 
 interface ParentTicketDetailProps {
   ticket: ServiceTicket;
@@ -35,6 +37,9 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
 
 export function ParentTicketDetail({ ticket, onCollapse, onNavigateToChild }: ParentTicketDetailProps) {
   const allTickets = useServiceTicketsStore((s) => s.tickets);
+  const { data: dbCustomers = [] } = useCustomers();
+  const matchedCustomer = dbCustomers.find(c => c.company.toLowerCase() === ticket.customer.company.toLowerCase());
+  const children = useMemo(() => {
   const children = useMemo(() => {
     if (!ticket.childTicketIds) return [];
     return ticket.childTicketIds
@@ -54,6 +59,7 @@ export function ParentTicketDetail({ ticket, onCollapse, onNavigateToChild }: Pa
           <h3 className="text-sm font-semibold text-foreground">{ticket.ticketId}</h3>
           <Badge variant="outline" className="text-xs">Parent Ticket</Badge>
           <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority}</Badge>
+          {matchedCustomer && <PricingTypeBadge pricingType={matchedCustomer.pricing_type} />}
           <span className="text-xs text-muted-foreground">
             {children.length} charger{children.length !== 1 ? "s" : ""}
           </span>

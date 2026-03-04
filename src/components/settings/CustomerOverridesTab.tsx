@@ -14,11 +14,13 @@ import {
   useCustomerOverrides, useCreateCustomerOverride, useUpdateCustomerOverride, useDeleteCustomerOverride,
   useRateCards, useRateCardItems, type CustomerOverride, type RateCardItem,
 } from "@/hooks/useQuotingSettings";
+import { useCustomers } from "@/hooks/useCustomers";
 
 export function CustomerOverridesTab() {
   const { data: overrides = [], isLoading } = useCustomerOverrides();
   const { data: cards = [] } = useRateCards();
   const { data: allItems = [] } = useRateCardItems();
+  const { data: dbCustomers = [] } = useCustomers();
   const createOverride = useCreateCustomerOverride();
   const updateOverride = useUpdateCustomerOverride();
   const deleteOverride = useDeleteCustomerOverride();
@@ -147,6 +149,18 @@ export function CustomerOverridesTab() {
           <DialogHeader><DialogTitle>{editId ? "Edit Override" : "New Override"}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2"><Label>Customer Name *</Label><Input value={form.customer_name} onChange={e => setForm(f => ({ ...f, customer_name: e.target.value }))} placeholder="e.g. GreenCharge Networks" /></div>
+            {(() => {
+              const matchedCustomer = dbCustomers.find(c => c.company.toLowerCase() === form.customer_name.toLowerCase());
+              if (matchedCustomer?.pricing_type === "rate_sheet") {
+                return (
+                  <div className="flex items-start gap-2 rounded-lg border border-medium/30 bg-medium/10 p-3">
+                    <Info className="h-4 w-4 text-medium shrink-0 mt-0.5" />
+                    <p className="text-xs text-foreground">This customer uses a <strong>Customer Rate Sheet</strong> for pricing. Overrides here apply only to Rate Card-based pricing.</p>
+                  </div>
+                );
+              }
+              return null;
+            })()}
             <div className="space-y-2">
               <Label>Rate Card *</Label>
               <Select value={form.rate_card_id} onValueChange={v => setForm(f => ({ ...f, rate_card_id: v }))}>

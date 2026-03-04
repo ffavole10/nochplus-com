@@ -464,6 +464,57 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          address: string
+          company: string
+          contact_name: string
+          created_at: string
+          email: string
+          id: string
+          last_service_date: string | null
+          notes: string
+          phone: string
+          pricing_type: string
+          status: string
+          ticket_count: number
+          total_revenue: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string
+          company: string
+          contact_name: string
+          created_at?: string
+          email: string
+          id?: string
+          last_service_date?: string | null
+          notes?: string
+          phone?: string
+          pricing_type?: string
+          status?: string
+          ticket_count?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          company?: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          last_service_date?: string | null
+          notes?: string
+          phone?: string
+          pricing_type?: string
+          status?: string
+          ticket_count?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       estimates: {
         Row: {
           account_manager: string | null
