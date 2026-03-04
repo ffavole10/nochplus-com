@@ -59,6 +59,7 @@ export function ParentTicketDetail({ ticket, onCollapse, onNavigateToChild }: Pa
           <h3 className="text-sm font-semibold text-foreground">{ticket.ticketId}</h3>
           <Badge variant="outline" className="text-xs">Parent Ticket</Badge>
           <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority}</Badge>
+          {matchedCustomer && <PricingTypeBadge pricingType={matchedCustomer.pricing_type} />}
           <span className="text-xs text-muted-foreground">
             {children.length} charger{children.length !== 1 ? "s" : ""}
           </span>

@@ -69,6 +69,7 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
             <DialogTitle className="text-lg">{ticket.ticketId}</DialogTitle>
             <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority}</Badge>
             <Badge variant="outline">{SOURCE_LABELS[ticket.source]}</Badge>
+            {matchedCustomer && <PricingTypeBadge pricingType={matchedCustomer.pricing_type} />}
             {ticket.sourceCampaignName && (
               <span className="text-xs text-muted-foreground">({ticket.sourceCampaignName})</span>
             )}
