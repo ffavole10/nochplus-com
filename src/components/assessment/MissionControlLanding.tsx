@@ -62,16 +62,6 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
       endDate: c.endDate,
       source: "user" as const,
     })),
-    ...sampleCampaigns.map(c => ({
-      id: `sample-${c.id}`,
-      name: c.name,
-      status: c.status,
-      customer: CUSTOMER_LABELS[c.customer] || c.customer,
-      totalChargers: c.totalChargers,
-      startDate: c.startDate,
-      endDate: c.endDate,
-      source: "sample" as const,
-    })),
   ];
 
   const toggleId = (id: string) => {
