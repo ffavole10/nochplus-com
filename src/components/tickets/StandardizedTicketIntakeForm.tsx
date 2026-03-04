@@ -122,6 +122,11 @@ export default function StandardizedTicketIntakeForm({
 }: Props) {
   const [activeTab, setActiveTab] = useState("customer");
   const [submitted, setSubmitted] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [duplicateMatch, setDuplicateMatch] = useState<CustomerMatch | null>(null);
+  const [pendingSubmitData, setPendingSubmitData] = useState<TicketData | null>(null);
 
   const [customer, setCustomer] = useState<TicketCustomerInfo>(
     initialData?.customer ?? { name: "", company: "", email: "", phone: "", address: "" }
@@ -137,29 +142,118 @@ export default function StandardizedTicketIntakeForm({
   const errors = submitted ? validate(customer, charger, photos, issue) : { customer: [], charger: [], photos: [], issue: [] };
   const isReview = mode === "review";
 
-  const handleSubmit = () => {
+  // Handle auto-complete selection
+  const handleCustomerSelect = useCallback((match: CustomerMatch) => {
+    setSelectedCustomerId(match.id);
+    setCustomer({
+      name: match.contact_name,
+      company: match.company,
+      email: match.email,
+      phone: match.phone,
+      address: match.address,
+    });
+    setAutoFilledFields(new Set(["name", "company", "email", "phone", "address"]));
+  }, []);
+
+  // Clear auto-fill indicator when user manually edits a field
+  const handleManualEdit = useCallback((field: string, value: string) => {
+    setAutoFilledFields((prev) => {
+      const next = new Set(prev);
+      next.delete(field);
+      return next;
+    });
+    // If user edits name or company, clear the selected customer
+    if (field === "name" || field === "company") {
+      setSelectedCustomerId(null);
+    }
+    setCustomer((p) => ({ ...p, [field]: value }));
+  }, []);
+
+  const buildTicketData = useCallback((): TicketData => ({
+    customer,
+    charger,
+    photos,
+    issue,
+    metadata: {
+      source,
+      createdAt,
+      ...(initialData?.metadata?.campaignId && { campaignId: initialData.metadata.campaignId }),
+      ...(initialData?.metadata?.submissionId && { submissionId: initialData.metadata.submissionId }),
+      ...(initialData?.metadata?.createdBy && { createdBy: initialData.metadata.createdBy }),
+    },
+  }), [customer, charger, photos, issue, source, createdAt, initialData]);
+
+  const finalizeSubmit = useCallback(async (data: TicketData, customerId?: string | null) => {
+    // If no existing customer selected, create a new one
+    if (!customerId) {
+      try {
+        const { data: newCustomer, error } = await supabase
+          .from("customers")
+          .insert({
+            contact_name: data.customer.name,
+            company: data.customer.company,
+            email: data.customer.email,
+            phone: data.customer.phone,
+            address: data.customer.address,
+          } as any)
+          .select("id")
+          .single();
+        if (!error && newCustomer) {
+          setSelectedCustomerId((newCustomer as any).id);
+        }
+      } catch (err) {
+        console.warn("Failed to create customer record:", err);
+      }
+    }
+    onSubmit(data);
+  }, [onSubmit]);
+
+  const handleSubmit = async () => {
     setSubmitted(true);
     const errs = validate(customer, charger, photos, issue);
     if (hasErrors(errs)) {
-      // Navigate to first tab with errors
       const firstBad = (["customer", "charger", "photos", "issue"] as const).find((t) => errs[t].length > 0);
       if (firstBad) setActiveTab(firstBad);
       return;
     }
 
-    onSubmit({
-      customer,
-      charger,
-      photos,
-      issue,
-      metadata: {
-        source,
-        createdAt,
-        ...(initialData?.metadata?.campaignId && { campaignId: initialData.metadata.campaignId }),
-        ...(initialData?.metadata?.submissionId && { submissionId: initialData.metadata.submissionId }),
-        ...(initialData?.metadata?.createdBy && { createdBy: initialData.metadata.createdBy }),
-      },
-    });
+    const ticketData = buildTicketData();
+
+    // If a customer is already selected from auto-complete, submit directly
+    if (selectedCustomerId) {
+      finalizeSubmit(ticketData, selectedCustomerId);
+      return;
+    }
+
+    // Check for duplicate before creating new customer
+    try {
+      const searchTerm = `%${customer.name.trim()}%`;
+      const { data: matches } = await supabase
+        .from("customers")
+        .select("id, contact_name, company, email, phone, address")
+        .or(`contact_name.ilike.${searchTerm},company.ilike.%${customer.company.trim()}%`)
+        .limit(5);
+
+      const fuzzyMatch = (matches || [] as any[]).find((m: any) => {
+        const nameNorm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const nameMatch = nameNorm(m.contact_name).includes(nameNorm(customer.name)) ||
+          nameNorm(customer.name).includes(nameNorm(m.contact_name));
+        const companyMatch = nameNorm(m.company).includes(nameNorm(customer.company)) ||
+          nameNorm(customer.company).includes(nameNorm(m.company));
+        return nameMatch || companyMatch;
+      }) as CustomerMatch | undefined;
+
+      if (fuzzyMatch) {
+        setDuplicateMatch(fuzzyMatch);
+        setPendingSubmitData(ticketData);
+        setDuplicateDialogOpen(true);
+        return;
+      }
+    } catch (err) {
+      console.warn("Duplicate check failed:", err);
+    }
+
+    finalizeSubmit(ticketData, null);
   };
 
   // Photo helpers
