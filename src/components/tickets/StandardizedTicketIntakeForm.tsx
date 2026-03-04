@@ -30,16 +30,6 @@ import type {
   ChargerBrand,
   ChargerType,
 } from "@/types/ticket";
-import type {
-  TicketData,
-  TicketCustomerInfo,
-  TicketChargerInfo,
-  TicketPhoto,
-  TicketIssueInfo,
-  TicketSource,
-  ChargerBrand,
-  ChargerType,
-} from "@/types/ticket";
 
 interface Props {
   mode: "create" | "review";
