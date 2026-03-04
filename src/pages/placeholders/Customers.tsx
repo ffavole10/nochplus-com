@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Users, Search, ArrowUpDown, Mail, Phone, DollarSign, Ticket, Eye, X, Building2, MapPin, StickyNote, FileText, CreditCard, ExternalLink, AlertTriangle, Info } from "lucide-react";
+import { CustomerLogo } from "@/components/CustomerLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
