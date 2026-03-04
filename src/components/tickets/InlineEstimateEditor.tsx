@@ -271,13 +271,38 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
       ? SWI_CATALOG.find(s => s.id === swiMatch.matched_swi_id)
       : undefined;
     const swiTitle = swiDoc?.title || swiMatch?.matched_swi_id || null;
+    // Use ticket description as additional context for scope matching
+    const ticketDescription = ticket.issue?.description || null;
 
-    lookupRateSheetPricing(
-      customerCompany,
-      ticket.priority || "Medium",
-      swiTitle,
-      swiMatch?.matched_swi_id || null
-    ).then((result) => {
+    // Also try to find SWI from database if not found in hardcoded catalog
+    const findSWIFromDB = async () => {
+      if (swiDoc) return { parts: swiMatch?.required_parts ?? swiDoc?.requiredParts ?? [], hours: swiDoc ? parseEstimatedHours(swiDoc.estimatedTime) : 2 };
+      if (!swiMatch?.matched_swi_id) return { parts: [], hours: 2 };
+      // Try DB catalog
+      const { data: dbEntries } = await supabase
+        .from("swi_catalog_entries")
+        .select("*")
+        .or(`title.ilike.%${swiMatch.matched_swi_id}%,id.eq.${swiMatch.matched_swi_id.length === 36 ? swiMatch.matched_swi_id : '00000000-0000-0000-0000-000000000000'}`);
+      const dbEntry = dbEntries?.[0];
+      if (dbEntry) {
+        const dbParts = (dbEntry.required_parts as string[]) || [];
+        const dbHours = dbEntry.estimated_time ? parseEstimatedHours(dbEntry.estimated_time as string) : 2;
+        return { parts: dbParts.length > 0 ? dbParts : (swiMatch.required_parts || []), hours: dbHours };
+      }
+      return { parts: swiMatch?.required_parts || [], hours: 2 };
+    };
+
+    Promise.all([
+      lookupRateSheetPricing(
+        customerCompany,
+        ticket.priority || "Medium",
+        swiTitle,
+        swiMatch?.matched_swi_id || null,
+        undefined,
+        ticketDescription
+      ),
+      findSWIFromDB()
+    ]).then(([result, swiInfo]) => {
       setPricingLoaded(true);
       if (!result) return; // customer uses rate_card — keep defaults
 
