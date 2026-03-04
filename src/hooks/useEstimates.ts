@@ -20,6 +20,13 @@ export interface EstimateRecord {
   sent_at: string | null;
   created_at: string;
   updated_at: string;
+  estimate_number: string | null;
+  terms: string;
+  valid_until: string | null;
+  po_number: string | null;
+  customer_name: string | null;
+  customer_address: string | null;
+  service_date_range: string | null;
 }
 
 export function useEstimates(campaignId: string | null) {
