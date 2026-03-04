@@ -117,7 +117,7 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
     setShowNewContact(false);
     setNewLocName(""); setNewLocAddress(""); setNewLocCity(""); setNewLocState(""); setNewLocZip("");
     setNewContactName(""); setNewContactEmail(""); setNewContactPhone(""); setNewContactRole("");
-    setChargerBrand(""); setChargerSerial(""); setChargerType("");
+    setChargerBrand(""); setChargerSerial(""); setChargerType(""); setStationId("");
     setIssueDescription("");
     setPhotos([]);
   }, []);
