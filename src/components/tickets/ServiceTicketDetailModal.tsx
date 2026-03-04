@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { AssessmentReportTab } from "@/components/assessment-report/AssessmentReportTab";
 import { useState } from "react";
+import { PricingTypeBadge } from "@/pages/placeholders/Customers";
+import { useCustomers } from "@/hooks/useCustomers";
 
 interface ServiceTicketDetailModalProps {
   ticket: ServiceTicket | null;
