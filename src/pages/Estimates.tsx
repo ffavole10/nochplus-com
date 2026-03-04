@@ -48,6 +48,10 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
   const [siteName, setSiteName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [accountManager, setAccountManager] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [terms, setTerms] = useState("Net 30");
+  const [poNumber, setPoNumber] = useState("");
 
   useEffect(() => {
     if (estimate) {
