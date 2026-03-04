@@ -319,16 +319,16 @@ const Estimates = () => {
     });
   };
 
-  const handleDownloadSelected = () => {
+  const handleDownloadSelected = async () => {
     const selected = filteredEstimates.filter(e => selectedIds.has(e.id));
     if (selected.length === 0) { toast.error("No estimates selected"); return; }
-    downloadMultipleEstimatePDFs(selected, partnerName);
+    await downloadMultipleEstimatePDFs(selected, partnerName);
     toast.success(`Downloading ${selected.length} estimate${selected.length > 1 ? "s" : ""}`);
   };
 
-  const handleDownloadAll = () => {
+  const handleDownloadAll = async () => {
     if (filteredEstimates.length === 0) return;
-    downloadMultipleEstimatePDFs(filteredEstimates, partnerName);
+    await downloadMultipleEstimatePDFs(filteredEstimates, partnerName);
     toast.success(`Downloading all ${filteredEstimates.length} estimate${filteredEstimates.length > 1 ? "s" : ""}`);
   };
 
