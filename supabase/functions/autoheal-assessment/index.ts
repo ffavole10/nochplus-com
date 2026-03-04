@@ -247,7 +247,7 @@ serve(async (req) => {
                 || (results["diagnostic-agent"] as any)?.root_cause
                 || "N/A",
               swi_recommendations: results["swi-matcher"] || "N/A",
-              swi_library_json: JSON.stringify(swiLibrary.slice(0, 80)),
+              swi_library_json: JSON.stringify(swiLibrary.slice(0, 150)),
               swi_count: swiLibrary.length,
               autoheal_full_output: JSON.stringify(results),
               // Placeholders for data not yet available
