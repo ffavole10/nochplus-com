@@ -416,6 +416,14 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
                     ))}
                   </SelectContent>
                 </Select>
+                <Select value={chargerType} onValueChange={setChargerType}>
+                  <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+                  <SelectContent>
+                    {CHARGER_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Input
                   placeholder="Serial Number *"
                   value={chargerSerial}
@@ -426,14 +434,6 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
                   value={stationId}
                   onChange={(e) => setStationId(e.target.value)}
                 />
-                <Select value={chargerType} onValueChange={setChargerType}>
-                  <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
-                  <SelectContent>
-                    {CHARGER_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
