@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,13 +22,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Plus, Trash2, Save, Send, GripVertical, AlertTriangle, CheckCircle, Loader2, RefreshCw, UserCheck,
+  Plus, Trash2, Save, Send, GripVertical, AlertTriangle, CheckCircle, Loader2, RefreshCw, UserCheck, FileText,
 } from "lucide-react";
 import { ServiceTicket } from "@/types/serviceTicket";
 import { SWI_CATALOG } from "@/data/swiCatalog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
+import { lookupRateSheetPricing, buildRateSheetLineItems, type RateSheetPricingResult } from "@/services/rateSheetPricingService";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
