@@ -142,6 +142,7 @@ export default function Customers() {
             <Card key={c.id} className="transition-all hover:shadow-md">
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <CustomerLogo logoUrl={c.logo_url} companyName={c.company} size="md" />
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-foreground">{c.company}</span>
