@@ -260,6 +260,47 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
 
   const updateTicket = useServiceTicketsStore((s) => s.updateTicket);
 
+  // Check customer pricing type and load rate sheet pricing if applicable
+  useEffect(() => {
+    if (pricingLoaded) return;
+    const customerCompany = ticket.customer.company || ticket.customer.name;
+    if (!customerCompany) { setPricingLoaded(true); return; }
+
+    const swiMatch = ticket.swiMatchData;
+    const swiDoc = swiMatch?.matched_swi_id
+      ? SWI_CATALOG.find(s => s.id === swiMatch.matched_swi_id)
+      : undefined;
+    const swiTitle = swiDoc?.title || swiMatch?.matched_swi_id || null;
+
+    lookupRateSheetPricing(
+      customerCompany,
+      ticket.priority || "Medium",
+      swiTitle,
+      swiMatch?.matched_swi_id || null
+    ).then((result) => {
+      setPricingLoaded(true);
+      if (!result) return; // customer uses rate_card — keep defaults
+
+      setRateSheetPricing(result);
+      const parts = swiMatch?.required_parts ?? swiDoc?.requiredParts ?? [];
+      const rateSheetItems = buildRateSheetLineItems(
+        result,
+        swiTitle || "General Service",
+        parts
+      );
+      setLineItems(
+        rateSheetItems.map((item) => ({
+          ...item,
+          id: uid(),
+        }))
+      );
+      toast.info(`Pricing loaded from ${result.rateSheetName}`, { duration: 4000 });
+    }).catch((err) => {
+      console.warn("Rate sheet pricing lookup failed:", err);
+      setPricingLoaded(true);
+    });
+  }, [ticket, pricingLoaded]);
+
   const isReadOnly = status === "approved" || status === "sent";
 
   /* Derived totals */
