@@ -58,7 +58,7 @@ let _nextId = 1;
 const uid = () => `li_${Date.now()}_${_nextId++}`;
 
 const LABOR_RATE = 125;
-const TAX_RATE = 0.08;
+const TAX_RATE = 0;
 
 const CATEGORY_LABELS: Record<EstimateLineItem["category"], string> = {
   labor: "Labor",
