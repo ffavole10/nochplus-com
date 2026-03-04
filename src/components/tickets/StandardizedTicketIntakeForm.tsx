@@ -493,6 +493,42 @@ export default function StandardizedTicketIntakeForm({
           </Button>
         )}
       </div>
+
+      {/* Duplicate Prevention Dialog */}
+      <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Similar customer found</AlertDialogTitle>
+            <AlertDialogDescription>
+              A customer named <span className="font-semibold">{duplicateMatch?.contact_name}</span> at{" "}
+              <span className="font-semibold">{duplicateMatch?.company}</span> already exists.
+              Do you want to use the existing customer or create a new one?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                // Create new customer
+                if (pendingSubmitData) finalizeSubmit(pendingSubmitData, null);
+                setDuplicateDialogOpen(false);
+              }}
+            >
+              Create New
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (duplicateMatch && pendingSubmitData) {
+                  handleCustomerSelect(duplicateMatch);
+                  finalizeSubmit(pendingSubmitData, duplicateMatch.id);
+                }
+                setDuplicateDialogOpen(false);
+              }}
+            >
+              Use Existing
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
