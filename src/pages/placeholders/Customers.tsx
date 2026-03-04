@@ -33,6 +33,10 @@ export default function Customers() {
   const [sortBy, setSortBy] = useState<"name" | "tickets" | "revenue" | "recent">("name");
   const [formOpen, setFormOpen] = useState(false);
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Customer>>({});
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [pricingConfirmOpen, setPricingConfirmOpen] = useState(false);
   const [pendingPricingType, setPendingPricingType] = useState<string | null>(null);
 
