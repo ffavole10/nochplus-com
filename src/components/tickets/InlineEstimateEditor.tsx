@@ -233,6 +233,8 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
   const [lineItems, setLineItems] = useState<EstimateLineItem[]>(() =>
     buildDefaultItems(ticket)
   );
+  const [rateSheetPricing, setRateSheetPricing] = useState<RateSheetPricingResult | null>(null);
+  const [pricingLoaded, setPricingLoaded] = useState(false);
   const [customerEmail, setCustomerEmail] = useState(ticket.customer.email || "");
   const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
   const [newAdditionalEmail, setNewAdditionalEmail] = useState("");
