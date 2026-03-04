@@ -264,8 +264,8 @@ export async function generateEstimatePDF(estimate: EstimateRecord, _partnerName
 export async function downloadEstimatePDF(estimate: EstimateRecord, partnerName?: string) {
   const doc = await generateEstimatePDF(estimate, partnerName);
   const estNum = (estimate.estimate_number || estimate.id.slice(0, 8)).replace(/[^a-zA-Z0-9-_]/g, "_");
-  const custName = (estimate.customer_name || estimate.site_name || "Customer").replace(/[^a-zA-Z0-9-_]/g, "_");
-  const filename = `Noch_Estimate_${estNum}_${custName}.pdf`;
+  const custName = (estimate.customer_name || estimate.site_name || "Customer").replace(/[^a-zA-Z0-9-_ ]/g, "").replace(/\s+/g, " ").trim();
+  const filename = `Noch Service Estimate ${custName} - ${estNum}.pdf`;
   doc.save(filename);
 }
 
