@@ -97,6 +97,68 @@ export default function Customers() {
   const getCustomerRateSheets = (customerName: string) =>
     rateSheets.filter(rs => rs.customer_name.toLowerCase() === customerName.toLowerCase());
 
+  const startEditing = (c: Customer) => {
+    setEditing(true);
+    setEditForm({
+      company: c.company,
+      contact_name: c.contact_name,
+      email: c.email,
+      phone: c.phone,
+      address: c.address,
+      notes: c.notes,
+      website_url: c.website_url,
+      industry: c.industry || "",
+      description: c.description || "",
+      headquarters_address: c.headquarters_address || "",
+      logo_url: c.logo_url,
+    });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !detailCustomer) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image"); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error("Image must be under 2MB"); return; }
+
+    setLogoUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `logos/${detailCustomer.id}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      setEditForm(prev => ({ ...prev, logo_url: publicUrl }));
+      toast.success("Logo uploaded");
+    } catch (err: any) {
+      toast.error("Upload failed: " + err.message);
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!detailCustomer) return;
+    const { company, contact_name, email, phone, address, notes, website_url, industry, description, headquarters_address, logo_url } = editForm;
+    if (!company?.trim()) { toast.error("Company name is required"); return; }
+    updateCustomer.mutate({
+      id: detailCustomer.id,
+      company, contact_name, email, phone, address, notes,
+      website_url: website_url || "",
+      industry: industry || null,
+      description: description || null,
+      headquarters_address: headquarters_address || null,
+      logo_url: logo_url || null,
+    } as any, {
+      onSuccess: () => {
+        setDetailCustomer(prev => prev ? { ...prev, ...editForm } as Customer : null);
+        setEditing(false);
+        toast.success("Customer updated");
+      },
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
