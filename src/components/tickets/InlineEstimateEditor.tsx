@@ -304,7 +304,24 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
       findSWIFromDB()
     ]).then(([result, swiInfo]) => {
       setPricingLoaded(true);
-      if (!result) return; // customer uses rate_card — keep defaults
+
+      // Update default items with DB SWI data even for rate_card customers
+      if (!result) {
+        if (swiInfo.parts.length > 0 || swiInfo.hours !== 2) {
+          const title = swiDoc?.title || swiMatch?.matched_swi_id || "General Service";
+          const items: EstimateLineItem[] = [
+            { id: uid(), description: `Labor — ${title}`, qty: swiInfo.hours, unit: "hours", rate: LABOR_RATE, amount: swiInfo.hours * LABOR_RATE, category: "labor" },
+            { id: uid(), description: "Travel Time", qty: 1, unit: "hours", rate: LABOR_RATE, amount: LABOR_RATE, category: "travel" },
+          ];
+          swiInfo.parts.forEach((p) => {
+            if (p && p.toLowerCase() !== "none" && !p.toLowerCase().startsWith("none")) {
+              items.push({ id: uid(), description: p, qty: 1, unit: "each", rate: 0, amount: 0, category: "parts" });
+            }
+          });
+          setLineItems(items);
+        }
+        return;
+      }
 
       setRateSheetPricing(result);
       const parts = swiInfo.parts.length > 0 ? swiInfo.parts : (swiMatch?.required_parts ?? swiDoc?.requiredParts ?? []);
