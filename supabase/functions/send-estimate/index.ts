@@ -32,8 +32,8 @@ function validatePayload(payload: any): string | null {
     if (typeof li.qty !== "number" || li.qty < 0 || li.qty > 10000) return "Invalid line item qty";
     if (typeof li.rate !== "number" || li.rate < -1000000 || li.rate > 1000000) return "Invalid line item rate";
   }
-  if (typeof payload.subtotal !== "number" || payload.subtotal < 0 || payload.subtotal > 10000000) return "Invalid subtotal";
-  if (typeof payload.total !== "number" || payload.total < 0 || payload.total > 10000000) return "Invalid total";
+  if (typeof payload.subtotal !== "number" || payload.subtotal < -10000000 || payload.subtotal > 10000000) return "Invalid subtotal";
+  if (typeof payload.total !== "number" || payload.total < -10000000 || payload.total > 10000000) return "Invalid total";
   if (payload.notes && (typeof payload.notes !== "string" || payload.notes.length > MAX_NOTE)) return "Notes must be under 2000 characters";
   return null;
 }
