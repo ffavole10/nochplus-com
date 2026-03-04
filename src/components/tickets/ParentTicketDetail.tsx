@@ -40,7 +40,6 @@ export function ParentTicketDetail({ ticket, onCollapse, onNavigateToChild }: Pa
   const { data: dbCustomers = [] } = useCustomers();
   const matchedCustomer = dbCustomers.find(c => c.company.toLowerCase() === ticket.customer.company.toLowerCase());
   const children = useMemo(() => {
-  const children = useMemo(() => {
     if (!ticket.childTicketIds) return [];
     return ticket.childTicketIds
       .map((cid) => allTickets.find((t) => t.id === cid))
