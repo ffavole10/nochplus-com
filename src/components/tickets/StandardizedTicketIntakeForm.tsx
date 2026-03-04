@@ -311,23 +311,68 @@ export default function StandardizedTicketIntakeForm({
 
         {/* ─── Customer Tab ─── */}
         <TabsContent value="customer" className="space-y-4 mt-4">
+          {selectedCustomerId && (
+            <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+              <Check className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs text-primary font-medium">Existing customer selected — fields auto-filled</span>
+              <button
+                type="button"
+                className="ml-auto text-xs text-muted-foreground hover:text-foreground underline"
+                onClick={() => {
+                  setSelectedCustomerId(null);
+                  setAutoFilledFields(new Set());
+                }}
+              >
+                Clear
+              </button>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FieldInput label="Name" required value={customer.name} disabled={isReview}
-              onChange={(v) => setCustomer((p) => ({ ...p, name: v }))}
-              error={errors.customer.find((e) => e.includes("Name"))} />
-            <FieldInput label="Company" required value={customer.company} disabled={isReview}
-              onChange={(v) => setCustomer((p) => ({ ...p, company: v }))}
-              error={errors.customer.find((e) => e.includes("Company"))} />
+            {isReview ? (
+              <FieldInput label="Name" required value={customer.name} disabled
+                onChange={() => {}}
+                error={errors.customer.find((e) => e.includes("Name"))} />
+            ) : (
+              <CustomerAutoComplete
+                field="name"
+                label="Name"
+                value={customer.name}
+                onChange={(v) => handleManualEdit("name", v)}
+                onSelect={handleCustomerSelect}
+                required
+                error={errors.customer.find((e) => e.includes("Name"))}
+                isAutoFilled={autoFilledFields.has("name")}
+              />
+            )}
+            {isReview ? (
+              <FieldInput label="Company" required value={customer.company} disabled
+                onChange={() => {}}
+                error={errors.customer.find((e) => e.includes("Company"))} />
+            ) : (
+              <CustomerAutoComplete
+                field="company"
+                label="Company"
+                value={customer.company}
+                onChange={(v) => handleManualEdit("company", v)}
+                onSelect={handleCustomerSelect}
+                required
+                error={errors.customer.find((e) => e.includes("Company"))}
+                isAutoFilled={autoFilledFields.has("company")}
+              />
+            )}
             <FieldInput label="Email" required type="email" value={customer.email} disabled={isReview}
-              onChange={(v) => setCustomer((p) => ({ ...p, email: v }))}
-              error={errors.customer.find((e) => e.toLowerCase().includes("email"))} />
+              onChange={(v) => { handleManualEdit("email", v); }}
+              error={errors.customer.find((e) => e.toLowerCase().includes("email"))}
+              isAutoFilled={autoFilledFields.has("email")} />
             <FieldInput label="Phone" required type="tel" value={customer.phone} disabled={isReview}
-              onChange={(v) => setCustomer((p) => ({ ...p, phone: formatPhone(v) }))}
-              error={errors.customer.find((e) => e.toLowerCase().includes("phone"))} />
+              onChange={(v) => { handleManualEdit("phone", formatPhone(v)); }}
+              error={errors.customer.find((e) => e.toLowerCase().includes("phone"))}
+              isAutoFilled={autoFilledFields.has("phone")} />
             <div className="sm:col-span-2">
               <FieldInput label="Address" required value={customer.address} disabled={isReview}
-                onChange={(v) => setCustomer((p) => ({ ...p, address: v }))}
-                error={errors.customer.find((e) => e.includes("Address"))} />
+                onChange={(v) => { handleManualEdit("address", v); }}
+                error={errors.customer.find((e) => e.includes("Address"))}
+                isAutoFilled={autoFilledFields.has("address")} />
             </div>
           </div>
           <div className="text-xs text-muted-foreground">
