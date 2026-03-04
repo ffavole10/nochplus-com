@@ -114,6 +114,10 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
       site_name: siteName || null,
       customer_email: customerEmail || null,
       account_manager: accountManager || null,
+      customer_name: customerName || null,
+      customer_address: customerAddress || null,
+      terms: terms || "Net 30",
+      po_number: poNumber || null,
     }, {
       onSuccess: (data) => {
         toast.success("Estimate updated");
