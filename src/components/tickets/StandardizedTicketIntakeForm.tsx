@@ -536,24 +536,37 @@ export default function StandardizedTicketIntakeForm({
 /* ─── Sub-components ─── */
 
 function FieldInput({
-  label, required, value, onChange, error, disabled, type = "text", placeholder,
+  label, required, value, onChange, error, disabled, type = "text", placeholder, isAutoFilled,
 }: {
   label: string; required?: boolean; value: string;
   onChange: (v: string) => void; error?: string; disabled?: boolean;
-  type?: string; placeholder?: string;
+  type?: string; placeholder?: string; isAutoFilled?: boolean;
 }) {
   return (
     <div className="space-y-2">
       <Label className="text-sm font-medium">
         {label} {required && <span className="text-critical">*</span>}
       </Label>
-      <Input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        placeholder={placeholder}
-        className={cn(error && "border-critical")}
+      <div className="relative">
+        <Input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          placeholder={placeholder}
+          className={cn(
+            error && "border-critical",
+            isAutoFilled && "bg-primary/5 border-primary/30"
+          )}
+        />
+        {isAutoFilled && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <span className="text-[9px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+              Auto-filled
+            </span>
+          </div>
+        )}
+      </div>
       />
       {error && <p className="text-xs text-critical">{error}</p>}
     </div>
