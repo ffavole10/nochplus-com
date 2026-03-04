@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,13 +22,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Plus, Trash2, Save, Send, GripVertical, AlertTriangle, CheckCircle, Loader2, RefreshCw, UserCheck,
+  Plus, Trash2, Save, Send, GripVertical, AlertTriangle, CheckCircle, Loader2, RefreshCw, UserCheck, FileText,
 } from "lucide-react";
 import { ServiceTicket } from "@/types/serviceTicket";
 import { SWI_CATALOG } from "@/data/swiCatalog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
+import { lookupRateSheetPricing, buildRateSheetLineItems, type RateSheetPricingResult } from "@/services/rateSheetPricingService";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -232,6 +233,8 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
   const [lineItems, setLineItems] = useState<EstimateLineItem[]>(() =>
     buildDefaultItems(ticket)
   );
+  const [rateSheetPricing, setRateSheetPricing] = useState<RateSheetPricingResult | null>(null);
+  const [pricingLoaded, setPricingLoaded] = useState(false);
   const [customerEmail, setCustomerEmail] = useState(ticket.customer.email || "");
   const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
   const [newAdditionalEmail, setNewAdditionalEmail] = useState("");
@@ -256,6 +259,47 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
   const [approvalNotes, setApprovalNotes] = useState("");
 
   const updateTicket = useServiceTicketsStore((s) => s.updateTicket);
+
+  // Check customer pricing type and load rate sheet pricing if applicable
+  useEffect(() => {
+    if (pricingLoaded) return;
+    const customerCompany = ticket.customer.company || ticket.customer.name;
+    if (!customerCompany) { setPricingLoaded(true); return; }
+
+    const swiMatch = ticket.swiMatchData;
+    const swiDoc = swiMatch?.matched_swi_id
+      ? SWI_CATALOG.find(s => s.id === swiMatch.matched_swi_id)
+      : undefined;
+    const swiTitle = swiDoc?.title || swiMatch?.matched_swi_id || null;
+
+    lookupRateSheetPricing(
+      customerCompany,
+      ticket.priority || "Medium",
+      swiTitle,
+      swiMatch?.matched_swi_id || null
+    ).then((result) => {
+      setPricingLoaded(true);
+      if (!result) return; // customer uses rate_card — keep defaults
+
+      setRateSheetPricing(result);
+      const parts = swiMatch?.required_parts ?? swiDoc?.requiredParts ?? [];
+      const rateSheetItems = buildRateSheetLineItems(
+        result,
+        swiTitle || "General Service",
+        parts
+      );
+      setLineItems(
+        rateSheetItems.map((item) => ({
+          ...item,
+          id: uid(),
+        }))
+      );
+      toast.info(`Pricing loaded from ${result.rateSheetName}`, { duration: 4000 });
+    }).catch((err) => {
+      console.warn("Rate sheet pricing lookup failed:", err);
+      setPricingLoaded(true);
+    });
+  }, [ticket, pricingLoaded]);
 
   const isReadOnly = status === "approved" || status === "sent";
 
@@ -685,6 +729,26 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
 
   return (
     <div className="space-y-5">
+      {/* Rate Sheet indicator */}
+      {rateSheetPricing && (
+        <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+          <FileText className="h-4 w-4 text-primary" />
+          <span className="text-xs font-medium text-primary">
+            Pricing from: {rateSheetPricing.rateSheetName}
+          </span>
+          {rateSheetPricing.matchedScope && (
+            <Badge variant="outline" className="text-[10px] border-primary/30 text-primary ml-auto">
+              {rateSheetPricing.matchedScope.scopeCode} — {rateSheetPricing.matchedScope.slaTier} SLA
+            </Badge>
+          )}
+          {rateSheetPricing.volumeDiscount && (
+            <Badge variant="secondary" className="text-[10px]">
+              {rateSheetPricing.volumeDiscount.discountPercent}% vol. discount
+            </Badge>
+          )}
+        </div>
+      )}
+
       {/* Header info */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 bg-muted/30 rounded-lg p-3 border border-border/50 text-sm">
         <div>
