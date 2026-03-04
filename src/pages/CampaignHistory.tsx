@@ -54,9 +54,7 @@ export default function CampaignHistory() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const { data: dbCampaigns } = useCampaigns();
 
-  // Combine database campaigns with sample data for display
   const allCampaigns = [
-    ...sampleCampaigns,
     ...(dbCampaigns?.map((c) => ({
       id: c.id,
       name: c.name,
