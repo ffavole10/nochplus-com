@@ -93,6 +93,7 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
   const [chargerBrand, setChargerBrand] = useState("");
   const [chargerSerial, setChargerSerial] = useState("");
   const [chargerType, setChargerType] = useState("");
+  const [stationId, setStationId] = useState("");
 
   // Issue
   const [issueDescription, setIssueDescription] = useState("");
