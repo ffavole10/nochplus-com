@@ -19,9 +19,11 @@ import { DataManagement } from "@/components/settings/DataManagement";
 import { RateCardsTab } from "@/components/settings/RateCardsTab";
 import { QuoteRulesTab } from "@/components/settings/QuoteRulesTab";
 import { CustomerOverridesTab } from "@/components/settings/CustomerOverridesTab";
+import { CustomerRateSheetsTab } from "@/components/settings/CustomerRateSheetsTab";
 import { QuoteFlowDiagram } from "@/components/settings/QuoteFlowDiagram";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRateCards, useQuoteRules, useCustomerOverrides } from "@/hooks/useQuotingSettings";
+import { useCustomerRateSheetsList } from "@/hooks/useCustomerRateSheets";
 
 type UserWithRole = {
   id: string;
