@@ -25,12 +25,12 @@ function validatePayload(payload: any): string | null {
   }
   if (!payload.ticketId || typeof payload.ticketId !== "string" || payload.ticketId.length > 100) return "Invalid ticketId";
   if (!payload.accountName || typeof payload.accountName !== "string" || payload.accountName.length > MAX_STRING) return "Invalid accountName";
-  if (!payload.chargerName || typeof payload.chargerName !== "string" || payload.chargerName.length > MAX_STRING) return "Invalid chargerName";
+  if (payload.chargerName && typeof payload.chargerName !== "string") return "Invalid chargerName";
   if (!Array.isArray(payload.lineItems) || payload.lineItems.length === 0 || payload.lineItems.length > MAX_LINE_ITEMS) return "lineItems must be 1-50 items";
   for (const li of payload.lineItems) {
     if (typeof li.description !== "string" || li.description.length > MAX_STRING) return "Invalid line item description";
     if (typeof li.qty !== "number" || li.qty < 0 || li.qty > 10000) return "Invalid line item qty";
-    if (typeof li.rate !== "number" || li.rate < 0 || li.rate > 1000000) return "Invalid line item rate";
+    if (typeof li.rate !== "number" || li.rate < -1000000 || li.rate > 1000000) return "Invalid line item rate";
   }
   if (typeof payload.subtotal !== "number" || payload.subtotal < 0 || payload.subtotal > 10000000) return "Invalid subtotal";
   if (typeof payload.total !== "number" || payload.total < 0 || payload.total > 10000000) return "Invalid total";
