@@ -43,6 +43,7 @@ export interface TicketCreationData {
   chargerSerial: string;
   chargerType: string;
   chargerLocation: string;
+  stationId: string;
   issueDescription: string;
   photos: TicketPhoto[];
 }
