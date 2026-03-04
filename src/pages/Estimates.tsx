@@ -150,7 +150,7 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
                   }}>Cancel</Button>
                 </>
               )}
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { downloadEstimatePDF(estimate, partnerName); toast.success("PDF downloaded"); }}>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={async () => { await downloadEstimatePDF(estimate, partnerName); toast.success("PDF downloaded"); }}>
                 <Download className="h-3.5 w-3.5" />Download PDF
               </Button>
               <Badge variant="outline" className={config.className}>{config.label}</Badge>
