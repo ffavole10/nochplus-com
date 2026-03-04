@@ -154,6 +154,7 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
   };
 
   const handleSave = async () => {
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     updateEstimate.mutate({
       id: estimate.id,
       line_items: items as any,
@@ -171,7 +172,7 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
       po_number: poNumber || null,
     }, {
       onSuccess: (data) => {
-        toast.success("Estimate updated");
+        toast.success("Estimate saved");
         setEditing(false);
         onUpdated?.(data);
       },
