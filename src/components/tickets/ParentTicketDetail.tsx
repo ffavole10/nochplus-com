@@ -37,6 +37,9 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
 
 export function ParentTicketDetail({ ticket, onCollapse, onNavigateToChild }: ParentTicketDetailProps) {
   const allTickets = useServiceTicketsStore((s) => s.tickets);
+  const { data: dbCustomers = [] } = useCustomers();
+  const matchedCustomer = dbCustomers.find(c => c.company.toLowerCase() === ticket.customer.company.toLowerCase());
+  const children = useMemo(() => {
   const children = useMemo(() => {
     if (!ticket.childTicketIds) return [];
     return ticket.childTicketIds
