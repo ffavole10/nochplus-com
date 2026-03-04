@@ -431,14 +431,16 @@ const Estimates = () => {
                 <TableRow>
                   <TableHead className="w-10">
                     <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" className={someSelected ? "data-[state=unchecked]:bg-primary/20" : ""} />
-                  </TableHead>
+                   </TableHead>
+                  <TableHead>Estimate #</TableHead>
                   <TableHead>Station / Site</TableHead>
                   <TableHead>Ticket</TableHead>
-                  <TableHead>Customer Email</TableHead>
+                  <TableHead>Customer</TableHead>
                   <TableHead>Account Manager</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -448,13 +450,19 @@ const Estimates = () => {
                   return (
                     <TableRow key={est.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedEstimate(est)}>
                       <TableCell onClick={(e) => e.stopPropagation()}><Checkbox checked={isChecked} onCheckedChange={() => toggleOne(est.id)} /></TableCell>
+                      <TableCell className="text-sm font-mono text-muted-foreground">{est.estimate_number || "—"}</TableCell>
                       <TableCell><div className="font-medium">{est.site_name || est.station_id || "—"}</div></TableCell>
                       <TableCell className="text-sm text-muted-foreground">{est.ticket_id || "—"}</TableCell>
-                      <TableCell className="text-sm">{est.customer_email || "—"}</TableCell>
+                      <TableCell className="text-sm">{est.customer_name || est.customer_email || "—"}</TableCell>
                       <TableCell className="text-sm">{est.account_manager || "—"}</TableCell>
                       <TableCell className="text-right font-semibold">${Number(est.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                       <TableCell><Badge variant="outline" className={config.className}>{config.label}</Badge></TableCell>
                       <TableCell className="text-sm text-muted-foreground">{format(new Date(est.created_at), "MMM d, yyyy")}</TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => { await downloadEstimatePDF(est); toast.success("PDF downloaded"); }}>
+                          <Download className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
