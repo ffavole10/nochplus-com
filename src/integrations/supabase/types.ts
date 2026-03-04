@@ -390,6 +390,50 @@ export type Database = {
           },
         ]
       }
+      contacts: {
+        Row: {
+          created_at: string
+          customer_id: string
+          email: string
+          id: string
+          is_primary: boolean
+          name: string
+          phone: string
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          email?: string
+          id?: string
+          is_primary?: boolean
+          name: string
+          phone?: string
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          email?: string
+          id?: string
+          is_primary?: boolean
+          name?: string
+          phone?: string
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_rate_overrides: {
         Row: {
           created_at: string
@@ -470,9 +514,13 @@ export type Database = {
           company: string
           contact_name: string
           created_at: string
+          description: string | null
           email: string
+          headquarters_address: string | null
           id: string
+          industry: string | null
           last_service_date: string | null
+          logo_url: string | null
           notes: string
           phone: string
           pricing_type: string
@@ -480,15 +528,20 @@ export type Database = {
           ticket_count: number
           total_revenue: number
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           address?: string
           company: string
           contact_name: string
           created_at?: string
+          description?: string | null
           email: string
+          headquarters_address?: string | null
           id?: string
+          industry?: string | null
           last_service_date?: string | null
+          logo_url?: string | null
           notes?: string
           phone?: string
           pricing_type?: string
@@ -496,15 +549,20 @@ export type Database = {
           ticket_count?: number
           total_revenue?: number
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           address?: string
           company?: string
           contact_name?: string
           created_at?: string
+          description?: string | null
           email?: string
+          headquarters_address?: string | null
           id?: string
+          industry?: string | null
           last_service_date?: string | null
+          logo_url?: string | null
           notes?: string
           phone?: string
           pricing_type?: string
@@ -512,6 +570,7 @@ export type Database = {
           ticket_count?: number
           total_revenue?: number
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -589,6 +648,56 @@ export type Database = {
             columns: ["charger_record_id"]
             isOneToOne: false
             referencedRelation: "charger_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          address: string
+          charger_count: number
+          city: string
+          country: string
+          created_at: string
+          customer_id: string
+          id: string
+          site_name: string
+          state: string
+          updated_at: string
+          zip: string
+        }
+        Insert: {
+          address?: string
+          charger_count?: number
+          city?: string
+          country?: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          site_name: string
+          state?: string
+          updated_at?: string
+          zip?: string
+        }
+        Update: {
+          address?: string
+          charger_count?: number
+          city?: string
+          country?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          site_name?: string
+          state?: string
+          updated_at?: string
+          zip?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]

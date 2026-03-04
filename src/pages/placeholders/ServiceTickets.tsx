@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import StandardizedTicketIntakeForm from "@/components/tickets/StandardizedTicketIntakeForm";
+import { TicketCreationModal, type TicketCreationData } from "@/components/tickets/TicketCreationModal";
+import { CustomerLogo } from "@/components/CustomerLogo";
 import { TicketDetailPanel } from "@/components/tickets/TicketDetailPanel";
 import { TicketReviewPanel } from "@/components/tickets/TicketReviewPanel";
 import { ParentTicketDetail } from "@/components/tickets/ParentTicketDetail";
-import type { TicketData } from "@/types/ticket";
+
 import { ServiceTicket } from "@/types/serviceTicket";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { AutoHealResult } from "@/services/autoHealService";
@@ -156,17 +156,27 @@ export default function ServiceTickets() {
   const addTicket = useServiceTicketsStore((s) => s.addTicket);
   const createParentWithChildren = useServiceTicketsStore((s) => s.createParentWithChildren);
 
-  const handleSubmit = (data: TicketData) => {
-    // Single charger: create standalone ticket
+  const handleSubmit = (data: TicketCreationData) => {
     const nextId = useServiceTicketsStore.getState().getNextTicketId();
     const newTicket: ServiceTicket = {
       id: `st-${Date.now()}`,
       ticketId: nextId,
       source: "manual",
-      customer: data.customer,
-      charger: data.charger,
+      customer: {
+        name: data.customerName,
+        company: data.customerCompany,
+        email: data.contactEmail || "",
+        phone: data.contactPhone || "",
+        address: data.chargerLocation,
+      },
+      charger: {
+        brand: (data.chargerBrand || "") as any,
+        serialNumber: data.chargerSerial,
+        type: (data.chargerType || "") as any,
+        location: data.chargerLocation,
+      },
       photos: [],
-      issue: data.issue,
+      issue: { description: data.issueDescription },
       priority: "Medium",
       status: "pending_review",
       currentStep: 1,
@@ -558,19 +568,11 @@ export default function ServiceTickets() {
       )}
 
       {/* Create Manual Ticket Modal */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Service Ticket</DialogTitle>
-          </DialogHeader>
-          <StandardizedTicketIntakeForm
-            mode="create"
-            source="manual"
-            onSubmit={handleSubmit}
-            onCancel={() => setFormOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <TicketCreationModal
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }
