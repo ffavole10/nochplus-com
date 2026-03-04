@@ -58,7 +58,7 @@ let _nextId = 1;
 const uid = () => `li_${Date.now()}_${_nextId++}`;
 
 const LABOR_RATE = 125;
-const TAX_RATE = 0.08;
+const TAX_RATE = 0;
 
 const CATEGORY_LABELS: Record<EstimateLineItem["category"], string> = {
   labor: "Labor",
@@ -271,18 +271,60 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
       ? SWI_CATALOG.find(s => s.id === swiMatch.matched_swi_id)
       : undefined;
     const swiTitle = swiDoc?.title || swiMatch?.matched_swi_id || null;
+    // Use ticket description as additional context for scope matching
+    const ticketDescription = ticket.issue?.description || null;
 
-    lookupRateSheetPricing(
-      customerCompany,
-      ticket.priority || "Medium",
-      swiTitle,
-      swiMatch?.matched_swi_id || null
-    ).then((result) => {
+    // Also try to find SWI from database if not found in hardcoded catalog
+    const findSWIFromDB = async () => {
+      if (swiDoc) return { parts: swiMatch?.required_parts ?? swiDoc?.requiredParts ?? [], hours: swiDoc ? parseEstimatedHours(swiDoc.estimatedTime) : 2 };
+      if (!swiMatch?.matched_swi_id) return { parts: [], hours: 2 };
+      // Try DB catalog
+      const { data: dbEntries } = await supabase
+        .from("swi_catalog_entries")
+        .select("*")
+        .or(`title.ilike.%${swiMatch.matched_swi_id}%,id.eq.${swiMatch.matched_swi_id.length === 36 ? swiMatch.matched_swi_id : '00000000-0000-0000-0000-000000000000'}`);
+      const dbEntry = dbEntries?.[0];
+      if (dbEntry) {
+        const dbParts = (dbEntry.required_parts as string[]) || [];
+        const dbHours = dbEntry.estimated_time ? parseEstimatedHours(dbEntry.estimated_time as string) : 2;
+        return { parts: dbParts.length > 0 ? dbParts : (swiMatch.required_parts || []), hours: dbHours };
+      }
+      return { parts: swiMatch?.required_parts || [], hours: 2 };
+    };
+
+    Promise.all([
+      lookupRateSheetPricing(
+        customerCompany,
+        ticket.priority || "Medium",
+        swiTitle,
+        swiMatch?.matched_swi_id || null,
+        undefined,
+        ticketDescription
+      ),
+      findSWIFromDB()
+    ]).then(([result, swiInfo]) => {
       setPricingLoaded(true);
-      if (!result) return; // customer uses rate_card — keep defaults
+
+      // Update default items with DB SWI data even for rate_card customers
+      if (!result) {
+        if (swiInfo.parts.length > 0 || swiInfo.hours !== 2) {
+          const title = swiDoc?.title || swiMatch?.matched_swi_id || "General Service";
+          const items: EstimateLineItem[] = [
+            { id: uid(), description: `Labor — ${title}`, qty: swiInfo.hours, unit: "hours", rate: LABOR_RATE, amount: swiInfo.hours * LABOR_RATE, category: "labor" },
+            { id: uid(), description: "Travel Time", qty: 1, unit: "hours", rate: LABOR_RATE, amount: LABOR_RATE, category: "travel" },
+          ];
+          swiInfo.parts.forEach((p) => {
+            if (p && p.toLowerCase() !== "none" && !p.toLowerCase().startsWith("none")) {
+              items.push({ id: uid(), description: p, qty: 1, unit: "each", rate: 0, amount: 0, category: "parts" });
+            }
+          });
+          setLineItems(items);
+        }
+        return;
+      }
 
       setRateSheetPricing(result);
-      const parts = swiMatch?.required_parts ?? swiDoc?.requiredParts ?? [];
+      const parts = swiInfo.parts.length > 0 ? swiInfo.parts : (swiMatch?.required_parts ?? swiDoc?.requiredParts ?? []);
       const rateSheetItems = buildRateSheetLineItems(
         result,
         swiTitle || "General Service",
