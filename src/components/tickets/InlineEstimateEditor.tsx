@@ -729,6 +729,26 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
 
   return (
     <div className="space-y-5">
+      {/* Rate Sheet indicator */}
+      {rateSheetPricing && (
+        <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+          <FileText className="h-4 w-4 text-primary" />
+          <span className="text-xs font-medium text-primary">
+            Pricing from: {rateSheetPricing.rateSheetName}
+          </span>
+          {rateSheetPricing.matchedScope && (
+            <Badge variant="outline" className="text-[10px] border-primary/30 text-primary ml-auto">
+              {rateSheetPricing.matchedScope.scopeCode} — {rateSheetPricing.matchedScope.slaTier} SLA
+            </Badge>
+          )}
+          {rateSheetPricing.volumeDiscount && (
+            <Badge variant="secondary" className="text-[10px]">
+              {rateSheetPricing.volumeDiscount.discountPercent}% vol. discount
+            </Badge>
+          )}
+        </div>
+      )}
+
       {/* Header info */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 bg-muted/30 rounded-lg p-3 border border-border/50 text-sm">
         <div>
