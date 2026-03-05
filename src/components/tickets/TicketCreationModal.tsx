@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,7 +106,27 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
   const createContact = useCreateContact();
 
   const selectedLocation = locations.find((l) => l.id === selectedLocationId);
-  const selectedContact = contacts.find((c) => c.id === selectedContactId);
+
+  const fallbackContact = useMemo<Contact | null>(() => {
+    if (!selectedCustomer || contacts.length > 0) return null;
+    const hasAny = selectedCustomer.contact_name?.trim() || selectedCustomer.email?.trim() || selectedCustomer.phone?.trim();
+    if (!hasAny) return null;
+    const now = new Date().toISOString();
+    return {
+      id: "__customer_primary__",
+      customer_id: selectedCustomer.id,
+      name: selectedCustomer.contact_name || selectedCustomer.company,
+      email: selectedCustomer.email || "",
+      phone: selectedCustomer.phone || "",
+      role: "Primary Contact",
+      is_primary: true,
+      created_at: now,
+      updated_at: now,
+    };
+  }, [selectedCustomer, contacts.length]);
+
+  const contactOptions = contacts.length > 0 ? contacts : (fallbackContact ? [fallbackContact] : []);
+  const selectedContact = contactOptions.find((c) => c.id === selectedContactId);
 
   const resetForm = useCallback(() => {
     setPhase("select_company");
@@ -453,13 +473,13 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
                     <SelectTrigger>
                       <SelectValue placeholder="Select a contact..." />
                     </SelectTrigger>
-                    <SelectContent className="pointer-events-auto z-[2200]">
-                      {contacts.length === 0 && (
+                    <SelectContent className="pointer-events-auto z-[2100]">
+                      {contactOptions.length === 0 && (
                         <div className="px-3 py-2 text-xs text-muted-foreground">
                           No contacts found. Add one below.
                         </div>
                       )}
-                      {contacts.map((con) => (
+                      {contactOptions.map((con) => (
                         <SelectItem key={con.id} value={con.id}>
                           <div className="flex flex-col">
                             <span className="font-medium">
