@@ -144,23 +144,22 @@ export default function Customers() {
     }
   };
 
+  const [pricingConfirm, setPricingConfirm] = useState<{ open: boolean; newType: string }>({ open: false, newType: "" });
+
   const handlePricingTypeChange = (newType: string) => {
     if (!detailCustomer || newType === detailCustomer.pricing_type) return;
+    setPricingConfirm({ open: true, newType });
+  };
 
-    const confirmed = window.confirm(
-      newType === "rate_sheet"
-        ? "Change pricing type to Customer Rate Sheet? Quotes will use scope-based pricing from the customer's rate sheet instead of the standard rate card."
-        : "Change pricing type to Standard Rate Card? Quotes will use the standard rate card system instead of the scope-based rate sheet."
-    );
-
-    if (!confirmed) return;
-
-    updateCustomer.mutate({ id: detailCustomer.id, pricing_type: newType }, {
+  const confirmPricingChange = useCallback(() => {
+    if (!detailCustomer) return;
+    updateCustomer.mutate({ id: detailCustomer.id, pricing_type: pricingConfirm.newType }, {
       onSuccess: () => {
-        setDetailCustomer(prev => prev ? { ...prev, pricing_type: newType } : null);
+        setDetailCustomer(prev => prev ? { ...prev, pricing_type: pricingConfirm.newType } : null);
       },
     });
-  };
+    setPricingConfirm({ open: false, newType: "" });
+  }, [detailCustomer, pricingConfirm.newType, updateCustomer]);
 
   const getCustomerRateSheets = (customerName: string) =>
     rateSheets.filter(rs => rs.customer_name.toLowerCase() === customerName.toLowerCase());
