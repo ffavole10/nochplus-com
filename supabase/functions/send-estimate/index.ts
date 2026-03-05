@@ -215,19 +215,39 @@ serve(async (req) => {
       emailPayload.cc = payload.cc;
     }
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(emailPayload),
-    });
+    const sendViaResend = async (fromAddress: string) => {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...emailPayload, from: fromAddress }),
+      });
 
-    const data = await res.json();
+      const result = await response.json();
+      return { response, result };
+    };
 
-    if (!res.ok) {
-      console.error("Resend API error:", JSON.stringify(data));
+    let { response: resendResponse, result: resendResult } = await sendViaResend(
+      "Noch Power <noreply@nochplus.com>"
+    );
+
+    // Fallback while root domain authorization is still propagating in Resend
+    if (
+      !resendResponse.ok &&
+      resendResponse.status === 403 &&
+      typeof resendResult?.message === "string" &&
+      resendResult.message.includes("Not authorized to send emails from nochplus.com")
+    ) {
+      console.warn("Resend root-domain sender not authorized yet. Retrying with verified subdomain sender.");
+      ({ response: resendResponse, result: resendResult } = await sendViaResend(
+        "Noch Power <noreply@send.nochplus.com>"
+      ));
+    }
+
+    if (!resendResponse.ok) {
+      console.error("Resend API error:", JSON.stringify(resendResult));
       throw new Error("Failed to send email");
     }
 
