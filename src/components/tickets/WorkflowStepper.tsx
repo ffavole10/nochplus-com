@@ -143,10 +143,21 @@ function PhaseCard({
 }
 
 export function WorkflowStepper({ steps, currentStep, compact }: WorkflowStepperProps) {
+  // Derive step statuses from currentStep as the single source of truth
+  const derivedSteps: WorkflowStepInfo[] = steps.map((s) => ({
+    ...s,
+    status:
+      s.number < currentStep
+        ? "complete" as StepStatus
+        : s.number === currentStep
+        ? "in_progress" as StepStatus
+        : "pending" as StepStatus,
+  }));
+
   return (
     <div className="space-y-2">
       {PHASES.map((phase) => {
-        const phaseSteps = steps.filter(
+        const phaseSteps = derivedSteps.filter(
           (s) => s.number >= phase.range[0] && s.number <= phase.range[1]
         );
 
