@@ -114,7 +114,7 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Noch Campaigns <noreply@nochcampaigns.com>",
+        from: "Noch Power <noreply@nochplus.com>",
         to: [to],
         subject: `Assessment Report — ${safeTicketId}`,
         html: emailHtml,
