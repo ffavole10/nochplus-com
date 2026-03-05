@@ -532,7 +532,7 @@ export default function Customers() {
 
       {/* Pricing Type Change Confirmation */}
       <AlertDialog open={pricingConfirmOpen} onOpenChange={setPricingConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="pointer-events-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Change Pricing Type</AlertDialogTitle>
             <AlertDialogDescription>
