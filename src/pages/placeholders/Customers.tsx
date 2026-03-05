@@ -69,10 +69,16 @@ export default function Customers() {
 
   const handleAdd = () => {
     if (!form.company || !form.contact_name || !form.email) { toast.error("Fill required fields"); return; }
-    createCustomer.mutate({ company: form.company, contact_name: form.contact_name, email: form.email, phone: form.phone, address: form.address, notes: form.notes, status: "active", pricing_type: "rate_card" }, {
+    createCustomer.mutate({
+      company: form.company, contact_name: form.contact_name, email: form.email,
+      phone: form.phone, address: form.address, notes: form.notes,
+      website_url: form.website_url || "", industry: form.industry || null,
+      description: form.description || null, headquarters_address: form.headquarters_address || null,
+      status: "active", pricing_type: "rate_card",
+    } as any, {
       onSuccess: () => {
         setFormOpen(false);
-        setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "" });
+        setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" });
       },
     });
   };
