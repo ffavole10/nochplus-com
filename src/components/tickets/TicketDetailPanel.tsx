@@ -10,6 +10,7 @@ import { SWIPreviewDialog } from "@/components/tickets/SWIPreviewDialog";
 import { getSWIPublicUrl } from "@/lib/swiStorage";
 import { TicketCloseStep } from "@/components/tickets/TicketCloseStep";
 import { InlineEstimateEditor } from "@/components/tickets/InlineEstimateEditor";
+import { WorkflowStepper } from "@/components/tickets/WorkflowStepper";
 import { AssessmentReportActions } from "@/components/tickets/AssessmentReportActions";
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,

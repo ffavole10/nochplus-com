@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ServiceTicket, StepStatus } from "@/types/serviceTicket";
 import { SWI_CATALOG } from "@/data/swiCatalog";
 import { TicketCloseStep } from "@/components/tickets/TicketCloseStep";
+import { WorkflowStepper } from "@/components/tickets/WorkflowStepper";
 import { SWIPreviewDialog } from "@/components/tickets/SWIPreviewDialog";
 import { getSWIPublicUrl } from "@/lib/swiStorage";
 import {
