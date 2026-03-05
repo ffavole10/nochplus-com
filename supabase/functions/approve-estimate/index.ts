@@ -135,7 +135,7 @@ function buildConfirmationEmail(ticketId: string, siteName: string, total: strin
     '<p style="color:#475569;font-size:14px;line-height:1.5;margin:0;">You can now proceed with dispatching the service team.</p>' +
     '</div>' +
     '<div style="background:#f8fafc;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">' +
-    '<p style="margin:0;color:#94a3b8;font-size:12px;">This notification was sent by Noch Campaigns</p>' +
+    '<p style="margin:0;color:#94a3b8;font-size:12px;">This notification was sent by Noch Power</p>' +
     '</div>' +
     '</div>' +
     '</body></html>';
