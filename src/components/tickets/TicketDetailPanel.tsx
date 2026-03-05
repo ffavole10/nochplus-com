@@ -10,6 +10,7 @@ import { SWIPreviewDialog } from "@/components/tickets/SWIPreviewDialog";
 import { getSWIPublicUrl } from "@/lib/swiStorage";
 import { TicketCloseStep } from "@/components/tickets/TicketCloseStep";
 import { InlineEstimateEditor } from "@/components/tickets/InlineEstimateEditor";
+import { WorkflowStepper } from "@/components/tickets/WorkflowStepper";
 import { AssessmentReportActions } from "@/components/tickets/AssessmentReportActions";
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
@@ -307,49 +308,7 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
 
         {/* Workflow */}
         <TabsContent value="workflow" className="mt-4">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs font-medium">Step {ticket.currentStep} of 10:</span>
-            <span className="text-xs text-muted-foreground">
-              {ticket.workflowSteps.find(s => s.number === ticket.currentStep)?.label}
-            </span>
-          </div>
-          <div className="space-y-1">
-            {ticket.workflowSteps.map((step) => {
-              const isExpanded = expandedStep === step.number;
-              return (
-                <div key={step.number} className={`rounded-lg border transition-colors ${
-                  step.status === "in_progress" ? "border-primary/30 bg-primary/5" :
-                  step.status === "complete" ? "border-optimal/20 bg-optimal/5" :
-                  "border-border bg-background"
-                }`}>
-                  <button
-                    className="w-full flex items-center gap-3 px-3 py-2 text-left"
-                    onClick={() => setExpandedStep(isExpanded ? null : step.number)}
-                  >
-                    <StepIcon status={step.status} />
-                    <div className="flex-1 min-w-0">
-                      <span className={`text-xs font-medium ${step.status === "pending" ? "text-muted-foreground" : "text-foreground"}`}>
-                        {step.number}. {step.label}
-                      </span>
-                      {step.completedAt && (
-                        <span className="text-xs text-muted-foreground ml-2">
-                          {format(new Date(step.completedAt), "MMM d")}
-                        </span>
-                      )}
-                    </div>
-                    {step.status !== "pending" && (
-                      isExpanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                  </button>
-                  {isExpanded && step.status !== "pending" && (
-                    <div className="px-3 pb-2 pl-11">
-                      <WorkflowStepDetail ticket={ticket} stepNumber={step.number} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <WorkflowStepper steps={ticket.workflowSteps} currentStep={ticket.currentStep} compact />
         </TabsContent>
 
         {/* Estimate */}
