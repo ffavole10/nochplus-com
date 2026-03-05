@@ -91,7 +91,7 @@ function buildDefaultItems(ticket: ServiceTicket): EstimateLineItem[] {
   const items: EstimateLineItem[] = [
     {
       id: uid(),
-      description: `Labor — ${title}`,
+      description: "Labor — EVSE certified field technician",
       qty: hours,
       unit: "hours",
       rate: LABOR_RATE,
