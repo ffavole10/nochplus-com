@@ -110,17 +110,18 @@ export default function Customers() {
 
   const handlePricingTypeChange = (newType: string) => {
     if (!detailCustomer || newType === detailCustomer.pricing_type) return;
-    setPendingPricingType(newType);
-    setPricingConfirmOpen(true);
-  };
 
-  const confirmPricingChange = () => {
-    if (!detailCustomer || !pendingPricingType) return;
-    updateCustomer.mutate({ id: detailCustomer.id, pricing_type: pendingPricingType }, {
+    const confirmed = window.confirm(
+      newType === "rate_sheet"
+        ? "Change pricing type to Customer Rate Sheet? Quotes will use scope-based pricing from the customer's rate sheet instead of the standard rate card."
+        : "Change pricing type to Standard Rate Card? Quotes will use the standard rate card system instead of the scope-based rate sheet."
+    );
+
+    if (!confirmed) return;
+
+    updateCustomer.mutate({ id: detailCustomer.id, pricing_type: newType }, {
       onSuccess: () => {
-        setDetailCustomer(prev => prev ? { ...prev, pricing_type: pendingPricingType! } : null);
-        setPricingConfirmOpen(false);
-        setPendingPricingType(null);
+        setDetailCustomer(prev => prev ? { ...prev, pricing_type: newType } : null);
       },
     });
   };
