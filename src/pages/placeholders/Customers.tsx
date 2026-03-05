@@ -37,6 +37,9 @@ export default function Customers() {
   const [editForm, setEditForm] = useState<Partial<Customer>>({});
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const addLogoInputRef = useRef<HTMLInputElement>(null);
+  const [addLogoUrl, setAddLogoUrl] = useState<string | null>(null);
+  const [addLogoUploading, setAddLogoUploading] = useState(false);
   const [pricingConfirmOpen, setPricingConfirmOpen] = useState(false);
   const [pendingPricingType, setPendingPricingType] = useState<string | null>(null);
 
