@@ -259,8 +259,9 @@ serve(async (req) => {
     );
   } catch (error: unknown) {
     console.error("Error sending estimate email:", error);
+    const message = error instanceof Error ? error.message : "Failed to send estimate";
     return new Response(
-      JSON.stringify({ success: false, error: "Failed to send estimate" }),
+      JSON.stringify({ success: false, error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
