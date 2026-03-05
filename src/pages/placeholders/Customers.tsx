@@ -40,8 +40,6 @@ export default function Customers() {
   const addLogoInputRef = useRef<HTMLInputElement>(null);
   const [addLogoUrl, setAddLogoUrl] = useState<string | null>(null);
   const [addLogoUploading, setAddLogoUploading] = useState(false);
-  const [pricingConfirmOpen, setPricingConfirmOpen] = useState(false);
-  const [pendingPricingType, setPendingPricingType] = useState<string | null>(null);
 
   const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" });
 
