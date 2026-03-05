@@ -69,6 +69,67 @@ serve(async (req) => {
         .from("user_roles")
         .insert({ user_id: newUser.user.id, role });
 
+      // Send invite email via Resend
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+      if (RESEND_API_KEY) {
+        const safeName = (display_name || email).replace(/[&<>"]/g, (c: string) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] || c));
+        const platformUrl = req.headers.get("origin") || "https://nochplus-com.lovable.app";
+
+        const inviteHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #1e293b; padding: 24px; text-align: center;">
+              <h1 style="color: #25b3a5; margin: 0; font-size: 24px;">NOCH Power</h1>
+            </div>
+            <div style="padding: 32px 24px; background: #ffffff;">
+              <h2 style="color: #1e293b; margin-top: 0;">Welcome to NOCH Power Platform</h2>
+              <p style="color: #475569;">Hi ${safeName},</p>
+              <p style="color: #475569;">
+                You've been invited to join the NOCH Power platform${company ? ` as part of <strong>${company}</strong>` : ""}.
+              </p>
+              <p style="color: #475569;">Here are your login credentials:</p>
+              <div style="background: #f1f5f9; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                <p style="color: #334155; margin: 4px 0;"><strong>Email:</strong> ${email}</p>
+                <p style="color: #334155; margin: 4px 0;"><strong>Temporary Password:</strong> ${password}</p>
+              </div>
+              <p style="color: #475569;">Please sign in and change your password at your earliest convenience.</p>
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="${platformUrl}/login" style="display: inline-block; background-color: #25b3a5; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: bold;">
+                  Sign In to Platform
+                </a>
+              </div>
+              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+              <p style="color: #94a3b8; font-size: 12px;">
+                This is an automated message from the NOCH Power Platform. If you did not expect this invitation, please disregard this email.
+              </p>
+            </div>
+          </div>
+        `;
+
+        const sendInvite = async (fromAddr: string) => {
+          return await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${RESEND_API_KEY}`,
+            },
+            body: JSON.stringify({
+              from: fromAddr,
+              to: [email],
+              subject: "You've been invited to NOCH Power Platform",
+              html: inviteHtml,
+            }),
+          });
+        };
+
+        let inviteRes = await sendInvite("Noch Power <noreply@nochplus.com>");
+        if (!inviteRes.ok && inviteRes.status === 403) {
+          inviteRes = await sendInvite("Noch Power <noreply@send.nochplus.com>");
+        }
+        if (!inviteRes.ok) {
+          console.warn("Failed to send invite email:", await inviteRes.text());
+        }
+      }
+
       return new Response(JSON.stringify({ success: true, user_id: newUser.user.id }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
