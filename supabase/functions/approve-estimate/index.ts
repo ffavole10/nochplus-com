@@ -72,7 +72,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Noch Campaigns <noreply@nochcampaigns.com>",
+            from: "Noch Power <noreply@nochplus.com>",
             to: [estimate.account_manager],
             subject: "Estimate Approved - Ticket #" + ticketId + " | " + siteName,
             html: confirmHtml,
