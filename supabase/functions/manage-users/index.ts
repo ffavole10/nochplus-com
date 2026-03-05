@@ -183,10 +183,68 @@ serve(async (req) => {
     }
 
     if (action === "send_reset") {
-      await supabaseAdmin.auth.admin.generateLink({
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
         type: "recovery",
         email,
       });
+
+      if (linkError) throw linkError;
+
+      const recoveryUrl = linkData?.properties?.action_link;
+      if (!recoveryUrl) {
+        throw new Error("Failed to generate recovery link");
+      }
+
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+      if (!RESEND_API_KEY) {
+        throw new Error("Email provider is not configured");
+      }
+
+      const safeEmail = (email || "").replace(/[&<>\"]/g, (c: string) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] || c));
+      const resetHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #1e293b; padding: 24px; text-align: center;">
+            <h1 style="color: #25b3a5; margin: 0; font-size: 24px;">NOCH Power</h1>
+          </div>
+          <div style="padding: 32px 24px; background: #ffffff;">
+            <h2 style="color: #1e293b; margin-top: 0;">Reset your password</h2>
+            <p style="color: #475569;">A password reset was requested for <strong>${safeEmail}</strong>.</p>
+            <p style="color: #475569;">Click the button below to set a new password:</p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${recoveryUrl}" style="display: inline-block; background-color: #25b3a5; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: bold;">
+                Reset Password
+              </a>
+            </div>
+            <p style="color: #64748b; font-size: 13px;">If you didn't request this, you can safely ignore this email.</p>
+          </div>
+        </div>
+      `;
+
+      const sendReset = async (fromAddr: string) => {
+        return await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            from: fromAddr,
+            to: [email],
+            subject: "Reset your NOCH Power password",
+            html: resetHtml,
+          }),
+        });
+      };
+
+      let resetRes = await sendReset("Noch Power <noreply@nochplus.com>");
+      if (!resetRes.ok && resetRes.status === 403) {
+        resetRes = await sendReset("Noch Power <noreply@send.nochplus.com>");
+      }
+
+      if (!resetRes.ok) {
+        const errorText = await resetRes.text();
+        throw new Error(`Failed to send password reset email: ${errorText}`);
+      }
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
