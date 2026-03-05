@@ -2,7 +2,7 @@ import {
   CheckCircle, Search, FileText, Send, ThumbsUp, CalendarDays,
   Package, Clock, Wrench, ClipboardCheck, XCircle,
 } from "lucide-react";
-import { WorkflowStepInfo, StepStatus } from "@/types/serviceTicket";
+import { WorkflowStepInfo, StepStatus, WORKFLOW_STEPS_TEMPLATE } from "@/types/serviceTicket";
 import { cn } from "@/lib/utils";
 
 interface WorkflowStepperProps {
@@ -47,7 +47,7 @@ function HorizontalStep({
   return (
     <div className="flex items-center flex-1 min-w-0">
       {/* Node */}
-      <div className="flex flex-col items-center gap-1.5 min-w-0">
+      <div className="flex flex-col items-center gap-1.5 w-full">
         <div
           className={cn(
             "relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all",
@@ -73,7 +73,7 @@ function HorizontalStep({
         </div>
         <span
           className={cn(
-            "text-[10px] font-medium text-center leading-tight max-w-[72px] truncate",
+            "text-[10px] font-medium text-center leading-tight w-full",
             isComplete
               ? "text-primary"
               : isActive
@@ -133,8 +133,8 @@ function PhaseSection({
           : "border-border bg-card"
       )}
     >
-      {/* Phase header */}
-      <div className="flex items-center justify-between mb-4">
+      {/* Phase header — centered */}
+      <div className="flex flex-col items-center gap-1 mb-4">
         <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
           {phase.label}
         </span>
@@ -155,7 +155,7 @@ function PhaseSection({
       </div>
 
       {/* Horizontal step track */}
-      <div className="flex items-start">
+      <div className="flex items-start justify-center">
         {phaseSteps.map((step, i) => (
           <HorizontalStep
             key={step.number}
@@ -170,12 +170,14 @@ function PhaseSection({
 }
 
 export function WorkflowStepper({ steps, currentStep, compact }: WorkflowStepperProps) {
-  const derivedSteps: WorkflowStepInfo[] = steps.map((s) => ({
-    ...s,
+  // Always build from the canonical template to ensure all 10 steps exist,
+  // even if the persisted ticket has stale/incomplete workflowSteps.
+  const derivedSteps: WorkflowStepInfo[] = WORKFLOW_STEPS_TEMPLATE.map((tmpl) => ({
+    ...tmpl,
     status:
-      s.number < currentStep
+      tmpl.number < currentStep
         ? "complete" as StepStatus
-        : s.number === currentStep
+        : tmpl.number === currentStep
         ? "in_progress" as StepStatus
         : "pending" as StepStatus,
   }));
