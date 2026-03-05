@@ -40,7 +40,7 @@ export default function Customers() {
   const [pricingConfirmOpen, setPricingConfirmOpen] = useState(false);
   const [pendingPricingType, setPendingPricingType] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "" });
+  const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" });
 
   const filtered = useMemo(() => {
     let result = [...customers];
