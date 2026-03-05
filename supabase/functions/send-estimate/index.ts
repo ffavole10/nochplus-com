@@ -12,7 +12,7 @@ const MAX_NOTE = 2000;
 const MAX_LINE_ITEMS = 50;
 
 function validateEmail(email: string): boolean {
-  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) && email.length <= 254;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
 }
 
 function validatePayload(payload: any): string | null {
