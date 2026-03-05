@@ -529,24 +529,6 @@ export default function Customers() {
         </DialogContent>
       </Dialog>
 
-      {/* Pricing Type Change Confirmation */}
-      <AlertDialog open={pricingConfirmOpen} onOpenChange={setPricingConfirmOpen}>
-        <AlertDialogContent className="pointer-events-auto">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Change Pricing Type</AlertDialogTitle>
-            <AlertDialogDescription>
-              Changing the pricing type affects how quotes are generated for this customer.
-              {pendingPricingType === "rate_sheet"
-                ? " Quotes will use scope-based pricing from the customer's rate sheet instead of the standard rate card."
-                : " Quotes will use the standard rate card system instead of the scope-based rate sheet."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingPricingType(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmPricingChange}>Confirm Change</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
