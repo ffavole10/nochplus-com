@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
@@ -40,8 +40,6 @@ export default function Customers() {
   const addLogoInputRef = useRef<HTMLInputElement>(null);
   const [addLogoUrl, setAddLogoUrl] = useState<string | null>(null);
   const [addLogoUploading, setAddLogoUploading] = useState(false);
-  const [pricingConfirmOpen, setPricingConfirmOpen] = useState(false);
-  const [pendingPricingType, setPendingPricingType] = useState<string | null>(null);
 
   const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" });
 
@@ -112,17 +110,18 @@ export default function Customers() {
 
   const handlePricingTypeChange = (newType: string) => {
     if (!detailCustomer || newType === detailCustomer.pricing_type) return;
-    setPendingPricingType(newType);
-    setPricingConfirmOpen(true);
-  };
 
-  const confirmPricingChange = () => {
-    if (!detailCustomer || !pendingPricingType) return;
-    updateCustomer.mutate({ id: detailCustomer.id, pricing_type: pendingPricingType }, {
+    const confirmed = window.confirm(
+      newType === "rate_sheet"
+        ? "Change pricing type to Customer Rate Sheet? Quotes will use scope-based pricing from the customer's rate sheet instead of the standard rate card."
+        : "Change pricing type to Standard Rate Card? Quotes will use the standard rate card system instead of the scope-based rate sheet."
+    );
+
+    if (!confirmed) return;
+
+    updateCustomer.mutate({ id: detailCustomer.id, pricing_type: newType }, {
       onSuccess: () => {
-        setDetailCustomer(prev => prev ? { ...prev, pricing_type: pendingPricingType! } : null);
-        setPricingConfirmOpen(false);
-        setPendingPricingType(null);
+        setDetailCustomer(prev => prev ? { ...prev, pricing_type: newType } : null);
       },
     });
   };
@@ -530,24 +529,6 @@ export default function Customers() {
         </DialogContent>
       </Dialog>
 
-      {/* Pricing Type Change Confirmation */}
-      <AlertDialog open={pricingConfirmOpen} onOpenChange={setPricingConfirmOpen}>
-        <AlertDialogContent className="pointer-events-auto">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Change Pricing Type</AlertDialogTitle>
-            <AlertDialogDescription>
-              Changing the pricing type affects how quotes are generated for this customer.
-              {pendingPricingType === "rate_sheet"
-                ? " Quotes will use scope-based pricing from the customer's rate sheet instead of the standard rate card."
-                : " Quotes will use the standard rate card system instead of the scope-based rate sheet."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingPricingType(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmPricingChange}>Confirm Change</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
