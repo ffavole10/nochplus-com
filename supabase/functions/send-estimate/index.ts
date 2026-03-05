@@ -101,7 +101,7 @@ function buildEmailHtml(est: EstimatePayload): string {
         <tr><td style="padding:6px 0;color:#64748b;font-size:13px;width:120px;">Account</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1e293b;">${escHtml(est.accountName)}</td></tr>
         <tr><td style="padding:6px 0;color:#64748b;font-size:13px;">Charger</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1e293b;">${escHtml(est.chargerName)} (${escHtml(est.chargerType || "")})</td></tr>
         <tr><td style="padding:6px 0;color:#64748b;font-size:13px;">Location</td><td style="padding:6px 0;font-size:14px;color:#1e293b;">${escHtml(est.location || "")}</td></tr>
-        <tr><td style="padding:6px 0;color:#64748b;font-size:13px;">SWI</td><td style="padding:6px 0;font-size:14px;color:#3b82f6;font-weight:600;">${escHtml(est.swiTitle || "")}</td></tr>
+        
       </table>
     </div>
     <div style="padding:0 32px 20px;">

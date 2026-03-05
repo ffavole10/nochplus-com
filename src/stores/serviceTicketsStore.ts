@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { ServiceTicket, WORKFLOW_STEPS_TEMPLATE, WorkflowStepInfo } from "@/types/serviceTicket";
 
 function makeSteps(currentStep: number): WorkflowStepInfo[] {
@@ -36,7 +37,9 @@ interface ServiceTicketsStore {
   ) => string;
 }
 
-export const useServiceTicketsStore = create<ServiceTicketsStore>((set, get) => ({
+export const useServiceTicketsStore = create<ServiceTicketsStore>()(
+  persist(
+    (set, get) => ({
   tickets: [],
 
   addTicket: (ticket) =>
@@ -134,6 +137,9 @@ export const useServiceTicketsStore = create<ServiceTicketsStore>((set, get) => 
     set((state) => ({ tickets: [parentTicket, ...childTickets, ...state.tickets] }));
     return parentId;
   },
-}));
+    }),
+    { name: "service-tickets-storage" }
+  )
+);
 
 export { makeSteps };
