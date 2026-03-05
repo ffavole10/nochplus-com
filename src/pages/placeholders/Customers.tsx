@@ -290,7 +290,7 @@ export default function Customers() {
       )}
 
       {/* Add Customer Modal */}
-      <Dialog open={formOpen} onOpenChange={(open) => { if (!open) { setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" }); setAddLogoUrl(null); } setFormOpen(open); }}>
+      <Dialog open={formOpen} onOpenChange={(open) => { if (!open) resetAddForm(); setFormOpen(open); }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Add Customer</DialogTitle></DialogHeader>
           <div className="flex items-center gap-3 mb-2">
