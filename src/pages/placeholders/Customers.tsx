@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer, type Customer } from "@/hooks/useCustomers";
 import { useRateCards } from "@/hooks/useQuotingSettings";
-import { useCustomerRateSheetsList } from "@/hooks/useCustomerRateSheets";
+import { useCustomerRateSheetsList, useCreateCustomerRateSheet } from "@/hooks/useCustomerRateSheets";
 
 export default function Customers() {
   const { data: customers = [], isLoading } = useCustomers();
