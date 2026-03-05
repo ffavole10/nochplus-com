@@ -107,24 +107,43 @@ serve(async (req) => {
       </div>
     `;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "Noch Power <noreply@nochplus.com>",
-        to: [to],
-        subject: `Assessment Report — ${safeTicketId}`,
-        html: emailHtml,
-        attachments: [{ filename, content: pdfBase64 }],
-      }),
-    });
+    const sendViaResend = async (fromAddress: string) => {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: fromAddress,
+          to: [to],
+          subject: `Assessment Report — ${safeTicketId}`,
+          html: emailHtml,
+          attachments: [{ filename, content: pdfBase64 }],
+        }),
+      });
 
-    const result = await res.json();
+      const result = await response.json();
+      return { response, result };
+    };
 
-    if (!res.ok) {
+    let { response: resendResponse, result } = await sendViaResend(
+      "Noch Power <noreply@nochplus.com>"
+    );
+
+    if (
+      !resendResponse.ok &&
+      resendResponse.status === 403 &&
+      typeof result?.message === "string" &&
+      result.message.includes("Not authorized to send emails from nochplus.com")
+    ) {
+      console.warn("Resend root-domain sender not authorized yet. Retrying with verified subdomain sender.");
+      ({ response: resendResponse, result } = await sendViaResend(
+        "Noch Power <noreply@send.nochplus.com>"
+      ));
+    }
+
+    if (!resendResponse.ok) {
       console.error("Resend error:", result);
       throw new Error("Failed to send email");
     }
