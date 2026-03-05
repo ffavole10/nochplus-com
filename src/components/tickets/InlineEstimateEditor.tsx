@@ -310,7 +310,7 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
         if (swiInfo.parts.length > 0 || swiInfo.hours !== 2) {
           const title = swiDoc?.title || swiMatch?.matched_swi_id || "General Service";
           const items: EstimateLineItem[] = [
-            { id: uid(), description: `Labor — ${title}`, qty: swiInfo.hours, unit: "hours", rate: LABOR_RATE, amount: swiInfo.hours * LABOR_RATE, category: "labor" },
+            { id: uid(), description: "Labor — EVSE certified field technician", qty: swiInfo.hours, unit: "hours", rate: LABOR_RATE, amount: swiInfo.hours * LABOR_RATE, category: "labor" },
             { id: uid(), description: "Travel Time", qty: 1, unit: "hours", rate: LABOR_RATE, amount: LABOR_RATE, category: "travel" },
           ];
           swiInfo.parts.forEach((p) => {
