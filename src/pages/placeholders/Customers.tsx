@@ -269,12 +269,12 @@ export default function Customers() {
       )}
 
       {/* Add Customer Modal */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+      <Dialog open={formOpen} onOpenChange={(open) => { if (!open) { setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" }); setAddLogoUrl(null); } setFormOpen(open); }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Add Customer</DialogTitle></DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="relative group cursor-pointer" onClick={() => addLogoInputRef.current?.click()}>
-              <CustomerLogo logoUrl={addLogoUrl} companyName={form.company || "?"} size="lg" />
+              <CustomerLogo logoUrl={addLogoUrl} companyName={form.company || "Logo"} size="lg" />
               <div className="absolute inset-0 rounded-md bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 {addLogoUploading ? <Loader2 className="h-4 w-4 text-white animate-spin" /> : <Upload className="h-4 w-4 text-white" />}
               </div>
@@ -328,7 +328,7 @@ export default function Customers() {
               <Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} rows={3} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => { setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" }); setAddLogoUrl(null); setFormOpen(false); }}>Cancel</Button>
               <Button onClick={handleAdd} disabled={createCustomer.isPending}>{createCustomer.isPending ? "Adding..." : "Add Customer"}</Button>
             </div>
           </div>
