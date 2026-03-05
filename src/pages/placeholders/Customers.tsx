@@ -596,6 +596,23 @@ export default function Customers() {
         </DialogContent>
       </Dialog>
 
+      <AlertDialog open={pricingConfirm.open} onOpenChange={(open) => !open && setPricingConfirm({ open: false, newType: "" })}>
+        <AlertDialogContent className="z-[2200]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Pricing Type</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pricingConfirm.newType === "rate_sheet"
+                ? "Quotes will use scope-based pricing from the customer's rate sheet instead of the standard rate card."
+                : "Quotes will use the standard rate card system instead of the scope-based rate sheet."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPricingChange}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
