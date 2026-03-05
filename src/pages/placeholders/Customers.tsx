@@ -77,13 +77,37 @@ export default function Customers() {
       phone: form.phone, address: form.address, notes: form.notes,
       website_url: form.website_url || "", industry: form.industry || null,
       description: form.description || null, headquarters_address: form.headquarters_address || null,
+      logo_url: addLogoUrl || null,
       status: "active", pricing_type: "rate_card",
     } as any, {
       onSuccess: () => {
         setFormOpen(false);
         setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" });
+        setAddLogoUrl(null);
       },
     });
+  };
+
+  const handleAddLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image"); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error("Image must be under 2MB"); return; }
+    setAddLogoUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `logos/new-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      setAddLogoUrl(`${urlData.publicUrl}?t=${Date.now()}`);
+      toast.success("Logo uploaded");
+    } catch (err: any) {
+      toast.error("Upload failed: " + err.message);
+    } finally {
+      setAddLogoUploading(false);
+      if (addLogoInputRef.current) addLogoInputRef.current.value = "";
+    }
   };
 
   const handlePricingTypeChange = (newType: string) => {
