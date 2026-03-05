@@ -137,6 +137,9 @@ export const useServiceTicketsStore = create<ServiceTicketsStore>()(
     set((state) => ({ tickets: [parentTicket, ...childTickets, ...state.tickets] }));
     return parentId;
   },
-}));
+    }),
+    { name: "service-tickets-storage" }
+  )
+);
 
 export { makeSteps };
