@@ -205,7 +205,7 @@ serve(async (req) => {
     const html = buildEmailHtml(payload);
 
     const emailPayload: Record<string, unknown> = {
-      from: "Noch Campaigns <noreply@nochcampaigns.com>",
+      from: "Noch Power <noreply@nochplus.com>",
       to: [payload.to],
       subject: `Service Estimate — Ticket #${payload.ticketId} | ${payload.chargerName}`,
       html,
