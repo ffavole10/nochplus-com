@@ -15,7 +15,7 @@ serve(async (req) => {
     const url = new URL(req.url);
     const estimateId = url.searchParams.get("id");
     // Base URL for redirect — use the published app URL
-    const appBase = "https://nochcampaigns.lovable.app";
+    const appBase = "https://nochplus-com.lovable.app";
 
     if (!estimateId) {
       return redirect(appBase + "/estimate-status?status=error&message=Missing+estimate+ID");
@@ -72,7 +72,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Noch Campaigns <noreply@nochcampaigns.com>",
+            from: "Noch Power <noreply@nochplus.com>",
             to: [estimate.account_manager],
             subject: "Estimate Approved - Ticket #" + ticketId + " | " + siteName,
             html: confirmHtml,
@@ -98,7 +98,7 @@ serve(async (req) => {
     return redirect(appBase + "/estimate-status?status=approved");
   } catch (error) {
     console.error("approve-estimate error:", error);
-    return redirect("https://nochcampaigns.lovable.app/estimate-status?status=error&message=Unexpected+error");
+    return redirect("https://nochplus-com.lovable.app/estimate-status?status=error&message=Unexpected+error");
   }
 });
 
@@ -135,7 +135,7 @@ function buildConfirmationEmail(ticketId: string, siteName: string, total: strin
     '<p style="color:#475569;font-size:14px;line-height:1.5;margin:0;">You can now proceed with dispatching the service team.</p>' +
     '</div>' +
     '<div style="background:#f8fafc;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">' +
-    '<p style="margin:0;color:#94a3b8;font-size:12px;">This notification was sent by Noch Campaigns</p>' +
+    '<p style="margin:0;color:#94a3b8;font-size:12px;">This notification was sent by Noch Power</p>' +
     '</div>' +
     '</div>' +
     '</body></html>';
