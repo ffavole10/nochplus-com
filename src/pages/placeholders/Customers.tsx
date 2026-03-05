@@ -456,7 +456,7 @@ export default function Customers() {
                             <SelectTrigger className="h-9">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="pointer-events-auto z-[2200]">
                               <SelectItem value="rate_card">
                                 <span className="flex items-center gap-1.5"><CreditCard className="h-3 w-3" /> Standard Rate Card</span>
                               </SelectItem>
