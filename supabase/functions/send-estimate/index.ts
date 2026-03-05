@@ -215,7 +215,15 @@ serve(async (req) => {
       emailPayload.cc = payload.cc;
     }
 
-    const sendViaResend = async (fromAddress: string) => {
+    const senderCandidates = [
+      "Noch Power <noreply@nochplus.com>",
+      "Noch Power <noreply@send.nochplus.com>",
+    ];
+
+    let resendResponse: Response | null = null;
+    let resendResult: any = null;
+
+    for (const fromAddress of senderCandidates) {
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -226,29 +234,22 @@ serve(async (req) => {
       });
 
       const result = await response.json();
-      return { response, result };
-    };
 
-    let { response: resendResponse, result: resendResult } = await sendViaResend(
-      "Noch Power <noreply@nochplus.com>"
-    );
+      if (response.ok) {
+        resendResponse = response;
+        resendResult = result;
+        break;
+      }
 
-    // Fallback while root domain authorization is still propagating in Resend
-    if (
-      !resendResponse.ok &&
-      resendResponse.status === 403 &&
-      typeof resendResult?.message === "string" &&
-      resendResult.message.includes("Not authorized to send emails from nochplus.com")
-    ) {
-      console.warn("Resend root-domain sender not authorized yet. Retrying with verified subdomain sender.");
-      ({ response: resendResponse, result: resendResult } = await sendViaResend(
-        "Noch Power <noreply@send.nochplus.com>"
-      ));
+      resendResponse = response;
+      resendResult = result;
+      console.warn(`Resend sender failed (${fromAddress}):`, JSON.stringify(result));
     }
 
-    if (!resendResponse.ok) {
+    if (!resendResponse?.ok) {
       console.error("Resend API error:", JSON.stringify(resendResult));
-      throw new Error("Failed to send email");
+      const resendMessage = typeof resendResult?.message === "string" ? resendResult.message : "Failed to send email";
+      throw new Error(`Failed to send email: ${resendMessage}`);
     }
 
     return new Response(
@@ -257,8 +258,9 @@ serve(async (req) => {
     );
   } catch (error: unknown) {
     console.error("Error sending estimate email:", error);
+    const message = error instanceof Error ? error.message : "Failed to send estimate";
     return new Response(
-      JSON.stringify({ success: false, error: "Failed to send estimate" }),
+      JSON.stringify({ success: false, error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
