@@ -344,6 +344,38 @@ export default function Customers() {
                 <Input value={form.headquarters_address} onChange={e => setForm(p => ({ ...p, headquarters_address: e.target.value }))} />
               </div>
             </div>
+            <Separator />
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold flex items-center gap-1.5"><CreditCard className="h-4 w-4" /> Pricing Type</h4>
+              <Select value={form.pricing_type} onValueChange={v => setForm(p => ({ ...p, pricing_type: v }))}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rate_card">
+                    <span className="flex items-center gap-1.5"><CreditCard className="h-3 w-3" /> Standard Rate Card</span>
+                  </SelectItem>
+                  <SelectItem value="rate_sheet">
+                    <span className="flex items-center gap-1.5"><FileText className="h-3 w-3" /> Customer Rate Sheet</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {form.pricing_type === "rate_sheet" && (
+                <div className="space-y-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+                  <p className="text-xs text-muted-foreground">A draft rate sheet will be created for this customer. You can configure scopes and pricing later in Settings.</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Rate Sheet Name *</Label>
+                      <Input value={newRateSheetName} onChange={e => setNewRateSheetName(e.target.value)} placeholder={`${form.company || "Customer"} Rate Sheet`} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Description</Label>
+                      <Input value={newRateSheetDesc} onChange={e => setNewRateSheetDesc(e.target.value)} placeholder="Optional description" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Notes</Label>
               <Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} rows={3} />
