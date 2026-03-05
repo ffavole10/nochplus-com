@@ -98,7 +98,7 @@ serve(async (req) => {
     return redirect(appBase + "/estimate-status?status=approved");
   } catch (error) {
     console.error("approve-estimate error:", error);
-    return redirect("https://nochcampaigns.lovable.app/estimate-status?status=error&message=Unexpected+error");
+    return redirect("https://nochplus-com.lovable.app/estimate-status?status=error&message=Unexpected+error");
   }
 });
 
