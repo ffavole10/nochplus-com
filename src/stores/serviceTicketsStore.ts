@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { ServiceTicket, WORKFLOW_STEPS_TEMPLATE, WorkflowStepInfo } from "@/types/serviceTicket";
 
 function makeSteps(currentStep: number): WorkflowStepInfo[] {
