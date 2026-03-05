@@ -274,7 +274,7 @@ export default function Customers() {
           <DialogHeader><DialogTitle>Add Customer</DialogTitle></DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="relative group cursor-pointer" onClick={() => addLogoInputRef.current?.click()}>
-              <CustomerLogo logoUrl={addLogoUrl} companyName={form.company || "?"} size="lg" />
+              <CustomerLogo logoUrl={addLogoUrl} companyName={form.company || "Logo"} size="lg" />
               <div className="absolute inset-0 rounded-md bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 {addLogoUploading ? <Loader2 className="h-4 w-4 text-white animate-spin" /> : <Upload className="h-4 w-4 text-white" />}
               </div>
