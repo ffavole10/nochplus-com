@@ -91,7 +91,7 @@ function buildDefaultItems(ticket: ServiceTicket): EstimateLineItem[] {
   const items: EstimateLineItem[] = [
     {
       id: uid(),
-      description: `Labor — ${title}`,
+      description: "Labor — EVSE certified field technician",
       qty: hours,
       unit: "hours",
       rate: LABOR_RATE,
@@ -310,7 +310,7 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
         if (swiInfo.parts.length > 0 || swiInfo.hours !== 2) {
           const title = swiDoc?.title || swiMatch?.matched_swi_id || "General Service";
           const items: EstimateLineItem[] = [
-            { id: uid(), description: `Labor — ${title}`, qty: swiInfo.hours, unit: "hours", rate: LABOR_RATE, amount: swiInfo.hours * LABOR_RATE, category: "labor" },
+            { id: uid(), description: "Labor — EVSE certified field technician", qty: swiInfo.hours, unit: "hours", rate: LABOR_RATE, amount: swiInfo.hours * LABOR_RATE, category: "labor" },
             { id: uid(), description: "Travel Time", qty: 1, unit: "hours", rate: LABOR_RATE, amount: LABOR_RATE, category: "travel" },
           ];
           swiInfo.parts.forEach((p) => {
@@ -372,7 +372,7 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
 
   const addItem = () => {
     const defaults: Record<EstimateLineItem["category"], Partial<EstimateLineItem>> = {
-      labor: { description: "Labor — ", qty: 1, unit: "hours", rate: LABOR_RATE },
+      labor: { description: "Labor — EVSE certified field technician", qty: 1, unit: "hours", rate: LABOR_RATE },
       parts: { description: "", qty: 1, unit: "each", rate: 0 },
       travel: { description: "Travel Time", qty: 1, unit: "hours", rate: LABOR_RATE },
       other: { description: "", qty: 1, unit: "flat", rate: 0 },

@@ -99,7 +99,7 @@ function buildDefaultItems(
   const items: EstimateLineItem[] = [
     {
       id: uid(),
-      description: `Labor — ${title}`,
+      description: "Labor — EVSE certified field technician",
       qty: hours,
       unit: "hours",
       rate: LABOR_RATE,
@@ -313,7 +313,7 @@ export function EstimateBuilder({
 
   const addItem = () => {
     const defaults: Record<EstimateLineItem["category"], Partial<EstimateLineItem>> = {
-      labor: { description: "Labor — ", qty: 1, unit: "hours", rate: LABOR_RATE },
+      labor: { description: "Labor — EVSE certified field technician", qty: 1, unit: "hours", rate: LABOR_RATE },
       parts: { description: "", qty: 1, unit: "each", rate: 0 },
       travel: { description: "Travel Time", qty: 1, unit: "hours", rate: LABOR_RATE },
       other: { description: "", qty: 1, unit: "flat", rate: 0 },

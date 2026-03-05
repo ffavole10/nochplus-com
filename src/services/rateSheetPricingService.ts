@@ -292,7 +292,7 @@ export function buildRateSheetLineItems(
   if (pricing.matchedScope) {
     const s = pricing.matchedScope;
     items.push({
-      description: `${s.scopeCode} — ${s.scopeName} (${s.slaTier} SLA)`,
+      description: `Labor — EVSE certified field technician (${s.scopeCode}, ${s.slaTier} SLA)`,
       qty: 1,
       unit: "flat",
       rate: s.price,
