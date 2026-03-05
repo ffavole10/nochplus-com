@@ -1,4 +1,7 @@
-import { CheckCircle, Clock, XCircle } from "lucide-react";
+import {
+  CheckCircle, Search, FileText, Send, ThumbsUp, CalendarDays,
+  Package, Clock, Wrench, ClipboardCheck, XCircle,
+} from "lucide-react";
 import { WorkflowStepInfo, StepStatus } from "@/types/serviceTicket";
 import { cn } from "@/lib/utils";
 
@@ -14,128 +17,152 @@ const PHASES = [
   { label: "Fulfillment", range: [6, 10], number: 3 },
 ] as const;
 
-function StepDot({ status, label, number }: { status: StepStatus; label: string; number: number }) {
+const STEP_ICONS: Record<number, React.ElementType> = {
+  1: Search,
+  2: FileText,
+  3: FileText,
+  4: Send,
+  5: ThumbsUp,
+  6: CalendarDays,
+  7: Package,
+  8: Clock,
+  9: Wrench,
+  10: ClipboardCheck,
+};
+
+function HorizontalStep({
+  step,
+  isLast,
+  nextStatus,
+}: {
+  step: WorkflowStepInfo;
+  isLast: boolean;
+  nextStatus?: StepStatus;
+}) {
+  const Icon = STEP_ICONS[step.number] || FileText;
+  const isComplete = step.status === "complete";
+  const isActive = step.status === "in_progress";
+  const isFailed = step.status === "failed";
+
   return (
-    <div className="flex items-center gap-2 py-1">
-      <div
-        className={cn(
-          "h-2.5 w-2.5 rounded-full flex-shrink-0",
-          status === "complete" ? "bg-primary" :
-          status === "in_progress" ? "bg-primary animate-pulse" :
-          status === "failed" ? "bg-destructive" :
-          "bg-muted-foreground/25"
-        )}
-      />
-      <span
-        className={cn(
-          "text-xs",
-          status === "complete" ? "text-foreground" :
-          status === "in_progress" ? "text-primary font-medium" :
-          status === "failed" ? "text-destructive" :
-          "text-muted-foreground"
-        )}
-      >
-        {number}. {label}
-      </span>
-      {status === "complete" && (
-        <CheckCircle className="h-3 w-3 text-primary ml-auto flex-shrink-0" />
-      )}
-      {status === "in_progress" && (
-        <span className="text-[10px] text-primary font-medium ml-auto bg-primary/10 px-1.5 py-0.5 rounded-full">Active</span>
-      )}
-      {status === "failed" && (
-        <XCircle className="h-3 w-3 text-destructive ml-auto flex-shrink-0" />
+    <div className="flex items-center flex-1 min-w-0">
+      {/* Node */}
+      <div className="flex flex-col items-center gap-1.5 min-w-0">
+        <div
+          className={cn(
+            "relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all",
+            isComplete
+              ? "border-primary bg-primary text-primary-foreground"
+              : isActive
+              ? "border-primary bg-primary/10 text-primary ring-4 ring-primary/15"
+              : isFailed
+              ? "border-destructive bg-destructive/10 text-destructive"
+              : "border-muted-foreground/25 bg-muted text-muted-foreground/50"
+          )}
+        >
+          {isComplete ? (
+            <CheckCircle className="h-4 w-4" />
+          ) : isFailed ? (
+            <XCircle className="h-4 w-4" />
+          ) : (
+            <Icon className="h-4 w-4" />
+          )}
+          {isActive && (
+            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+          )}
+        </div>
+        <span
+          className={cn(
+            "text-[10px] font-medium text-center leading-tight max-w-[72px] truncate",
+            isComplete
+              ? "text-primary"
+              : isActive
+              ? "text-primary font-semibold"
+              : isFailed
+              ? "text-destructive"
+              : "text-muted-foreground"
+          )}
+        >
+          {step.label}
+        </span>
+      </div>
+
+      {/* Connector line */}
+      {!isLast && (
+        <div className="flex-1 mx-1.5 mt-[-18px]">
+          <div className="h-0.5 w-full rounded-full bg-muted-foreground/15 relative overflow-hidden">
+            <div
+              className={cn(
+                "absolute inset-y-0 left-0 rounded-full transition-all duration-500",
+                isComplete && (nextStatus === "complete" || nextStatus === "in_progress")
+                  ? "bg-primary w-full"
+                  : isComplete
+                  ? "bg-gradient-to-r from-primary to-primary/30 w-full"
+                  : "w-0"
+              )}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-function PhaseCard({
+function PhaseSection({
   phase,
   phaseSteps,
-  phaseNumber,
 }: {
   phase: (typeof PHASES)[number];
   phaseSteps: WorkflowStepInfo[];
-  phaseNumber: number;
 }) {
-  const total = phaseSteps.length;
   const completed = phaseSteps.filter((s) => s.status === "complete").length;
+  const allComplete = completed === phaseSteps.length;
+  const anyActive = phaseSteps.some((s) => s.status === "in_progress");
   const hasFailed = phaseSteps.some((s) => s.status === "failed");
-  const anyInProgress = phaseSteps.some((s) => s.status === "in_progress");
-  const allComplete = completed === total;
-  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
     <div
       className={cn(
-        "rounded-xl border p-3 transition-all",
+        "rounded-xl border p-4 transition-all",
         allComplete
           ? "border-primary/30 bg-primary/5"
           : hasFailed
           ? "border-destructive/30 bg-destructive/5"
-          : anyInProgress
+          : anyActive
           ? "border-primary/20 bg-card"
           : "border-border bg-card"
       )}
     >
-      {/* Header row */}
-      <div className="flex items-center gap-2.5 mb-2">
-        <div
+      {/* Phase header */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
+          {phase.label}
+        </span>
+        <span
           className={cn(
-            "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold",
+            "text-[10px] font-semibold px-2 py-0.5 rounded-full",
             allComplete
-              ? "bg-primary text-primary-foreground"
-              : anyInProgress
               ? "bg-primary/15 text-primary"
+              : anyActive
+              ? "bg-primary/10 text-primary"
+              : hasFailed
+              ? "bg-destructive/10 text-destructive"
               : "bg-muted text-muted-foreground"
           )}
         >
-          {allComplete ? (
-            <CheckCircle className="h-4 w-4" />
-          ) : (
-            `0${phaseNumber}`
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-foreground">{phase.label}</span>
-            <span
-              className={cn(
-                "text-xs font-semibold",
-                allComplete
-                  ? "text-primary"
-                  : hasFailed
-                  ? "text-destructive"
-                  : anyInProgress
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              )}
-            >
-              {allComplete ? "Complete" : `${pct}%`}
-            </span>
-          </div>
-          {/* Progress bar */}
-          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-500",
-                allComplete
-                  ? "bg-primary"
-                  : hasFailed
-                  ? "bg-destructive"
-                  : "bg-gradient-to-r from-primary/80 to-primary"
-              )}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
+          {allComplete ? "Complete" : hasFailed ? "Issue" : anyActive ? "In Progress" : `${completed}/${phaseSteps.length}`}
+        </span>
       </div>
 
-      {/* Step list */}
-      <div className="ml-10 border-l border-border pl-3 space-y-0">
-        {phaseSteps.map((step) => (
-          <StepDot key={step.number} status={step.status} label={step.label} number={step.number} />
+      {/* Horizontal step track */}
+      <div className="flex items-start">
+        {phaseSteps.map((step, i) => (
+          <HorizontalStep
+            key={step.number}
+            step={step}
+            isLast={i === phaseSteps.length - 1}
+            nextStatus={phaseSteps[i + 1]?.status}
+          />
         ))}
       </div>
     </div>
@@ -143,7 +170,6 @@ function PhaseCard({
 }
 
 export function WorkflowStepper({ steps, currentStep, compact }: WorkflowStepperProps) {
-  // Derive step statuses from currentStep as the single source of truth
   const derivedSteps: WorkflowStepInfo[] = steps.map((s) => ({
     ...s,
     status:
@@ -155,19 +181,13 @@ export function WorkflowStepper({ steps, currentStep, compact }: WorkflowStepper
   }));
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {PHASES.map((phase) => {
         const phaseSteps = derivedSteps.filter(
           (s) => s.number >= phase.range[0] && s.number <= phase.range[1]
         );
-
         return (
-          <PhaseCard
-            key={phase.label}
-            phase={phase}
-            phaseSteps={phaseSteps}
-            phaseNumber={phase.number}
-          />
+          <PhaseSection key={phase.label} phase={phase} phaseSteps={phaseSteps} />
         );
       })}
     </div>
