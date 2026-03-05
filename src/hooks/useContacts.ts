@@ -35,12 +35,19 @@ export function useCreateContact() {
   return useMutation({
     mutationFn: async (contact: Omit<Contact, "id" | "created_at" | "updated_at">) => {
       const { data, error } = await supabase
-        .from("contacts" as any)
-        .insert(contact as any)
+        .from("contacts")
+        .insert({
+          customer_id: contact.customer_id,
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+          role: contact.role,
+          is_primary: contact.is_primary,
+        })
         .select()
         .single();
       if (error) throw error;
-      return data as unknown as Contact;
+      return data as Contact;
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["contacts", vars.customer_id] });
