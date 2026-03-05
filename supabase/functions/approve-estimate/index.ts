@@ -15,7 +15,7 @@ serve(async (req) => {
     const url = new URL(req.url);
     const estimateId = url.searchParams.get("id");
     // Base URL for redirect — use the published app URL
-    const appBase = "https://nochcampaigns.lovable.app";
+    const appBase = "https://nochplus-com.lovable.app";
 
     if (!estimateId) {
       return redirect(appBase + "/estimate-status?status=error&message=Missing+estimate+ID");
