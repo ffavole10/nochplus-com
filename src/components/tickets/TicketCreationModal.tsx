@@ -106,7 +106,27 @@ export function TicketCreationModal({ open, onOpenChange, onSubmit }: TicketCrea
   const createContact = useCreateContact();
 
   const selectedLocation = locations.find((l) => l.id === selectedLocationId);
-  const selectedContact = contacts.find((c) => c.id === selectedContactId);
+
+  const fallbackContact = useMemo<Contact | null>(() => {
+    if (!selectedCustomer || contacts.length > 0) return null;
+    const hasAny = selectedCustomer.contact_name?.trim() || selectedCustomer.email?.trim() || selectedCustomer.phone?.trim();
+    if (!hasAny) return null;
+    const now = new Date().toISOString();
+    return {
+      id: "__customer_primary__",
+      customer_id: selectedCustomer.id,
+      name: selectedCustomer.contact_name || selectedCustomer.company,
+      email: selectedCustomer.email || "",
+      phone: selectedCustomer.phone || "",
+      role: "Primary Contact",
+      is_primary: true,
+      created_at: now,
+      updated_at: now,
+    };
+  }, [selectedCustomer, contacts.length]);
+
+  const contactOptions = contacts.length > 0 ? contacts : (fallbackContact ? [fallbackContact] : []);
+  const selectedContact = contactOptions.find((c) => c.id === selectedContactId);
 
   const resetForm = useCallback(() => {
     setPhase("select_company");
