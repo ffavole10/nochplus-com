@@ -93,7 +93,18 @@ export default function Customers() {
       logo_url: addLogoUrl || null,
       status: "active", pricing_type: form.pricing_type,
     } as any, {
-      onSuccess: () => {
+      onSuccess: (newCustomer) => {
+        // Create a primary contact from the customer info
+        if (newCustomer?.id && form.contact_name.trim()) {
+          createContact.mutate({
+            customer_id: newCustomer.id,
+            name: form.contact_name.trim(),
+            email: form.email.trim(),
+            phone: form.phone.trim(),
+            role: null,
+            is_primary: true,
+          });
+        }
         if (form.pricing_type === "rate_sheet" && newRateSheetName.trim()) {
           createRateSheet.mutate({
             customer_name: form.company,
