@@ -9,71 +9,60 @@ export default function EstimateStatus() {
 
   if (status === "approved") {
     return (
-      <div className="min-h-screen bg-[#f0f0f0] relative overflow-hidden">
+      <div className="min-h-screen bg-slate-100 relative overflow-hidden">
         {/* Logo */}
         <div className="absolute top-6 left-8 z-20">
           <img src="/images/noch-power-logo.png" alt="Noch Power" className="h-10" />
         </div>
 
         <div className="min-h-screen flex items-center justify-center px-4 py-20">
-          <div className="max-w-6xl w-full flex flex-col md:flex-row items-center gap-0 relative">
-            {/* Left — Organic blob with text */}
-            <div className="relative z-10 flex-1">
-              {/* Blob shape */}
-              <svg
-                viewBox="0 0 600 550"
-                className="w-full max-w-[600px]"
-                xmlns="http://www.w3.org/2000/svg"
+          <div className="max-w-6xl w-full flex flex-col md:flex-row items-center relative">
+            {/* Left — Blob with content */}
+            <div className="relative z-10 flex-1 max-w-xl">
+              <div
+                className="bg-primary px-10 md:px-14 py-14 md:py-16 text-white relative"
+                style={{
+                  borderRadius: '42% 58% 62% 38% / 38% 32% 68% 62%',
+                  minHeight: '460px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                }}
               >
-                <defs>
-                  <clipPath id="blobClip">
-                    <path d="M80,60 C200,-20 420,-10 520,80 C620,170 600,320 540,420 C480,520 320,560 180,520 C40,480 -20,380 10,260 C40,140 -40,140 80,60 Z" />
-                  </clipPath>
-                </defs>
-                <path
-                  d="M80,60 C200,-20 420,-10 520,80 C620,170 600,320 540,420 C480,520 320,560 180,520 C40,480 -20,380 10,260 C40,140 -40,140 80,60 Z"
-                  fill="hsl(var(--primary))"
+                {/* Small floating accent blob */}
+                <div
+                  className="absolute -top-4 right-16 w-14 h-12 bg-primary rounded-full opacity-70"
                 />
-                {/* Small floating blob accent */}
-                <ellipse cx="420" cy="40" rx="30" ry="28" fill="hsl(var(--primary))" opacity="0.7" />
-                
-                <foreignObject x="60" y="80" width="440" height="420">
-                  <div className="flex flex-col justify-center h-full px-4 text-white">
-                    <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-5 drop-shadow-sm">
-                      You're in<br />Good Hands.
-                    </h1>
-                    <p className="text-white/90 text-base md:text-lg font-medium mb-4 leading-relaxed">
-                      Your service is confirmed. The team is already on it.
-                    </p>
-                    <p className="text-white/80 text-sm md:text-base leading-relaxed mb-4">
-                      We've received your request and assigned a certified technician. You'll hear from us before we arrive. No follow-up needed on your end.
-                    </p>
-                    <p className="text-white/80 text-sm md:text-base leading-relaxed italic mb-6">
-                      Your charger will be back online. We'll make sure of it.
-                    </p>
-                    <div>
-                      <a
-                        href="/"
-                        className="inline-block bg-white text-slate-900 font-semibold text-sm px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                      >
-                        Track Our Progress
-                      </a>
-                    </div>
-                  </div>
-                </foreignObject>
-              </svg>
+
+                <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-5 drop-shadow-sm">
+                  You're in<br />Good Hands.
+                </h1>
+                <p className="text-white/90 text-base md:text-lg font-medium mb-4 leading-relaxed">
+                  Your service is confirmed. The team is already on it.
+                </p>
+                <p className="text-white/80 text-sm md:text-base leading-relaxed mb-4">
+                  We've received your request and assigned a certified technician. You'll hear from us before we arrive. No follow-up needed on your end.
+                </p>
+                <p className="text-white/80 text-sm md:text-base leading-relaxed italic mb-6">
+                  Your charger will be back online. We'll make sure of it.
+                </p>
+                <div>
+                  <a
+                    href="/"
+                    className="inline-block bg-white text-foreground font-semibold text-sm px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                  >
+                    Track Our Progress
+                  </a>
+                </div>
+              </div>
             </div>
 
-            {/* Right — Character illustration */}
-            <div className="flex-shrink-0 -ml-12 md:-ml-20 relative z-0">
+            {/* Right — Character */}
+            <div className="flex-shrink-0 md:-ml-10 relative z-0 mt-8 md:mt-0">
               <img
                 src={approvedHero}
                 alt="Celebration"
-                className="h-[400px] md:h-[520px] object-contain object-left drop-shadow-2xl"
-                style={{ 
-                  clipPath: 'inset(0 0 0 45%)',
-                  marginLeft: '-10%'
-                }}
+                className="h-[350px] md:h-[500px] object-contain drop-shadow-2xl"
               />
             </div>
           </div>
