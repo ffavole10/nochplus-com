@@ -37,7 +37,9 @@ interface ServiceTicketsStore {
   ) => string;
 }
 
-export const useServiceTicketsStore = create<ServiceTicketsStore>((set, get) => ({
+export const useServiceTicketsStore = create<ServiceTicketsStore>()(
+  persist(
+    (set, get) => ({
   tickets: [],
 
   addTicket: (ticket) =>
