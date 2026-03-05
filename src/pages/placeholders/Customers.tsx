@@ -71,20 +71,39 @@ export default function Customers() {
     totalTickets: customers.reduce((s, c) => s + c.ticket_count, 0),
   }), [customers]);
 
+  const defaultForm = { company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "", pricing_type: "rate_card" };
+
+  const resetAddForm = () => {
+    setForm(defaultForm);
+    setAddLogoUrl(null);
+    setNewRateSheetName("");
+    setNewRateSheetDesc("");
+  };
+
   const handleAdd = () => {
     if (!form.company || !form.contact_name || !form.email) { toast.error("Fill required fields"); return; }
+    if (form.pricing_type === "rate_sheet" && !newRateSheetName.trim()) { toast.error("Rate sheet name is required"); return; }
     createCustomer.mutate({
       company: form.company, contact_name: form.contact_name, email: form.email,
       phone: form.phone, address: form.address, notes: form.notes,
       website_url: form.website_url || "", industry: form.industry || null,
       description: form.description || null, headquarters_address: form.headquarters_address || null,
       logo_url: addLogoUrl || null,
-      status: "active", pricing_type: "rate_card",
+      status: "active", pricing_type: form.pricing_type,
     } as any, {
       onSuccess: () => {
+        if (form.pricing_type === "rate_sheet" && newRateSheetName.trim()) {
+          createRateSheet.mutate({
+            customer_name: form.company,
+            name: newRateSheetName.trim(),
+            description: newRateSheetDesc.trim() || "",
+            effective_date: null,
+            expiration_date: null,
+            status: "draft",
+          });
+        }
         setFormOpen(false);
-        setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" });
-        setAddLogoUrl(null);
+        resetAddForm();
       },
     });
   };
