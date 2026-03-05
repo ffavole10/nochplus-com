@@ -296,16 +296,14 @@ serve(async (req) => {
 
               sendEvent("step", { agentId, status: "done", label: AGENT_LABELS[agentId] || agentId, result: parsed });
 
-              // Check intake validation
+              // Check intake validation — warn but continue pipeline
               if (agentId === "intake-validator" && (parsed as any).proceed_to_diagnostic === false) {
-                sendEvent("error", {
+                sendEvent("warning", {
                   agent: agentId,
-                  message: `Ticket data incomplete: ${JSON.stringify((parsed as any).missing_fields || [])}`,
+                  message: `Some data is missing (${((parsed as any).missing_fields || []).join(", ")}), proceeding with available information`,
                   validation: parsed,
                 });
-                overallSuccess = false;
-                failedAgent = agentId;
-                break;
+                // Continue pipeline — don't break
               }
 
               // Check final validation
