@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer, type Customer } from "@/hooks/useCustomers";
 import { useRateCards } from "@/hooks/useQuotingSettings";
-import { useCustomerRateSheetsList } from "@/hooks/useCustomerRateSheets";
+import { useCustomerRateSheetsList, useCreateCustomerRateSheet } from "@/hooks/useCustomerRateSheets";
 
 export default function Customers() {
   const { data: customers = [], isLoading } = useCustomers();
@@ -41,7 +41,10 @@ export default function Customers() {
   const [addLogoUrl, setAddLogoUrl] = useState<string | null>(null);
   const [addLogoUploading, setAddLogoUploading] = useState(false);
 
-  const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" });
+  const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "", pricing_type: "rate_card" as string });
+  const [newRateSheetName, setNewRateSheetName] = useState("");
+  const [newRateSheetDesc, setNewRateSheetDesc] = useState("");
+  const createRateSheet = useCreateCustomerRateSheet();
 
   const filtered = useMemo(() => {
     let result = [...customers];
@@ -68,20 +71,39 @@ export default function Customers() {
     totalTickets: customers.reduce((s, c) => s + c.ticket_count, 0),
   }), [customers]);
 
+  const defaultForm = { company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "", pricing_type: "rate_card" };
+
+  const resetAddForm = () => {
+    setForm(defaultForm);
+    setAddLogoUrl(null);
+    setNewRateSheetName("");
+    setNewRateSheetDesc("");
+  };
+
   const handleAdd = () => {
     if (!form.company || !form.contact_name || !form.email) { toast.error("Fill required fields"); return; }
+    if (form.pricing_type === "rate_sheet" && !newRateSheetName.trim()) { toast.error("Rate sheet name is required"); return; }
     createCustomer.mutate({
       company: form.company, contact_name: form.contact_name, email: form.email,
       phone: form.phone, address: form.address, notes: form.notes,
       website_url: form.website_url || "", industry: form.industry || null,
       description: form.description || null, headquarters_address: form.headquarters_address || null,
       logo_url: addLogoUrl || null,
-      status: "active", pricing_type: "rate_card",
+      status: "active", pricing_type: form.pricing_type,
     } as any, {
       onSuccess: () => {
+        if (form.pricing_type === "rate_sheet" && newRateSheetName.trim()) {
+          createRateSheet.mutate({
+            customer_name: form.company,
+            name: newRateSheetName.trim(),
+            description: newRateSheetDesc.trim() || "",
+            effective_date: null,
+            expiration_date: null,
+            status: "draft",
+          });
+        }
         setFormOpen(false);
-        setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" });
-        setAddLogoUrl(null);
+        resetAddForm();
       },
     });
   };
@@ -268,7 +290,7 @@ export default function Customers() {
       )}
 
       {/* Add Customer Modal */}
-      <Dialog open={formOpen} onOpenChange={(open) => { if (!open) { setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" }); setAddLogoUrl(null); } setFormOpen(open); }}>
+      <Dialog open={formOpen} onOpenChange={(open) => { if (!open) resetAddForm(); setFormOpen(open); }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Add Customer</DialogTitle></DialogHeader>
           <div className="flex items-center gap-3 mb-2">
@@ -322,12 +344,44 @@ export default function Customers() {
                 <Input value={form.headquarters_address} onChange={e => setForm(p => ({ ...p, headquarters_address: e.target.value }))} />
               </div>
             </div>
+            <Separator />
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold flex items-center gap-1.5"><CreditCard className="h-4 w-4" /> Pricing Type</h4>
+              <Select value={form.pricing_type} onValueChange={v => setForm(p => ({ ...p, pricing_type: v }))}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rate_card">
+                    <span className="flex items-center gap-1.5"><CreditCard className="h-3 w-3" /> Standard Rate Card</span>
+                  </SelectItem>
+                  <SelectItem value="rate_sheet">
+                    <span className="flex items-center gap-1.5"><FileText className="h-3 w-3" /> Customer Rate Sheet</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {form.pricing_type === "rate_sheet" && (
+                <div className="space-y-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+                  <p className="text-xs text-muted-foreground">A draft rate sheet will be created for this customer. You can configure scopes and pricing later in Settings.</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Rate Sheet Name *</Label>
+                      <Input value={newRateSheetName} onChange={e => setNewRateSheetName(e.target.value)} placeholder={`${form.company || "Customer"} Rate Sheet`} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Description</Label>
+                      <Input value={newRateSheetDesc} onChange={e => setNewRateSheetDesc(e.target.value)} placeholder="Optional description" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Notes</Label>
               <Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} rows={3} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => { setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" }); setAddLogoUrl(null); setFormOpen(false); }}>Cancel</Button>
+              <Button variant="outline" onClick={() => { resetAddForm(); setFormOpen(false); }}>Cancel</Button>
               <Button onClick={handleAdd} disabled={createCustomer.isPending}>{createCustomer.isPending ? "Adding..." : "Add Customer"}</Button>
             </div>
           </div>
