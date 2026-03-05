@@ -41,7 +41,10 @@ export default function Customers() {
   const [addLogoUrl, setAddLogoUrl] = useState<string | null>(null);
   const [addLogoUploading, setAddLogoUploading] = useState(false);
 
-  const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" });
+  const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "", pricing_type: "rate_card" as string });
+  const [newRateSheetName, setNewRateSheetName] = useState("");
+  const [newRateSheetDesc, setNewRateSheetDesc] = useState("");
+  const createRateSheet = useCreateCustomerRateSheet();
 
   const filtered = useMemo(() => {
     let result = [...customers];
