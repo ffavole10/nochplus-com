@@ -20,12 +20,12 @@ export function useContacts(customerId?: string) {
     enabled: !!customerId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("contacts" as any)
+        .from("contacts")
         .select("*")
         .eq("customer_id", customerId!)
         .order("is_primary", { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as Contact[];
+      return (data || []) as Contact[];
     },
   });
 }
