@@ -328,7 +328,7 @@ export default function Customers() {
               <Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} rows={3} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => { setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" }); setAddLogoUrl(null); setFormOpen(false); }}>Cancel</Button>
               <Button onClick={handleAdd} disabled={createCustomer.isPending}>{createCustomer.isPending ? "Adding..." : "Add Customer"}</Button>
             </div>
           </div>
