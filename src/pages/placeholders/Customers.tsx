@@ -37,6 +37,9 @@ export default function Customers() {
   const [editForm, setEditForm] = useState<Partial<Customer>>({});
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const addLogoInputRef = useRef<HTMLInputElement>(null);
+  const [addLogoUrl, setAddLogoUrl] = useState<string | null>(null);
+  const [addLogoUploading, setAddLogoUploading] = useState(false);
   const [pricingConfirmOpen, setPricingConfirmOpen] = useState(false);
   const [pendingPricingType, setPendingPricingType] = useState<string | null>(null);
 
@@ -74,13 +77,37 @@ export default function Customers() {
       phone: form.phone, address: form.address, notes: form.notes,
       website_url: form.website_url || "", industry: form.industry || null,
       description: form.description || null, headquarters_address: form.headquarters_address || null,
+      logo_url: addLogoUrl || null,
       status: "active", pricing_type: "rate_card",
     } as any, {
       onSuccess: () => {
         setFormOpen(false);
         setForm({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", industry: "", description: "", headquarters_address: "" });
+        setAddLogoUrl(null);
       },
     });
+  };
+
+  const handleAddLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image"); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error("Image must be under 2MB"); return; }
+    setAddLogoUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `logos/new-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      setAddLogoUrl(`${urlData.publicUrl}?t=${Date.now()}`);
+      toast.success("Logo uploaded");
+    } catch (err: any) {
+      toast.error("Upload failed: " + err.message);
+    } finally {
+      setAddLogoUploading(false);
+      if (addLogoInputRef.current) addLogoInputRef.current.value = "";
+    }
   };
 
   const handlePricingTypeChange = (newType: string) => {
@@ -245,6 +272,16 @@ export default function Customers() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Add Customer</DialogTitle></DialogHeader>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="relative group cursor-pointer" onClick={() => addLogoInputRef.current?.click()}>
+              <CustomerLogo logoUrl={addLogoUrl} companyName={form.company || "?"} size="lg" />
+              <div className="absolute inset-0 rounded-md bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                {addLogoUploading ? <Loader2 className="h-4 w-4 text-white animate-spin" /> : <Upload className="h-4 w-4 text-white" />}
+              </div>
+              <input ref={addLogoInputRef} type="file" accept="image/*" className="hidden" onChange={handleAddLogoUpload} />
+            </div>
+            <div className="text-xs text-muted-foreground">Click to upload logo</div>
+          </div>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
