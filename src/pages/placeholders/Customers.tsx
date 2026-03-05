@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer, type Customer } from "@/hooks/useCustomers";
 import { useRateCards } from "@/hooks/useQuotingSettings";
 import { useCustomerRateSheetsList, useCreateCustomerRateSheet } from "@/hooks/useCustomerRateSheets";
+import { useCreateContact } from "@/hooks/useContacts";
 
 export default function Customers() {
   const { data: customers = [], isLoading } = useCustomers();
