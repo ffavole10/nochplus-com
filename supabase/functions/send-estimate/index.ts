@@ -218,7 +218,6 @@ serve(async (req) => {
     const senderCandidates = [
       "Noch Power <noreply@nochplus.com>",
       "Noch Power <noreply@send.nochplus.com>",
-      "Noch Power <onboarding@resend.dev>",
     ];
 
     let resendResponse: Response | null = null;
