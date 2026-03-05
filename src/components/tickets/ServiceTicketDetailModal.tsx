@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -75,10 +76,35 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
               <span className="text-xs text-muted-foreground">({ticket.sourceCampaignName})</span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm text-muted-foreground">Step {ticket.currentStep} of 10</span>
-            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-xs">
-              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
+          <div className="mt-2">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-sm font-medium text-foreground">
+                Step {ticket.currentStep} of 10: {ticket.workflowSteps.find(s => s.number === ticket.currentStep)?.label || ""}
+              </span>
+              <span className="text-xs text-muted-foreground">{Math.round(progressPercent)}%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {ticket.workflowSteps.map((ws) => (
+                <div key={ws.number} className="flex items-center" style={{ flex: 1 }}>
+                  <div
+                    className={cn(
+                      "h-2 w-2 rounded-full flex-shrink-0",
+                      ws.status === "complete" ? "bg-primary" :
+                      ws.status === "in_progress" ? "bg-primary animate-pulse" :
+                      ws.status === "failed" ? "bg-destructive" :
+                      "bg-muted-foreground/25"
+                    )}
+                  />
+                  {ws.number < 10 && (
+                    <div className="flex-1 h-0.5 mx-0.5">
+                      <div className={cn(
+                        "h-full rounded-full",
+                        ws.status === "complete" ? "bg-primary" : "bg-muted"
+                      )} />
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </DialogHeader>
