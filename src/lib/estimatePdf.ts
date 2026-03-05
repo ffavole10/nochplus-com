@@ -190,7 +190,7 @@ export async function generateEstimatePDF(estimate: EstimateRecord, _partnerName
       doc.setFontSize(7);
       doc.setTextColor(180, 180, 180);
       doc.text(`${COMPANY.name}  •  ${COMPANY.website}`, mx, ph - 8);
-      doc.text(`Page ${doc.getCurrentPageInfo().pageNumber}`, mr, ph - 8, { align: "right" });
+      // Page number removed per request
     },
   });
 
