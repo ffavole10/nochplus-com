@@ -590,6 +590,15 @@ export default function Customers() {
                         <p className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 border border-border/50">{detailCustomer.notes}</p>
                       </div>
                     )}
+
+
+                    {/* Delete */}
+                    <Separator />
+                    <div className="flex justify-end">
+                      <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => setDeleteConfirm(detailCustomer)}>
+                        <Trash2 className="h-3.5 w-3.5" /> Delete Customer
+                      </Button>
+                    </div>
                   </>
                 )}
               </div>
