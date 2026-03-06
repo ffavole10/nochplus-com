@@ -28,7 +28,9 @@ export default function Customers() {
   const { data: rateSheets = [] } = useCustomerRateSheetsList();
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
+  const deleteCustomer = useDeleteCustomer();
   const createContact = useCreateContact();
+  const [deleteConfirm, setDeleteConfirm] = useState<Customer | null>(null);
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
