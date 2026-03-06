@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.track-submission]
 verify_jwt = false
+
+[functions.upload-submission-photo]
+verify_jwt = false
+
+[functions.approve-estimate]
+verify_jwt = false

@@ -215,7 +215,7 @@ serve(async (req) => {
       );
     }
 
-    const html = buildEmailHtml(payload);
+    const html = await buildEmailHtml(payload);
 
     const emailPayload: Record<string, unknown> = {
       from: "Noch Power <noreply@nochplus.com>",
