@@ -5,6 +5,7 @@ import { PlatformSidebar } from "@/components/PlatformSidebar";
 import { PlatformHeader } from "@/components/PlatformHeader";
 import { FilterProvider } from "@/contexts/FilterContext";
 import { CampaignProvider } from "@/contexts/CampaignContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export default function MainPlatformLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
