@@ -35,25 +35,20 @@ export default function EstimateStatus() {
                 />
 
                 <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-5 drop-shadow-sm">
-                  You're in<br />Good Hands.
+                  You're in<br />Good Hands!
                 </h1>
-                <p className="text-white/90 text-base md:text-lg font-medium mb-4 leading-relaxed">
-                  Your service is confirmed. The team is already on it.
+                <p className="text-white/90 text-base md:text-lg font-bold italic mb-4 leading-relaxed">
+                  Your service is confirmed.<br />The team is already on it.
                 </p>
                 <p className="text-white/80 text-sm md:text-base leading-relaxed mb-4">
-                  We've received your request and assigned a certified technician. You'll hear from us before we arrive. No follow-up needed on your end.
+                  We've received your request and a NOCH ninja technician is already preparing for the mission. You'll hear from us soon. No follow-up needed on your end.
                 </p>
-                <p className="text-white/80 text-sm md:text-base leading-relaxed italic mb-6">
-                  Your charger will be back online. We'll make sure of it.
+                <p className="text-white/80 text-sm md:text-base leading-relaxed mb-4">
+                  Go watch a movie. Read a book. Maybe even try yoga.
                 </p>
-                <div>
-                  <a
-                    href="/"
-                    className="inline-block bg-white text-foreground font-semibold text-sm px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                  >
-                    Track Our Progress
-                  </a>
-                </div>
+                <p className="text-white font-bold italic text-base md:text-lg">
+                  We've got this!
+                </p>
               </div>
             </div>
 
