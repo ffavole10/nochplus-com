@@ -22,11 +22,11 @@ export default function EstimateStatus() {
   // "already-approved" gets the same blob design
   if (status === "already-approved") {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+      <div className="min-h-screen w-full">
         <img
           src={statusApprovedHero}
           alt="You're in Good Hands — Your service is confirmed"
-          className="w-full h-full object-contain max-w-[1400px]"
+          className="w-full h-screen object-cover"
         />
       </div>
     );
