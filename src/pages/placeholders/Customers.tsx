@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Users, Search, ArrowUpDown, Mail, Phone, DollarSign, Ticket, Eye, X, Building2, MapPin, StickyNote, FileText, CreditCard, ExternalLink, AlertTriangle, Info, Pencil, Upload, Globe, Loader2 } from "lucide-react";
+import { Plus, Users, Search, ArrowUpDown, Mail, Phone, DollarSign, Ticket, Eye, X, Building2, MapPin, StickyNote, FileText, CreditCard, ExternalLink, AlertTriangle, Info, Pencil, Upload, Globe, Loader2, Trash2 } from "lucide-react";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +28,9 @@ export default function Customers() {
   const { data: rateSheets = [] } = useCustomerRateSheetsList();
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
+  const deleteCustomer = useDeleteCustomer();
   const createContact = useCreateContact();
+  const [deleteConfirm, setDeleteConfirm] = useState<Customer | null>(null);
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
@@ -431,9 +433,14 @@ export default function Customers() {
                     )}
                   </div>
                   {!editing && (
-                    <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => startEditing(detailCustomer)}>
-                      <Pencil className="h-3.5 w-3.5" /> Edit
-                    </Button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => startEditing(detailCustomer)}>
+                        <Pencil className="h-3.5 w-3.5" /> Edit
+                      </Button>
+                      <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => setDeleteConfirm(detailCustomer)}>
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </Button>
+                    </div>
                   )}
                 </DialogTitle>
               </DialogHeader>
@@ -609,6 +616,36 @@ export default function Customers() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmPricingChange}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Customer Confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <span className="font-semibold">{deleteConfirm?.company}</span>? This action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteConfirm) {
+                  deleteCustomer.mutate(deleteConfirm.id, {
+                    onSuccess: () => {
+                      setDeleteConfirm(null);
+                      setDetailCustomer(null);
+                    },
+                  });
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
