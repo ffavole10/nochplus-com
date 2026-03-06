@@ -64,7 +64,7 @@ interface EstimatePayload {
   notes: string;
 }
 
-function buildEmailHtml(est: EstimatePayload): string {
+async function buildEmailHtml(est: EstimatePayload): Promise<string> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   
   // Generate HMAC-signed approval URL with 7-day expiry
