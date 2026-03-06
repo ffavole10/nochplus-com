@@ -33,7 +33,15 @@ import SWILibrary from "./pages/SWILibrary";
 import Locations from "./pages/placeholders/Locations";
 import Parts from "./pages/placeholders/Parts";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
