@@ -1,6 +1,6 @@
 import { useSearchParams } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
-import approvedHero from "@/assets/estimate-approved-hero.jpeg";
+import statusApprovedHero from "@/assets/status-approved-hero.png";
 
 export default function EstimateStatus() {
   const [searchParams] = useSearchParams();
