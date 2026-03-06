@@ -66,7 +66,20 @@ interface EstimatePayload {
 
 function buildEmailHtml(est: EstimatePayload): string {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-  const approveUrl = `${supabaseUrl}/functions/v1/approve-estimate?id=${encodeURIComponent(est.estimateId)}&action=approve`;
+  
+  // Generate HMAC-signed approval URL with 7-day expiry
+  const approvalSecret = Deno.env.get("APPROVAL_SECRET") || "";
+  const expires = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const payload = `${est.estimateId}:${expires}`;
+  let approveUrl: string;
+  if (approvalSecret) {
+    const { createHmac } = await import("node:crypto");
+    const sig = createHmac("sha256", approvalSecret).update(payload).digest("hex");
+    approveUrl = `${supabaseUrl}/functions/v1/approve-estimate?payload=${encodeURIComponent(payload)}&sig=${sig}`;
+  } else {
+    // Fallback (should not happen in production)
+    approveUrl = `${supabaseUrl}/functions/v1/approve-estimate?payload=${encodeURIComponent(payload)}&sig=missing`;
+  }
 
   const escHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 

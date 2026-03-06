@@ -1,5 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.3";
+import { createHmac } from "node:crypto";
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  const encoder = new TextEncoder();
+  const bufA = encoder.encode(a);
+  const bufB = encoder.encode(b);
+  let result = 0;
+  for (let i = 0; i < bufA.length; i++) {
+    result |= bufA[i] ^ bufB[i];
+  }
+  return result === 0;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -11,14 +24,40 @@ serve(async (req) => {
     });
   }
 
+  const appBase = "https://nochplus-com.lovable.app";
+
   try {
     const url = new URL(req.url);
-    const estimateId = url.searchParams.get("id");
-    // Base URL for redirect — use the published app URL
-    const appBase = "https://nochplus-com.lovable.app";
+    const payload = url.searchParams.get("payload");
+    const sig = url.searchParams.get("sig");
 
-    if (!estimateId) {
-      return redirect(appBase + "/estimate-status?status=error&message=Missing+estimate+ID");
+    // Validate HMAC signature
+    if (!payload || !sig) {
+      return redirect(appBase + "/estimate-status?status=error&message=Invalid+approval+link");
+    }
+
+    const secret = Deno.env.get("APPROVAL_SECRET");
+    if (!secret) {
+      console.error("APPROVAL_SECRET not configured");
+      return redirect(appBase + "/estimate-status?status=error&message=Server+configuration+error");
+    }
+
+    const expected = createHmac("sha256", secret).update(payload).digest("hex");
+    if (!timingSafeEqual(sig, expected)) {
+      return redirect(appBase + "/estimate-status?status=error&message=Invalid+approval+link");
+    }
+
+    // Parse payload: estimateId:expiresTimestamp
+    const parts = payload.split(":");
+    if (parts.length !== 2) {
+      return redirect(appBase + "/estimate-status?status=error&message=Invalid+approval+link");
+    }
+
+    const [estimateId, expiresStr] = parts;
+    const expires = parseInt(expiresStr, 10);
+
+    if (isNaN(expires) || Date.now() > expires) {
+      return redirect(appBase + "/estimate-status?status=error&message=This+approval+link+has+expired");
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -36,12 +75,10 @@ serve(async (req) => {
       return redirect(appBase + "/estimate-status?status=error&message=Estimate+not+found");
     }
 
-    // Check if already approved
     if (estimate.status === "approved") {
       return redirect(appBase + "/estimate-status?status=already-approved");
     }
 
-    // Update status to approved
     const { error: updateErr } = await supabase
       .from("estimates")
       .update({ status: "approved", updated_at: new Date().toISOString() })
@@ -52,7 +89,7 @@ serve(async (req) => {
       return redirect(appBase + "/estimate-status?status=error&message=Failed+to+update+estimate");
     }
 
-    // Send confirmation email to account manager
+    // Send confirmation email
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (RESEND_API_KEY && estimate.account_manager) {
       try {
@@ -83,7 +120,7 @@ serve(async (req) => {
       }
     }
 
-    // Create a notification in the system
+    // Create notification
     try {
       await supabase.from("notifications").insert({
         title: "Estimate Approved",
@@ -98,7 +135,7 @@ serve(async (req) => {
     return redirect(appBase + "/estimate-status?status=approved");
   } catch (error) {
     console.error("approve-estimate error:", error);
-    return redirect("https://nochplus-com.lovable.app/estimate-status?status=error&message=Unexpected+error");
+    return redirect(appBase + "/estimate-status?status=error&message=Unexpected+error");
   }
 });
 
