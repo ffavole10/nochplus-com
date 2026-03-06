@@ -77,7 +77,7 @@ const App = () => (
           <Route path="/tickets" element={<Navigate to="/issues" replace />} />
           <Route path="/campaigns/reports" element={<Navigate to="/field-reports" replace />} />
           <Route path="/estimates" element={<Navigate to="/service-desk/estimates" replace />} />
-          <Route path="/missioncontrol" element={<ProtectedRoute><IssuesQueue /></ProtectedRoute>} />
+          <Route path="/missioncontrol" element={<Navigate to="/issues" replace />} />
           <Route path="/estimate-status" element={<EstimateStatus />} />
           {/* Public Noch+ submission pages — "/" is the main landing */}
           <Route path="/" element={<SubmitAssessment />} />
