@@ -355,14 +355,26 @@ export default function SubmitAssessment() {
         const photoUrls: string[] = [];
 
         for (const photo of charger.photos) {
-          const ext = photo.file.name.split(".").pop();
-          const path = `${submission.id}/${charger.id}/${crypto.randomUUID()}.${ext}`;
-          const { error: uploadErr } = await supabase.storage
-            .from("submission-photos")
-            .upload(path, photo.file);
-          if (!uploadErr) {
-            const { data: urlData } = supabase.storage.from("submission-photos").getPublicUrl(path);
-            photoUrls.push(urlData.publicUrl);
+          try {
+            const formData = new FormData();
+            formData.append("file", photo.file);
+            formData.append("submission_id", submission.id);
+            formData.append("charger_id", charger.id);
+
+            const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-submission-photo`;
+            const res = await fetch(uploadUrl, {
+              method: "POST",
+              body: formData,
+            });
+
+            if (res.ok) {
+              const result = await res.json();
+              if (result.path) {
+                photoUrls.push(result.path);
+              }
+            }
+          } catch (photoErr) {
+            console.error("Photo upload error:", photoErr);
           }
         }
 
