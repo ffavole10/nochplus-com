@@ -180,7 +180,7 @@ const Settings = () => {
       toast.success("User created — invite email sent with setup link");
       setDialogOpen(false);
       setNewEmail("");
-      setNewPassword("");
+      
       setNewName("");
       setNewCompany("");
       setNewRole("employee");
