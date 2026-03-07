@@ -64,6 +64,21 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Verify submission_id and charger_id exist in the database
+    const { data: charger, error: lookupErr } = await supabase
+      .from("charger_submissions")
+      .select("id")
+      .eq("id", chargerId)
+      .eq("submission_id", submissionId)
+      .maybeSingle();
+
+    if (lookupErr || !charger) {
+      return new Response(
+        JSON.stringify({ error: "Invalid submission_id or charger_id" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const ext = file.name.split(".").pop() || "jpg";
     const path = `${submissionId}/${chargerId}/${crypto.randomUUID()}.${ext}`;
 
