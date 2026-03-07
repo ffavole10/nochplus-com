@@ -177,7 +177,7 @@ const Settings = () => {
         company: newCompany,
         role: newRole,
       });
-      toast.success("User created successfully");
+      toast.success("User created — invite email sent with setup link");
       setDialogOpen(false);
       setNewEmail("");
       setNewPassword("");
