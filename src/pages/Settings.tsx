@@ -121,7 +121,7 @@ const Settings = () => {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  
   const [newName, setNewName] = useState("");
   const [newCompany, setNewCompany] = useState("");
   const [newRole, setNewRole] = useState<string>("employee");
