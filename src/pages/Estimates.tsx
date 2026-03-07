@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Download, Search, Crosshair, Diamond, UserPlus, DollarSign, XCircle, Plus, Trash2, Pencil, Save } from "lucide-react";
+import { FileText, Download, Search, Crosshair, Diamond, UserPlus, DollarSign, XCircle, Plus, Trash2, Pencil, Save, UserCheck } from "lucide-react";
 import { useEstimates, useUpdateEstimate, EstimateRecord } from "@/hooks/useEstimates";
 import { format } from "date-fns";
 import { downloadEstimatePDF, downloadMultipleEstimatePDFs } from "@/lib/estimatePdf";
