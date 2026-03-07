@@ -335,10 +335,6 @@ const Settings = () => {
                         <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="user@company.com" />
                       </div>
                       <div className="space-y-2">
-                        <Label>Password *</Label>
-                        <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Minimum 6 characters" />
-                      </div>
-                      <div className="space-y-2">
                         <Label>Display Name</Label>
                         <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="John Doe" />
                       </div>
