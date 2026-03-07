@@ -50,12 +50,12 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, email, password, role, display_name, company, user_id } = body;
+    const { action, email, role, display_name, company, user_id } = body;
 
     if (action === "create_user") {
+      // Generate a secure invite link instead of using plaintext passwords
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
-        password,
         email_confirm: true,
       });
       if (createError) throw createError;
@@ -69,11 +69,22 @@ serve(async (req) => {
         .from("user_roles")
         .insert({ user_id: newUser.user.id, role });
 
+      // Generate a password reset link so the user can set their own password
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email,
+      });
+
+      if (linkError) {
+        console.warn("Failed to generate setup link:", linkError.message);
+      }
+
+      const setupUrl = linkData?.properties?.action_link;
+
       // Send invite email via Resend
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
       if (RESEND_API_KEY) {
         const safeName = (display_name || email).replace(/[&<>"]/g, (c: string) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] || c));
-        const platformUrl = req.headers.get("origin") || "https://nochplus-com.lovable.app";
 
         const inviteHtml = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -86,20 +97,16 @@ serve(async (req) => {
               <p style="color: #475569;">
                 You've been invited to join the NOCH Power platform${company ? ` as part of <strong>${company}</strong>` : ""}.
               </p>
-              <p style="color: #475569;">Here are your login credentials:</p>
-              <div style="background: #f1f5f9; border-radius: 8px; padding: 16px; margin: 16px 0;">
-                <p style="color: #334155; margin: 4px 0;"><strong>Email:</strong> ${email}</p>
-                <p style="color: #334155; margin: 4px 0;"><strong>Temporary Password:</strong> ${password}</p>
-              </div>
-              <p style="color: #475569;">Please sign in and change your password at your earliest convenience.</p>
+              <p style="color: #475569;">Click the button below to set up your password and access your account:</p>
               <div style="text-align: center; margin: 24px 0;">
-                <a href="${platformUrl}/login" style="display: inline-block; background-color: #25b3a5; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: bold;">
-                  Sign In to Platform
+                <a href="${setupUrl || '#'}" style="display: inline-block; background-color: #25b3a5; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: bold;">
+                  Set Up Your Account
                 </a>
               </div>
+              <p style="color: #64748b; font-size: 13px;">This link will expire in 24 hours. If you didn't expect this invitation, please disregard this email.</p>
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
               <p style="color: #94a3b8; font-size: 12px;">
-                This is an automated message from the NOCH Power Platform. If you did not expect this invitation, please disregard this email.
+                This is an automated message from the NOCH Power Platform.
               </p>
             </div>
           </div>
