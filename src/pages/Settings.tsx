@@ -164,8 +164,8 @@ const Settings = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!newEmail || !newPassword) {
-      toast.error("Email and password are required");
+    if (!newEmail) {
+      toast.error("Email is required");
       return;
     }
     setCreating(true);
