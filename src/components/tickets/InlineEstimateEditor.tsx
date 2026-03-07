@@ -601,11 +601,13 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
     if (!savedEstimateId) return;
     try {
       const now = new Date().toISOString();
-      await supabase.from("estimates").update({ status: "approved", updated_at: now }).eq("id", savedEstimateId);
-
-      const approver = accountManager
+      const approverName = accountManager
         ? ACCOUNT_MANAGERS.find(am => am.email === accountManager)?.name || accountManager
         : "Account Manager";
+      const manualNote = `[MANUAL_APPROVAL:${approverName}]`;
+      await supabase.from("estimates").update({ status: "approved", updated_at: now, notes: manualNote }).eq("id", savedEstimateId);
+
+      const approver = approverName;
 
       setApprovalData({ method: "manual", approvedBy: approver, approvedAt: now, notes: approvalNotes || undefined });
       setStatus("approved");
