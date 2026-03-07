@@ -173,7 +173,6 @@ const Settings = () => {
       await callManageUsers({
         action: "create_user",
         email: newEmail,
-        password: newPassword,
         display_name: newName,
         company: newCompany,
         role: newRole,
