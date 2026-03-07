@@ -508,7 +508,14 @@ const Estimates = () => {
                       <TableCell className="text-sm">{est.customer_name || est.customer_email || "—"}</TableCell>
                       <TableCell className="text-sm">{est.account_manager || "—"}</TableCell>
                       <TableCell className="text-right font-semibold">${Number(est.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                      <TableCell><Badge variant="outline" className={config.className}>{config.label}</Badge></TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={config.className}>
+                          {est.status === "approved" && est.notes?.startsWith("[MANUAL_APPROVAL") && (
+                            <UserCheck className="h-3 w-3 mr-1" />
+                          )}
+                          {config.label}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{format(new Date(est.created_at), "MMM d, yyyy")}</TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => { await downloadEstimatePDF(est); toast.success("PDF downloaded"); }}>
