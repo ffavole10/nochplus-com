@@ -121,7 +121,7 @@ const Settings = () => {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  
   const [newName, setNewName] = useState("");
   const [newCompany, setNewCompany] = useState("");
   const [newRole, setNewRole] = useState<string>("employee");
@@ -164,8 +164,8 @@ const Settings = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!newEmail || !newPassword) {
-      toast.error("Email and password are required");
+    if (!newEmail) {
+      toast.error("Email is required");
       return;
     }
     setCreating(true);
@@ -173,15 +173,14 @@ const Settings = () => {
       await callManageUsers({
         action: "create_user",
         email: newEmail,
-        password: newPassword,
         display_name: newName,
         company: newCompany,
         role: newRole,
       });
-      toast.success("User created successfully");
+      toast.success("User created — invite email sent with setup link");
       setDialogOpen(false);
       setNewEmail("");
-      setNewPassword("");
+      
       setNewName("");
       setNewCompany("");
       setNewRole("employee");
@@ -334,10 +333,6 @@ const Settings = () => {
                       <div className="space-y-2">
                         <Label>Email *</Label>
                         <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="user@company.com" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Password *</Label>
-                        <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Minimum 6 characters" />
                       </div>
                       <div className="space-y-2">
                         <Label>Display Name</Label>
