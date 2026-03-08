@@ -10,6 +10,7 @@ import nochLogo from "@/assets/noch-logo-white.png";
 import { toast } from "sonner";
 
 const Login = () => {
+  usePageTitle('Sign In');
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

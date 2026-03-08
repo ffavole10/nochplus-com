@@ -354,6 +354,7 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
 
 /* ── Main Page ─────────────────────────────────── */
 const Estimates = () => {
+  usePageTitle('Estimates');
   // Load estimates from all campaigns (pass null to get all)
   const { data: estimates = [], isLoading } = useEstimates(null);
   const [selectedEstimate, setSelectedEstimate] = useState<EstimateRecord | null>(null);

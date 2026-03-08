@@ -114,6 +114,7 @@ function QuotingAndRatesSection() {
 }
 
 const Settings = () => {
+  usePageTitle('Settings');
   const navigate = useNavigate();
   const { session } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>("campaigns");

@@ -62,6 +62,7 @@ function getHighestPriority(tickets: ServiceTicket[]): string {
 }
 
 export default function ServiceTickets() {
+  usePageTitle('Tickets');
   const tickets = useServiceTicketsStore((s) => s.tickets);
   const updateTicketInStore = useServiceTicketsStore((s) => s.updateTicket);
   const [formOpen, setFormOpen] = useState(false);

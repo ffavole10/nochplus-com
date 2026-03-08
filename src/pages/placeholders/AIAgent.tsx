@@ -14,6 +14,7 @@ import { ConfigSection } from "@/components/ai-agent/ConfigSection";
 import { MetricsDashboard } from "@/components/ai-agent/MetricsDashboard";
 
 const AIAgent = () => {
+  usePageTitle('AutoHeal™');
   const [agents, setAgents] = useState<AgentPrompt[]>([]);
   const [loading, setLoading] = useState(true);
   const [testAgent, setTestAgent] = useState<AgentPrompt | null>(null);

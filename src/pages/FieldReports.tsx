@@ -29,6 +29,7 @@ interface FieldReport {
 const DEMO_REPORTS: FieldReport[] = [];
 
 export default function FieldReports() {
+  usePageTitle('Field Reports');
   const { selectedCampaignId } = useCampaignContext();
   const { data: chargerRecords = [] } = useChargerRecords(selectedCampaignId || null);
 

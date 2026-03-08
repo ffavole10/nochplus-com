@@ -28,6 +28,7 @@ type ViewMode = "card" | "list";
 type TabFilter = "all" | "employee" | "subcontractor" | "available" | "on_job" | "inactive";
 
 const Locations = () => {
+  usePageTitle('Locations');
   const qc = useQueryClient();
 
   const { data: technicians = [], isLoading } = useTechnicians();

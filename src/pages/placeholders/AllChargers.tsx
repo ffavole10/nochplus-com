@@ -32,6 +32,7 @@ const STATUS_STYLES: Record<string, string> = {
 const CHARGERS: ChargerRecord[] = [];
 
 export default function AllChargers() {
+  usePageTitle('Chargers');
   const [search, setSearch] = useState("");
   const [campaignFilter, setCampaignFilter] = useState("all");
   const [nochFilter, setNochFilter] = useState("all");

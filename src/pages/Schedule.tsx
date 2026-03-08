@@ -11,6 +11,7 @@ import { AssessmentCharger } from "@/types/assessment";
 import { toast } from "sonner";
 
 const Schedule = () => {
+  usePageTitle('Schedule');
   const { chargers: localChargers, importChargers, updateCharger, moveChargerToPhase, clearData } = useAssessmentData();
   const { session } = useAuth();
   const { selectedCampaignId, selectedCampaignName } = useCampaignContext();

@@ -44,6 +44,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; description:
 const TIMELINE_STEPS = ["Submitted", "Under Review", "Assessment Complete", "Contact Made"];
 
 export default function TrackSubmission() {
+  usePageTitle('Track Your Submission');
   const { submissionId: paramId } = useParams();
   const navigate = useNavigate();
   const [searchId, setSearchId] = useState(paramId || "");

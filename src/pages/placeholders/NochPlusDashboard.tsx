@@ -18,6 +18,7 @@ interface Subscriber {
 }
 
 export default function NochPlusDashboard() {
+  usePageTitle('Noch+ Dashboard');
   const subscribers: Subscriber[] = [];
 
   const stats = useMemo(() => ({

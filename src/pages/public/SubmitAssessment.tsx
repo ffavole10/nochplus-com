@@ -60,6 +60,7 @@ type FormStep = "landing" | "step0" | "step1" | "step2" | "oem_question" | "memb
 type SubmissionType = "assessment" | "repair" | "";
 
 export default function SubmitAssessment() {
+  usePageTitle('Submit a Request');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [submitting, setSubmitting] = useState(false);

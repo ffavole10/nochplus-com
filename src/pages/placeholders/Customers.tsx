@@ -24,6 +24,7 @@ import { useCustomerRateSheetsList, useCreateCustomerRateSheet } from "@/hooks/u
 import { useCreateContact } from "@/hooks/useContacts";
 
 export default function Customers() {
+  usePageTitle('Customers');
   const { data: customers = [], isLoading } = useCustomers();
   const { data: rateCards = [] } = useRateCards();
   const { data: rateSheets = [] } = useCustomerRateSheetsList();

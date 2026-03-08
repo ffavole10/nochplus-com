@@ -71,6 +71,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function Submissions() {
+  usePageTitle('Submissions');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

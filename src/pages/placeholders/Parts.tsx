@@ -32,6 +32,7 @@ function StatusBadge({ part }: { part: Part }) {
 }
 
 const Parts = () => {
+  usePageTitle('Parts');
   const { data: parts = [], isLoading } = useParts();
   const { data: movements = [] } = useStockMovementsAll();
   const createPart = useCreatePart();

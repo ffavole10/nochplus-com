@@ -14,6 +14,7 @@ import { useChargerRecords, useCampaign } from "@/hooks/useCampaigns";
 import { Database } from "lucide-react";
 
 const Index = () => {
+  usePageTitle('Dashboard');
   const { selectedCampaignId, selectedCustomer } = useCampaignContext();
   const { data: campaignData } = useCampaign(selectedCampaignId || null);
   const { data: chargerRecords = [] } = useChargerRecords(selectedCampaignId || null);
