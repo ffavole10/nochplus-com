@@ -415,7 +415,7 @@ export default function SubmitAssessment() {
 
   // ─── LANDING PAGE ───
   if (currentStep === "landing") {
-    return <AnimatedLandingPage onStart={() => setCurrentStep("step1")} />;
+    return <AnimatedLandingPage onStart={() => setCurrentStep("step0")} />;
   }
 
   // ─── FORM HEADER ───
