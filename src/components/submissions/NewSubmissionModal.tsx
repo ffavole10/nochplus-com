@@ -35,6 +35,7 @@ interface ChargerEntry {
   serialNumber: string;
   chargerType: string;
   installationLocation: string;
+  locationDescriptor: string;
   knownIssues: string;
   isWorking: string;
   underWarranty: string;
@@ -46,6 +47,7 @@ const createEmptyCharger = (): ChargerEntry => ({
   serialNumber: "",
   chargerType: "",
   installationLocation: "",
+  locationDescriptor: "",
   knownIssues: "",
   isWorking: "",
   underWarranty: "",
@@ -403,8 +405,11 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               is_working: charger.isWorking || null,
               under_warranty: charger.underWarranty || null,
               photo_urls: photoUrls,
-              location_descriptor: locationDescriptor.trim() || null,
+              location_descriptor: charger.locationDescriptor.trim() || locationDescriptor.trim() || null,
             });
+            if (charger.locationDescriptor.trim()) {
+              await saveDescriptor(resolvedSiteId, charger.locationDescriptor);
+            }
           }
 
           await saveDescriptor(resolvedSiteId, locationDescriptor);
@@ -448,8 +453,11 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               installation_location: charger.installationLocation || null,
               known_issues: charger.knownIssues || null,
               photo_urls: photoUrls,
-              location_descriptor: locationDescriptor.trim() || null,
+              location_descriptor: charger.locationDescriptor.trim() || locationDescriptor.trim() || null,
             });
+            if (charger.locationDescriptor.trim()) {
+              await saveDescriptor(resolvedSiteId, charger.locationDescriptor);
+            }
           }
 
           await saveDescriptor(resolvedSiteId, locationDescriptor);
@@ -732,6 +740,10 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                       <div>
                         <Label className="text-xs">Company Name</Label>
                         <Input value={charger.installationLocation} onChange={e => updateCharger(charger.id, "installationLocation", e.target.value)} placeholder="e.g., Acme Corp" className="text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Location Detail</Label>
+                        <Input value={charger.locationDescriptor} onChange={e => updateCharger(charger.id, "locationDescriptor", e.target.value)} placeholder="e.g., Behind elevators, 2nd Floor, Lot B" className="text-sm" />
                       </div>
                       <div>
                         <Label className="text-xs">Is the charger working?</Label>
