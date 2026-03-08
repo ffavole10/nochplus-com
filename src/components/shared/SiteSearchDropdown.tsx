@@ -302,7 +302,39 @@ export function SiteSearchDropdown({
 
       {showNewForm && (
         <div className="mt-3 p-3 border border-border rounded-lg bg-muted/30 space-y-3">
-          <p className="text-xs font-medium text-muted-foreground">New Site Details</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-muted-foreground">New Site Details</p>
+            {hqAddress && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1.5"
+                onClick={() => {
+                  setNewAddress(hqAddress);
+                  // Try to parse city/state/zip from HQ address string
+                  const parts = hqAddress.split(",").map(s => s.trim());
+                  if (parts.length >= 2) {
+                    // Last part might be "STATE ZIP" or just state
+                    const lastPart = parts[parts.length - 1];
+                    const stateZipMatch = lastPart.match(/^([A-Z]{2})\s*(\d{5})?$/);
+                    if (stateZipMatch) {
+                      setNewState(stateZipMatch[1]);
+                      if (stateZipMatch[2]) setNewZip(stateZipMatch[2]);
+                      if (parts.length >= 3) setNewCity(parts[parts.length - 2]);
+                      setNewAddress(parts.slice(0, parts.length - (parts.length >= 3 ? 2 : 1)).join(", "));
+                    } else if (parts.length >= 2) {
+                      setNewCity(parts[parts.length - 1]);
+                      setNewAddress(parts.slice(0, parts.length - 1).join(", "));
+                    }
+                  }
+                }}
+              >
+                <Building2 className="h-3 w-3" />
+                Use HQ Address
+              </Button>
+            )}
+          </div>
           <div>
             <Label className="text-xs">Site Name *</Label>
             <Input
