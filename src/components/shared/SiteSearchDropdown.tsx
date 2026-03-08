@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, MapPin, Loader2 } from "lucide-react";
 import { AddressAutocomplete } from "@/components/submissions/AddressAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
