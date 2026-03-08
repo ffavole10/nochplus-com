@@ -846,10 +846,10 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                     ))}
                   </div>
                 </div>
-                {photos.length > 0 && (
+                {chargers.some(c => c.photos.length > 0) && (
                   <div className="pt-2 border-t border-border/50">
                     <span className="text-muted-foreground text-sm">Photos:</span>{" "}
-                    <span className="font-medium text-sm">{photos.length}</span>
+                    <span className="font-medium text-sm">{chargers.reduce((sum, c) => sum + c.photos.length, 0)} across {chargers.filter(c => c.photos.length > 0).length} charger(s)</span>
                   </div>
                 )}
               </CardContent>
