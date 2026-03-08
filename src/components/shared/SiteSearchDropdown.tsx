@@ -29,6 +29,10 @@ interface SiteSearchDropdownProps {
   /** If true, fetches via edge function (no auth needed). */
   usePublicEndpoint?: boolean;
   error?: string;
+  /** Callback for the location descriptor field */
+  onDescriptorChange?: (descriptor: string) => void;
+  /** Current descriptor value */
+  descriptor?: string;
 }
 
 export function SiteSearchDropdown({
@@ -37,6 +41,8 @@ export function SiteSearchDropdown({
   onSiteChange,
   usePublicEndpoint = false,
   error,
+  onDescriptorChange,
+  descriptor = "",
 }: SiteSearchDropdownProps) {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,10 +56,18 @@ export function SiteSearchDropdown({
   const [newState, setNewState] = useState("");
   const [newZip, setNewZip] = useState("");
 
+  // Descriptor suggestions
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const descriptorRef = useRef<HTMLDivElement>(null);
+
+  // Resolve the active location_id (either selected or confirmed new)
+  const activeLocationId = selectedId && selectedId !== "__new__" && selectedId !== "__confirmed_new__" ? selectedId : null;
+
   useEffect(() => {
     if (companyId) {
       fetchSites(companyId);
-      // Reset selection when company changes
       setSelectedId("");
       setShowNewForm(false);
       onSiteChange({ id: null, siteName: "", address: "", city: "", state: "", zip: "" });
@@ -69,6 +83,36 @@ export function SiteSearchDropdown({
       setSelectedId(selectedSiteId);
     }
   }, [selectedSiteId]);
+
+  // Fetch descriptor suggestions when location changes
+  useEffect(() => {
+    if (activeLocationId) {
+      fetchDescriptors(activeLocationId);
+    } else {
+      setSuggestions([]);
+    }
+  }, [activeLocationId]);
+
+  // Filter suggestions as user types
+  useEffect(() => {
+    if (!descriptor.trim()) {
+      setFilteredSuggestions(suggestions);
+    } else {
+      const lower = descriptor.toLowerCase();
+      setFilteredSuggestions(suggestions.filter(s => s.toLowerCase().includes(lower)));
+    }
+  }, [descriptor, suggestions]);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (descriptorRef.current && !descriptorRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const fetchSites = async (custId: string) => {
     setLoading(true);
@@ -92,6 +136,28 @@ export function SiteSearchDropdown({
       // silently fail
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDescriptors = async (locationId: string) => {
+    try {
+      if (usePublicEndpoint) {
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-location-descriptors?location_id=${locationId}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestions(data || []);
+        }
+      } else {
+        const { data } = await supabase
+          .from("charger_locations" as any)
+          .select("descriptor")
+          .eq("location_id", locationId)
+          .order("descriptor");
+        setSuggestions(((data || []) as any[]).map(d => d.descriptor));
+      }
+    } catch {
+      setSuggestions([]);
     }
   };
 
@@ -130,6 +196,14 @@ export function SiteSearchDropdown({
     setShowNewForm(false);
     setSelectedId("__confirmed_new__");
   };
+
+  const handleDescriptorSelect = (value: string) => {
+    onDescriptorChange?.(value);
+    setShowSuggestions(false);
+  };
+
+  // Show descriptor field when a site is selected or confirmed
+  const showDescriptor = !!(onDescriptorChange && (activeLocationId || selectedId === "__confirmed_new__"));
 
   if (!companyId) {
     return (
@@ -228,6 +302,43 @@ export function SiteSearchDropdown({
           <Button size="sm" onClick={confirmNewSite} disabled={!newSiteName.trim()}>
             Confirm Site
           </Button>
+        </div>
+      )}
+
+      {/* Specific Location / Descriptor field */}
+      {showDescriptor && (
+        <div className="mt-3" ref={descriptorRef}>
+          <Label className="text-xs">Specific Location (Optional)</Label>
+          <div className="relative mt-1">
+            <Input
+              value={descriptor}
+              onChange={(e) => {
+                onDescriptorChange?.(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              placeholder='e.g., Valet Level 1, Parking Garage B, 3rd Floor, Main Entrance'
+              className="text-sm"
+            />
+            {showSuggestions && filteredSuggestions.length > 0 && (
+              <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-md max-h-40 overflow-y-auto">
+                {filteredSuggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleDescriptorSelect(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Where exactly is the charger located within this property?
+          </p>
         </div>
       )}
     </div>

@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.list-locations]
 verify_jwt = false
+
+[functions.list-location-descriptors]
+verify_jwt = false
