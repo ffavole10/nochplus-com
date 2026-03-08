@@ -807,8 +807,21 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                             </label>
                           )}
                         </div>
-                        <p className="text-[9px] text-muted-foreground mt-1">Drag & drop or click • Max {MAX_PHOTOS} photos</p>
+                      <div className="sm:col-span-2">
+                        <Label className="text-xs">Known Issues</Label>
+                        <Textarea value={charger.knownIssues} onChange={e => updateCharger(charger.id, "knownIssues", e.target.value)} placeholder="Any problems or concerns?" rows={2} className="text-sm" />
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {chargers.length < 50 && (
+              <Button variant="outline" className="w-full gap-2" onClick={addCharger}>
+                <Plus className="h-4 w-4" /> Add Another Charger
+              </Button>
+            )}
 
             <div className="flex gap-3">
               <Button variant="outline" size="lg" className="flex-1 gap-2" onClick={handleBack}>
