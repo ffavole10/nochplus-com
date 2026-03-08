@@ -257,7 +257,7 @@ export function PlatformSidebar() {
     <Sidebar side="left" collapsible="none" className="border-r border-border/50 relative h-screen sticky top-0">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex justify-start mb-2">
-          <img src={nochLogo} alt="Noch Power" className="w-[37.5%] h-auto brightness-0 invert" />
+          <img src={nochLogo} alt="Noch Power" className="w-[45%] h-auto brightness-0 invert" />
         </div>
       </SidebarHeader>
 

@@ -82,7 +82,7 @@ export function MissionControlLanding({ campaigns, onUploadFile, onSelectCampaig
       {/* Header */}
       <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
         <div className="flex items-center gap-4">
-          <img src={nochLogo} alt="Noch Power" className="h-8 brightness-0 dark:brightness-100" />
+          <img src={nochLogo} alt="Noch Power" className="h-10 brightness-0 dark:brightness-100" />
           <div className="h-6 w-px bg-border" />
           <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-primary" />
