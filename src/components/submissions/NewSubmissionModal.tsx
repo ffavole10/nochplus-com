@@ -306,6 +306,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
   );
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto pointer-events-auto z-[2200]">
         <DialogHeader>
