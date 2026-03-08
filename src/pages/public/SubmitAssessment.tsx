@@ -80,6 +80,7 @@ export default function SubmitAssessment() {
   const [siteCity, setSiteCity] = useState("");
   const [siteState, setSiteState] = useState("");
   const [siteZip, setSiteZip] = useState("");
+  const [locationDescriptor, setLocationDescriptor] = useState("");
 
   // Chargers
   const [chargers, setChargers] = useState<ChargerEntry[]>([createEmptyCharger()]);
@@ -337,6 +338,17 @@ export default function SubmitAssessment() {
     }
   };
 
+  /** Save descriptor to charger_locations for future auto-suggest */
+  const saveDescriptor = async (locId: string | null, desc: string) => {
+    if (!locId || !desc.trim()) return;
+    try {
+      await supabase.from("charger_locations" as any).upsert(
+        { location_id: locId, descriptor: desc.trim() } as any,
+        { onConflict: "location_id,descriptor" }
+      );
+    } catch { /* ignore duplicates */ }
+  };
+
   const handleSubmit = async () => {
     if (!validateStep3()) { toast.error("Please fix the errors before submitting."); return; }
     setSubmitting(true);
@@ -402,8 +414,11 @@ export default function SubmitAssessment() {
             is_working: charger.isWorking || null,
             under_warranty: charger.underWarranty || null,
             photo_urls: photoUrls,
+            location_descriptor: locationDescriptor.trim() || null,
           });
         }
+
+        await saveDescriptor(resolvedSiteId, locationDescriptor);
 
         navigate(`/submit/confirmation/${submissionId}`, {
           state: {
@@ -467,8 +482,11 @@ export default function SubmitAssessment() {
             installation_location: charger.installationLocation || null,
             known_issues: charger.knownIssues || null,
             photo_urls: photoUrls,
+            location_descriptor: locationDescriptor.trim() || null,
           });
         }
+
+        await saveDescriptor(resolvedSiteId, locationDescriptor);
 
         navigate(`/submit/confirmation/${submissionId}`, {
           state: {
@@ -787,6 +805,8 @@ export default function SubmitAssessment() {
                     }}
                     usePublicEndpoint={true}
                     error={errors.site}
+                    descriptor={locationDescriptor}
+                    onDescriptorChange={setLocationDescriptor}
                   />
                 </div>
               </div>

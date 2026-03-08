@@ -142,6 +142,7 @@ export type Database = {
           id: string
           installation_location: string | null
           known_issues: string | null
+          location_descriptor: string | null
           photo_urls: string[] | null
           serial_number: string | null
           status: string
@@ -154,6 +155,7 @@ export type Database = {
           id?: string
           installation_location?: string | null
           known_issues?: string | null
+          location_descriptor?: string | null
           photo_urls?: string[] | null
           serial_number?: string | null
           status?: string
@@ -166,6 +168,7 @@ export type Database = {
           id?: string
           installation_location?: string | null
           known_issues?: string | null
+          location_descriptor?: string | null
           photo_urls?: string[] | null
           serial_number?: string | null
           status?: string
@@ -243,6 +246,35 @@ export type Database = {
           year?: number | null
         }
         Relationships: []
+      }
+      charger_locations: {
+        Row: {
+          created_at: string
+          descriptor: string
+          id: string
+          location_id: string
+        }
+        Insert: {
+          created_at?: string
+          descriptor: string
+          id?: string
+          location_id: string
+        }
+        Update: {
+          created_at?: string
+          descriptor?: string
+          id?: string
+          location_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charger_locations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       charger_records: {
         Row: {
@@ -1873,6 +1905,7 @@ export type Database = {
           installation_location: string | null
           is_working: string | null
           known_issues: string | null
+          location_descriptor: string | null
           photo_urls: string[] | null
           serial_number: string | null
           ticket_id: string
@@ -1886,6 +1919,7 @@ export type Database = {
           installation_location?: string | null
           is_working?: string | null
           known_issues?: string | null
+          location_descriptor?: string | null
           photo_urls?: string[] | null
           serial_number?: string | null
           ticket_id: string
@@ -1899,6 +1933,7 @@ export type Database = {
           installation_location?: string | null
           is_working?: string | null
           known_issues?: string | null
+          location_descriptor?: string | null
           photo_urls?: string[] | null
           serial_number?: string | null
           ticket_id?: string

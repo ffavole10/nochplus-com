@@ -103,6 +103,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
   const [siteCity, setSiteCity] = useState("");
   const [siteState, setSiteState] = useState("");
   const [siteZip, setSiteZip] = useState("");
+  const [locationDescriptor, setLocationDescriptor] = useState("");
 
   // Step 2 fields
   const [chargers, setChargers] = useState<ChargerEntry[]>([createEmptyCharger()]);
@@ -152,6 +153,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     setSiteCity("");
     setSiteState("");
     setSiteZip("");
+    setLocationDescriptor("");
     setChargers([createEmptyCharger()]);
     setPhotos([]);
     setCustomerNotes("");
@@ -310,6 +312,17 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     return urls;
   };
 
+  /** Save descriptor to charger_locations for future auto-suggest */
+  const saveDescriptor = async (locId: string | null, desc: string) => {
+    if (!locId || !desc.trim()) return;
+    try {
+      await supabase.from("charger_locations" as any).upsert(
+        { location_id: locId, descriptor: desc.trim() } as any,
+        { onConflict: "location_id,descriptor" }
+      );
+    } catch { /* ignore duplicates */ }
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
@@ -389,8 +402,11 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               is_working: charger.isWorking || null,
               under_warranty: charger.underWarranty || null,
               photo_urls: photoUrls,
+              location_descriptor: locationDescriptor.trim() || null,
             });
           }
+
+          await saveDescriptor(resolvedSiteId, locationDescriptor);
 
           toast.success(`Repair ticket ${submissionId} created successfully.`);
         } else {
@@ -431,8 +447,11 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               installation_location: charger.installationLocation || null,
               known_issues: charger.knownIssues || null,
               photo_urls: photoUrls,
+              location_descriptor: locationDescriptor.trim() || null,
             });
           }
+
+          await saveDescriptor(resolvedSiteId, locationDescriptor);
 
           toast.success(`Assessment ${submissionId} created successfully.`);
         }
@@ -654,6 +673,8 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                   }}
                   usePublicEndpoint={false}
                   error={errors.site}
+                  descriptor={locationDescriptor}
+                  onDescriptorChange={setLocationDescriptor}
                 />
               </div>
             </div>
