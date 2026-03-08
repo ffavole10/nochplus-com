@@ -1067,8 +1067,11 @@ export default function Submissions() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" className="gap-1.5" onClick={(e) => { e.stopPropagation(); openDetail(sub); }}>
-                      <Eye className="h-4 w-4" />
-                      View
+                      {sub.status === "draft" ? (
+                        <><Pencil className="h-4 w-4" />Resume</>
+                      ) : (
+                        <><Eye className="h-4 w-4" />View</>
+                      )}
                     </Button>
                   </TableCell>
                 </TableRow>
