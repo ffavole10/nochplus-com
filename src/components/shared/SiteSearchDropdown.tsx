@@ -353,8 +353,8 @@ export function SiteSearchDropdown({
               </div>
             </div>
           </div>
-          <Button size="sm" onClick={confirmNewSite} disabled={!newSiteName.trim()}>
-            Confirm Site
+          <Button size="sm" onClick={confirmNewSite} disabled={!newSiteName.trim() || saving}>
+            {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> Saving...</> : "Confirm Site"}
           </Button>
         </div>
       )}
