@@ -482,8 +482,11 @@ export default function SubmitAssessment() {
             installation_location: charger.installationLocation || null,
             known_issues: charger.knownIssues || null,
             photo_urls: photoUrls,
+            location_descriptor: locationDescriptor.trim() || null,
           });
         }
+
+        await saveDescriptor(resolvedSiteId, locationDescriptor);
 
         navigate(`/submit/confirmation/${submissionId}`, {
           state: {
