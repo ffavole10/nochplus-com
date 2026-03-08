@@ -186,18 +186,63 @@ export function SiteSearchDropdown({
     }
   };
 
-  const confirmNewSite = () => {
-    if (!newSiteName.trim()) return;
-    onSiteChange({
-      id: null,
-      siteName: newSiteName.trim(),
-      address: newAddress.trim(),
-      city: newCity.trim(),
-      state: newState,
-      zip: newZip.trim(),
-    });
-    setShowNewForm(false);
-    setSelectedId("__confirmed_new__");
+  const confirmNewSite = async () => {
+    if (!newSiteName.trim() || !companyId) return;
+    setSaving(true);
+    try {
+      if (usePublicEndpoint) {
+        // Public context — no DB insert, just pass values up
+        onSiteChange({
+          id: null,
+          siteName: newSiteName.trim(),
+          address: newAddress.trim(),
+          city: newCity.trim(),
+          state: newState,
+          zip: newZip.trim(),
+        });
+        setShowNewForm(false);
+        setSelectedId("__confirmed_new__");
+      } else {
+        const { data: newLoc, error: insertErr } = await supabase
+          .from("locations" as any)
+          .insert({
+            customer_id: companyId,
+            site_name: newSiteName.trim(),
+            address: newAddress.trim(),
+            city: newCity.trim(),
+            state: newState,
+            zip: newZip.trim(),
+          } as any)
+          .select()
+          .single();
+
+        if (insertErr) throw insertErr;
+
+        const loc = newLoc as unknown as Site;
+        setSites(prev => [...prev, loc].sort((a, b) => a.site_name.localeCompare(b.site_name)));
+        setSelectedId(loc.id);
+        setShowNewForm(false);
+        onSiteChange({
+          id: loc.id,
+          siteName: loc.site_name,
+          address: loc.address,
+          city: loc.city,
+          state: loc.state,
+          zip: loc.zip,
+        });
+        toast.success("Site saved");
+        // Reset new-site fields
+        setNewSiteName("");
+        setNewAddress("");
+        setNewCity("");
+        setNewState("");
+        setNewZip("");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save site");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDescriptorSelect = (value: string) => {
