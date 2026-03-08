@@ -554,5 +554,31 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
         )}
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
+      <AlertDialogContent className="z-[2500]">
+        <AlertDialogHeader>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+          </div>
+          <AlertDialogDescription>
+            You have unsaved information in this submission. Would you like to keep it as a draft and continue later, or discard everything?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setShowCloseWarning(false)}>
+            Go Back
+          </AlertDialogCancel>
+          <Button variant="destructive" onClick={handleDiscard}>
+            Discard
+          </Button>
+          <AlertDialogAction onClick={handleSaveDraft}>
+            Save as Draft
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
