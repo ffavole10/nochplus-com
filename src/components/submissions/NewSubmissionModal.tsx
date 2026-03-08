@@ -402,8 +402,11 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               is_working: charger.isWorking || null,
               under_warranty: charger.underWarranty || null,
               photo_urls: photoUrls,
+              location_descriptor: locationDescriptor.trim() || null,
             });
           }
+
+          await saveDescriptor(resolvedSiteId, locationDescriptor);
 
           toast.success(`Repair ticket ${submissionId} created successfully.`);
         } else {
