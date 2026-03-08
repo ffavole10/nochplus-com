@@ -320,7 +320,17 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
               <div className="sm:col-span-2">
                 <Label>Street Address</Label>
                 <div className="flex gap-2">
-                  <Input className="flex-1" value={streetAddress} onChange={e => setStreetAddress(e.target.value)} placeholder="123 Main St (optional)" />
+                  <AddressAutocomplete
+                    value={streetAddress}
+                    onChange={setStreetAddress}
+                    onSelect={(addr) => {
+                      if (addr.city) setCity(addr.city);
+                      if (addr.state) setState(addr.state);
+                      if (addr.zip) setZipCode(addr.zip);
+                    }}
+                    placeholder="Start typing an address..."
+                    className="flex-1"
+                  />
                   <Button
                     variant="outline"
                     size="icon"
