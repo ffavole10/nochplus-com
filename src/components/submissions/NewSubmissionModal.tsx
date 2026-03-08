@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import {
   ArrowRight, ArrowLeft, CheckCircle2, Plus, Trash2, Loader2, LocateFixed, AlertTriangle,
 } from "lucide-react";
+import { CompanySearchDropdown } from "@/components/shared/CompanySearchDropdown";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -49,6 +50,7 @@ const createEmptyCharger = (): ChargerEntry => ({
 });
 
 type Step = 1 | 2 | 3;
+type InternalSubmissionType = "assessment" | "repair";
 
 interface DraftData {
   id: string;
@@ -83,9 +85,13 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
   const [draftId, setDraftId] = useState<string | null>(null);
   const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(null);
 
+  // Submission type
+  const [submissionType, setSubmissionType] = useState<InternalSubmissionType>("assessment");
+
   // Step 1 fields
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [streetAddress, setStreetAddress] = useState("");
@@ -130,8 +136,10 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
 
   const resetForm = () => {
     setStep(1);
+    setSubmissionType("assessment");
     setFullName("");
     setCompanyName("");
+    setCompanyId(null);
     setEmail("");
     setPhone("");
     setStreetAddress("");
@@ -256,11 +264,34 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     if (step === 3) setStep(2);
   };
 
+  /** Create a new customer if no companyId, return the ID */
+  const resolveCompanyId = async (): Promise<string | null> => {
+    if (companyId) return companyId;
+    if (!companyName.trim()) return null;
+    try {
+      const { data, error } = await supabase
+        .from("customers")
+        .insert({
+          company: companyName.trim(),
+          contact_name: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
+          address: [streetAddress, city, state, zipCode].filter(Boolean).join(", "),
+        })
+        .select("id")
+        .single();
+      if (error) { console.error("Customer creation error:", error); return null; }
+      return data?.id || null;
+    } catch { return null; }
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
+      const resolvedCompanyId = await resolveCompanyId();
+
       if (draftId) {
-        // Update existing draft → pending_review
+        // Update existing draft → pending_review (legacy path for old drafts)
         await supabase.from("submissions").update({
           full_name: fullName.trim(),
           company_name: companyName.trim(),
@@ -275,7 +306,6 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
           status: "pending_review",
         }).eq("id", draftId);
 
-        // Replace chargers
         await supabase.from("charger_submissions").delete().eq("submission_id", draftId);
         for (const charger of chargers) {
           await supabase.from("charger_submissions").insert({
@@ -294,42 +324,84 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
         const hex = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
         const submissionId = `NP-${year}-${hex}`;
 
-        const { data: submission, error: subError } = await supabase
-          .from("submissions")
-          .insert({
-            submission_id: submissionId,
-            full_name: fullName.trim(),
-            company_name: companyName.trim(),
-            email: email.trim().toLowerCase(),
-            phone: phone.trim(),
-            street_address: streetAddress.trim() || city.trim(),
-            city: city.trim(),
-            state,
-            zip_code: zipCode.trim() || "00000",
-            referral_source: "manual_entry",
-            assessment_needs: null,
-            service_urgency: serviceUrgency || null,
-            customer_notes: customerNotes.trim() || null,
-            noch_plus_member: false,
-          })
-          .select()
-          .single();
+        if (submissionType === "repair") {
+          // Insert into service_tickets
+          const { data: ticket, error: ticketError } = await supabase
+            .from("service_tickets")
+            .insert({
+              ticket_id: submissionId,
+              source: "manual_entry",
+              status: "New",
+              company_id: resolvedCompanyId,
+              company_name: companyName.trim(),
+              full_name: fullName.trim(),
+              email: email.trim().toLowerCase(),
+              phone: phone.trim(),
+              street_address: streetAddress.trim() || null,
+              city: city.trim(),
+              state,
+              zip_code: zipCode.trim() || null,
+              customer_notes: customerNotes.trim() || null,
+              service_urgency: serviceUrgency || null,
+            })
+            .select()
+            .single();
 
-        if (subError) throw subError;
+          if (ticketError) throw ticketError;
 
-        for (const charger of chargers) {
-          const { error: chError } = await supabase.from("charger_submissions").insert({
-            submission_id: submission.id,
-            brand: charger.brand,
-            serial_number: charger.serialNumber || null,
-            charger_type: charger.chargerType,
-            installation_location: charger.installationLocation || null,
-            known_issues: charger.knownIssues || null,
-          });
-          if (chError) throw chError;
+          for (const charger of chargers) {
+            await supabase.from("ticket_chargers").insert({
+              ticket_id: ticket.id,
+              brand: charger.brand,
+              charger_type: charger.chargerType,
+              serial_number: charger.serialNumber || null,
+              installation_location: charger.installationLocation || null,
+              known_issues: charger.knownIssues || null,
+              is_working: charger.isWorking || null,
+              under_warranty: charger.underWarranty || null,
+            });
+          }
+
+          toast.success(`Repair ticket ${submissionId} created successfully.`);
+        } else {
+          // Insert into noch_plus_submissions
+          const { data: submission, error: subError } = await supabase
+            .from("noch_plus_submissions")
+            .insert({
+              submission_id: submissionId,
+              submission_type: "assessment",
+              company_id: resolvedCompanyId,
+              full_name: fullName.trim(),
+              company_name: companyName.trim(),
+              email: email.trim().toLowerCase(),
+              phone: phone.trim(),
+              street_address: streetAddress.trim() || city.trim(),
+              city: city.trim(),
+              state,
+              zip_code: zipCode.trim() || "00000",
+              referral_source: "manual_entry",
+              service_urgency: serviceUrgency || null,
+              customer_notes: customerNotes.trim() || null,
+              noch_plus_member: false,
+            })
+            .select()
+            .single();
+
+          if (subError) throw subError;
+
+          for (const charger of chargers) {
+            await supabase.from("assessment_chargers").insert({
+              submission_id: submission.id,
+              brand: charger.brand,
+              charger_type: charger.chargerType,
+              serial_number: charger.serialNumber || null,
+              installation_location: charger.installationLocation || null,
+              known_issues: charger.knownIssues || null,
+            });
+          }
+
+          toast.success(`Assessment ${submissionId} created successfully.`);
         }
-
-        toast.success(`Submission ${submissionId} created successfully.`);
       }
 
       resetForm();
@@ -361,7 +433,6 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
 
   const handleDiscard = async () => {
     setShowCloseWarning(false);
-    // If this was a persisted draft, delete it
     if (draftId) {
       await supabase.from("charger_submissions").delete().eq("submission_id", draftId);
       await supabase.from("submissions").delete().eq("id", draftId);
@@ -381,7 +452,6 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
       })();
 
       if (draftId) {
-        // Update existing draft
         await supabase.from("submissions").update({
           full_name: fullName.trim() || "Draft",
           company_name: companyName.trim() || "Draft",
@@ -396,7 +466,6 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
           status: "draft",
         }).eq("id", draftId);
 
-        // Delete old chargers and re-insert
         await supabase.from("charger_submissions").delete().eq("submission_id", draftId);
         for (const ch of chargers) {
           await supabase.from("charger_submissions").insert({
@@ -409,7 +478,6 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
           });
         }
       } else {
-        // Create new draft
         const { data: submission, error } = await supabase.from("submissions").insert({
           submission_id: subId,
           full_name: fullName.trim() || "Draft",
@@ -480,6 +548,31 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
           </DialogDescription>
         </DialogHeader>
 
+        {/* Submission Type Toggle */}
+        <div className="mb-2">
+          <Label className="text-sm mb-1.5 block">Submission Type</Label>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={submissionType === "assessment" ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => setSubmissionType("assessment")}
+            >
+              Assessment
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={submissionType === "repair" ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => setSubmissionType("repair")}
+            >
+              Repair
+            </Button>
+          </div>
+        </div>
+
         <StepIndicator />
 
         {/* STEP 1: Contact & Location */}
@@ -492,9 +585,13 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                 {errors.fullName && <p className="text-xs text-destructive mt-1">{errors.fullName}</p>}
               </div>
               <div>
-                <Label>Company / Property *</Label>
-                <Input value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Acme Properties" />
-                {errors.companyName && <p className="text-xs text-destructive mt-1">{errors.companyName}</p>}
+                <CompanySearchDropdown
+                  value={companyName}
+                  companyId={companyId}
+                  onChange={(name, id) => { setCompanyName(name); setCompanyId(id); }}
+                  usePublicEndpoint={false}
+                  error={errors.companyName}
+                />
               </div>
               <div>
                 <Label>Email *</Label>
@@ -658,11 +755,11 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
         {/* STEP 3: Review & Submit */}
         {step === 3 && (
           <div className="space-y-4">
-            {/* Summary */}
             <Card className="bg-muted/30">
               <CardContent className="p-4 space-y-2">
                 <h4 className="text-sm font-semibold text-foreground">Submission Summary</h4>
                 <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                  <div><span className="text-muted-foreground">Type:</span> <span className="font-medium capitalize">{submissionType}</span></div>
                   <div><span className="text-muted-foreground">Name:</span> <span className="font-medium">{fullName}</span></div>
                   <div><span className="text-muted-foreground">Company:</span> <span className="font-medium">{companyName}</span></div>
                   <div><span className="text-muted-foreground">Email:</span> <span className="font-medium">{email}</span></div>
@@ -673,7 +770,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                   <span className="text-muted-foreground text-sm">Chargers:</span>{" "}
                   <span className="font-medium text-sm">{chargers.length}</span>
                   <div className="flex flex-wrap gap-1.5 mt-1">
-                    {chargers.map((c, i) => (
+                    {chargers.map((c) => (
                       <Badge key={c.id} variant="outline" className="text-xs">
                         {c.brand || "Unknown"} — {c.chargerType || "N/A"}
                       </Badge>
@@ -709,7 +806,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                 {submitting ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
                 ) : (
-                  <>Create Submission <CheckCircle2 className="h-4 w-4" /></>
+                  <>Create {submissionType === "repair" ? "Repair Ticket" : "Assessment"} <CheckCircle2 className="h-4 w-4" /></>
                 )}
               </Button>
             </div>
