@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
