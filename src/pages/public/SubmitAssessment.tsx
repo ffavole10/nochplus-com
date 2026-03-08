@@ -60,7 +60,8 @@ const createEmptyCharger = (): ChargerEntry => ({
   underWarranty: "",
 });
 
-type FormStep = "landing" | "step1" | "step2" | "membership" | "step3";
+type FormStep = "landing" | "step0" | "step1" | "step2" | "membership" | "step3";
+type SubmissionType = "assessment" | "repair" | "";
 
 export default function SubmitAssessment() {
   const navigate = useNavigate();
