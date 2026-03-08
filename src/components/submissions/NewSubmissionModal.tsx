@@ -35,6 +35,7 @@ interface ChargerEntry {
   serialNumber: string;
   chargerType: string;
   installationLocation: string;
+  locationDescriptor: string;
   knownIssues: string;
   isWorking: string;
   underWarranty: string;
@@ -46,6 +47,7 @@ const createEmptyCharger = (): ChargerEntry => ({
   serialNumber: "",
   chargerType: "",
   installationLocation: "",
+  locationDescriptor: "",
   knownIssues: "",
   isWorking: "",
   underWarranty: "",
