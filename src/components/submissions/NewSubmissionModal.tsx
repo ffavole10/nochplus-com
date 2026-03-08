@@ -110,6 +110,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
 
   // Photos (submission-level)
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
+  const [dragOver, setDragOver] = useState(false);
 
   // Step 3 fields
   const [customerNotes, setCustomerNotes] = useState("");
