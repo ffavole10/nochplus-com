@@ -103,6 +103,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
   const [siteCity, setSiteCity] = useState("");
   const [siteState, setSiteState] = useState("");
   const [siteZip, setSiteZip] = useState("");
+  const [locationDescriptor, setLocationDescriptor] = useState("");
 
   // Step 2 fields
   const [chargers, setChargers] = useState<ChargerEntry[]>([createEmptyCharger()]);

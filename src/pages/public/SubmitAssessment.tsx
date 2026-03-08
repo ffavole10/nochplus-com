@@ -80,6 +80,7 @@ export default function SubmitAssessment() {
   const [siteCity, setSiteCity] = useState("");
   const [siteState, setSiteState] = useState("");
   const [siteZip, setSiteZip] = useState("");
+  const [locationDescriptor, setLocationDescriptor] = useState("");
 
   // Chargers
   const [chargers, setChargers] = useState<ChargerEntry[]>([createEmptyCharger()]);
