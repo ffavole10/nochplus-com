@@ -152,11 +152,11 @@ export function CompanySearchDropdown({
       )}
 
       {showNewForm && (
-        <div className="mt-3 p-3 border border-border rounded-lg bg-muted/30 space-y-3">
+        <div className="mt-3 p-3 border border-border rounded-lg bg-muted/30 space-y-3 min-w-[320px]">
           <p className="text-xs font-medium text-muted-foreground">
             New Company: <span className="text-foreground font-semibold">{search.trim() || "—"}</span>
           </p>
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">
             <div>
               <Label className="text-xs">Contact Name</Label>
               <Input
@@ -176,7 +176,7 @@ export function CompanySearchDropdown({
                 className="text-sm"
               />
             </div>
-            <div>
+            <div className="min-[400px]:col-span-2">
               <Label className="text-xs">Contact Phone</Label>
               <Input
                 value={newContactPhone}
@@ -185,10 +185,12 @@ export function CompanySearchDropdown({
                 className="text-sm"
               />
             </div>
+            <div className="min-[400px]:col-span-2">
+              <Button size="sm" onClick={confirmNewCompany} disabled={!search.trim()} className="w-full">
+                Confirm Company
+              </Button>
+            </div>
           </div>
-          <Button size="sm" onClick={confirmNewCompany} disabled={!search.trim()}>
-            Confirm Company
-          </Button>
         </div>
       )}
     </div>
