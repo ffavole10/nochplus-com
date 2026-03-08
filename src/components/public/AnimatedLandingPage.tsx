@@ -51,7 +51,7 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
         <img
           src={nochLogoWhite}
           alt="Noch Power"
-          className="h-6 sm:h-5 mx-auto sm:mx-0 sm:absolute sm:top-4 sm:left-6 mt-2 sm:mt-0"
+          className="h-6 sm:h-5 mx-auto sm:mx-0 sm:absolute sm:top-4 sm:left-6 mt-2 sm:mt-0 brightness-0 invert"
         />
       </div>
 

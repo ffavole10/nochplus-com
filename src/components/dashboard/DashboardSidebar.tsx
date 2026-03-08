@@ -192,7 +192,7 @@ export function DashboardSidebar({
             <img 
               src={nochLogo} 
               alt="Noch Power" 
-              className="w-[37.5%] h-auto"
+              className="w-[37.5%] h-auto brightness-0 invert"
             />
           </div>
         )}
