@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X, Play, FileDown } from "lucide-react";
+import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X, Play, FileDown, Plus } from "lucide-react";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
 import type { TicketChargerInfo, ChargerBrand } from "@/types/ticket";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { NewSubmissionModal } from "@/components/submissions/NewSubmissionModal";
 
 interface ChargerSubmission {
   id: string;
@@ -79,6 +80,7 @@ export default function Submissions() {
   const [editChargers, setEditChargers] = useState<ChargerSubmission[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [newSubmissionOpen, setNewSubmissionOpen] = useState(false);
 
   // Assessment state
   const [assessmentStatus, setAssessmentStatus] = useState<"idle" | "running" | "done">("idle");
@@ -944,7 +946,7 @@ export default function Submissions() {
       </div>
 
       {/* Search & Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -962,7 +964,16 @@ export default function Submissions() {
             <TabsTrigger value="archived">Archived</TabsTrigger>
           </TabsList>
         </Tabs>
+        <Button className="gap-2 ml-auto" onClick={() => setNewSubmissionOpen(true)}>
+          <Plus className="h-4 w-4" /> New Submission
+        </Button>
       </div>
+
+      <NewSubmissionModal
+        open={newSubmissionOpen}
+        onOpenChange={setNewSubmissionOpen}
+        onSubmitted={fetchSubmissions}
+      />
 
       {/* Table */}
       {loading ? (
