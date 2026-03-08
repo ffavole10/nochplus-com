@@ -447,8 +447,11 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               installation_location: charger.installationLocation || null,
               known_issues: charger.knownIssues || null,
               photo_urls: photoUrls,
+              location_descriptor: locationDescriptor.trim() || null,
             });
           }
+
+          await saveDescriptor(resolvedSiteId, locationDescriptor);
 
           toast.success(`Assessment ${submissionId} created successfully.`);
         }
