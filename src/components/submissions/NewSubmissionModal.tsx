@@ -74,12 +74,14 @@ interface Props {
   draftData?: DraftData | null;
 }
 
-export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
+export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData }: Props) {
   const [step, setStep] = useState<Step>(1);
   const [submitting, setSubmitting] = useState(false);
   const [locatingUser, setLocatingUser] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showCloseWarning, setShowCloseWarning] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(null);
 
   // Step 1 fields
   const [fullName, setFullName] = useState("");
@@ -97,6 +99,34 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
   // Step 3 fields
   const [customerNotes, setCustomerNotes] = useState("");
   const [serviceUrgency, setServiceUrgency] = useState("");
+
+  // Load draft data when provided
+  const loadDraft = (draft: DraftData) => {
+    setDraftId(draft.id);
+    setDraftSubmissionId(draft.submissionId);
+    setFullName(draft.fullName);
+    setCompanyName(draft.companyName);
+    setEmail(draft.email);
+    setPhone(draft.phone);
+    setStreetAddress(draft.streetAddress);
+    setCity(draft.city);
+    setState(draft.state);
+    setZipCode(draft.zipCode);
+    setChargers(draft.chargers.length > 0 ? draft.chargers : [createEmptyCharger()]);
+    setCustomerNotes(draft.customerNotes);
+    setServiceUrgency(draft.serviceUrgency);
+    setStep(draft.step || 1);
+  };
+
+  // When modal opens with draft data, populate fields
+  useState(() => {
+    if (draftData && open) loadDraft(draftData);
+  });
+
+  // Watch for draftData changes
+  if (draftData && open && draftId !== draftData.id) {
+    loadDraft(draftData);
+  }
 
   const resetForm = () => {
     setStep(1);
