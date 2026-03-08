@@ -807,6 +807,8 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                             </label>
                           )}
                         </div>
+                        <p className="text-[9px] text-muted-foreground mt-1">Drag & drop or click • Max {MAX_PHOTOS} photos</p>
+                      </div>
                       <div className="sm:col-span-2">
                         <Label className="text-xs">Known Issues</Label>
                         <Textarea value={charger.knownIssues} onChange={e => updateCharger(charger.id, "knownIssues", e.target.value)} placeholder="Any problems or concerns?" rows={2} className="text-sm" />
