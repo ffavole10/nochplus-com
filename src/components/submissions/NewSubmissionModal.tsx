@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AddressAutocomplete } from "./AddressAutocomplete";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  ArrowRight, ArrowLeft, CheckCircle2, Plus, Trash2, Loader2, LocateFixed,
+  ArrowRight, ArrowLeft, CheckCircle2, Plus, Trash2, Loader2, LocateFixed, AlertTriangle,
 } from "lucide-react";
 
 const US_STATES = [
