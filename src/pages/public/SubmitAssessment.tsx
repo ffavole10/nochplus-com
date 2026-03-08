@@ -19,6 +19,7 @@ import {
 import evChargerBg from "@/assets/ev-charger-bg.png";
 import medalBadge from "@/assets/medal-badge.png";
 import AnimatedLandingPage from "@/components/public/AnimatedLandingPage";
+import { CompanySearchDropdown } from "@/components/shared/CompanySearchDropdown";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -60,7 +61,7 @@ const createEmptyCharger = (): ChargerEntry => ({
   underWarranty: "",
 });
 
-type FormStep = "landing" | "step0" | "step1" | "step2" | "membership" | "step3";
+type FormStep = "landing" | "step0" | "step1" | "step2" | "oem_question" | "membership" | "step3";
 type SubmissionType = "assessment" | "repair" | "";
 
 export default function SubmitAssessment() {
@@ -75,6 +76,7 @@ export default function SubmitAssessment() {
   // Customer fields
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [streetAddress, setStreetAddress] = useState("");
@@ -87,6 +89,10 @@ export default function SubmitAssessment() {
 
   // Noch+
   const [nochPlus, setNochPlus] = useState(false);
+
+  // OEM ticket (repair only)
+  const [oemTicketExists, setOemTicketExists] = useState<"yes" | "no" | "unknown" | "">("");
+  const [oemTicketNumber, setOemTicketNumber] = useState("");
 
   // Terms
   const [termsAgreed, setTermsAgreed] = useState(false);
@@ -103,7 +109,6 @@ export default function SubmitAssessment() {
       setNochPlus(true);
       setCurrentStep("step3");
       toast.success("Membership payment successful! Complete your submission below.");
-      // Clean URL
       window.history.replaceState({}, "", "/submit");
     } else if (membership === "cancelled") {
       setCurrentStep("membership");
@@ -253,11 +258,21 @@ export default function SubmitAssessment() {
 
   const handleNextStep2 = () => {
     if (validateStep2()) {
-      setCurrentStep("membership");
+      if (submissionType === "repair") {
+        setCurrentStep("oem_question");
+      } else {
+        setCurrentStep("membership");
+      }
       window.scrollTo(0, 0);
     } else {
       toast.error("Please fix the errors before continuing.");
     }
+  };
+
+  const handleNextOem = () => {
+    // OEM question is optional, always allow proceeding
+    setCurrentStep("step3");
+    window.scrollTo(0, 0);
   };
 
   const handleSubscribe = async () => {
@@ -274,11 +289,10 @@ export default function SubmitAssessment() {
 
       if (error) throw error;
       if (data?.url) {
-        // Save form state to sessionStorage before redirecting
         sessionStorage.setItem("submit-form-state", JSON.stringify({
-          fullName, companyName, email, phone, streetAddress, city, state, zipCode,
+          fullName, companyName, companyId, email, phone, streetAddress, city, state, zipCode,
           chargers: chargers.map(c => ({ ...c, photos: [], photoPreviewUrls: [] })),
-          customerNotes, termsAgreed, contactConsent,
+          customerNotes, termsAgreed, contactConsent, submissionType,
         }));
         window.location.href = data.url;
       } else {
@@ -306,6 +320,7 @@ export default function SubmitAssessment() {
         const s = JSON.parse(saved);
         setFullName(s.fullName || "");
         setCompanyName(s.companyName || "");
+        setCompanyId(s.companyId || null);
         setEmail(s.email || "");
         setPhone(s.phone || "");
         setStreetAddress(s.streetAddress || "");
@@ -316,10 +331,39 @@ export default function SubmitAssessment() {
         setCustomerNotes(s.customerNotes || "");
         setTermsAgreed(s.termsAgreed || false);
         setContactConsent(s.contactConsent || false);
+        if (s.submissionType) setSubmissionType(s.submissionType);
         sessionStorage.removeItem("submit-form-state");
       } catch { /* ignore */ }
     }
   }, [searchParams]);
+
+  /** Create a new customer if no companyId exists, return the company ID */
+  const resolveCompanyId = async (): Promise<string | null> => {
+    if (companyId) return companyId;
+    if (!companyName.trim()) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from("customers")
+        .insert({
+          company: companyName.trim(),
+          contact_name: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
+          address: [streetAddress, city, state, zipCode].filter(Boolean).join(", "),
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("Customer creation error:", error);
+        return null;
+      }
+      return data?.id || null;
+    } catch {
+      return null;
+    }
+  };
 
   const handleSubmit = async () => {
     if (!validateStep3()) { toast.error("Please fix the errors before submitting."); return; }
@@ -330,79 +374,141 @@ export default function SubmitAssessment() {
       const hex = crypto.randomUUID().replace(/-/g, '').substring(0, 8).toUpperCase();
       const submissionId = `NP-${year}-${hex}`;
 
-      const { data: submission, error: subError } = await supabase
-        .from("submissions")
-        .insert({
-          submission_id: submissionId,
-          full_name: fullName.trim(),
-          company_name: companyName.trim(),
-          email: email.trim().toLowerCase(),
-          phone: phone.trim(),
-          street_address: streetAddress.trim() || city.trim(),
-          city: city.trim(),
-          state,
-          zip_code: zipCode.trim() || "00000",
-          referral_source: null,
-          assessment_needs: null,
-          service_urgency: null,
-          customer_notes: customerNotes.trim() || null,
-          noch_plus_member: nochPlus,
-        })
-        .select()
-        .single();
+      const resolvedCompanyId = await resolveCompanyId();
 
-      if (subError) throw subError;
+      if (submissionType === "repair") {
+        // Insert into service_tickets table
+        const { data: ticket, error: ticketError } = await supabase
+          .from("service_tickets")
+          .insert({
+            ticket_id: submissionId,
+            source: "customer_submission",
+            status: "New",
+            company_id: resolvedCompanyId,
+            company_name: companyName.trim(),
+            full_name: fullName.trim(),
+            email: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            street_address: streetAddress.trim() || null,
+            city: city.trim(),
+            state,
+            zip_code: zipCode.trim() || null,
+            oem_ticket_exists: oemTicketExists || null,
+            oem_ticket_number: oemTicketNumber.trim() || null,
+            customer_notes: customerNotes.trim() || null,
+          })
+          .select()
+          .single();
 
-      for (const charger of chargers) {
-        const photoUrls: string[] = [];
+        if (ticketError) throw ticketError;
 
-        for (const photo of charger.photos) {
-          try {
-            const formData = new FormData();
-            formData.append("file", photo.file);
-            formData.append("submission_id", submission.id);
-            formData.append("charger_id", charger.id);
-
-            const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-submission-photo`;
-            const res = await fetch(uploadUrl, {
-              method: "POST",
-              body: formData,
-            });
-
-            if (res.ok) {
-              const result = await res.json();
-              if (result.path) {
-                photoUrls.push(result.path);
+        // Insert chargers
+        for (const charger of chargers) {
+          const photoUrls: string[] = [];
+          for (const photo of charger.photos) {
+            try {
+              const formData = new FormData();
+              formData.append("file", photo.file);
+              formData.append("submission_id", ticket.id);
+              formData.append("charger_id", charger.id);
+              const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-submission-photo`;
+              const res = await fetch(uploadUrl, { method: "POST", body: formData });
+              if (res.ok) {
+                const result = await res.json();
+                if (result.path) photoUrls.push(result.path);
               }
-            }
-          } catch (photoErr) {
-            console.error("Photo upload error:", photoErr);
+            } catch (photoErr) { console.error("Photo upload error:", photoErr); }
           }
+
+          await supabase.from("ticket_chargers").insert({
+            ticket_id: ticket.id,
+            brand: charger.brand,
+            charger_type: charger.chargerType,
+            serial_number: charger.serialNumber || null,
+            installation_location: charger.installationLocation || null,
+            known_issues: charger.knownIssues || null,
+            is_working: charger.isWorking || null,
+            under_warranty: charger.underWarranty || null,
+            photo_urls: photoUrls,
+          });
         }
 
-        await supabase.from("charger_submissions").insert({
-          submission_id: submission.id,
-          brand: charger.brand,
-          serial_number: charger.serialNumber || null,
-          charger_type: charger.chargerType,
-          installation_location: charger.installationLocation || null,
-          known_issues: charger.knownIssues || null,
-          photo_urls: photoUrls,
+        navigate(`/submit/confirmation/${submissionId}`, {
+          state: {
+            fullName, email, phone, companyName,
+            chargerCount: chargers.length,
+            submissionId,
+            nochPlus: false,
+            submittedAt: new Date().toISOString(),
+            submissionType: "repair",
+          }
+        });
+      } else {
+        // Assessment path — insert into noch_plus_submissions
+        const { data: submission, error: subError } = await supabase
+          .from("noch_plus_submissions")
+          .insert({
+            submission_id: submissionId,
+            submission_type: "assessment",
+            company_id: resolvedCompanyId,
+            full_name: fullName.trim(),
+            company_name: companyName.trim(),
+            email: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            street_address: streetAddress.trim() || city.trim(),
+            city: city.trim(),
+            state,
+            zip_code: zipCode.trim() || "00000",
+            referral_source: null,
+            assessment_needs: null,
+            service_urgency: null,
+            customer_notes: customerNotes.trim() || null,
+            noch_plus_member: nochPlus,
+          })
+          .select()
+          .single();
+
+        if (subError) throw subError;
+
+        for (const charger of chargers) {
+          const photoUrls: string[] = [];
+          for (const photo of charger.photos) {
+            try {
+              const formData = new FormData();
+              formData.append("file", photo.file);
+              formData.append("submission_id", submission.id);
+              formData.append("charger_id", charger.id);
+              const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-submission-photo`;
+              const res = await fetch(uploadUrl, { method: "POST", body: formData });
+              if (res.ok) {
+                const result = await res.json();
+                if (result.path) photoUrls.push(result.path);
+              }
+            } catch (photoErr) { console.error("Photo upload error:", photoErr); }
+          }
+
+          await supabase.from("assessment_chargers").insert({
+            submission_id: submission.id,
+            brand: charger.brand,
+            charger_type: charger.chargerType,
+            serial_number: charger.serialNumber || null,
+            installation_location: charger.installationLocation || null,
+            known_issues: charger.knownIssues || null,
+            photo_urls: photoUrls,
+          });
+        }
+
+        navigate(`/submit/confirmation/${submissionId}`, {
+          state: {
+            fullName, email, phone, companyName,
+            chargerCount: chargers.length,
+            submissionId,
+            nochPlus,
+            submittedAt: new Date().toISOString(),
+            submissionType: "assessment",
+          }
         });
       }
-
-      navigate(`/submit/confirmation/${submissionId}`, {
-        state: {
-          fullName,
-          email,
-          phone,
-          companyName,
-          chargerCount: chargers.length,
-          submissionId,
-          nochPlus,
-          submittedAt: new Date().toISOString(),
-        }
-      });
     } catch (err: any) {
       console.error("Submission error:", err);
       toast.error("Something went wrong. Please try again.");
@@ -411,7 +517,18 @@ export default function SubmitAssessment() {
     }
   };
 
-  const stepNumber = currentStep === "step0" ? 1 : currentStep === "step1" ? 2 : currentStep === "step2" ? 3 : currentStep === "membership" ? 3.5 : currentStep === "step3" ? 4 : 0;
+  const getStepNumber = () => {
+    switch (currentStep) {
+      case "step0": return 1;
+      case "step1": return 2;
+      case "step2": return 3;
+      case "oem_question": return 3.5;
+      case "membership": return 3.5;
+      case "step3": return 4;
+      default: return 0;
+    }
+  };
+  const stepNumber = getStepNumber();
 
   // ─── LANDING PAGE ───
   if (currentStep === "landing") {
@@ -428,7 +545,9 @@ export default function SubmitAssessment() {
           </div>
           <span className="font-bold text-white">NOCH+</span>
         </div>
-        <Badge className="bg-white/20 text-white border-0 hover:bg-white/30">Free Assessment</Badge>
+        <Badge className="bg-white/20 text-white border-0 hover:bg-white/30">
+          {submissionType === "repair" ? "Repair Request" : "Free Assessment"}
+        </Badge>
       </div>
     </header>
   );
@@ -493,7 +612,7 @@ export default function SubmitAssessment() {
     );
   }
 
-  // ─── MEMBERSHIP UPSELL PAGE ───
+  // ─── MEMBERSHIP UPSELL PAGE (assessment only) ───
   if (currentStep === "membership") {
     return (
       <div className="min-h-screen bg-background">
@@ -507,7 +626,6 @@ export default function SubmitAssessment() {
             <p className="text-muted-foreground">Get exclusive benefits for your {chargers.length} charger{chargers.length > 1 ? "s" : ""}</p>
           </div>
 
-          {/* Pricing */}
           <Card className="mb-6 border-primary shadow-lg">
             <CardContent className="p-6">
               <div className="text-center mb-6">
@@ -541,13 +659,7 @@ export default function SubmitAssessment() {
                 For less than $0.30 a day, get peace of mind for your entire charging setup.
               </p>
 
-              {/* Subscribe Button */}
-              <Button
-                size="lg"
-                className="w-full text-lg gap-2 h-14"
-                onClick={handleSubscribe}
-                disabled={membershipLoading}
-              >
+              <Button size="lg" className="w-full text-lg gap-2 h-14" onClick={handleSubscribe} disabled={membershipLoading}>
                 {membershipLoading ? (
                   <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
                 ) : (
@@ -562,17 +674,73 @@ export default function SubmitAssessment() {
             </CardContent>
           </Card>
 
-          {/* Skip */}
           <div className="text-center">
-            <button
-              onClick={handleSkipMembership}
-              className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
-            >
+            <button onClick={handleSkipMembership} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
               Skip for now — continue with free assessment
             </button>
           </div>
         </div>
 
+        <footer className="py-6 border-t border-border/50 bg-card">
+          <div className="max-w-3xl mx-auto px-4 text-center text-sm text-muted-foreground">
+            <p>© {new Date().getFullYear()} Noch Power. All rights reserved.</p>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // ─── OEM TICKET QUESTION (repair path) ───
+  if (currentStep === "oem_question") {
+    return (
+      <div className="min-h-screen bg-background">
+        <FormHeader />
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <StepProgress />
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4">OEM Ticket Information</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Does this issue have an open ticket with the charger manufacturer (OEM)?
+              </p>
+
+              <div className="flex gap-3 mb-6">
+                {(["yes", "no", "unknown"] as const).map((val) => (
+                  <Button
+                    key={val}
+                    type="button"
+                    size="lg"
+                    variant={oemTicketExists === val ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => setOemTicketExists(val)}
+                  >
+                    {val === "yes" ? "Yes" : val === "no" ? "No" : "I don't know"}
+                  </Button>
+                ))}
+              </div>
+
+              {oemTicketExists === "yes" && (
+                <div className="mb-6">
+                  <Label>OEM Ticket Number (optional)</Label>
+                  <Input
+                    value={oemTicketNumber}
+                    onChange={(e) => setOemTicketNumber(e.target.value)}
+                    placeholder="e.g. BTC-2024-00123"
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Button variant="outline" size="lg" className="flex-1" onClick={() => { setCurrentStep("step2"); window.scrollTo(0, 0); }}>
+                  Back
+                </Button>
+                <Button size="lg" className="flex-1 gap-2" onClick={handleNextOem}>
+                  Next <ArrowRight className="h-5 w-5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         <footer className="py-6 border-t border-border/50 bg-card">
           <div className="max-w-3xl mx-auto px-4 text-center text-sm text-muted-foreground">
             <p>© {new Date().getFullYear()} Noch Power. All rights reserved.</p>
@@ -589,7 +757,9 @@ export default function SubmitAssessment() {
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="text-center mb-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Submit Your Chargers</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+            {submissionType === "repair" ? "Report a Repair" : "Submit Your Chargers"}
+          </h1>
           <p className="text-muted-foreground">Fill in the basics — takes about 2 minutes</p>
         </div>
 
@@ -611,9 +781,13 @@ export default function SubmitAssessment() {
                   {errors.fullName && <p className="text-xs text-destructive mt-1">{errors.fullName}</p>}
                 </div>
                 <div>
-                  <Label>Company / Property *</Label>
-                  <Input value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Acme Properties" />
-                  {errors.companyName && <p className="text-xs text-destructive mt-1">{errors.companyName}</p>}
+                  <CompanySearchDropdown
+                    value={companyName}
+                    companyId={companyId}
+                    onChange={(name, id) => { setCompanyName(name); setCompanyId(id); }}
+                    usePublicEndpoint={true}
+                    error={errors.companyName}
+                  />
                 </div>
                 <div>
                   <Label>Email *</Label>
@@ -739,7 +913,6 @@ export default function SubmitAssessment() {
                         <div className="sm:col-span-2">
                           <Label className="text-xs">Photos (optional, up to 6)</Label>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {/* Existing photos */}
                             {charger.photos.map((photo, pi) => (
                               <div key={pi} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
                                 <img src={photo.previewUrl} alt={photo.label} className="w-full h-full object-cover" />
@@ -752,7 +925,6 @@ export default function SubmitAssessment() {
                               </div>
                             ))}
 
-                            {/* Prompt slots: Front View, Serial #, then Add More */}
                             {!charger.photos.some(p => p.label === "front_view") && charger.photos.length < 6 && (
                               <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
                                 <Camera className="h-5 w-5 text-muted-foreground" />
@@ -809,7 +981,7 @@ export default function SubmitAssessment() {
                 Submit
               </h3>
 
-              {nochPlus && (
+              {nochPlus && submissionType === "assessment" && (
                 <div className="mb-4 p-3 bg-primary/10 rounded-lg flex items-center gap-2 text-sm">
                   <img src={medalBadge} alt="Noch+" className="h-4 w-4" />
                   <span className="font-medium">Noch+ Membership active</span>
@@ -835,14 +1007,25 @@ export default function SubmitAssessment() {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" size="lg" className="flex-1" onClick={() => { setCurrentStep("membership"); window.scrollTo(0, 0); }}>
+                <Button variant="outline" size="lg" className="flex-1" onClick={() => {
+                  if (submissionType === "repair") {
+                    setCurrentStep("oem_question");
+                  } else {
+                    setCurrentStep("membership");
+                  }
+                  window.scrollTo(0, 0);
+                }}>
                   Back
                 </Button>
                 <Button size="lg" className="flex-1 text-lg gap-2" disabled={submitting} onClick={handleSubmit}>
                   {submitting ? <><Loader2 className="h-5 w-5 animate-spin" /> Submitting...</> : <>Submit <ArrowRight className="h-5 w-5" /></>}
                 </Button>
               </div>
-              <p className="text-center text-xs text-muted-foreground mt-3">100% Free • No credit card required for assessment</p>
+              <p className="text-center text-xs text-muted-foreground mt-3">
+                {submissionType === "repair"
+                  ? "Our team will review and contact you to schedule a technician."
+                  : "100% Free • No credit card required for assessment"}
+              </p>
             </CardContent>
           </Card>
         )}
