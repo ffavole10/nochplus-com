@@ -380,7 +380,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
               <Badge variant="outline">{chargers.length}/50</Badge>
             </div>
 
-            <div className="space-y-3 max-h-[45vh] overflow-y-auto overflow-x-visible pr-1" style={{ isolation: "isolate" }}>
+            <div className="space-y-3 max-h-[45vh] overflow-y-auto pr-1">
               {chargers.map((charger, idx) => (
                 <Card key={charger.id} className="border-border/70">
                   <CardContent className="p-4">
