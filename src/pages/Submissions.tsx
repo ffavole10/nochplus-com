@@ -996,6 +996,7 @@ export default function Submissions() {
         <Tabs value={statusFilter} onValueChange={setStatusFilter}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="draft">Drafts{stats.drafts > 0 ? ` (${stats.drafts})` : ""}</TabsTrigger>
             <TabsTrigger value="pending_review">Pending</TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="archived">Archived</TabsTrigger>
