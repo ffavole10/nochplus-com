@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Loader2, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Company {
   id: string;
@@ -27,12 +28,14 @@ export function CompanySearchDropdown({
 }: CompanySearchDropdownProps) {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState(value);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
   const [newContactName, setNewContactName] = useState("");
   const [newContactEmail, setNewContactEmail] = useState("");
   const [newContactPhone, setNewContactPhone] = useState("");
+  const [newHqAddress, setNewHqAddress] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,11 +88,67 @@ export function CompanySearchDropdown({
     setShowDropdown(false);
   };
 
-  const confirmNewCompany = () => {
+  const confirmNewCompany = async () => {
     const name = search.trim();
     if (!name) return;
-    onChange(name, null);
-    setShowNewForm(false);
+
+    setSaving(true);
+    try {
+      if (usePublicEndpoint) {
+        // For public forms, just pass name back without DB creation
+        onChange(name, null);
+        setShowNewForm(false);
+        resetNewForm();
+        return;
+      }
+
+      // Create customer in DB
+      const { data: newCustomer, error: insertErr } = await supabase
+        .from("customers" as any)
+        .insert({
+          company: name,
+          contact_name: newContactName.trim() || name,
+          email: newContactEmail.trim() || "",
+          phone: newContactPhone.trim() || "",
+          headquarters_address: newHqAddress.trim() || null,
+        } as any)
+        .select()
+        .single();
+
+      if (insertErr) throw insertErr;
+
+      const created = newCustomer as any;
+
+      // Create primary contact if name or email provided
+      if (newContactName.trim() || newContactEmail.trim()) {
+        await supabase.from("contacts").insert({
+          customer_id: created.id,
+          name: newContactName.trim() || name,
+          email: newContactEmail.trim() || "",
+          phone: newContactPhone.trim() || "",
+          is_primary: true,
+        });
+      }
+
+      // Update local list and select the new company
+      setCompanies((prev) => [...prev, { id: created.id, company: created.company }].sort((a, b) => a.company.localeCompare(b.company)));
+      onChange(created.company, created.id);
+      setShowNewForm(false);
+      resetNewForm();
+      toast.success(`Company "${created.company}" created`);
+    } catch (err: any) {
+      console.error("Failed to create company:", err);
+      toast.error(err.message || "Failed to create company");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resetNewForm = () => {
+    setNewContactName("");
+    setNewContactEmail("");
+    setNewContactPhone("");
+    setNewHqAddress("");
   };
 
   useEffect(() => {
@@ -186,8 +245,17 @@ export function CompanySearchDropdown({
               />
             </div>
             <div className="min-[400px]:col-span-2">
-              <Button type="button" size="sm" onClick={confirmNewCompany} disabled={!search.trim()} className="w-full">
-                Confirm Company
+              <Label className="text-xs">HQ Address</Label>
+              <Input
+                value={newHqAddress}
+                onChange={(e) => setNewHqAddress(e.target.value)}
+                placeholder="Optional"
+                className="text-sm"
+              />
+            </div>
+            <div className="min-[400px]:col-span-2">
+              <Button type="button" size="sm" onClick={confirmNewCompany} disabled={!search.trim() || saving} className="w-full">
+                {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Creating...</> : "Confirm Company"}
               </Button>
             </div>
           </div>
