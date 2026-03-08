@@ -436,7 +436,7 @@ export default function SubmitAssessment() {
   // ─── STEP PROGRESS ───
   const StepProgress = () => (
     <div className="flex items-center justify-center gap-2 mb-8">
-      {[1, 2, 3].map(s => (
+      {[1, 2, 3, 4].map(s => (
         <div key={s} className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
             s < stepNumber ? "bg-primary text-primary-foreground" :
@@ -445,11 +445,53 @@ export default function SubmitAssessment() {
           }`}>
             {s < stepNumber ? <CheckCircle2 className="h-4 w-4" /> : s}
           </div>
-          {s < 3 && <div className={`w-8 h-0.5 ${s < stepNumber ? "bg-primary" : "bg-muted"}`} />}
+          {s < 4 && <div className={`w-8 h-0.5 ${s < stepNumber ? "bg-primary" : "bg-muted"}`} />}
         </div>
       ))}
     </div>
   );
+
+  // ─── STEP 0: SERVICE TYPE SELECTION ───
+  if (currentStep === "step0") {
+    return (
+      <div className="min-h-screen bg-background">
+        <FormHeader />
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <StepProgress />
+          <div className="text-center mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">How can we help?</h1>
+            <p className="text-muted-foreground">Select the type of service you need</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => { setSubmissionType("assessment"); setCurrentStep("step1"); window.scrollTo(0, 0); }}
+              className="group flex flex-col items-center text-center gap-4 p-8 rounded-xl border-2 border-border bg-card hover:border-primary hover:shadow-lg transition-all cursor-pointer"
+            >
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <ClipboardSearch className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-foreground mb-1">Site Assessment</h2>
+                <p className="text-sm text-muted-foreground">Get a professional evaluation of your EV charging setup. Identify issues and explore upgrade options.</p>
+              </div>
+            </button>
+            <button
+              onClick={() => { setSubmissionType("repair"); setCurrentStep("step1"); window.scrollTo(0, 0); }}
+              className="group flex flex-col items-center text-center gap-4 p-8 rounded-xl border-2 border-border bg-card hover:border-primary hover:shadow-lg transition-all cursor-pointer"
+            >
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <Wrench className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-foreground mb-1">Request a Repair</h2>
+                <p className="text-sm text-muted-foreground">Report a known issue with one or more of your chargers. Our team will dispatch a technician.</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ─── MEMBERSHIP UPSELL PAGE ───
   if (currentStep === "membership") {
