@@ -76,7 +76,7 @@ export function AssessmentHeader({ view, onViewChange, onImport, onExport, onCle
     <div className="sticky top-0 z-30">
       {/* Top bar - slim */}
       <header className="border-b border-border bg-card px-6 py-2 flex items-center justify-between">
-        <img src={nochLogo} alt="Noch Power" className="h-7 brightness-0 dark:brightness-100" />
+        <img src={nochLogo} alt="Noch Power" className="h-8 brightness-0 dark:brightness-100" />
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
             <LayoutDashboard className="h-4 w-4" />
