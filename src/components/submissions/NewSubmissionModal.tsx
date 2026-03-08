@@ -153,6 +153,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     setSiteCity("");
     setSiteState("");
     setSiteZip("");
+    setLocationDescriptor("");
     setChargers([createEmptyCharger()]);
     setPhotos([]);
     setCustomerNotes("");
