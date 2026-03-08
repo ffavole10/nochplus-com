@@ -14,7 +14,7 @@ import {
   CheckCircle2, Clock, Zap, Camera,
   Plus, Trash2, Loader2, ArrowRight, X, LocateFixed,
   Users, Monitor, BadgePercent, Package, Wrench, CreditCard, Shield,
-  Hash, ImagePlus
+  Hash, ImagePlus, Search
 } from "lucide-react";
 import evChargerBg from "@/assets/ev-charger-bg.png";
 import medalBadge from "@/assets/medal-badge.png";
@@ -60,7 +60,8 @@ const createEmptyCharger = (): ChargerEntry => ({
   underWarranty: "",
 });
 
-type FormStep = "landing" | "step1" | "step2" | "membership" | "step3";
+type FormStep = "landing" | "step0" | "step1" | "step2" | "membership" | "step3";
+type SubmissionType = "assessment" | "repair" | "";
 
 export default function SubmitAssessment() {
   const navigate = useNavigate();
@@ -69,6 +70,7 @@ export default function SubmitAssessment() {
   const [currentStep, setCurrentStep] = useState<FormStep>("landing");
   const [locatingUser, setLocatingUser] = useState(false);
   const [membershipLoading, setMembershipLoading] = useState(false);
+  const [submissionType, setSubmissionType] = useState<SubmissionType>("");
 
   // Customer fields
   const [fullName, setFullName] = useState("");
@@ -409,11 +411,11 @@ export default function SubmitAssessment() {
     }
   };
 
-  const stepNumber = currentStep === "step1" ? 1 : currentStep === "step2" ? 2 : currentStep === "membership" ? 2.5 : currentStep === "step3" ? 3 : 0;
+  const stepNumber = currentStep === "step0" ? 1 : currentStep === "step1" ? 2 : currentStep === "step2" ? 3 : currentStep === "membership" ? 3.5 : currentStep === "step3" ? 4 : 0;
 
   // ─── LANDING PAGE ───
   if (currentStep === "landing") {
-    return <AnimatedLandingPage onStart={() => setCurrentStep("step1")} />;
+    return <AnimatedLandingPage onStart={() => setCurrentStep("step0")} />;
   }
 
   // ─── FORM HEADER ───
@@ -434,7 +436,7 @@ export default function SubmitAssessment() {
   // ─── STEP PROGRESS ───
   const StepProgress = () => (
     <div className="flex items-center justify-center gap-2 mb-8">
-      {[1, 2, 3].map(s => (
+      {[1, 2, 3, 4].map(s => (
         <div key={s} className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
             s < stepNumber ? "bg-primary text-primary-foreground" :
@@ -443,11 +445,53 @@ export default function SubmitAssessment() {
           }`}>
             {s < stepNumber ? <CheckCircle2 className="h-4 w-4" /> : s}
           </div>
-          {s < 3 && <div className={`w-8 h-0.5 ${s < stepNumber ? "bg-primary" : "bg-muted"}`} />}
+          {s < 4 && <div className={`w-8 h-0.5 ${s < stepNumber ? "bg-primary" : "bg-muted"}`} />}
         </div>
       ))}
     </div>
   );
+
+  // ─── STEP 0: SERVICE TYPE SELECTION ───
+  if (currentStep === "step0") {
+    return (
+      <div className="min-h-screen bg-background">
+        <FormHeader />
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <StepProgress />
+          <div className="text-center mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">How can we help?</h1>
+            <p className="text-muted-foreground">Select the type of service you need</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => { setSubmissionType("assessment"); setCurrentStep("step1"); window.scrollTo(0, 0); }}
+              className="group flex flex-col items-center text-center gap-4 p-8 rounded-xl border-2 border-border bg-card hover:border-primary hover:shadow-lg transition-all cursor-pointer"
+            >
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <Search className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-foreground mb-1">Site Assessment</h2>
+                <p className="text-sm text-muted-foreground">Get a professional evaluation of your EV charging setup. Identify issues and explore upgrade options.</p>
+              </div>
+            </button>
+            <button
+              onClick={() => { setSubmissionType("repair"); setCurrentStep("step1"); window.scrollTo(0, 0); }}
+              className="group flex flex-col items-center text-center gap-4 p-8 rounded-xl border-2 border-border bg-card hover:border-primary hover:shadow-lg transition-all cursor-pointer"
+            >
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <Wrench className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-foreground mb-1">Request a Repair</h2>
+                <p className="text-sm text-muted-foreground">Report a known issue with one or more of your chargers. Our team will dispatch a technician.</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ─── MEMBERSHIP UPSELL PAGE ───
   if (currentStep === "membership") {
