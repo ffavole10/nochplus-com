@@ -411,7 +411,7 @@ export default function SubmitAssessment() {
     }
   };
 
-  const stepNumber = currentStep === "step1" ? 1 : currentStep === "step2" ? 2 : currentStep === "membership" ? 2.5 : currentStep === "step3" ? 3 : 0;
+  const stepNumber = currentStep === "step0" ? 1 : currentStep === "step1" ? 2 : currentStep === "step2" ? 3 : currentStep === "membership" ? 3.5 : currentStep === "step3" ? 4 : 0;
 
   // ─── LANDING PAGE ───
   if (currentStep === "landing") {
