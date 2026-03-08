@@ -338,6 +338,17 @@ export default function SubmitAssessment() {
     }
   };
 
+  /** Save descriptor to charger_locations for future auto-suggest */
+  const saveDescriptor = async (locId: string | null, desc: string) => {
+    if (!locId || !desc.trim()) return;
+    try {
+      await supabase.from("charger_locations" as any).upsert(
+        { location_id: locId, descriptor: desc.trim() } as any,
+        { onConflict: "location_id,descriptor" }
+      );
+    } catch { /* ignore duplicates */ }
+  };
+
   const handleSubmit = async () => {
     if (!validateStep3()) { toast.error("Please fix the errors before submitting."); return; }
     setSubmitting(true);
