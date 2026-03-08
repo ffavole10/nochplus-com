@@ -72,6 +72,7 @@ export function SiteSearchDropdown({
   useEffect(() => {
     if (companyId) {
       fetchSites(companyId);
+      fetchHqAddress(companyId);
       setSelectedId("");
       setShowNewForm(false);
       onSiteChange({ id: null, siteName: "", address: "", city: "", state: "", zip: "" });
@@ -79,6 +80,7 @@ export function SiteSearchDropdown({
       setSites([]);
       setSelectedId("");
       setShowNewForm(false);
+      setHqAddress(null);
     }
   }, [companyId]);
 
