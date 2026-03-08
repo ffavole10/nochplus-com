@@ -769,70 +769,46 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                         <Input value={charger.locationDescriptor} onChange={e => updateCharger(charger.id, "locationDescriptor", e.target.value)} placeholder="e.g., Behind elevators, 2nd Floor, Lot B" className="text-sm" />
                       </div>
                       <div className="sm:col-span-2">
-                        <Label className="text-xs">Known Issues</Label>
-                        <Textarea value={charger.knownIssues} onChange={e => updateCharger(charger.id, "knownIssues", e.target.value)} placeholder="Any problems or concerns?" rows={2} className="text-sm" />
+                        <Label className="text-xs">Photos</Label>
+                        <div
+                          className={`flex flex-wrap gap-2 p-2 rounded-lg border-2 border-dashed transition-colors mt-1 ${
+                            charger.dragOver ? "border-primary bg-primary/5" : "border-border/50"
+                          }`}
+                          onDragOver={e => { e.preventDefault(); setChargers(prev => prev.map(c => c.id === charger.id ? { ...c, dragOver: true } : c)); }}
+                          onDragLeave={() => setChargers(prev => prev.map(c => c.id === charger.id ? { ...c, dragOver: false } : c))}
+                          onDrop={e => {
+                            e.preventDefault();
+                            setChargers(prev => prev.map(c => c.id === charger.id ? { ...c, dragOver: false } : c));
+                            if (e.dataTransfer.files?.length) handleChargerPhotoAdd(charger.id, e.dataTransfer.files);
+                          }}
+                        >
+                          {charger.photos.map((photo, i) => (
+                            <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-border group">
+                              <img src={photo.previewUrl} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                              <button
+                                onClick={() => removeChargerPhoto(charger.id, i)}
+                                className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            </div>
+                          ))}
+                          {charger.photos.length < MAX_PHOTOS && (
+                            <label className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                              <ImagePlus className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-[8px] text-muted-foreground mt-0.5">Add</span>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                                multiple
+                                className="hidden"
+                                onChange={e => handleChargerPhotoAdd(charger.id, e.target.files)}
+                              />
+                            </label>
+                          )}
+                        </div>
+                        <p className="text-[9px] text-muted-foreground mt-1">Drag & drop or click • Max {MAX_PHOTOS} photos</p>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {chargers.length < 50 && (
-              <Button variant="outline" className="w-full gap-2" onClick={addCharger}>
-                <Plus className="h-4 w-4" /> Add Another Charger
-              </Button>
-            )}
-
-            {/* Photo Upload Section */}
-            <Card className="border-border/70">
-              <CardContent className="p-4">
-                <div className="mb-2">
-                  <Label className="text-sm font-medium">Photos (Optional)</Label>
-                  <p className="text-xs text-muted-foreground">Upload photos of the charger, damage, or any relevant issues</p>
-                </div>
-                <div
-                  className={`flex flex-wrap gap-2 p-3 rounded-lg border-2 border-dashed transition-colors ${
-                    dragOver ? "border-primary bg-primary/5" : "border-transparent"
-                  }`}
-                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={e => {
-                    e.preventDefault();
-                    setDragOver(false);
-                    if (e.dataTransfer.files?.length) handlePhotoAdd(e.dataTransfer.files);
-                  }}
-                >
-                  {photos.map((photo, i) => (
-                    <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
-                      <img src={photo.previewUrl} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                      <button
-                        onClick={() => removeSubmissionPhoto(i)}
-                        className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                  {photos.length < MAX_PHOTOS && (
-                    <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
-                      <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                      <span className="text-[9px] text-muted-foreground mt-0.5">Add Photo</span>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                        multiple
-                        className="hidden"
-                        onChange={e => handlePhotoAdd(e.target.files)}
-                      />
-                    </label>
-                  )}
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  Drag & drop or click to add • JPG, PNG, WebP, HEIC • Max 10MB each • Up to {MAX_PHOTOS} photos
-                </p>
-              </CardContent>
-            </Card>
 
             <div className="flex gap-3">
               <Button variant="outline" size="lg" className="flex-1 gap-2" onClick={handleBack}>
