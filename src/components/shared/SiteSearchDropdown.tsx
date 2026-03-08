@@ -58,6 +58,7 @@ export function SiteSearchDropdown({
   const [newState, setNewState] = useState("");
   const [newZip, setNewZip] = useState("");
   const [saving, setSaving] = useState(false);
+  const [hqAddress, setHqAddress] = useState<string | null>(null);
 
   // Descriptor suggestions
   const [suggestions, setSuggestions] = useState<string[]>([]);
