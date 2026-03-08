@@ -50,10 +50,28 @@ const createEmptyCharger = (): ChargerEntry => ({
 
 type Step = 1 | 2 | 3;
 
+interface DraftData {
+  id: string;
+  submissionId: string;
+  fullName: string;
+  companyName: string;
+  email: string;
+  phone: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  chargers: ChargerEntry[];
+  customerNotes: string;
+  serviceUrgency: string;
+  step: Step;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmitted: () => void;
+  draftData?: DraftData | null;
 }
 
 export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
