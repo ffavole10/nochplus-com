@@ -1009,8 +1009,12 @@ export default function Submissions() {
 
       <NewSubmissionModal
         open={newSubmissionOpen}
-        onOpenChange={setNewSubmissionOpen}
+        onOpenChange={(val) => {
+          setNewSubmissionOpen(val);
+          if (!val) setEditingDraft(null);
+        }}
         onSubmitted={fetchSubmissions}
+        draftData={editingDraft}
       />
 
       {/* Table */}
