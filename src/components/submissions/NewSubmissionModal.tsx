@@ -560,7 +560,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
       <AlertDialogContent className="z-[2500]">
         <AlertDialogHeader>
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            <AlertTriangle className="h-5 w-5 text-destructive" />
             <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
           </div>
           <AlertDialogDescription>
