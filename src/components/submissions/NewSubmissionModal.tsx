@@ -738,6 +738,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                       <div>
                         <Label className="text-xs">Location Detail</Label>
                         <Input value={charger.locationDescriptor} onChange={e => updateCharger(charger.id, "locationDescriptor", e.target.value)} placeholder="e.g., Behind elevators, 2nd Floor, Lot B" className="text-sm" />
+                      </div>
                       <div>
                         <Label className="text-xs">Is the charger working?</Label>
                         <div className="flex gap-2 mt-1">
