@@ -186,7 +186,7 @@ export function CompanySearchDropdown({
               />
             </div>
             <div className="min-[400px]:col-span-2">
-              <Button size="sm" onClick={confirmNewCompany} disabled={!search.trim()} className="w-full">
+              <Button type="button" size="sm" onClick={confirmNewCompany} disabled={!search.trim()} className="w-full">
                 Confirm Company
               </Button>
             </div>
