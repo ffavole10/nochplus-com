@@ -396,10 +396,8 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
 
           if (ticketError) throw ticketError;
 
-          // Upload photos and store URLs
-          const photoUrls = await uploadPhotos(ticket.id);
-
           for (const charger of chargers) {
+            const photoUrls = await uploadChargerPhotos(ticket.id, charger.photos);
             await supabase.from("ticket_chargers").insert({
               ticket_id: ticket.id,
               brand: charger.brand,
