@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AddressAutocomplete } from "./AddressAutocomplete";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  ArrowRight, ArrowLeft, CheckCircle2, Plus, Trash2, Loader2, LocateFixed,
+  ArrowRight, ArrowLeft, CheckCircle2, Plus, Trash2, Loader2, LocateFixed, AlertTriangle,
 } from "lucide-react";
 
 const US_STATES = [
@@ -60,6 +61,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [locatingUser, setLocatingUser] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showCloseWarning, setShowCloseWarning] = useState(false);
 
   // Step 1 fields
   const [fullName, setFullName] = useState("");
@@ -258,9 +260,32 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
     }
   };
 
+  const isFormDirty = () => {
+    const hasContactInfo = !!(fullName || companyName || email || phone || streetAddress || city || state || zipCode);
+    const hasChargerInfo = chargers.some(c => !!(c.brand || c.serialNumber || c.chargerType || c.installationLocation || c.knownIssues || c.isWorking || c.underWarranty));
+    const hasNotes = !!(customerNotes || serviceUrgency);
+    return hasContactInfo || hasChargerInfo || hasNotes;
+  };
+
   const handleOpenChange = (val: boolean) => {
+    if (!val && isFormDirty()) {
+      setShowCloseWarning(true);
+      return;
+    }
     if (!val) resetForm();
     onOpenChange(val);
+  };
+
+  const handleDiscard = () => {
+    setShowCloseWarning(false);
+    resetForm();
+    onOpenChange(false);
+  };
+
+  const handleSaveDraft = () => {
+    setShowCloseWarning(false);
+    onOpenChange(false);
+    toast.success("Draft saved — reopen to continue where you left off.");
   };
 
   const StepIndicator = () => (
@@ -281,6 +306,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
   );
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto pointer-events-auto z-[2200]">
         <DialogHeader>
@@ -529,5 +555,31 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
         )}
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
+      <AlertDialogContent className="z-[2500]">
+        <AlertDialogHeader>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+          </div>
+          <AlertDialogDescription>
+            You have unsaved information in this submission. Would you like to keep it as a draft and continue later, or discard everything?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setShowCloseWarning(false)}>
+            Go Back
+          </AlertDialogCancel>
+          <Button variant="destructive" onClick={handleDiscard}>
+            Discard
+          </Button>
+          <AlertDialogAction onClick={handleSaveDraft}>
+            Save as Draft
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
