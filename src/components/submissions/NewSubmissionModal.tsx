@@ -302,10 +302,10 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     } catch { return null; }
   };
 
-  /** Upload submission-level photos to storage */
-  const uploadPhotos = async (recordId: string): Promise<string[]> => {
+  /** Upload photos for a specific charger to storage */
+  const uploadChargerPhotos = async (recordId: string, chargerPhotos: PhotoEntry[]): Promise<string[]> => {
     const urls: string[] = [];
-    for (const photo of photos) {
+    for (const photo of chargerPhotos) {
       try {
         const ext = photo.file.name.split(".").pop() || "jpg";
         const path = `${recordId}/${crypto.randomUUID()}.${ext}`;
