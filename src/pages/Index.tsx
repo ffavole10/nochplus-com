@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useMemo, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { getNetworkStats, Charger, chargerRecordToCharger } from "@/data/chargerData";
 import { chargerRecordToAssessment } from "@/lib/assessmentParser";
 import { getTicketPriorityStats } from "@/lib/ticketPriority";
