@@ -736,6 +736,9 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                         <Input value={charger.installationLocation} onChange={e => updateCharger(charger.id, "installationLocation", e.target.value)} placeholder="e.g., Acme Corp" className="text-sm" />
                       </div>
                       <div>
+                        <Label className="text-xs">Location Detail</Label>
+                        <Input value={charger.locationDescriptor} onChange={e => updateCharger(charger.id, "locationDescriptor", e.target.value)} placeholder="e.g., Behind elevators, 2nd Floor, Lot B" className="text-sm" />
+                      <div>
                         <Label className="text-xs">Is the charger working?</Label>
                         <div className="flex gap-2 mt-1">
                           <Button type="button" size="sm" variant={charger.isWorking === "yes" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "isWorking", "yes")}>Yes</Button>
