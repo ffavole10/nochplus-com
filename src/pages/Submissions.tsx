@@ -56,12 +56,14 @@ interface Submission {
 }
 
 const STATUS_STYLES: Record<string, string> = {
+  draft: "bg-secondary/15 text-secondary border-secondary/30",
   pending_review: "bg-medium/15 text-medium border-medium/30",
   approved: "bg-optimal/15 text-optimal border-optimal/30",
   archived: "bg-muted text-muted-foreground border-border",
 };
 
 const STATUS_LABELS: Record<string, string> = {
+  draft: "Draft",
   pending_review: "Pending",
   approved: "Approved",
   archived: "Archived",
