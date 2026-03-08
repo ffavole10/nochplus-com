@@ -61,6 +61,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [locatingUser, setLocatingUser] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showCloseWarning, setShowCloseWarning] = useState(false);
 
   // Step 1 fields
   const [fullName, setFullName] = useState("");
