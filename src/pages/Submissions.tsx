@@ -157,6 +157,7 @@ export default function Submissions() {
 
   const stats = useMemo(() => ({
     total: submissions.length,
+    drafts: submissions.filter((s) => s.status === "draft").length,
     pending: submissions.filter((s) => s.status === "pending_review").length,
     approved: submissions.filter((s) => s.status === "approved").length,
     totalChargers: submissions.reduce((acc, s) => acc + s.chargers.length, 0),
