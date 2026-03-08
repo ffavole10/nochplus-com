@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, MapPin, Loader2 } from "lucide-react";
 import { AddressAutocomplete } from "@/components/submissions/AddressAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -56,6 +57,7 @@ export function SiteSearchDropdown({
   const [newCity, setNewCity] = useState("");
   const [newState, setNewState] = useState("");
   const [newZip, setNewZip] = useState("");
+  const [saving, setSaving] = useState(false);
 
   // Descriptor suggestions
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -184,18 +186,63 @@ export function SiteSearchDropdown({
     }
   };
 
-  const confirmNewSite = () => {
-    if (!newSiteName.trim()) return;
-    onSiteChange({
-      id: null,
-      siteName: newSiteName.trim(),
-      address: newAddress.trim(),
-      city: newCity.trim(),
-      state: newState,
-      zip: newZip.trim(),
-    });
-    setShowNewForm(false);
-    setSelectedId("__confirmed_new__");
+  const confirmNewSite = async () => {
+    if (!newSiteName.trim() || !companyId) return;
+    setSaving(true);
+    try {
+      if (usePublicEndpoint) {
+        // Public context — no DB insert, just pass values up
+        onSiteChange({
+          id: null,
+          siteName: newSiteName.trim(),
+          address: newAddress.trim(),
+          city: newCity.trim(),
+          state: newState,
+          zip: newZip.trim(),
+        });
+        setShowNewForm(false);
+        setSelectedId("__confirmed_new__");
+      } else {
+        const { data: newLoc, error: insertErr } = await supabase
+          .from("locations" as any)
+          .insert({
+            customer_id: companyId,
+            site_name: newSiteName.trim(),
+            address: newAddress.trim(),
+            city: newCity.trim(),
+            state: newState,
+            zip: newZip.trim(),
+          } as any)
+          .select()
+          .single();
+
+        if (insertErr) throw insertErr;
+
+        const loc = newLoc as unknown as Site;
+        setSites(prev => [...prev, loc].sort((a, b) => a.site_name.localeCompare(b.site_name)));
+        setSelectedId(loc.id);
+        setShowNewForm(false);
+        onSiteChange({
+          id: loc.id,
+          siteName: loc.site_name,
+          address: loc.address,
+          city: loc.city,
+          state: loc.state,
+          zip: loc.zip,
+        });
+        toast.success("Site saved");
+        // Reset new-site fields
+        setNewSiteName("");
+        setNewAddress("");
+        setNewCity("");
+        setNewState("");
+        setNewZip("");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save site");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDescriptorSelect = (value: string) => {
@@ -306,8 +353,8 @@ export function SiteSearchDropdown({
               </div>
             </div>
           </div>
-          <Button size="sm" onClick={confirmNewSite} disabled={!newSiteName.trim()}>
-            Confirm Site
+          <Button size="sm" onClick={confirmNewSite} disabled={!newSiteName.trim() || saving}>
+            {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> Saving...</> : "Confirm Site"}
           </Button>
         </div>
       )}
