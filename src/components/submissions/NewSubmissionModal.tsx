@@ -142,6 +142,8 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     setCustomerNotes("");
     setServiceUrgency("");
     setErrors({});
+    setDraftId(null);
+    setDraftSubmissionId(null);
   };
 
   const formatPhone = (val: string) => {
