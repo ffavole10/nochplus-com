@@ -145,6 +145,24 @@ export function SiteSearchDropdown({
     }
   };
 
+  const fetchHqAddress = async (custId: string) => {
+    try {
+      if (usePublicEndpoint) {
+        // HQ address not critical for public flow
+        setHqAddress(null);
+      } else {
+        const { data } = await supabase
+          .from("customers")
+          .select("headquarters_address")
+          .eq("id", custId)
+          .single();
+        setHqAddress((data as any)?.headquarters_address || null);
+      }
+    } catch {
+      setHqAddress(null);
+    }
+  };
+
   const fetchDescriptors = async (locationId: string) => {
     try {
       if (usePublicEndpoint) {
