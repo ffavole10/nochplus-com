@@ -444,10 +444,8 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
 
           if (subError) throw subError;
 
-          // Upload photos and store URLs
-          const photoUrls = await uploadPhotos(submission.id);
-
           for (const charger of chargers) {
+            const photoUrls = await uploadChargerPhotos(submission.id, charger.photos);
             await supabase.from("assessment_chargers").insert({
               submission_id: submission.id,
               brand: charger.brand,
