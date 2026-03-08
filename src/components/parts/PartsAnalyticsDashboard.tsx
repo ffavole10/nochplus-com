@@ -364,9 +364,9 @@ export function PartsAnalyticsDashboard({ parts, movements, onFilterLowStock, on
         <Card className="hover:shadow-metric-hover transition-shadow">
           <CardContent className="p-5">
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Parts Usage Trend (6 Months)</span>
-            <div className="h-40 mt-3">
-              <ChartContainer config={{ used: { label: "Parts Used", color: "hsl(174, 66%, 42%)" } }}>
-                <LineChart data={analytics.monthlyData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+            <div className="h-44 mt-3">
+              <ChartContainer config={{ used: { label: "Parts Used", color: "hsl(174, 66%, 42%)" } }} className="h-full w-full [&_.recharts-wrapper]:!overflow-hidden">
+                <LineChart data={analytics.monthlyData} margin={{ top: 5, right: 10, bottom: 20, left: 5 }}>
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={30} />
                   <ChartTooltip content={<ChartTooltipContent />} />
