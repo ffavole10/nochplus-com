@@ -414,8 +414,11 @@ export default function SubmitAssessment() {
             is_working: charger.isWorking || null,
             under_warranty: charger.underWarranty || null,
             photo_urls: photoUrls,
+            location_descriptor: locationDescriptor.trim() || null,
           });
         }
+
+        await saveDescriptor(resolvedSiteId, locationDescriptor);
 
         navigate(`/submit/confirmation/${submissionId}`, {
           state: {
