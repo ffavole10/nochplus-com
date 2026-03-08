@@ -781,6 +781,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          location_id: string | null
           noch_plus_member: boolean
           phone: string
           referral_source: string | null
@@ -804,6 +805,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          location_id?: string | null
           noch_plus_member?: boolean
           phone: string
           referral_source?: string | null
@@ -827,6 +829,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          location_id?: string | null
           noch_plus_member?: boolean
           phone?: string
           referral_source?: string | null
@@ -846,6 +849,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "noch_plus_submissions_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -1476,6 +1486,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          location_id: string | null
           oem_ticket_exists: string | null
           oem_ticket_number: string | null
           phone: string
@@ -1498,6 +1509,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          location_id?: string | null
           oem_ticket_exists?: string | null
           oem_ticket_number?: string | null
           phone: string
@@ -1520,6 +1532,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          location_id?: string | null
           oem_ticket_exists?: string | null
           oem_ticket_number?: string | null
           phone?: string
@@ -1539,6 +1552,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_tickets_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
