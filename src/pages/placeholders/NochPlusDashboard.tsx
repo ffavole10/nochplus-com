@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Diamond, Users, DollarSign, TrendingDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { NochPlusMap } from "@/components/noch-plus/NochPlusMap";
