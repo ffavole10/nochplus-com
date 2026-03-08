@@ -160,7 +160,6 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     setSiteZip("");
     setLocationDescriptor("");
     setChargers([createEmptyCharger()]);
-    setPhotos([]);
     setCustomerNotes("");
     setServiceUrgency("");
     setErrors({});
