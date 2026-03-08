@@ -114,9 +114,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
   // Step 2 fields
   const [chargers, setChargers] = useState<ChargerEntry[]>([createEmptyCharger()]);
 
-  // Photos (submission-level)
-  const [photos, setPhotos] = useState<PhotoEntry[]>([]);
-  const [dragOver, setDragOver] = useState(false);
+  // Photos are now per-charger (charger.photos)
 
   // Step 3 fields
   const [customerNotes, setCustomerNotes] = useState("");
