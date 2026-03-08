@@ -83,6 +83,7 @@ export default function Submissions() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [newSubmissionOpen, setNewSubmissionOpen] = useState(false);
+  const [editingDraft, setEditingDraft] = useState<any>(null);
 
   // Assessment state
   const [assessmentStatus, setAssessmentStatus] = useState<"idle" | "running" | "done">("idle");
