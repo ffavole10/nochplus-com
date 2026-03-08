@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { ChargerDetailModal } from "@/components/assessment/ChargerDetailModal";
 import { TicketsView } from "@/components/assessment/TicketsView";
 import { useChargerRecords } from "@/hooks/useCampaigns";
