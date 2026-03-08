@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { ScheduleView } from "@/components/schedule/ScheduleView";
 import { useAssessmentData } from "@/hooks/useAssessmentData";
 import { useCampaignManager } from "@/hooks/useCampaignManager";
