@@ -482,7 +482,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     const hasContactInfo = !!(fullName || companyName || email || phone || siteName);
     const hasChargerInfo = chargers.some(c => !!(c.brand || c.serialNumber || c.chargerType || c.installationLocation || c.knownIssues || c.isWorking || c.underWarranty));
     const hasNotes = !!(customerNotes || serviceUrgency);
-    const hasPhotos = photos.length > 0;
+    const hasPhotos = chargers.some(c => c.photos.length > 0);
     return hasContactInfo || hasChargerInfo || hasNotes || hasPhotos;
   };
 
