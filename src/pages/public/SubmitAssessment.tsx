@@ -468,7 +468,7 @@ export default function SubmitAssessment() {
               className="group flex flex-col items-center text-center gap-4 p-8 rounded-xl border-2 border-border bg-card hover:border-primary hover:shadow-lg transition-all cursor-pointer"
             >
               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <ClipboardSearch className="h-7 w-7 text-primary" />
+                <Search className="h-7 w-7 text-primary" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-foreground mb-1">Site Assessment</h2>
