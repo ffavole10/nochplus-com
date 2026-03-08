@@ -39,6 +39,8 @@ interface ChargerEntry {
   knownIssues: string;
   isWorking: string;
   underWarranty: string;
+  photos: PhotoEntry[];
+  dragOver: boolean;
 }
 
 const createEmptyCharger = (): ChargerEntry => ({
@@ -51,6 +53,8 @@ const createEmptyCharger = (): ChargerEntry => ({
   knownIssues: "",
   isWorking: "",
   underWarranty: "",
+  photos: [],
+  dragOver: false,
 });
 
 type Step = 1 | 2 | 3;
