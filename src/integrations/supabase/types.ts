@@ -134,6 +134,53 @@ export type Database = {
         }
         Relationships: []
       }
+      assessment_chargers: {
+        Row: {
+          brand: string
+          charger_type: string
+          created_at: string
+          id: string
+          installation_location: string | null
+          known_issues: string | null
+          photo_urls: string[] | null
+          serial_number: string | null
+          status: string
+          submission_id: string
+        }
+        Insert: {
+          brand: string
+          charger_type: string
+          created_at?: string
+          id?: string
+          installation_location?: string | null
+          known_issues?: string | null
+          photo_urls?: string[] | null
+          serial_number?: string | null
+          status?: string
+          submission_id: string
+        }
+        Update: {
+          brand?: string
+          charger_type?: string
+          created_at?: string
+          id?: string
+          installation_location?: string | null
+          known_issues?: string | null
+          photo_urls?: string[] | null
+          serial_number?: string | null
+          status?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_chargers_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "noch_plus_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string
@@ -717,6 +764,86 @@ export type Database = {
           {
             foreignKeyName: "locations_customer_id_fkey"
             columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      noch_plus_submissions: {
+        Row: {
+          assessment_needs: string[] | null
+          city: string
+          company_id: string | null
+          company_name: string
+          created_at: string
+          customer_notes: string | null
+          email: string
+          full_name: string
+          id: string
+          noch_plus_member: boolean
+          phone: string
+          referral_source: string | null
+          service_urgency: string | null
+          staff_notes: string | null
+          state: string
+          status: string
+          street_address: string
+          submission_id: string
+          submission_type: string
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          assessment_needs?: string[] | null
+          city: string
+          company_id?: string | null
+          company_name: string
+          created_at?: string
+          customer_notes?: string | null
+          email: string
+          full_name: string
+          id?: string
+          noch_plus_member?: boolean
+          phone: string
+          referral_source?: string | null
+          service_urgency?: string | null
+          staff_notes?: string | null
+          state: string
+          status?: string
+          street_address: string
+          submission_id: string
+          submission_type?: string
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          assessment_needs?: string[] | null
+          city?: string
+          company_id?: string | null
+          company_name?: string
+          created_at?: string
+          customer_notes?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          noch_plus_member?: boolean
+          phone?: string
+          referral_source?: string | null
+          service_urgency?: string | null
+          staff_notes?: string | null
+          state?: string
+          status?: string
+          street_address?: string
+          submission_id?: string
+          submission_type?: string
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "noch_plus_submissions_company_id_fkey"
+            columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
@@ -1339,6 +1466,83 @@ export type Database = {
         }
         Relationships: []
       }
+      service_tickets: {
+        Row: {
+          city: string
+          company_id: string | null
+          company_name: string
+          created_at: string
+          customer_notes: string | null
+          email: string
+          full_name: string
+          id: string
+          oem_ticket_exists: string | null
+          oem_ticket_number: string | null
+          phone: string
+          service_urgency: string | null
+          source: string
+          staff_notes: string | null
+          state: string
+          status: string
+          street_address: string | null
+          ticket_id: string
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          city: string
+          company_id?: string | null
+          company_name: string
+          created_at?: string
+          customer_notes?: string | null
+          email: string
+          full_name: string
+          id?: string
+          oem_ticket_exists?: string | null
+          oem_ticket_number?: string | null
+          phone: string
+          service_urgency?: string | null
+          source?: string
+          staff_notes?: string | null
+          state: string
+          status?: string
+          street_address?: string | null
+          ticket_id: string
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          city?: string
+          company_id?: string | null
+          company_name?: string
+          created_at?: string
+          customer_notes?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          oem_ticket_exists?: string | null
+          oem_ticket_number?: string | null
+          phone?: string
+          service_urgency?: string | null
+          source?: string
+          staff_notes?: string | null
+          state?: string
+          status?: string
+          street_address?: string | null
+          ticket_id?: string
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_tickets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           balance_after: number
@@ -1639,6 +1843,56 @@ export type Database = {
           work_schedule?: Json
         }
         Relationships: []
+      }
+      ticket_chargers: {
+        Row: {
+          brand: string
+          charger_type: string
+          created_at: string
+          id: string
+          installation_location: string | null
+          is_working: string | null
+          known_issues: string | null
+          photo_urls: string[] | null
+          serial_number: string | null
+          ticket_id: string
+          under_warranty: string | null
+        }
+        Insert: {
+          brand: string
+          charger_type: string
+          created_at?: string
+          id?: string
+          installation_location?: string | null
+          is_working?: string | null
+          known_issues?: string | null
+          photo_urls?: string[] | null
+          serial_number?: string | null
+          ticket_id: string
+          under_warranty?: string | null
+        }
+        Update: {
+          brand?: string
+          charger_type?: string
+          created_at?: string
+          id?: string
+          installation_location?: string | null
+          is_working?: string | null
+          known_issues?: string | null
+          photo_urls?: string[] | null
+          serial_number?: string | null
+          ticket_id?: string
+          under_warranty?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_chargers_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "service_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
