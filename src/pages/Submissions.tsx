@@ -56,12 +56,14 @@ interface Submission {
 }
 
 const STATUS_STYLES: Record<string, string> = {
+  draft: "bg-secondary/15 text-secondary border-secondary/30",
   pending_review: "bg-medium/15 text-medium border-medium/30",
   approved: "bg-optimal/15 text-optimal border-optimal/30",
   archived: "bg-muted text-muted-foreground border-border",
 };
 
 const STATUS_LABELS: Record<string, string> = {
+  draft: "Draft",
   pending_review: "Pending",
   approved: "Approved",
   archived: "Archived",
@@ -81,6 +83,7 @@ export default function Submissions() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [newSubmissionOpen, setNewSubmissionOpen] = useState(false);
+  const [editingDraft, setEditingDraft] = useState<any>(null);
 
   // Assessment state
   const [assessmentStatus, setAssessmentStatus] = useState<"idle" | "running" | "done">("idle");
@@ -154,6 +157,7 @@ export default function Submissions() {
 
   const stats = useMemo(() => ({
     total: submissions.length,
+    drafts: submissions.filter((s) => s.status === "draft").length,
     pending: submissions.filter((s) => s.status === "pending_review").length,
     approved: submissions.filter((s) => s.status === "approved").length,
     totalChargers: submissions.reduce((acc, s) => acc + s.chargers.length, 0),
@@ -162,6 +166,11 @@ export default function Submissions() {
   const hasPhotos = (s: Submission) => s.chargers.some((c) => c.photo_urls && c.photo_urls.length > 0);
 
   const openDetail = (sub: Submission) => {
+    // If draft, open the modal for editing instead
+    if (sub.status === "draft") {
+      openDraftForEditing(sub);
+      return;
+    }
     setSelectedSubmission(sub);
     setActiveChargerIndex(0);
     setIsEditing(false);
@@ -169,7 +178,6 @@ export default function Submissions() {
     setEditChargers([]);
     setAssessmentStatus("idle");
     setAssessmentPdfBlob(null);
-    // Initialize per-charger state from DB values
     const statuses: Record<string, string> = {};
     const serviceNeeded: Record<string, boolean | null> = {};
     const notes: Record<string, string> = {};
@@ -181,6 +189,35 @@ export default function Submissions() {
     setChargerStatuses(statuses);
     setChargerServiceNeeded(serviceNeeded);
     setChargerNotes(notes);
+  };
+
+  const openDraftForEditing = (sub: Submission) => {
+    setEditingDraft({
+      id: sub.id,
+      submissionId: sub.submission_id,
+      fullName: sub.full_name === "Draft" ? "" : sub.full_name,
+      companyName: sub.company_name === "Draft" ? "" : sub.company_name,
+      email: sub.email === "draft@placeholder.com" ? "" : sub.email,
+      phone: sub.phone === "0000000000" ? "" : sub.phone,
+      streetAddress: sub.street_address,
+      city: sub.city === "—" ? "" : sub.city,
+      state: sub.state === "—" ? "" : sub.state,
+      zipCode: sub.zip_code === "00000" ? "" : sub.zip_code,
+      chargers: sub.chargers.map(c => ({
+        id: c.id,
+        brand: c.brand === "Unknown" ? "" : c.brand,
+        serialNumber: c.serial_number || "",
+        chargerType: c.charger_type || "",
+        installationLocation: c.installation_location || "",
+        knownIssues: c.known_issues || "",
+        isWorking: "",
+        underWarranty: "",
+      })),
+      customerNotes: sub.customer_notes || "",
+      serviceUrgency: sub.service_urgency || "",
+      step: 1,
+    });
+    setNewSubmissionOpen(true);
   };
 
   const startEditing = () => {
@@ -959,6 +996,7 @@ export default function Submissions() {
         <Tabs value={statusFilter} onValueChange={setStatusFilter}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="draft">Drafts{stats.drafts > 0 ? ` (${stats.drafts})` : ""}</TabsTrigger>
             <TabsTrigger value="pending_review">Pending</TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="archived">Archived</TabsTrigger>
@@ -971,8 +1009,12 @@ export default function Submissions() {
 
       <NewSubmissionModal
         open={newSubmissionOpen}
-        onOpenChange={setNewSubmissionOpen}
+        onOpenChange={(val) => {
+          setNewSubmissionOpen(val);
+          if (!val) setEditingDraft(null);
+        }}
         onSubmitted={fetchSubmissions}
+        draftData={editingDraft}
       />
 
       {/* Table */}
@@ -1025,8 +1067,11 @@ export default function Submissions() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" className="gap-1.5" onClick={(e) => { e.stopPropagation(); openDetail(sub); }}>
-                      <Eye className="h-4 w-4" />
-                      View
+                      {sub.status === "draft" ? (
+                        <><Pencil className="h-4 w-4" />Resume</>
+                      ) : (
+                        <><Eye className="h-4 w-4" />View</>
+                      )}
                     </Button>
                   </TableCell>
                 </TableRow>

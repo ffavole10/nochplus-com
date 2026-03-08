@@ -50,18 +50,38 @@ const createEmptyCharger = (): ChargerEntry => ({
 
 type Step = 1 | 2 | 3;
 
+interface DraftData {
+  id: string;
+  submissionId: string;
+  fullName: string;
+  companyName: string;
+  email: string;
+  phone: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  chargers: ChargerEntry[];
+  customerNotes: string;
+  serviceUrgency: string;
+  step: Step;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmitted: () => void;
+  draftData?: DraftData | null;
 }
 
-export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
+export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData }: Props) {
   const [step, setStep] = useState<Step>(1);
   const [submitting, setSubmitting] = useState(false);
   const [locatingUser, setLocatingUser] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showCloseWarning, setShowCloseWarning] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(null);
 
   // Step 1 fields
   const [fullName, setFullName] = useState("");
@@ -80,6 +100,34 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
   const [customerNotes, setCustomerNotes] = useState("");
   const [serviceUrgency, setServiceUrgency] = useState("");
 
+  // Load draft data when provided
+  const loadDraft = (draft: DraftData) => {
+    setDraftId(draft.id);
+    setDraftSubmissionId(draft.submissionId);
+    setFullName(draft.fullName);
+    setCompanyName(draft.companyName);
+    setEmail(draft.email);
+    setPhone(draft.phone);
+    setStreetAddress(draft.streetAddress);
+    setCity(draft.city);
+    setState(draft.state);
+    setZipCode(draft.zipCode);
+    setChargers(draft.chargers.length > 0 ? draft.chargers : [createEmptyCharger()]);
+    setCustomerNotes(draft.customerNotes);
+    setServiceUrgency(draft.serviceUrgency);
+    setStep(draft.step || 1);
+  };
+
+  // When modal opens with draft data, populate fields
+  useState(() => {
+    if (draftData && open) loadDraft(draftData);
+  });
+
+  // Watch for draftData changes
+  if (draftData && open && draftId !== draftData.id) {
+    loadDraft(draftData);
+  }
+
   const resetForm = () => {
     setStep(1);
     setFullName("");
@@ -94,6 +142,8 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
     setCustomerNotes("");
     setServiceUrgency("");
     setErrors({});
+    setDraftId(null);
+    setDraftSubmissionId(null);
   };
 
   const formatPhone = (val: string) => {
@@ -209,14 +259,9 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const year = new Date().getFullYear();
-      const hex = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
-      const submissionId = `NP-${year}-${hex}`;
-
-      const { data: submission, error: subError } = await supabase
-        .from("submissions")
-        .insert({
-          submission_id: submissionId,
+      if (draftId) {
+        // Update existing draft → pending_review
+        await supabase.from("submissions").update({
           full_name: fullName.trim(),
           company_name: companyName.trim(),
           email: email.trim().toLowerCase(),
@@ -225,30 +270,68 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
           city: city.trim(),
           state,
           zip_code: zipCode.trim() || "00000",
-          referral_source: "manual_entry",
-          assessment_needs: null,
           service_urgency: serviceUrgency || null,
           customer_notes: customerNotes.trim() || null,
-          noch_plus_member: false,
-        })
-        .select()
-        .single();
+          status: "pending_review",
+        }).eq("id", draftId);
 
-      if (subError) throw subError;
+        // Replace chargers
+        await supabase.from("charger_submissions").delete().eq("submission_id", draftId);
+        for (const charger of chargers) {
+          await supabase.from("charger_submissions").insert({
+            submission_id: draftId,
+            brand: charger.brand,
+            serial_number: charger.serialNumber || null,
+            charger_type: charger.chargerType,
+            installation_location: charger.installationLocation || null,
+            known_issues: charger.knownIssues || null,
+          });
+        }
 
-      for (const charger of chargers) {
-        const { error: chError } = await supabase.from("charger_submissions").insert({
-          submission_id: submission.id,
-          brand: charger.brand,
-          serial_number: charger.serialNumber || null,
-          charger_type: charger.chargerType,
-          installation_location: charger.installationLocation || null,
-          known_issues: charger.knownIssues || null,
-        });
-        if (chError) throw chError;
+        toast.success(`Submission ${draftSubmissionId} submitted successfully.`);
+      } else {
+        const year = new Date().getFullYear();
+        const hex = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
+        const submissionId = `NP-${year}-${hex}`;
+
+        const { data: submission, error: subError } = await supabase
+          .from("submissions")
+          .insert({
+            submission_id: submissionId,
+            full_name: fullName.trim(),
+            company_name: companyName.trim(),
+            email: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            street_address: streetAddress.trim() || city.trim(),
+            city: city.trim(),
+            state,
+            zip_code: zipCode.trim() || "00000",
+            referral_source: "manual_entry",
+            assessment_needs: null,
+            service_urgency: serviceUrgency || null,
+            customer_notes: customerNotes.trim() || null,
+            noch_plus_member: false,
+          })
+          .select()
+          .single();
+
+        if (subError) throw subError;
+
+        for (const charger of chargers) {
+          const { error: chError } = await supabase.from("charger_submissions").insert({
+            submission_id: submission.id,
+            brand: charger.brand,
+            serial_number: charger.serialNumber || null,
+            charger_type: charger.chargerType,
+            installation_location: charger.installationLocation || null,
+            known_issues: charger.knownIssues || null,
+          });
+          if (chError) throw chError;
+        }
+
+        toast.success(`Submission ${submissionId} created successfully.`);
       }
 
-      toast.success(`Submission ${submissionId} created successfully.`);
       resetForm();
       onOpenChange(false);
       onSubmitted();
@@ -276,16 +359,95 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
     onOpenChange(val);
   };
 
-  const handleDiscard = () => {
+  const handleDiscard = async () => {
     setShowCloseWarning(false);
+    // If this was a persisted draft, delete it
+    if (draftId) {
+      await supabase.from("charger_submissions").delete().eq("submission_id", draftId);
+      await supabase.from("submissions").delete().eq("id", draftId);
+    }
     resetForm();
     onOpenChange(false);
+    onSubmitted();
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     setShowCloseWarning(false);
-    onOpenChange(false);
-    toast.success("Draft saved — reopen to continue where you left off.");
+    try {
+      const subId = draftSubmissionId || (() => {
+        const year = new Date().getFullYear();
+        const hex = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
+        return `NP-${year}-${hex}`;
+      })();
+
+      if (draftId) {
+        // Update existing draft
+        await supabase.from("submissions").update({
+          full_name: fullName.trim() || "Draft",
+          company_name: companyName.trim() || "Draft",
+          email: email.trim() || "draft@placeholder.com",
+          phone: phone.trim() || "0000000000",
+          street_address: streetAddress.trim() || "",
+          city: city.trim() || "—",
+          state: state || "—",
+          zip_code: zipCode.trim() || "00000",
+          customer_notes: customerNotes || null,
+          service_urgency: serviceUrgency || null,
+          status: "draft",
+        }).eq("id", draftId);
+
+        // Delete old chargers and re-insert
+        await supabase.from("charger_submissions").delete().eq("submission_id", draftId);
+        for (const ch of chargers) {
+          await supabase.from("charger_submissions").insert({
+            submission_id: draftId,
+            brand: ch.brand || "Unknown",
+            charger_type: ch.chargerType || "AC | Level 2",
+            serial_number: ch.serialNumber || null,
+            installation_location: ch.installationLocation || null,
+            known_issues: ch.knownIssues || null,
+          });
+        }
+      } else {
+        // Create new draft
+        const { data: submission, error } = await supabase.from("submissions").insert({
+          submission_id: subId,
+          full_name: fullName.trim() || "Draft",
+          company_name: companyName.trim() || "Draft",
+          email: email.trim() || "draft@placeholder.com",
+          phone: phone.trim() || "0000000000",
+          street_address: streetAddress.trim() || "",
+          city: city.trim() || "—",
+          state: state || "—",
+          zip_code: zipCode.trim() || "00000",
+          referral_source: "manual_entry",
+          customer_notes: customerNotes || null,
+          service_urgency: serviceUrgency || null,
+          status: "draft",
+        }).select("id").single();
+
+        if (error) throw error;
+
+        for (const ch of chargers) {
+          await supabase.from("charger_submissions").insert({
+            submission_id: submission.id,
+            brand: ch.brand || "Unknown",
+            charger_type: ch.chargerType || "AC | Level 2",
+            serial_number: ch.serialNumber || null,
+            installation_location: ch.installationLocation || null,
+            known_issues: ch.knownIssues || null,
+          });
+        }
+      }
+
+      resetForm();
+      onOpenChange(false);
+      onSubmitted();
+      toast.success("Draft saved — you can resume it anytime.");
+    } catch (err: any) {
+      console.error("Draft save error:", err);
+      toast.error(`Failed to save draft: ${err.message}`);
+    }
   };
 
   const StepIndicator = () => (
