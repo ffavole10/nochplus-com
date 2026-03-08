@@ -11,10 +11,9 @@ interface Company {
 }
 
 interface CompanySearchDropdownProps {
-  value: string; // company name string
+  value: string;
   companyId: string | null;
   onChange: (companyName: string, companyId: string | null) => void;
-  /** If true, fetches via edge function (no auth needed). Otherwise queries directly. */
   usePublicEndpoint?: boolean;
   error?: string;
 }
@@ -31,17 +30,15 @@ export function CompanySearchDropdown({
   const [search, setSearch] = useState(value);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
-  const [newCompanyName, setNewCompanyName] = useState("");
-  const [newSiteAddress, setNewSiteAddress] = useState("");
   const [newContactName, setNewContactName] = useState("");
   const [newContactEmail, setNewContactEmail] = useState("");
+  const [newContactPhone, setNewContactPhone] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchCompanies();
   }, []);
 
-  // Sync external value
   useEffect(() => {
     if (value !== search && !showDropdown) {
       setSearch(value);
@@ -86,19 +83,15 @@ export function CompanySearchDropdown({
   const handleCreateNew = () => {
     setShowNewForm(true);
     setShowDropdown(false);
-    setNewCompanyName(search);
   };
 
   const confirmNewCompany = () => {
-    const name = newCompanyName.trim();
+    const name = search.trim();
     if (!name) return;
-    // Store new company details — actual DB insert happens on form submit
     onChange(name, null);
-    setSearch(name);
     setShowNewForm(false);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -108,11 +101,6 @@ export function CompanySearchDropdown({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
-  // Expose new company details via a data attribute for the parent to read
-  const newCompanyData = showNewForm
-    ? { name: newCompanyName, address: newSiteAddress, contactName: newContactName, contactEmail: newContactEmail }
-    : null;
 
   return (
     <div ref={containerRef} className="relative">
@@ -125,7 +113,6 @@ export function CompanySearchDropdown({
             setSearch(e.target.value);
             setShowDropdown(true);
             setShowNewForm(false);
-            // Clear selection if typing
             if (companyId) onChange(e.target.value, null);
           }}
           onFocus={() => setShowDropdown(true)}
@@ -166,26 +153,10 @@ export function CompanySearchDropdown({
 
       {showNewForm && (
         <div className="mt-3 p-3 border border-border rounded-lg bg-muted/30 space-y-3">
-          <p className="text-xs font-medium text-muted-foreground">New Company Details</p>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs">Company Name *</Label>
-              <Input
-                value={newCompanyName}
-                onChange={(e) => setNewCompanyName(e.target.value)}
-                placeholder="Company name"
-                className="text-sm"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Site Address</Label>
-              <Input
-                value={newSiteAddress}
-                onChange={(e) => setNewSiteAddress(e.target.value)}
-                placeholder="Optional"
-                className="text-sm"
-              />
-            </div>
+          <p className="text-xs font-medium text-muted-foreground">
+            New Company: <span className="text-foreground font-semibold">{search.trim() || "—"}</span>
+          </p>
+          <div className="grid sm:grid-cols-3 gap-3">
             <div>
               <Label className="text-xs">Contact Name</Label>
               <Input
@@ -205,8 +176,17 @@ export function CompanySearchDropdown({
                 className="text-sm"
               />
             </div>
+            <div>
+              <Label className="text-xs">Contact Phone</Label>
+              <Input
+                value={newContactPhone}
+                onChange={(e) => setNewContactPhone(e.target.value)}
+                placeholder="Optional"
+                className="text-sm"
+              />
+            </div>
           </div>
-          <Button size="sm" onClick={confirmNewCompany} disabled={!newCompanyName.trim()}>
+          <Button size="sm" onClick={confirmNewCompany} disabled={!search.trim()}>
             Confirm Company
           </Button>
         </div>

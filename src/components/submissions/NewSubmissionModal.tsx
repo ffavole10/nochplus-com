@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { AddressAutocomplete } from "./AddressAutocomplete";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -13,19 +12,22 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  ArrowRight, ArrowLeft, CheckCircle2, Plus, Trash2, Loader2, LocateFixed, AlertTriangle,
+  ArrowRight, ArrowLeft, CheckCircle2, Plus, Trash2, Loader2, AlertTriangle, X, Camera, ImagePlus,
 } from "lucide-react";
 import { CompanySearchDropdown } from "@/components/shared/CompanySearchDropdown";
-
-const US_STATES = [
-  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
-  "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
-  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
-  "VA","WA","WV","WI","WY","DC"
-];
+import { SiteSearchDropdown } from "@/components/shared/SiteSearchDropdown";
 
 const CHARGER_BRANDS = ["BTC", "ABB", "Delta", "Tritium", "Signet", "ChargePoint", "Other"];
 const CHARGER_TYPES = ["AC | Level 2", "DC | Level 3"];
+
+const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+const MAX_PHOTO_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_PHOTOS = 10;
+
+interface PhotoEntry {
+  file: File;
+  previewUrl: string;
+}
 
 interface ChargerEntry {
   id: string;
@@ -79,7 +81,6 @@ interface Props {
 export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData }: Props) {
   const [step, setStep] = useState<Step>(1);
   const [submitting, setSubmitting] = useState(false);
-  const [locatingUser, setLocatingUser] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showCloseWarning, setShowCloseWarning] = useState(false);
   const [draftId, setDraftId] = useState<string | null>(null);
@@ -94,13 +95,20 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [streetAddress, setStreetAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zipCode, setZipCode] = useState("");
+
+  // Site fields
+  const [siteId, setSiteId] = useState<string | null>(null);
+  const [siteName, setSiteName] = useState("");
+  const [siteAddress, setSiteAddress] = useState("");
+  const [siteCity, setSiteCity] = useState("");
+  const [siteState, setSiteState] = useState("");
+  const [siteZip, setSiteZip] = useState("");
 
   // Step 2 fields
   const [chargers, setChargers] = useState<ChargerEntry[]>([createEmptyCharger()]);
+
+  // Photos (submission-level)
+  const [photos, setPhotos] = useState<PhotoEntry[]>([]);
 
   // Step 3 fields
   const [customerNotes, setCustomerNotes] = useState("");
@@ -114,10 +122,6 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     setCompanyName(draft.companyName);
     setEmail(draft.email);
     setPhone(draft.phone);
-    setStreetAddress(draft.streetAddress);
-    setCity(draft.city);
-    setState(draft.state);
-    setZipCode(draft.zipCode);
     setChargers(draft.chargers.length > 0 ? draft.chargers : [createEmptyCharger()]);
     setCustomerNotes(draft.customerNotes);
     setServiceUrgency(draft.serviceUrgency);
@@ -142,11 +146,14 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     setCompanyId(null);
     setEmail("");
     setPhone("");
-    setStreetAddress("");
-    setCity("");
-    setState("");
-    setZipCode("");
+    setSiteId(null);
+    setSiteName("");
+    setSiteAddress("");
+    setSiteCity("");
+    setSiteState("");
+    setSiteZip("");
     setChargers([createEmptyCharger()]);
+    setPhotos([]);
     setCustomerNotes("");
     setServiceUrgency("");
     setErrors({});
@@ -175,58 +182,38 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     setChargers(prev => prev.filter(c => c.id !== id));
   };
 
-  const useCurrentLocation = async () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser.");
+  // Photo handlers
+  const handlePhotoAdd = (files: FileList | null) => {
+    if (!files) return;
+    const valid = Array.from(files).filter(f => {
+      if (!ALLOWED_PHOTO_TYPES.includes(f.type)) {
+        toast.error(`${f.name}: Invalid format. Use JPG, PNG, WebP, or HEIC.`);
+        return false;
+      }
+      if (f.size > MAX_PHOTO_SIZE) {
+        toast.error(`${f.name}: Too large. Max 10MB per photo.`);
+        return false;
+      }
+      return true;
+    });
+    if (photos.length + valid.length > MAX_PHOTOS) {
+      toast.error(`Maximum ${MAX_PHOTOS} photos allowed.`);
       return;
     }
-    setLocatingUser(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
-            { headers: { "User-Agent": "NOCHPlusApp/1.0" } }
-          );
-          if (res.ok) {
-            const data = await res.json();
-            const addr = data.address || {};
-            const road = [addr.house_number, addr.road].filter(Boolean).join(" ");
-            if (road) setStreetAddress(road);
-            if (addr.city || addr.town || addr.village) setCity(addr.city || addr.town || addr.village);
-            if (addr.state) {
-              const stateMap: Record<string, string> = {
-                "alabama":"AL","alaska":"AK","arizona":"AZ","arkansas":"AR","california":"CA","colorado":"CO",
-                "connecticut":"CT","delaware":"DE","florida":"FL","georgia":"GA","hawaii":"HI","idaho":"ID",
-                "illinois":"IL","indiana":"IN","iowa":"IA","kansas":"KS","kentucky":"KY","louisiana":"LA",
-                "maine":"ME","maryland":"MD","massachusetts":"MA","michigan":"MI","minnesota":"MN",
-                "mississippi":"MS","missouri":"MO","montana":"MT","nebraska":"NE","nevada":"NV",
-                "new hampshire":"NH","new jersey":"NJ","new mexico":"NM","new york":"NY",
-                "north carolina":"NC","north dakota":"ND","ohio":"OH","oklahoma":"OK","oregon":"OR",
-                "pennsylvania":"PA","rhode island":"RI","south carolina":"SC","south dakota":"SD",
-                "tennessee":"TN","texas":"TX","utah":"UT","vermont":"VT","virginia":"VA",
-                "washington":"WA","west virginia":"WV","wisconsin":"WI","wyoming":"WY",
-                "district of columbia":"DC"
-              };
-              const matched = stateMap[addr.state.toLowerCase()] || "";
-              if (matched) setState(matched);
-            }
-            if (addr.postcode) setZipCode(addr.postcode.split("-")[0]);
-            toast.success("Location detected!");
-          }
-        } catch {
-          toast.error("Could not determine address.");
-        } finally {
-          setLocatingUser(false);
-        }
-      },
-      () => {
-        toast.error("Location access denied.");
-        setLocatingUser(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+    const newEntries: PhotoEntry[] = valid.map(f => ({
+      file: f,
+      previewUrl: URL.createObjectURL(f),
+    }));
+    setPhotos(prev => [...prev, ...newEntries]);
+  };
+
+  const removeSubmissionPhoto = (index: number) => {
+    setPhotos(prev => {
+      const copy = [...prev];
+      URL.revokeObjectURL(copy[index].previewUrl);
+      copy.splice(index, 1);
+      return copy;
+    });
   };
 
   const validateStep1 = () => {
@@ -235,8 +222,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     if (!companyName.trim()) e.companyName = "Company name is required";
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = "Valid email is required";
     if (!phone.trim() || phone.replace(/\D/g, "").length < 10) e.phone = "Valid phone is required";
-    if (!city.trim()) e.city = "City is required";
-    if (!state) e.state = "State is required";
+    if (!siteId && !siteName.trim()) e.site = "Please select or add a site";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -276,7 +262,6 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
           contact_name: fullName.trim(),
           email: email.trim().toLowerCase(),
           phone: phone.trim(),
-          address: [streetAddress, city, state, zipCode].filter(Boolean).join(", "),
         })
         .select("id")
         .single();
@@ -285,10 +270,51 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     } catch { return null; }
   };
 
+  /** Create a new location if no siteId exists */
+  const resolveSiteId = async (custId: string): Promise<string | null> => {
+    if (siteId) return siteId;
+    if (!siteName.trim()) return null;
+    try {
+      const { data, error } = await supabase
+        .from("locations" as any)
+        .insert({
+          customer_id: custId,
+          site_name: siteName.trim(),
+          address: siteAddress.trim(),
+          city: siteCity.trim(),
+          state: siteState,
+          zip: siteZip.trim(),
+        } as any)
+        .select("id")
+        .single();
+      if (error) { console.error("Location creation error:", error); return null; }
+      return (data as any)?.id || null;
+    } catch { return null; }
+  };
+
+  /** Upload submission-level photos to storage */
+  const uploadPhotos = async (recordId: string): Promise<string[]> => {
+    const urls: string[] = [];
+    for (const photo of photos) {
+      try {
+        const ext = photo.file.name.split(".").pop() || "jpg";
+        const path = `${recordId}/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage
+          .from("submission-photos")
+          .upload(path, photo.file, { contentType: photo.file.type, upsert: false });
+        if (!error) urls.push(path);
+      } catch (err) {
+        console.error("Photo upload error:", err);
+      }
+    }
+    return urls;
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
       const resolvedCompanyId = await resolveCompanyId();
+      const resolvedSiteId = resolvedCompanyId ? await resolveSiteId(resolvedCompanyId) : null;
 
       if (draftId) {
         // Update existing draft → pending_review (legacy path for old drafts)
@@ -297,10 +323,10 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
           company_name: companyName.trim(),
           email: email.trim().toLowerCase(),
           phone: phone.trim(),
-          street_address: streetAddress.trim() || city.trim(),
-          city: city.trim(),
-          state,
-          zip_code: zipCode.trim() || "00000",
+          street_address: siteAddress.trim() || siteName.trim(),
+          city: siteCity.trim() || siteName.trim(),
+          state: siteState || "—",
+          zip_code: siteZip.trim() || "00000",
           service_urgency: serviceUrgency || null,
           customer_notes: customerNotes.trim() || null,
           status: "pending_review",
@@ -325,7 +351,6 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
         const submissionId = `NP-${year}-${hex}`;
 
         if (submissionType === "repair") {
-          // Insert into service_tickets
           const { data: ticket, error: ticketError } = await supabase
             .from("service_tickets")
             .insert({
@@ -337,17 +362,21 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               full_name: fullName.trim(),
               email: email.trim().toLowerCase(),
               phone: phone.trim(),
-              street_address: streetAddress.trim() || null,
-              city: city.trim(),
-              state,
-              zip_code: zipCode.trim() || null,
+              street_address: siteAddress.trim() || null,
+              city: siteCity.trim() || siteName.trim(),
+              state: siteState || "—",
+              zip_code: siteZip.trim() || null,
               customer_notes: customerNotes.trim() || null,
               service_urgency: serviceUrgency || null,
-            })
+              location_id: resolvedSiteId,
+            } as any)
             .select()
             .single();
 
           if (ticketError) throw ticketError;
+
+          // Upload photos and store URLs
+          const photoUrls = await uploadPhotos(ticket.id);
 
           for (const charger of chargers) {
             await supabase.from("ticket_chargers").insert({
@@ -359,12 +388,12 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               known_issues: charger.knownIssues || null,
               is_working: charger.isWorking || null,
               under_warranty: charger.underWarranty || null,
+              photo_urls: photoUrls,
             });
           }
 
           toast.success(`Repair ticket ${submissionId} created successfully.`);
         } else {
-          // Insert into noch_plus_submissions
           const { data: submission, error: subError } = await supabase
             .from("noch_plus_submissions")
             .insert({
@@ -375,19 +404,23 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               company_name: companyName.trim(),
               email: email.trim().toLowerCase(),
               phone: phone.trim(),
-              street_address: streetAddress.trim() || city.trim(),
-              city: city.trim(),
-              state,
-              zip_code: zipCode.trim() || "00000",
+              street_address: siteAddress.trim() || siteName.trim(),
+              city: siteCity.trim() || siteName.trim(),
+              state: siteState || "—",
+              zip_code: siteZip.trim() || "00000",
               referral_source: "manual_entry",
               service_urgency: serviceUrgency || null,
               customer_notes: customerNotes.trim() || null,
               noch_plus_member: false,
-            })
+              location_id: resolvedSiteId,
+            } as any)
             .select()
             .single();
 
           if (subError) throw subError;
+
+          // Upload photos and store URLs
+          const photoUrls = await uploadPhotos(submission.id);
 
           for (const charger of chargers) {
             await supabase.from("assessment_chargers").insert({
@@ -397,6 +430,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               serial_number: charger.serialNumber || null,
               installation_location: charger.installationLocation || null,
               known_issues: charger.knownIssues || null,
+              photo_urls: photoUrls,
             });
           }
 
@@ -416,10 +450,11 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
   };
 
   const isFormDirty = () => {
-    const hasContactInfo = !!(fullName || companyName || email || phone || streetAddress || city || state || zipCode);
+    const hasContactInfo = !!(fullName || companyName || email || phone || siteName);
     const hasChargerInfo = chargers.some(c => !!(c.brand || c.serialNumber || c.chargerType || c.installationLocation || c.knownIssues || c.isWorking || c.underWarranty));
     const hasNotes = !!(customerNotes || serviceUrgency);
-    return hasContactInfo || hasChargerInfo || hasNotes;
+    const hasPhotos = photos.length > 0;
+    return hasContactInfo || hasChargerInfo || hasNotes || hasPhotos;
   };
 
   const handleOpenChange = (val: boolean) => {
@@ -457,10 +492,10 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
           company_name: companyName.trim() || "Draft",
           email: email.trim() || "draft@placeholder.com",
           phone: phone.trim() || "0000000000",
-          street_address: streetAddress.trim() || "",
-          city: city.trim() || "—",
-          state: state || "—",
-          zip_code: zipCode.trim() || "00000",
+          street_address: siteAddress.trim() || "",
+          city: siteCity.trim() || "—",
+          state: siteState || "—",
+          zip_code: siteZip.trim() || "00000",
           customer_notes: customerNotes || null,
           service_urgency: serviceUrgency || null,
           status: "draft",
@@ -484,10 +519,10 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
           company_name: companyName.trim() || "Draft",
           email: email.trim() || "draft@placeholder.com",
           phone: phone.trim() || "0000000000",
-          street_address: streetAddress.trim() || "",
-          city: city.trim() || "—",
-          state: state || "—",
-          zip_code: zipCode.trim() || "00000",
+          street_address: siteAddress.trim() || "",
+          city: siteCity.trim() || "—",
+          state: siteState || "—",
+          zip_code: siteZip.trim() || "00000",
           referral_source: "manual_entry",
           customer_notes: customerNotes || null,
           service_urgency: serviceUrgency || null,
@@ -542,8 +577,8 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
         <DialogHeader>
           <DialogTitle>New Submission</DialogTitle>
           <DialogDescription>
-            {step === 1 ? "Enter customer contact & location details" :
-             step === 2 ? "Add charger information" :
+            {step === 1 ? "Enter customer contact & site details" :
+             step === 2 ? "Add charger information & photos" :
              "Review & submit"}
           </DialogDescription>
         </DialogHeader>
@@ -575,7 +610,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
 
         <StepIndicator />
 
-        {/* STEP 1: Contact & Location */}
+        {/* STEP 1: Contact & Site */}
         {step === 1 && (
           <div className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
@@ -603,50 +638,23 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                 <Input value={phone} onChange={e => setPhone(formatPhone(e.target.value))} placeholder="(555) 123-4567" />
                 {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
               </div>
+
+              {/* Site Selector */}
               <div className="sm:col-span-2">
-                <Label>Street Address</Label>
-                <div className="flex gap-2">
-                  <AddressAutocomplete
-                    value={streetAddress}
-                    onChange={setStreetAddress}
-                    onSelect={(addr) => {
-                      if (addr.city) setCity(addr.city);
-                      if (addr.state) setState(addr.state);
-                      if (addr.zip) setZipCode(addr.zip);
-                    }}
-                    placeholder="Start typing an address..."
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="shrink-0 border-primary/30 text-primary hover:bg-primary/5"
-                    onClick={useCurrentLocation}
-                    disabled={locatingUser}
-                    title="Use my current location"
-                  >
-                    {locatingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <Label>City *</Label>
-                <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Los Angeles" />
-                {errors.city && <p className="text-xs text-destructive mt-1">{errors.city}</p>}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>State *</Label>
-                  <Select value={state} onValueChange={setState}>
-                    <SelectTrigger><SelectValue placeholder="State" /></SelectTrigger>
-                    <SelectContent>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
-                  {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
-                </div>
-                <div>
-                  <Label>ZIP Code</Label>
-                  <Input value={zipCode} onChange={e => setZipCode(e.target.value)} placeholder="90001" />
-                </div>
+                <SiteSearchDropdown
+                  companyId={companyId}
+                  selectedSiteId={siteId}
+                  onSiteChange={(site) => {
+                    setSiteId(site.id);
+                    setSiteName(site.siteName);
+                    setSiteAddress(site.address);
+                    setSiteCity(site.city);
+                    setSiteState(site.state);
+                    setSiteZip(site.zip);
+                  }}
+                  usePublicEndpoint={false}
+                  error={errors.site}
+                />
               </div>
             </div>
 
@@ -656,7 +664,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
           </div>
         )}
 
-        {/* STEP 2: Chargers */}
+        {/* STEP 2: Chargers + Photos */}
         {step === 2 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -666,7 +674,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               <Badge variant="outline">{chargers.length}/50</Badge>
             </div>
 
-            <div className="space-y-3 max-h-[45vh] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[35vh] overflow-y-auto pr-1">
               {chargers.map((charger, idx) => (
                 <Card key={charger.id} className="border-border/70">
                   <CardContent className="p-4">
@@ -741,6 +749,45 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               </Button>
             )}
 
+            {/* Photo Upload Section */}
+            <Card className="border-border/70">
+              <CardContent className="p-4">
+                <div className="mb-2">
+                  <Label className="text-sm font-medium">Photos (Optional)</Label>
+                  <p className="text-xs text-muted-foreground">Upload photos of the charger, damage, or any relevant issues</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {photos.map((photo, i) => (
+                    <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
+                      <img src={photo.previewUrl} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removeSubmissionPhoto(i)}
+                        className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {photos.length < MAX_PHOTOS && (
+                    <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                      <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[9px] text-muted-foreground mt-0.5">Add Photo</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                        multiple
+                        className="hidden"
+                        onChange={e => handlePhotoAdd(e.target.files)}
+                      />
+                    </label>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  JPG, PNG, WebP, HEIC • Max 10MB each • Up to {MAX_PHOTOS} photos
+                </p>
+              </CardContent>
+            </Card>
+
             <div className="flex gap-3">
               <Button variant="outline" size="lg" className="flex-1 gap-2" onClick={handleBack}>
                 <ArrowLeft className="h-4 w-4" /> Back
@@ -764,7 +811,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                   <div><span className="text-muted-foreground">Company:</span> <span className="font-medium">{companyName}</span></div>
                   <div><span className="text-muted-foreground">Email:</span> <span className="font-medium">{email}</span></div>
                   <div><span className="text-muted-foreground">Phone:</span> <span className="font-medium">{phone}</span></div>
-                  <div className="sm:col-span-2"><span className="text-muted-foreground">Location:</span> <span className="font-medium">{[streetAddress, city, state, zipCode].filter(Boolean).join(", ")}</span></div>
+                  <div className="sm:col-span-2"><span className="text-muted-foreground">Site:</span> <span className="font-medium">{siteName || "—"} {siteCity && `— ${siteCity}, ${siteState}`}</span></div>
                 </div>
                 <div className="pt-2 border-t border-border/50">
                   <span className="text-muted-foreground text-sm">Chargers:</span>{" "}
@@ -777,6 +824,12 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                     ))}
                   </div>
                 </div>
+                {photos.length > 0 && (
+                  <div className="pt-2 border-t border-border/50">
+                    <span className="text-muted-foreground text-sm">Photos:</span>{" "}
+                    <span className="font-medium text-sm">{photos.length}</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

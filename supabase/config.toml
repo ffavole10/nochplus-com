@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.list-companies]
 verify_jwt = false
+
+[functions.list-locations]
+verify_jwt = false

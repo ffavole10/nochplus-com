@@ -20,13 +20,7 @@ import evChargerBg from "@/assets/ev-charger-bg.png";
 import medalBadge from "@/assets/medal-badge.png";
 import AnimatedLandingPage from "@/components/public/AnimatedLandingPage";
 import { CompanySearchDropdown } from "@/components/shared/CompanySearchDropdown";
-
-const US_STATES = [
-  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
-  "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
-  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
-  "VA","WA","WV","WI","WY","DC"
-];
+import { SiteSearchDropdown } from "@/components/shared/SiteSearchDropdown";
 
 const CHARGER_BRANDS = ["BTC", "ABB", "Delta", "Tritium", "Signet", "ChargePoint", "Other"];
 const CHARGER_TYPES = ["AC | Level 2", "DC | Level 3"];
@@ -69,7 +63,6 @@ export default function SubmitAssessment() {
   const [searchParams] = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<FormStep>("landing");
-  const [locatingUser, setLocatingUser] = useState(false);
   const [membershipLoading, setMembershipLoading] = useState(false);
   const [submissionType, setSubmissionType] = useState<SubmissionType>("");
 
@@ -79,10 +72,14 @@ export default function SubmitAssessment() {
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [streetAddress, setStreetAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zipCode, setZipCode] = useState("");
+
+  // Site fields
+  const [siteId, setSiteId] = useState<string | null>(null);
+  const [siteName, setSiteName] = useState("");
+  const [siteAddress, setSiteAddress] = useState("");
+  const [siteCity, setSiteCity] = useState("");
+  const [siteState, setSiteState] = useState("");
+  const [siteZip, setSiteZip] = useState("");
 
   // Chargers
   const [chargers, setChargers] = useState<ChargerEntry[]>([createEmptyCharger()]);
@@ -163,68 +160,13 @@ export default function SubmitAssessment() {
     }));
   };
 
-  const useCurrentLocation = async () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser.");
-      return;
-    }
-    setLocatingUser(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
-            { headers: { "User-Agent": "NOCHPlusApp/1.0" } }
-          );
-          if (res.ok) {
-            const data = await res.json();
-            const addr = data.address || {};
-            const road = [addr.house_number, addr.road].filter(Boolean).join(" ");
-            if (road) setStreetAddress(road);
-            if (addr.city || addr.town || addr.village) setCity(addr.city || addr.town || addr.village);
-            if (addr.state) {
-              const stateMap: Record<string, string> = {
-                "alabama":"AL","alaska":"AK","arizona":"AZ","arkansas":"AR","california":"CA","colorado":"CO",
-                "connecticut":"CT","delaware":"DE","florida":"FL","georgia":"GA","hawaii":"HI","idaho":"ID",
-                "illinois":"IL","indiana":"IN","iowa":"IA","kansas":"KS","kentucky":"KY","louisiana":"LA",
-                "maine":"ME","maryland":"MD","massachusetts":"MA","michigan":"MI","minnesota":"MN",
-                "mississippi":"MS","missouri":"MO","montana":"MT","nebraska":"NE","nevada":"NV",
-                "new hampshire":"NH","new jersey":"NJ","new mexico":"NM","new york":"NY",
-                "north carolina":"NC","north dakota":"ND","ohio":"OH","oklahoma":"OK","oregon":"OR",
-                "pennsylvania":"PA","rhode island":"RI","south carolina":"SC","south dakota":"SD",
-                "tennessee":"TN","texas":"TX","utah":"UT","vermont":"VT","virginia":"VA",
-                "washington":"WA","west virginia":"WV","wisconsin":"WI","wyoming":"WY",
-                "district of columbia":"DC"
-              };
-              const matched = stateMap[addr.state.toLowerCase()] || "";
-              if (matched) setState(matched);
-            }
-            if (addr.postcode) setZipCode(addr.postcode.split("-")[0]);
-            toast.success("Location detected!");
-          }
-        } catch {
-          toast.error("Could not determine your address.");
-        } finally {
-          setLocatingUser(false);
-        }
-      },
-      () => {
-        toast.error("Location access denied. Please enter your address manually.");
-        setLocatingUser(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  };
-
   const validateStep1 = () => {
     const e: Record<string, string> = {};
     if (!fullName.trim()) e.fullName = "Name is required";
     if (!companyName.trim()) e.companyName = "Company name is required";
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = "Valid email is required";
     if (!phone.trim() || phone.replace(/\D/g, "").length < 10) e.phone = "Valid phone number is required";
-    if (!city.trim()) e.city = "City is required";
-    if (!state) e.state = "State is required";
+    if (!siteId && !siteName.trim()) e.site = "Please select or add a site";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -270,7 +212,6 @@ export default function SubmitAssessment() {
   };
 
   const handleNextOem = () => {
-    // OEM question is optional, always allow proceeding
     setCurrentStep("step3");
     window.scrollTo(0, 0);
   };
@@ -290,7 +231,8 @@ export default function SubmitAssessment() {
       if (error) throw error;
       if (data?.url) {
         sessionStorage.setItem("submit-form-state", JSON.stringify({
-          fullName, companyName, companyId, email, phone, streetAddress, city, state, zipCode,
+          fullName, companyName, companyId, email, phone,
+          siteId, siteName, siteAddress, siteCity, siteState, siteZip,
           chargers: chargers.map(c => ({ ...c, photos: [], photoPreviewUrls: [] })),
           customerNotes, termsAgreed, contactConsent, submissionType,
         }));
@@ -323,10 +265,12 @@ export default function SubmitAssessment() {
         setCompanyId(s.companyId || null);
         setEmail(s.email || "");
         setPhone(s.phone || "");
-        setStreetAddress(s.streetAddress || "");
-        setCity(s.city || "");
-        setState(s.state || "");
-        setZipCode(s.zipCode || "");
+        setSiteId(s.siteId || null);
+        setSiteName(s.siteName || "");
+        setSiteAddress(s.siteAddress || "");
+        setSiteCity(s.siteCity || "");
+        setSiteState(s.siteState || "");
+        setSiteZip(s.siteZip || "");
         if (s.chargers?.length) setChargers(s.chargers);
         setCustomerNotes(s.customerNotes || "");
         setTermsAgreed(s.termsAgreed || false);
@@ -350,7 +294,6 @@ export default function SubmitAssessment() {
           contact_name: fullName.trim(),
           email: email.trim().toLowerCase(),
           phone: phone.trim(),
-          address: [streetAddress, city, state, zipCode].filter(Boolean).join(", "),
         })
         .select("id")
         .single();
@@ -360,6 +303,35 @@ export default function SubmitAssessment() {
         return null;
       }
       return data?.id || null;
+    } catch {
+      return null;
+    }
+  };
+
+  /** Create a new location if no siteId exists, return the location ID */
+  const resolveSiteId = async (custId: string): Promise<string | null> => {
+    if (siteId) return siteId;
+    if (!siteName.trim()) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from("locations" as any)
+        .insert({
+          customer_id: custId,
+          site_name: siteName.trim(),
+          address: siteAddress.trim(),
+          city: siteCity.trim(),
+          state: siteState,
+          zip: siteZip.trim(),
+        } as any)
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("Location creation error:", error);
+        return null;
+      }
+      return (data as any)?.id || null;
     } catch {
       return null;
     }
@@ -375,9 +347,9 @@ export default function SubmitAssessment() {
       const submissionId = `NP-${year}-${hex}`;
 
       const resolvedCompanyId = await resolveCompanyId();
+      const resolvedSiteId = resolvedCompanyId ? await resolveSiteId(resolvedCompanyId) : null;
 
       if (submissionType === "repair") {
-        // Insert into service_tickets table
         const { data: ticket, error: ticketError } = await supabase
           .from("service_tickets")
           .insert({
@@ -389,20 +361,20 @@ export default function SubmitAssessment() {
             full_name: fullName.trim(),
             email: email.trim().toLowerCase(),
             phone: phone.trim(),
-            street_address: streetAddress.trim() || null,
-            city: city.trim(),
-            state,
-            zip_code: zipCode.trim() || null,
+            street_address: siteAddress.trim() || null,
+            city: siteCity.trim() || siteName.trim(),
+            state: siteState || "—",
+            zip_code: siteZip.trim() || null,
             oem_ticket_exists: oemTicketExists || null,
             oem_ticket_number: oemTicketNumber.trim() || null,
             customer_notes: customerNotes.trim() || null,
-          })
+            location_id: resolvedSiteId,
+          } as any)
           .select()
           .single();
 
         if (ticketError) throw ticketError;
 
-        // Insert chargers
         for (const charger of chargers) {
           const photoUrls: string[] = [];
           for (const photo of charger.photos) {
@@ -444,7 +416,6 @@ export default function SubmitAssessment() {
           }
         });
       } else {
-        // Assessment path — insert into noch_plus_submissions
         const { data: submission, error: subError } = await supabase
           .from("noch_plus_submissions")
           .insert({
@@ -455,16 +426,17 @@ export default function SubmitAssessment() {
             company_name: companyName.trim(),
             email: email.trim().toLowerCase(),
             phone: phone.trim(),
-            street_address: streetAddress.trim() || city.trim(),
-            city: city.trim(),
-            state,
-            zip_code: zipCode.trim() || "00000",
+            street_address: siteAddress.trim() || siteName.trim(),
+            city: siteCity.trim() || siteName.trim(),
+            state: siteState || "—",
+            zip_code: siteZip.trim() || "00000",
             referral_source: null,
             assessment_needs: null,
             service_urgency: null,
             customer_notes: customerNotes.trim() || null,
             noch_plus_member: nochPlus,
-          })
+            location_id: resolvedSiteId,
+          } as any)
           .select()
           .single();
 
@@ -765,7 +737,7 @@ export default function SubmitAssessment() {
 
         <StepProgress />
 
-        {/* Step 1: Location & Contact */}
+        {/* Step 1: Contact & Site */}
         {currentStep === "step1" && (
           <Card className="mb-6">
             <CardContent className="p-6">
@@ -799,40 +771,23 @@ export default function SubmitAssessment() {
                   <Input value={phone} onChange={e => setPhone(formatPhone(e.target.value))} placeholder="(555) 123-4567" />
                   {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
                 </div>
+
+                {/* Site Selector */}
                 <div className="sm:col-span-2">
-                  <Label>Street Address</Label>
-                  <div className="flex gap-2">
-                    <Input className="flex-1" value={streetAddress} onChange={e => setStreetAddress(e.target.value)} placeholder="123 Main St (optional)" />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0 border-primary/30 text-primary hover:bg-primary/5"
-                      onClick={useCurrentLocation}
-                      disabled={locatingUser}
-                      title="Use my current location"
-                    >
-                      {locatingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <Label>City *</Label>
-                  <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Los Angeles" />
-                  {errors.city && <p className="text-xs text-destructive mt-1">{errors.city}</p>}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>State *</Label>
-                    <Select value={state} onValueChange={setState}>
-                      <SelectTrigger><SelectValue placeholder="State" /></SelectTrigger>
-                      <SelectContent>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                    </Select>
-                    {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
-                  </div>
-                  <div>
-                    <Label>ZIP Code</Label>
-                    <Input value={zipCode} onChange={e => setZipCode(e.target.value)} placeholder="90001" />
-                  </div>
+                  <SiteSearchDropdown
+                    companyId={companyId}
+                    selectedSiteId={siteId}
+                    onSiteChange={(site) => {
+                      setSiteId(site.id);
+                      setSiteName(site.siteName);
+                      setSiteAddress(site.address);
+                      setSiteCity(site.city);
+                      setSiteState(site.state);
+                      setSiteZip(site.zip);
+                    }}
+                    usePublicEndpoint={true}
+                    error={errors.site}
+                  />
                 </div>
               </div>
 
