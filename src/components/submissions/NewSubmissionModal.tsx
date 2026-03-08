@@ -188,8 +188,8 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     setChargers(prev => prev.filter(c => c.id !== id));
   };
 
-  // Photo handlers
-  const handlePhotoAdd = (files: FileList | null) => {
+  // Per-charger photo handlers
+  const handleChargerPhotoAdd = (chargerId: string, files: FileList | null) => {
     if (!files) return;
     const valid = Array.from(files).filter(f => {
       if (!ALLOWED_PHOTO_TYPES.includes(f.type)) {
@@ -202,24 +202,28 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
       }
       return true;
     });
-    if (photos.length + valid.length > MAX_PHOTOS) {
-      toast.error(`Maximum ${MAX_PHOTOS} photos allowed.`);
-      return;
-    }
-    const newEntries: PhotoEntry[] = valid.map(f => ({
-      file: f,
-      previewUrl: URL.createObjectURL(f),
+    setChargers(prev => prev.map(c => {
+      if (c.id !== chargerId) return c;
+      if (c.photos.length + valid.length > MAX_PHOTOS) {
+        toast.error(`Maximum ${MAX_PHOTOS} photos per charger.`);
+        return c;
+      }
+      const newEntries: PhotoEntry[] = valid.map(f => ({
+        file: f,
+        previewUrl: URL.createObjectURL(f),
+      }));
+      return { ...c, photos: [...c.photos, ...newEntries] };
     }));
-    setPhotos(prev => [...prev, ...newEntries]);
   };
 
-  const removeSubmissionPhoto = (index: number) => {
-    setPhotos(prev => {
-      const copy = [...prev];
-      URL.revokeObjectURL(copy[index].previewUrl);
-      copy.splice(index, 1);
-      return copy;
-    });
+  const removeChargerPhoto = (chargerId: string, photoIndex: number) => {
+    setChargers(prev => prev.map(c => {
+      if (c.id !== chargerId) return c;
+      const copy = [...c.photos];
+      URL.revokeObjectURL(copy[photoIndex].previewUrl);
+      copy.splice(photoIndex, 1);
+      return { ...c, photos: copy };
+    }));
   };
 
   const validateStep1 = () => {
