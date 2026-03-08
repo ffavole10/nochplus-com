@@ -946,7 +946,7 @@ export default function Submissions() {
       </div>
 
       {/* Search & Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -964,7 +964,16 @@ export default function Submissions() {
             <TabsTrigger value="archived">Archived</TabsTrigger>
           </TabsList>
         </Tabs>
+        <Button className="gap-2 ml-auto" onClick={() => setNewSubmissionOpen(true)}>
+          <Plus className="h-4 w-4" /> New Submission
+        </Button>
       </div>
+
+      <NewSubmissionModal
+        open={newSubmissionOpen}
+        onOpenChange={setNewSubmissionOpen}
+        onSubmitted={fetchSubmissions}
+      />
 
       {/* Table */}
       {loading ? (
