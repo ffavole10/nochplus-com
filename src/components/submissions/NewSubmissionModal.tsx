@@ -423,6 +423,10 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
                           <Button type="button" size="sm" variant={charger.isWorking === "yes" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "isWorking", "yes")}>Yes</Button>
                           <Button type="button" size="sm" variant={charger.isWorking === "no" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "isWorking", "no")}>No</Button>
                         </div>
+                        <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer text-xs text-muted-foreground">
+                          <Checkbox checked={charger.isWorking === "unknown"} onCheckedChange={(checked) => updateCharger(charger.id, "isWorking", checked ? "unknown" : "")} className="h-3.5 w-3.5 rounded-full" />
+                          I don't know
+                        </label>
                       </div>
                       <div>
                         <Label className="text-xs">Under warranty?</Label>
@@ -430,6 +434,10 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted }: Props) {
                           <Button type="button" size="sm" variant={charger.underWarranty === "yes" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "underWarranty", "yes")}>Yes</Button>
                           <Button type="button" size="sm" variant={charger.underWarranty === "no" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "underWarranty", "no")}>No</Button>
                         </div>
+                        <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer text-xs text-muted-foreground">
+                          <Checkbox checked={charger.underWarranty === "unknown"} onCheckedChange={(checked) => updateCharger(charger.id, "underWarranty", checked ? "unknown" : "")} className="h-3.5 w-3.5 rounded-full" />
+                          I don't know
+                        </label>
                       </div>
                       <div className="sm:col-span-2">
                         <Label className="text-xs">Known Issues</Label>
