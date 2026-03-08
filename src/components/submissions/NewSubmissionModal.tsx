@@ -259,14 +259,9 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const year = new Date().getFullYear();
-      const hex = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
-      const submissionId = `NP-${year}-${hex}`;
-
-      const { data: submission, error: subError } = await supabase
-        .from("submissions")
-        .insert({
-          submission_id: submissionId,
+      if (draftId) {
+        // Update existing draft → pending_review
+        await supabase.from("submissions").update({
           full_name: fullName.trim(),
           company_name: companyName.trim(),
           email: email.trim().toLowerCase(),
@@ -275,30 +270,68 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
           city: city.trim(),
           state,
           zip_code: zipCode.trim() || "00000",
-          referral_source: "manual_entry",
-          assessment_needs: null,
           service_urgency: serviceUrgency || null,
           customer_notes: customerNotes.trim() || null,
-          noch_plus_member: false,
-        })
-        .select()
-        .single();
+          status: "pending_review",
+        }).eq("id", draftId);
 
-      if (subError) throw subError;
+        // Replace chargers
+        await supabase.from("charger_submissions").delete().eq("submission_id", draftId);
+        for (const charger of chargers) {
+          await supabase.from("charger_submissions").insert({
+            submission_id: draftId,
+            brand: charger.brand,
+            serial_number: charger.serialNumber || null,
+            charger_type: charger.chargerType,
+            installation_location: charger.installationLocation || null,
+            known_issues: charger.knownIssues || null,
+          });
+        }
 
-      for (const charger of chargers) {
-        const { error: chError } = await supabase.from("charger_submissions").insert({
-          submission_id: submission.id,
-          brand: charger.brand,
-          serial_number: charger.serialNumber || null,
-          charger_type: charger.chargerType,
-          installation_location: charger.installationLocation || null,
-          known_issues: charger.knownIssues || null,
-        });
-        if (chError) throw chError;
+        toast.success(`Submission ${draftSubmissionId} submitted successfully.`);
+      } else {
+        const year = new Date().getFullYear();
+        const hex = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
+        const submissionId = `NP-${year}-${hex}`;
+
+        const { data: submission, error: subError } = await supabase
+          .from("submissions")
+          .insert({
+            submission_id: submissionId,
+            full_name: fullName.trim(),
+            company_name: companyName.trim(),
+            email: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            street_address: streetAddress.trim() || city.trim(),
+            city: city.trim(),
+            state,
+            zip_code: zipCode.trim() || "00000",
+            referral_source: "manual_entry",
+            assessment_needs: null,
+            service_urgency: serviceUrgency || null,
+            customer_notes: customerNotes.trim() || null,
+            noch_plus_member: false,
+          })
+          .select()
+          .single();
+
+        if (subError) throw subError;
+
+        for (const charger of chargers) {
+          const { error: chError } = await supabase.from("charger_submissions").insert({
+            submission_id: submission.id,
+            brand: charger.brand,
+            serial_number: charger.serialNumber || null,
+            charger_type: charger.chargerType,
+            installation_location: charger.installationLocation || null,
+            known_issues: charger.knownIssues || null,
+          });
+          if (chError) throw chError;
+        }
+
+        toast.success(`Submission ${submissionId} created successfully.`);
       }
 
-      toast.success(`Submission ${submissionId} created successfully.`);
       resetForm();
       onOpenChange(false);
       onSubmitted();
