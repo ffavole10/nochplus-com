@@ -405,8 +405,11 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               is_working: charger.isWorking || null,
               under_warranty: charger.underWarranty || null,
               photo_urls: photoUrls,
-              location_descriptor: locationDescriptor.trim() || null,
+              location_descriptor: charger.locationDescriptor.trim() || locationDescriptor.trim() || null,
             });
+            if (charger.locationDescriptor.trim()) {
+              await saveDescriptor(resolvedSiteId, charger.locationDescriptor);
+            }
           }
 
           await saveDescriptor(resolvedSiteId, locationDescriptor);
