@@ -80,6 +80,7 @@ export default function Submissions() {
   const [editChargers, setEditChargers] = useState<ChargerSubmission[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [newSubmissionOpen, setNewSubmissionOpen] = useState(false);
 
   // Assessment state
   const [assessmentStatus, setAssessmentStatus] = useState<"idle" | "running" | "done">("idle");
