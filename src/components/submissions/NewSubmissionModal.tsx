@@ -326,16 +326,95 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
     onOpenChange(val);
   };
 
-  const handleDiscard = () => {
+  const handleDiscard = async () => {
     setShowCloseWarning(false);
+    // If this was a persisted draft, delete it
+    if (draftId) {
+      await supabase.from("charger_submissions").delete().eq("submission_id", draftId);
+      await supabase.from("submissions").delete().eq("id", draftId);
+    }
     resetForm();
     onOpenChange(false);
+    onSubmitted();
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     setShowCloseWarning(false);
-    onOpenChange(false);
-    toast.success("Draft saved — reopen to continue where you left off.");
+    try {
+      const subId = draftSubmissionId || (() => {
+        const year = new Date().getFullYear();
+        const hex = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
+        return `NP-${year}-${hex}`;
+      })();
+
+      if (draftId) {
+        // Update existing draft
+        await supabase.from("submissions").update({
+          full_name: fullName.trim() || "Draft",
+          company_name: companyName.trim() || "Draft",
+          email: email.trim() || "draft@placeholder.com",
+          phone: phone.trim() || "0000000000",
+          street_address: streetAddress.trim() || "",
+          city: city.trim() || "—",
+          state: state || "—",
+          zip_code: zipCode.trim() || "00000",
+          customer_notes: customerNotes || null,
+          service_urgency: serviceUrgency || null,
+          status: "draft",
+        }).eq("id", draftId);
+
+        // Delete old chargers and re-insert
+        await supabase.from("charger_submissions").delete().eq("submission_id", draftId);
+        for (const ch of chargers) {
+          await supabase.from("charger_submissions").insert({
+            submission_id: draftId,
+            brand: ch.brand || "Unknown",
+            charger_type: ch.chargerType || "AC | Level 2",
+            serial_number: ch.serialNumber || null,
+            installation_location: ch.installationLocation || null,
+            known_issues: ch.knownIssues || null,
+          });
+        }
+      } else {
+        // Create new draft
+        const { data: submission, error } = await supabase.from("submissions").insert({
+          submission_id: subId,
+          full_name: fullName.trim() || "Draft",
+          company_name: companyName.trim() || "Draft",
+          email: email.trim() || "draft@placeholder.com",
+          phone: phone.trim() || "0000000000",
+          street_address: streetAddress.trim() || "",
+          city: city.trim() || "—",
+          state: state || "—",
+          zip_code: zipCode.trim() || "00000",
+          referral_source: "manual_entry",
+          customer_notes: customerNotes || null,
+          service_urgency: serviceUrgency || null,
+          status: "draft",
+        }).select("id").single();
+
+        if (error) throw error;
+
+        for (const ch of chargers) {
+          await supabase.from("charger_submissions").insert({
+            submission_id: submission.id,
+            brand: ch.brand || "Unknown",
+            charger_type: ch.chargerType || "AC | Level 2",
+            serial_number: ch.serialNumber || null,
+            installation_location: ch.installationLocation || null,
+            known_issues: ch.knownIssues || null,
+          });
+        }
+      }
+
+      resetForm();
+      onOpenChange(false);
+      onSubmitted();
+      toast.success("Draft saved — you can resume it anytime.");
+    } catch (err: any) {
+      console.error("Draft save error:", err);
+      toast.error(`Failed to save draft: ${err.message}`);
+    }
   };
 
   const StepIndicator = () => (
