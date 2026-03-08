@@ -788,6 +788,8 @@ export default function SubmitAssessment() {
                     }}
                     usePublicEndpoint={true}
                     error={errors.site}
+                    descriptor={locationDescriptor}
+                    onDescriptorChange={setLocationDescriptor}
                   />
                 </div>
               </div>

@@ -655,6 +655,8 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                   }}
                   usePublicEndpoint={false}
                   error={errors.site}
+                  descriptor={locationDescriptor}
+                  onDescriptorChange={setLocationDescriptor}
                 />
               </div>
             </div>
