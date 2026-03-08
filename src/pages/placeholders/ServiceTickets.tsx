@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Plus, Ticket, Search, ArrowUpDown, Crosshair, Diamond, UserPlus, Loader2, Eye, Camera, FileText, Wrench, Shield, Brain, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,6 +62,7 @@ function getHighestPriority(tickets: ServiceTicket[]): string {
 }
 
 export default function ServiceTickets() {
+  usePageTitle('Tickets');
   const tickets = useServiceTicketsStore((s) => s.tickets);
   const updateTicketInStore = useServiceTicketsStore((s) => s.updateTicket);
   const [formOpen, setFormOpen] = useState(false);

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, Info } from "lucide-react";
@@ -13,6 +14,7 @@ import { ConfigSection } from "@/components/ai-agent/ConfigSection";
 import { MetricsDashboard } from "@/components/ai-agent/MetricsDashboard";
 
 const AIAgent = () => {
+  usePageTitle('AutoHeal™');
   const [agents, setAgents] = useState<AgentPrompt[]>([]);
   const [loading, setLoading] = useState(true);
   const [testAgent, setTestAgent] = useState<AgentPrompt | null>(null);

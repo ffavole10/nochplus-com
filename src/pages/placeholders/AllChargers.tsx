@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Search, ArrowUpDown, HardDrive, Crosshair, Diamond, MapPin, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ const STATUS_STYLES: Record<string, string> = {
 const CHARGERS: ChargerRecord[] = [];
 
 export default function AllChargers() {
+  usePageTitle('Chargers');
   const [search, setSearch] = useState("");
   const [campaignFilter, setCampaignFilter] = useState("all");
   const [nochFilter, setNochFilter] = useState("all");

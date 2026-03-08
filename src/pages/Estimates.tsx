@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -353,6 +354,7 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
 
 /* ── Main Page ─────────────────────────────────── */
 const Estimates = () => {
+  usePageTitle('Estimates');
   // Load estimates from all campaigns (pass null to get all)
   const { data: estimates = [], isLoading } = useEstimates(null);
   const [selectedEstimate, setSelectedEstimate] = useState<EstimateRecord | null>(null);

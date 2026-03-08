@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useNavigate } from "react-router-dom";
 import { Plus, Users, Search, ArrowUpDown, Mail, Phone, DollarSign, Ticket, Eye, X, Building2, MapPin, StickyNote, FileText, CreditCard, ExternalLink, AlertTriangle, Info, Pencil, Upload, Globe, Loader2, Trash2 } from "lucide-react";
 import { CustomerLogo } from "@/components/CustomerLogo";
@@ -23,6 +24,7 @@ import { useCustomerRateSheetsList, useCreateCustomerRateSheet } from "@/hooks/u
 import { useCreateContact } from "@/hooks/useContacts";
 
 export default function Customers() {
+  usePageTitle('Customers');
   const { data: customers = [], isLoading } = useCustomers();
   const { data: rateCards = [] } = useRateCards();
   const { data: rateSheets = [] } = useCustomerRateSheetsList();

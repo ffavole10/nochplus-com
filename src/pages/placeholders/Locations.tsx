@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ type ViewMode = "card" | "list";
 type TabFilter = "all" | "employee" | "subcontractor" | "available" | "on_job" | "inactive";
 
 const Locations = () => {
+  usePageTitle('Locations');
   const qc = useQueryClient();
 
   const { data: technicians = [], isLoading } = useTechnicians();

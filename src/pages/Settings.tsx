@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -113,6 +114,7 @@ function QuotingAndRatesSection() {
 }
 
 const Settings = () => {
+  usePageTitle('Settings');
   const navigate = useNavigate();
   const { session } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>("campaigns");

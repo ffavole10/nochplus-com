@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X, Play, FileDown, Plus } from "lucide-react";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
 import type { TicketChargerInfo, ChargerBrand } from "@/types/ticket";
@@ -70,6 +71,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function Submissions() {
+  usePageTitle('Submissions');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

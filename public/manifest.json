@@ -1,0 +1,9 @@
+{
+  "name": "Noch Power",
+  "short_name": "Noch+",
+  "description": "The Future of EVSE Service — Fast, Simple, Reliable.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0a9e8a"
+}

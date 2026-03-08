@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useMemo, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { getNetworkStats, Charger, chargerRecordToCharger } from "@/data/chargerData";
 import { chargerRecordToAssessment } from "@/lib/assessmentParser";
 import { getTicketPriorityStats } from "@/lib/ticketPriority";
@@ -13,6 +14,7 @@ import { useChargerRecords, useCampaign } from "@/hooks/useCampaigns";
 import { Database } from "lucide-react";
 
 const Index = () => {
+  usePageTitle('Dashboard');
   const { selectedCampaignId, selectedCustomer } = useCampaignContext();
   const { data: campaignData } = useCampaign(selectedCampaignId || null);
   const { data: chargerRecords = [] } = useChargerRecords(selectedCampaignId || null);

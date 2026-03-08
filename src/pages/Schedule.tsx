@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { ScheduleView } from "@/components/schedule/ScheduleView";
 import { useAssessmentData } from "@/hooks/useAssessmentData";
 import { useCampaignManager } from "@/hooks/useCampaignManager";
@@ -10,6 +11,7 @@ import { AssessmentCharger } from "@/types/assessment";
 import { toast } from "sonner";
 
 const Schedule = () => {
+  usePageTitle('Schedule');
   const { chargers: localChargers, importChargers, updateCharger, moveChargerToPhase, clearData } = useAssessmentData();
   const { session } = useAuth();
   const { selectedCampaignId, selectedCampaignName } = useCampaignContext();

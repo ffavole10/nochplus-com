@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Package, Plus, Download, Upload, Search, LayoutGrid, List, MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ function StatusBadge({ part }: { part: Part }) {
 }
 
 const Parts = () => {
+  usePageTitle('Parts');
   const { data: parts = [], isLoading } = useParts();
   const { data: movements = [] } = useStockMovementsAll();
   const createPart = useCreatePart();

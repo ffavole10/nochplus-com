@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; description:
 const TIMELINE_STEPS = ["Submitted", "Under Review", "Assessment Complete", "Contact Made"];
 
 export default function TrackSubmission() {
+  usePageTitle('Track Your Submission');
   const { submissionId: paramId } = useParams();
   const navigate = useNavigate();
   const [searchId, setSearchId] = useState(paramId || "");

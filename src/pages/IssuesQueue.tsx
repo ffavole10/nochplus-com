@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { ChargerDetailModal } from "@/components/assessment/ChargerDetailModal";
 import { TicketsView } from "@/components/assessment/TicketsView";
 import { useChargerRecords } from "@/hooks/useCampaigns";
@@ -10,6 +11,7 @@ import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore"
 import { ServiceTicket, WORKFLOW_STEPS_TEMPLATE } from "@/types/serviceTicket";
 
 const IssuesQueue = () => {
+  usePageTitle('Issues');
   const { selectedCampaignId, selectedCampaignName, selectedCustomer } = useCampaignContext();
   const { data: chargerRecords = [] } = useChargerRecords(selectedCampaignId || null);
   const addTicket = useServiceTicketsStore((s) => s.addTicket);
