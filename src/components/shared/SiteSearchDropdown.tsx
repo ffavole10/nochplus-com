@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, MapPin, Loader2 } from "lucide-react";
+import { AddressAutocomplete } from "@/components/submissions/AddressAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
 
 const US_STATES = [
