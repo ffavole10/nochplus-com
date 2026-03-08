@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, MapPin, Loader2 } from "lucide-react";
+import { AddressAutocomplete } from "@/components/submissions/AddressAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
 
 const US_STATES = [
@@ -264,10 +265,16 @@ export function SiteSearchDropdown({
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="sm:col-span-2">
               <Label className="text-xs">Street Address</Label>
-              <Input
+              <AddressAutocomplete
                 value={newAddress}
-                onChange={(e) => setNewAddress(e.target.value)}
-                placeholder="Optional"
+                onChange={setNewAddress}
+                onSelect={(parsed) => {
+                  setNewAddress(parsed.street);
+                  setNewCity(parsed.city);
+                  setNewState(parsed.state);
+                  setNewZip(parsed.zip);
+                }}
+                placeholder="Start typing an address..."
                 className="text-sm"
               />
             </div>
