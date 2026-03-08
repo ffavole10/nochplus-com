@@ -777,7 +777,18 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                   <Label className="text-sm font-medium">Photos (Optional)</Label>
                   <p className="text-xs text-muted-foreground">Upload photos of the charger, damage, or any relevant issues</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div
+                  className={`flex flex-wrap gap-2 p-3 rounded-lg border-2 border-dashed transition-colors ${
+                    dragOver ? "border-primary bg-primary/5" : "border-transparent"
+                  }`}
+                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={e => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    if (e.dataTransfer.files?.length) handlePhotoAdd(e.dataTransfer.files);
+                  }}
+                >
                   {photos.map((photo, i) => (
                     <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
                       <img src={photo.previewUrl} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
@@ -804,7 +815,7 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                   )}
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-2">
-                  JPG, PNG, WebP, HEIC • Max 10MB each • Up to {MAX_PHOTOS} photos
+                  Drag & drop or click to add • JPG, PNG, WebP, HEIC • Max 10MB each • Up to {MAX_PHOTOS} photos
                 </p>
               </CardContent>
             </Card>
