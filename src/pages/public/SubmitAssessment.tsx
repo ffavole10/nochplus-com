@@ -70,6 +70,7 @@ export default function SubmitAssessment() {
   const [currentStep, setCurrentStep] = useState<FormStep>("landing");
   const [locatingUser, setLocatingUser] = useState(false);
   const [membershipLoading, setMembershipLoading] = useState(false);
+  const [submissionType, setSubmissionType] = useState<SubmissionType>("");
 
   // Customer fields
   const [fullName, setFullName] = useState("");
