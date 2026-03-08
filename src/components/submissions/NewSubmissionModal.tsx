@@ -453,8 +453,11 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
               installation_location: charger.installationLocation || null,
               known_issues: charger.knownIssues || null,
               photo_urls: photoUrls,
-              location_descriptor: locationDescriptor.trim() || null,
+              location_descriptor: charger.locationDescriptor.trim() || locationDescriptor.trim() || null,
             });
+            if (charger.locationDescriptor.trim()) {
+              await saveDescriptor(resolvedSiteId, charger.locationDescriptor);
+            }
           }
 
           await saveDescriptor(resolvedSiteId, locationDescriptor);
