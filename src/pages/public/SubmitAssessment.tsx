@@ -14,7 +14,7 @@ import {
   CheckCircle2, Clock, Zap, Camera,
   Plus, Trash2, Loader2, ArrowRight, X, LocateFixed,
   Users, Monitor, BadgePercent, Package, Wrench, CreditCard, Shield,
-  Hash, ImagePlus, ClipboardSearch
+  Hash, ImagePlus, Search
 } from "lucide-react";
 import evChargerBg from "@/assets/ev-charger-bg.png";
 import medalBadge from "@/assets/medal-badge.png";
