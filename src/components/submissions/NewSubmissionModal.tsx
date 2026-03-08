@@ -742,8 +742,15 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                         <Input value={charger.installationLocation} onChange={e => updateCharger(charger.id, "installationLocation", e.target.value)} placeholder="e.g., Acme Corp" className="text-sm" />
                       </div>
                       <div>
-                        <Label className="text-xs">Location Detail</Label>
-                        <Input value={charger.locationDescriptor} onChange={e => updateCharger(charger.id, "locationDescriptor", e.target.value)} placeholder="e.g., Behind elevators, 2nd Floor, Lot B" className="text-sm" />
+                        <Label className="text-xs">Under warranty?</Label>
+                        <div className="flex gap-2 mt-1">
+                          <Button type="button" size="sm" variant={charger.underWarranty === "yes" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "underWarranty", "yes")}>Yes</Button>
+                          <Button type="button" size="sm" variant={charger.underWarranty === "no" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "underWarranty", "no")}>No</Button>
+                        </div>
+                        <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer text-xs text-muted-foreground">
+                          <Checkbox checked={charger.underWarranty === "unknown"} onCheckedChange={(checked) => updateCharger(charger.id, "underWarranty", checked ? "unknown" : "")} className="h-3.5 w-3.5 rounded-full" />
+                          I don't know
+                        </label>
                       </div>
                       <div>
                         <Label className="text-xs">Is the charger working?</Label>
@@ -757,15 +764,8 @@ export function NewSubmissionModal({ open, onOpenChange, onSubmitted, draftData 
                         </label>
                       </div>
                       <div>
-                        <Label className="text-xs">Under warranty?</Label>
-                        <div className="flex gap-2 mt-1">
-                          <Button type="button" size="sm" variant={charger.underWarranty === "yes" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "underWarranty", "yes")}>Yes</Button>
-                          <Button type="button" size="sm" variant={charger.underWarranty === "no" ? "default" : "outline"} className="flex-1" onClick={() => updateCharger(charger.id, "underWarranty", "no")}>No</Button>
-                        </div>
-                        <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer text-xs text-muted-foreground">
-                          <Checkbox checked={charger.underWarranty === "unknown"} onCheckedChange={(checked) => updateCharger(charger.id, "underWarranty", checked ? "unknown" : "")} className="h-3.5 w-3.5 rounded-full" />
-                          I don't know
-                        </label>
+                        <Label className="text-xs">Location Detail</Label>
+                        <Input value={charger.locationDescriptor} onChange={e => updateCharger(charger.id, "locationDescriptor", e.target.value)} placeholder="e.g., Behind elevators, 2nd Floor, Lot B" className="text-sm" />
                       </div>
                       <div className="sm:col-span-2">
                         <Label className="text-xs">Known Issues</Label>
