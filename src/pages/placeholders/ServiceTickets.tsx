@@ -191,6 +191,7 @@ export default function ServiceTickets() {
       history: [{ id: "h1", timestamp: new Date().toISOString(), action: "Manual ticket created", performedBy: "Current User" }],
     };
     addTicket(newTicket);
+    persistTicketToDB(newTicket);
     toast.success(`Ticket ${newTicket.ticketId} created successfully`);
     setFormOpen(false);
   };
