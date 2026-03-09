@@ -877,49 +877,55 @@ export default function Submissions() {
                   </Card>
 
                   {/* Service Request */}
-                  <Card className="border border-border/60">
-                    <CardContent className="p-5 space-y-3">
-                      <h3 className="font-semibold text-foreground text-sm">Service Request</h3>
-                      {isEditing ? (
-                        <div className="flex items-center gap-3">
-                          <Button
-                            size="sm"
-                            variant={chargerServiceNeeded[currentChargerId] === true ? "default" : "outline"}
-                            className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === true ? "bg-optimal text-optimal-foreground hover:bg-optimal/90" : ""}`}
-                            onClick={() => setChargerServiceNeeded(prev => ({ ...prev, [currentChargerId]: true }))}
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                            Yes
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={chargerServiceNeeded[currentChargerId] === false ? "default" : "outline"}
-                            className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === false ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}`}
-                            onClick={() => setChargerServiceNeeded(prev => ({ ...prev, [currentChargerId]: false }))}
-                          >
-                            <XCircle className="h-4 w-4" />
-                            No
-                          </Button>
-                        </div>
-                      ) : (
-                        <div>
-                          {chargerServiceNeeded[currentChargerId] === true && (
-                            <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
-                              <CheckCircle className="h-3 w-3" /> Yes — Send to Service Desk
-                            </Badge>
-                          )}
-                          {chargerServiceNeeded[currentChargerId] === false && (
-                            <Badge className="bg-muted text-muted-foreground gap-1">
-                              <XCircle className="h-3 w-3" /> No
-                            </Badge>
-                          )}
-                          {chargerServiceNeeded[currentChargerId] == null && (
-                            <p className="text-sm text-muted-foreground">Not decided</p>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                  {selectedSubmission.source !== "assessment" && (
+                    <Card className="border border-border/60">
+                      <CardContent className="p-5 space-y-3">
+                        <h3 className="font-semibold text-foreground text-sm">Service Request</h3>
+                        {isEditing ? (
+                          <div className="flex items-center gap-3">
+                            <Button
+                              size="sm"
+                              variant={chargerServiceNeeded[currentChargerId] === true ? "default" : "outline"}
+                              className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === true ? "bg-optimal text-optimal-foreground hover:bg-optimal/90" : ""}`}
+                              onClick={() =>
+                                setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: true }))
+                              }
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                              Yes
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={chargerServiceNeeded[currentChargerId] === false ? "default" : "outline"}
+                              className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === false ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}`}
+                              onClick={() =>
+                                setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: false }))
+                              }
+                            >
+                              <XCircle className="h-4 w-4" />
+                              No
+                            </Button>
+                          </div>
+                        ) : (
+                          <div>
+                            {chargerServiceNeeded[currentChargerId] === true && (
+                              <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
+                                <CheckCircle className="h-3 w-3" /> Yes — Send to Service Desk
+                              </Badge>
+                            )}
+                            {chargerServiceNeeded[currentChargerId] === false && (
+                              <Badge className="bg-muted text-muted-foreground gap-1">
+                                <XCircle className="h-3 w-3" /> No
+                              </Badge>
+                            )}
+                            {chargerServiceNeeded[currentChargerId] == null && (
+                              <p className="text-sm text-muted-foreground">Not decided</p>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
 
                 {/* Per-charger Notes */}
