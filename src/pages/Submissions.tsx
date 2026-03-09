@@ -175,10 +175,10 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
 
       const [legacyChargersRes, assessmentChargersRes] = await Promise.all([
         legacyIds.length
-          ? supabase.from("charger_submissions").select("*").in("submission_id", legacyIds)
+          ? supabase.from("charger_submissions").select("*").in("submission_id", legacyIds).order("created_at", { ascending: true })
           : Promise.resolve({ data: [] as any[] }),
         assessmentIds.length
-          ? supabase.from("assessment_chargers").select("*").in("submission_id", assessmentIds)
+          ? supabase.from("assessment_chargers").select("*").in("submission_id", assessmentIds).order("created_at", { ascending: true })
           : Promise.resolve({ data: [] as any[] }),
       ]);
 
