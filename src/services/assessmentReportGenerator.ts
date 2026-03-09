@@ -63,45 +63,40 @@ interface SubmissionData {
 // ── Status & Priority Logic ──────────────────────────────
 
 function getChargerStatus(ch: ChargerData): { label: string; color: string; bgColor: string } {
-  const issues = ch.known_issues?.trim() || "";
-  const statusVal = ch.status?.toLowerCase() || "";
-
-  if (statusVal === "approved" && !issues) {
-    return { label: "Functional", color: BRAND.green, bgColor: "#D1FAE5" };
-  }
-  if (issues.toLowerCase().includes("critical") || statusVal === "critical") {
-    return { label: "Critical", color: BRAND.red, bgColor: "#FEE2E2" };
-  }
-  if (ch.service_needed === true || issues.length > 0) {
-    // Check if minor
-    if (issues.toLowerCase().includes("minor")) {
+  // service_needed is the primary indicator set by staff in the platform
+  if (ch.service_needed === true) {
+    const issues = (ch.known_issues || "").toLowerCase();
+    if (issues.includes("critical")) {
+      return { label: "Critical", color: BRAND.red, bgColor: "#FEE2E2" };
+    }
+    if (issues.includes("minor")) {
       return { label: "Minor Issue", color: BRAND.blue, bgColor: "#DBEAFE" };
     }
     return { label: "Needs Repair", color: BRAND.amber, bgColor: "#FEF3C7" };
   }
+  // service_needed is false or null → charger is functional
   return { label: "Functional", color: BRAND.green, bgColor: "#D1FAE5" };
 }
 
 function getChargerPriority(ch: ChargerData): { label: string; color: string } {
+  if (ch.service_needed !== true) return { label: "NONE", color: BRAND.green };
   const issues = (ch.known_issues || "").toLowerCase();
   if (issues.includes("critical")) return { label: "CRITICAL", color: BRAND.red };
-  if (issues.includes("high") || ch.service_needed === true) return { label: "HIGH", color: BRAND.amber };
-  if (issues.includes("low")) return { label: "LOW", color: BRAND.blue };
-  return { label: "NONE", color: BRAND.green };
+  if (issues.includes("high")) return { label: "HIGH", color: BRAND.amber };
+  if (issues.includes("low") || issues.includes("minor")) return { label: "LOW", color: BRAND.blue };
+  return { label: "HIGH", color: BRAND.amber };
 }
 
 function getOverallRisk(chargers: ChargerData[]): { level: string; color: string; bgColor: string } {
   const total = chargers.length || 1;
-  const hasCritical = chargers.some(c => getChargerPriority(c).label === "CRITICAL");
-  const needsRepairCount = chargers.filter(c => {
-    const s = getChargerStatus(c);
-    return s.label !== "Functional";
-  }).length;
+  const hasCritical = chargers.some(c => getChargerStatus(c).label === "Critical");
+  const needsRepairCount = chargers.filter(c => getChargerStatus(c).label !== "Functional").length;
   const ratio = needsRepairCount / total;
 
   if (hasCritical) return { level: "HIGH", color: BRAND.red, bgColor: "#FEE2E2" };
   if (ratio >= 0.3) return { level: "MODERATE–HIGH", color: BRAND.amber, bgColor: "#FEF3C7" };
-  return { level: "LOW–MODERATE", color: BRAND.green, bgColor: "#D1FAE5" };
+  if (ratio > 0) return { level: "LOW–MODERATE", color: BRAND.amber, bgColor: "#FEF3C7" };
+  return { level: "LOW", color: BRAND.green, bgColor: "#D1FAE5" };
 }
 
 // ── Image loading helper ─────────────────────────────────
@@ -504,9 +499,15 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     y = drawSectionHeader(doc, "Priority Actions", y);
 
     for (let i = 0; i < priorityChargers.length; i++) {
-      y = needsNewPage(doc, y, 16, logoB64, sub.submission_id, pageCounter);
       const { ch, idx, priority } = priorityChargers[i];
       const issue = ch.known_issues || "Issue identified during assessment";
+      const recLine = `Charger ${idx + 1}: Recommend immediate ${priority.label === "CRITICAL" ? "critical" : "priority"} service.`;
+      const maxTextW = PAGE_W - 2 * M - 14;
+      const issueLines = doc.splitTextToSize(`${issue} — ${ch.serial_number || ch.brand}`, maxTextW);
+      const recLines = doc.splitTextToSize(recLine, maxTextW);
+      const itemH = 6 + issueLines.length * 4 + recLines.length * 3.5 + 4;
+
+      y = needsNewPage(doc, y, itemH, logoB64, sub.submission_id, pageCounter);
 
       setTextC(doc, priority.color);
       doc.setFontSize(10);
@@ -515,19 +516,21 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
 
       setTextC(doc, BRAND.darkText);
       doc.setFontSize(9);
-      doc.text(`${issue} — ${ch.serial_number || ch.brand}`, M + 10, y + 4);
+      doc.text(issueLines, M + 10, y + 4);
+      const afterIssue = y + 4 + issueLines.length * 4;
 
       setTextC(doc, BRAND.gray);
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      doc.text(`Charger ${idx + 1}: Recommend immediate ${priority.label === "CRITICAL" ? "critical" : "priority"} service.`, M + 10, y + 9);
+      doc.text(recLines, M + 10, afterIssue);
+      const afterRec = afterIssue + recLines.length * 3.5 + 2;
 
       if (i < priorityChargers.length - 1) {
         setDraw(doc, "#E5E7EB");
         doc.setLineWidth(0.1);
-        doc.line(M + 2, y + 12, PAGE_W - M - 2, y + 12);
+        doc.line(M + 2, afterRec, PAGE_W - M - 2, afterRec);
       }
-      y += 14;
+      y = afterRec + 2;
     }
     y += 2;
   }
@@ -548,10 +551,20 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     const priority = getChargerPriority(ch);
     const issue = ch.known_issues || "No issues reported";
 
+    // Pre-calculate text heights for proper card sizing
+    const col3W = (PAGE_W - 2 * M) / 3;
+    doc.setFontSize(8);
+    const issueLines = doc.splitTextToSize(issue, col3W - 8);
+    const recText = ch.service_needed
+      ? "Schedule professional service to address identified issues. Prioritize based on severity rating."
+      : "No immediate action required. Continue regular maintenance schedule.";
+    doc.setFontSize(8.5);
+    const recLines = doc.splitTextToSize(recText, PAGE_W - 2 * M - 12);
+
     // Estimate card height
     const cardHeaderH = 9;
-    const statusRowH = 10;
-    const recH = 16;
+    const statusRowH = Math.max(10, 6 + issueLines.length * 3.5);
+    const recH = 8 + recLines.length * 3.8;
     const photoH = ch.photo_urls && ch.photo_urls.length > 0 ? 38 : 10;
     const totalCardH = cardHeaderH + statusRowH + recH + photoH + 6;
 
@@ -574,8 +587,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     setFill(doc, status.bgColor);
     doc.rect(M, y, PAGE_W - 2 * M, statusRowH, "F");
 
-    const col3W = (PAGE_W - 2 * M) / 3;
-
     // STATUS column
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
@@ -596,7 +607,7 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.setFont("helvetica", "bold");
     doc.text(priority.label, M + col3W + 4, y + 8);
 
-    // ISSUE column
+    // ISSUE column — properly wrapped
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
@@ -604,11 +615,10 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     setTextC(doc, BRAND.darkText);
     doc.setFontSize(8);
     doc.setFont("helvetica", "bold");
-    const issueLines = doc.splitTextToSize(issue, col3W - 8);
-    doc.text(issueLines[0] || "—", M + 2 * col3W + 4, y + 8);
+    doc.text(issueLines, M + 2 * col3W + 4, y + 8);
     y += statusRowH;
 
-    // Recommendation
+    // Recommendation — properly wrapped
     setDraw(doc, "#E5E7EB");
     doc.setLineWidth(0.3);
     setFill(doc, BRAND.white);
@@ -620,10 +630,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     setTextC(doc, BRAND.darkText);
     doc.setFontSize(8.5);
     doc.setFont("helvetica", "normal");
-    const recText = ch.service_needed
-      ? "Schedule professional service to address identified issues. Prioritize based on severity rating."
-      : "No immediate action required. Continue regular maintenance schedule.";
-    const recLines = doc.splitTextToSize(recText, PAGE_W - 2 * M - 12);
     doc.text(recLines, M + 4, y + 8.5);
     y += recH;
 
