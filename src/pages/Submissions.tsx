@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { NewSubmissionModal } from "@/components/submissions/NewSubmissionModal";
 
+type SubmissionSource = "legacy" | "assessment";
+
 interface ChargerSubmission {
   id: string;
   brand: string;
@@ -28,7 +30,9 @@ interface ChargerSubmission {
   installation_location: string | null;
   photo_urls: string[] | null;
   known_issues: string | null;
+  /** Charger-level workflow status (legacy used pending_review; new assessments use pending) */
   status: string;
+  /** Legacy-only fields (not stored for assessment_chargers) */
   service_needed: boolean | null;
   staff_notes: string | null;
 }
@@ -36,7 +40,12 @@ interface ChargerSubmission {
 interface Submission {
   id: string;
   submission_id: string;
+  /** Submission-level status */
   status: string;
+  /** Present only for noch_plus_submissions (assessment/repair) */
+  submission_type?: string | null;
+  source: SubmissionSource;
+
   full_name: string;
   company_name: string;
   email: string;
@@ -59,6 +68,8 @@ interface Submission {
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-secondary/15 text-secondary border-secondary/30",
   pending_review: "bg-medium/15 text-medium border-medium/30",
+  // Alias for assessment_chargers default status
+  pending: "bg-medium/15 text-medium border-medium/30",
   approved: "bg-optimal/15 text-optimal border-optimal/30",
   archived: "bg-muted text-muted-foreground border-border",
 };
@@ -66,6 +77,7 @@ const STATUS_STYLES: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
   pending_review: "Pending",
+  pending: "Pending",
   approved: "Approved",
   archived: "Archived",
 };
