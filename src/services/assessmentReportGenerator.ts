@@ -325,66 +325,28 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   const pageCounter = { n: 1 };
 
   // ════════════════════════════════════════════════════════
-  // COVER PAGE
+  // COVER PAGE — static PDF background + text overlay
   // ════════════════════════════════════════════════════════
 
-  setFill(doc, BRAND.tealPrimary);
-  doc.rect(0, 0, PAGE_W, PAGE_H, "F");
+  const coverImage = await loadCoverAsImage();
+  if (coverImage) {
+    doc.addImage(coverImage, "JPEG", 0, 0, PAGE_W, PAGE_H);
+  } else {
+    // Fallback: simple teal cover if PDF load fails
+    setFill(doc, BRAND.tealPrimary);
+    doc.rect(0, 0, PAGE_W, PAGE_H, "F");
+    setTextC(doc, BRAND.white);
+    doc.setFontSize(36);
+    doc.setFont("helvetica", "bold");
+    doc.text("EVSE Assessment Report", PAGE_W / 2, PAGE_H / 2, { align: "center" });
+  }
 
-  setFill(doc, BRAND.coverDark);
-  doc.rect(0, 0, PAGE_W, PAGE_H * 0.55, "F");
-
-  setDraw(doc, BRAND.white);
-  doc.setLineWidth(1);
-  const boxX = M;
-  const boxY = M;
-  const boxW = PAGE_W - 2 * M;
-  const boxH = PAGE_H * 0.52;
-  doc.rect(boxX, boxY, boxW, boxH);
-
-  setTextC(doc, BRAND.white);
-  doc.setFontSize(52);
-  doc.setFont("helvetica", "bold");
-  doc.text("EVSE", boxX + 8, boxY + 30);
-  doc.setFontSize(48);
-  doc.text("Assessment", boxX + 8, boxY + 48);
-  doc.setFontSize(52);
-  doc.text("Report", boxX + 8, boxY + 68);
-
-  const pillY = boxY + boxH - 14;
-  const pillText = sub.submission_id;
-  doc.setFontSize(9);
-  const pillW = doc.getTextWidth(pillText) + 10;
-  setFill(doc, BRAND.tealDark);
-  doc.roundedRect(boxX + 8, pillY, pillW, 7, 3, 3, "F");
-  setTextC(doc, BRAND.white);
-  doc.setFont("helvetica", "bold");
-  doc.text(pillText, boxX + 8 + pillW / 2, pillY + 5, { align: "center" });
-
-  try {
-    const logoW = 1.6 * MM_PER_IN;
-    const logoH = 0.77 * MM_PER_IN;
-    const logoX = 0.45 * MM_PER_IN;
-    const logoCoverY = PAGE_H - 0.55 * MM_PER_IN - logoH;
-    doc.addImage(logoB64, "PNG", logoX, logoCoverY, logoW, logoH);
-  } catch { /* logo failed */ }
-
+  // Overlay Report Information text onto the existing dark-green box
+  // Position matches the box in the cover PDF (bottom-right area)
   const infoW = PAGE_W * 0.44;
   const infoH = 1.55 * MM_PER_IN;
   const infoX = PAGE_W - 0.45 * MM_PER_IN - infoW;
   const infoY = PAGE_H - 0.45 * MM_PER_IN - infoH;
-
-  setFill(doc, BRAND.tealDark);
-  doc.roundedRect(infoX, infoY, infoW, infoH, 3, 3, "F");
-
-  setTextC(doc, BRAND.white);
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("Report Information", infoX + 6, infoY + 9);
-
-  setDraw(doc, BRAND.tealPrimary);
-  doc.setLineWidth(0.3);
-  doc.line(infoX + 6, infoY + 12, infoX + infoW - 6, infoY + 12);
 
   const labels = ["Customer", "Prepared by", "Date", "Submission ID"];
   const values = [sub.company_name, NOCH_COMPANY, dateStr, sub.submission_id];
@@ -400,14 +362,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.text(values[i], infoX + 6, iy + 4);
     iy += 9;
   }
-
-  const footStripH = 0.42 * MM_PER_IN;
-  setFill(doc, BRAND.tealDark);
-  doc.rect(0, PAGE_H - footStripH, PAGE_W, footStripH, "F");
-  setTextC(doc, BRAND.tealAccent);
-  doc.setFontSize(7.5);
-  doc.setFont("helvetica", "normal");
-  doc.text(`${NOCH_ADDRESS}  |  ${NOCH_WEBSITE}`, PAGE_W / 2, PAGE_H - footStripH / 2 + 1, { align: "center" });
 
   // ════════════════════════════════════════════════════════
   // PAGE 2: Customer Info + Executive Summary
