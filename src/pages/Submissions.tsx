@@ -554,9 +554,6 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
         } else {
           toast.success("Changes saved");
         }
-      } else {
-        toast.success("Changes saved");
-      }
     } catch (err: any) {
       toast.error(`Failed to save: ${err.message}`);
     } finally {
