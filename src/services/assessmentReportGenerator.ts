@@ -669,11 +669,11 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    doc.text("PRIORITY", M + col3W + 4, y + 3.5);
+    doc.text("PRIORITY", M + contentW / 3 + 4, y + 3.5);
     setTextC(doc, priority.color);
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text(priority.label, M + col3W + 4, y + 8);
+    doc.text(priority.label, M + contentW / 3 + 4, y + 8);
     y += statusRowH;
 
     // Issue description block - renders line by line with page breaks
