@@ -25,17 +25,27 @@ export const NOCH_COMPANY = "Noch Power Inc.";
  * Falls back to a 1×1 transparent pixel if loading fails.
  */
 export async function loadLogoBase64(): Promise<string> {
+  const FALLBACK = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
   try {
-    // Use the public image path
     const res = await fetch("/images/noch-power-logo-white.png");
+    if (!res.ok) return FALLBACK;
     const blob = await res.blob();
+    // Force PNG mime type to preserve transparency
+    const pngBlob = new Blob([blob], { type: "image/png" });
     return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==");
-      reader.readAsDataURL(blob);
+      reader.onloadend = () => {
+        let result = reader.result as string;
+        // Ensure data URI has PNG mime type
+        if (result && !result.startsWith("data:image/png")) {
+          result = result.replace(/^data:image\/\w+/, "data:image/png");
+        }
+        resolve(result || FALLBACK);
+      };
+      reader.onerror = () => resolve(FALLBACK);
+      reader.readAsDataURL(pngBlob);
     });
   } catch {
-    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+    return FALLBACK;
   }
 }
