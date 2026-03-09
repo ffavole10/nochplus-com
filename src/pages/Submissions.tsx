@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X, Play, FileDown, Plus } from "lucide-react";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
