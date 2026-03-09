@@ -709,9 +709,25 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
               Email Customer
               {assessmentStatus === "done" && <FileText className="h-3 w-3 text-primary ml-1" />}
             </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => toast.info("PDF export coming soon")}>
-              <Download className="h-4 w-4" />
-              Export PDF
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={exportingPdf}
+              onClick={async () => {
+                setExportingPdf(true);
+                try {
+                  await generateAssessmentReport(selectedSubmission.id);
+                } catch (err: any) {
+                  console.error("PDF export error:", err);
+                  toast.error("Failed to generate report. Please try again.");
+                } finally {
+                  setExportingPdf(false);
+                }
+              }}
+            >
+              {exportingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {exportingPdf ? "Generating..." : "Export PDF"}
             </Button>
           </div>
         </div>
