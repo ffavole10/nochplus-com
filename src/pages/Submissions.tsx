@@ -572,6 +572,63 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
     setEditChargers((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
   };
 
+  const handlePhotoUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !selectedSubmission) return;
+    const charger = editChargers[activeChargerIndex];
+    if (!charger) return;
+
+    setUploadingPhotos(true);
+    try {
+      const existingUrls = [...(charger.photo_urls || [])];
+      const maxPhotos = 10;
+      const remaining = maxPhotos - existingUrls.length;
+      const filesToUpload = Array.from(files).slice(0, remaining);
+
+      for (const file of filesToUpload) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds 10MB limit`);
+          continue;
+        }
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = `${selectedSubmission.id}/${charger.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+        const { error: uploadErr } = await supabase.storage
+          .from("submission-photos")
+          .upload(path, file, { contentType: file.type, upsert: false });
+
+        if (uploadErr) {
+          console.error("Upload error:", uploadErr);
+          toast.error(`Failed to upload ${file.name}`);
+          continue;
+        }
+        existingUrls.push(path);
+      }
+
+      // Update local edit state
+      setEditChargers((prev) =>
+        prev.map((c, i) => (i === activeChargerIndex ? { ...c, photo_urls: existingUrls } : c))
+      );
+      toast.success(`${filesToUpload.length} photo(s) added`);
+    } catch (err: any) {
+      console.error("Photo upload error:", err);
+      toast.error("Failed to upload photos");
+    } finally {
+      setUploadingPhotos(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  };
+
+  const handleRemovePhoto = (photoIndex: number) => {
+    setEditChargers((prev) =>
+      prev.map((c, i) => {
+        if (i !== activeChargerIndex) return c;
+        const updated = [...(c.photo_urls || [])];
+        updated.splice(photoIndex, 1);
+        return { ...c, photo_urls: updated };
+      })
+    );
+  };
+
   // Detail view
   const charger = selectedSubmission?.chargers[activeChargerIndex];
   const photoLabels = ["Front", "Back", "Serial"];
