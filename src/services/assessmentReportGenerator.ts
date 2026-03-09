@@ -606,9 +606,10 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     const contentW = PAGE_W - 2 * M;
     const issueColW = contentW - 8;
 
-    // Split issue into paragraphs, then wrap each paragraph
+    // Split issue into paragraphs, then wrap each paragraph (measure with bold font)
     const issueParagraphs = issue.split(/\n+/).filter(p => p.trim());
     doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
     const allIssueLines: string[] = [];
     for (const para of issueParagraphs) {
       const wrapped = doc.splitTextToSize(para.trim(), issueColW);
