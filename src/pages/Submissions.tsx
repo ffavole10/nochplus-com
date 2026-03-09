@@ -121,7 +121,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
   );
 }
 
-  usePageTitle('Submissions');
+  export default function Submissions() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
