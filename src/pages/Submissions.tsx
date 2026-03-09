@@ -291,9 +291,14 @@ export default function Submissions() {
     if (!selectedSubmission) return;
     setSavingEdit(true);
     try {
+      const submissionTable =
+        selectedSubmission.source === "assessment" ? "noch_plus_submissions" : "submissions";
+      const chargerTable =
+        selectedSubmission.source === "assessment" ? "assessment_chargers" : "charger_submissions";
+
       // Save customer info
       const { error: subError } = await supabase
-        .from("submissions")
+        .from(submissionTable)
         .update({
           full_name: editForm.full_name,
           company_name: editForm.company_name,
@@ -303,50 +308,67 @@ export default function Submissions() {
           city: editForm.city,
           state: editForm.state,
           zip_code: editForm.zip_code,
-        })
+        } as any)
         .eq("id", selectedSubmission.id);
 
       if (subError) throw subError;
 
-      // Save each charger's details + per-charger status/service/notes
+      // Save each charger's details + per-charger status
       for (const ch of editChargers) {
+        const chargerUpdate: Record<string, any> = {
+          brand: ch.brand,
+          serial_number: ch.serial_number,
+          charger_type: ch.charger_type,
+          installation_location: ch.installation_location,
+          known_issues: ch.known_issues,
+          status: chargerStatuses[ch.id] || "pending",
+        };
+
+        // Legacy-only fields (assessment_chargers does not store these)
+        if (selectedSubmission.source !== "assessment") {
+          chargerUpdate.service_needed = chargerServiceNeeded[ch.id] ?? null;
+          chargerUpdate.staff_notes = chargerNotes[ch.id] || null;
+        }
+
         const { error: chError } = await supabase
-          .from("charger_submissions")
-          .update({
-            brand: ch.brand,
-            serial_number: ch.serial_number,
-            charger_type: ch.charger_type,
-            installation_location: ch.installation_location,
-            known_issues: ch.known_issues,
-            status: chargerStatuses[ch.id] || "pending_review",
-            service_needed: chargerServiceNeeded[ch.id] ?? null,
-            staff_notes: chargerNotes[ch.id] || null,
-          })
+          .from(chargerTable)
+          .update(chargerUpdate as any)
           .eq("id", ch.id);
         if (chError) throw chError;
       }
 
       // Update submission-level status based on charger statuses
-      const allApproved = editChargers.every(ch => chargerStatuses[ch.id] === "approved");
-      const anyApproved = editChargers.some(ch => chargerStatuses[ch.id] === "approved");
+      const allApproved = editChargers.every(
+        (ch) => (chargerStatuses[ch.id] || "pending") === "approved"
+      );
+      const anyApproved = editChargers.some(
+        (ch) => (chargerStatuses[ch.id] || "pending") === "approved"
+      );
       let newSubStatus = selectedSubmission.status;
       if (allApproved) newSubStatus = "approved";
       else if (anyApproved) newSubStatus = "approved";
 
       if (newSubStatus !== selectedSubmission.status) {
-        await supabase.from("submissions").update({ status: newSubStatus }).eq("id", selectedSubmission.id);
+        await supabase
+          .from(submissionTable)
+          .update({ status: newSubStatus } as any)
+          .eq("id", selectedSubmission.id);
       }
 
-      const updatedChargers = editChargers.map(ch => ({
+      const updatedChargers = editChargers.map((ch) => ({
         ...ch,
-        status: chargerStatuses[ch.id] || "pending_review",
-        service_needed: chargerServiceNeeded[ch.id] ?? null,
-        staff_notes: chargerNotes[ch.id] || null,
+        status: chargerStatuses[ch.id] || "pending",
+        service_needed:
+          selectedSubmission.source === "assessment"
+            ? null
+            : (chargerServiceNeeded[ch.id] ?? null),
+        staff_notes:
+          selectedSubmission.source === "assessment" ? null : chargerNotes[ch.id] || null,
       }));
 
       const updated: Submission = {
         ...selectedSubmission,
-        ...editForm as any,
+        ...(editForm as any),
         status: newSubStatus,
         chargers: updatedChargers,
       };
@@ -355,74 +377,96 @@ export default function Submissions() {
       setSelectedSubmission(updated);
       setIsEditing(false);
 
-      // Create service tickets for chargers flagged with service_needed=true
-      // Only create tickets for chargers that are newly flagged (weren't already flagged before)
-      const serviceChargers = updatedChargers.filter(ch => ch.service_needed === true);
-      const previouslyFlagged = selectedSubmission.chargers
-        .filter(ch => ch.service_needed === true)
-        .map(ch => ch.id);
-      const newServiceChargers = serviceChargers.filter(ch => !previouslyFlagged.includes(ch.id));
+      if (selectedSubmission.source !== "assessment") {
+        // Create service tickets for chargers flagged with service_needed=true
+        // Only create tickets for chargers that are newly flagged (weren't already flagged before)
+        const serviceChargers = updatedChargers.filter((ch) => ch.service_needed === true);
+        const previouslyFlagged = selectedSubmission.chargers
+          .filter((ch) => ch.service_needed === true)
+          .map((ch) => ch.id);
+        const newServiceChargers = serviceChargers.filter((ch) => !previouslyFlagged.includes(ch.id));
 
-      if (newServiceChargers.length > 0) {
-        const store = useServiceTicketsStore.getState();
-        const customerInfo = {
-          name: updated.full_name,
-          company: updated.company_name,
-          email: updated.email,
-          phone: updated.phone,
-          address: `${updated.street_address}, ${updated.city}, ${updated.state} ${updated.zip_code}`,
-        };
+        if (newServiceChargers.length > 0) {
+          const store = useServiceTicketsStore.getState();
+          const customerInfo = {
+            name: updated.full_name,
+            company: updated.company_name,
+            email: updated.email,
+            phone: updated.phone,
+            address: `${updated.street_address}, ${updated.city}, ${updated.state} ${updated.zip_code}`,
+          };
 
-        const validBrands: ChargerBrand[] = ["BTC", "ABB", "Delta", "Tritium", "Signet", "Other"];
-        const mapBrand = (b: string): ChargerBrand | "" => {
-          const upper = b?.toUpperCase() || "";
-          const found = validBrands.find(v => upper.includes(v.toUpperCase()));
-          return found || (b ? "Other" : "");
-        };
+          const validBrands: ChargerBrand[] = ["BTC", "ABB", "Delta", "Tritium", "Signet", "Other"];
+          const mapBrand = (b: string): ChargerBrand | "" => {
+            const upper = b?.toUpperCase() || "";
+            const found = validBrands.find((v) => upper.includes(v.toUpperCase()));
+            return found || (b ? "Other" : "");
+          };
 
-        const chargerData = newServiceChargers.map(ch => ({
-          charger: {
-            brand: mapBrand(ch.brand),
-            serialNumber: ch.serial_number || "",
-            type: (ch.charger_type === "DC" || ch.charger_type === "DC | Level 3" ? "DC_L3" : "AC_L2") as TicketChargerInfo["type"],
-            location: `${updated.city}, ${updated.state}`,
-          },
-          issue: {
-            description: ch.known_issues || chargerNotes[ch.id] || "Service requested via Noch+ submission.",
-          },
-        }));
+          const chargerData = newServiceChargers.map((ch) => ({
+            charger: {
+              brand: mapBrand(ch.brand),
+              serialNumber: ch.serial_number || "",
+              type: (
+                ch.charger_type === "DC" || ch.charger_type === "DC | Level 3" ? "DC_L3" : "AC_L2"
+              ) as TicketChargerInfo["type"],
+              location: `${updated.city}, ${updated.state}`,
+            },
+            issue: {
+              description:
+                ch.known_issues || chargerNotes[ch.id] || "Service requested via Noch+ submission.",
+            },
+          }));
 
-        if (chargerData.length === 1) {
-          // Single charger → standalone ticket
-          const now = new Date().toISOString();
-          const ticketId = store.getNextTicketId();
-          const cd = chargerData[0];
-          store.addTicket({
-            id: `st-${Date.now()}`,
-            ticketId,
-            source: "noch_plus",
-            customer: customerInfo,
-            charger: cd.charger,
-            photos: [],
-            issue: cd.issue,
-            priority: "Medium",
-            status: "pending_review",
-            currentStep: 1,
-            workflowSteps: makeSteps(1),
-            createdAt: now,
-            updatedAt: now,
-            history: [{ id: `h-${Date.now()}`, timestamp: now, action: "Ticket created from Noch+ submission", performedBy: "System" }],
-            metadata: { campaignName: `Submission ${updated.submission_id}` },
-          });
-          toast.success(`Service ticket ${ticketId} created in Service Desk.`, { duration: 5000 });
+          if (chargerData.length === 1) {
+            // Single charger → standalone ticket
+            const now = new Date().toISOString();
+            const ticketId = store.getNextTicketId();
+            const cd = chargerData[0];
+            store.addTicket({
+              id: `st-${Date.now()}`,
+              ticketId,
+              source: "noch_plus",
+              customer: customerInfo,
+              charger: cd.charger,
+              photos: [],
+              issue: cd.issue,
+              priority: "Medium",
+              status: "pending_review",
+              currentStep: 1,
+              workflowSteps: makeSteps(1),
+              createdAt: now,
+              updatedAt: now,
+              history: [
+                {
+                  id: `h-${Date.now()}`,
+                  timestamp: now,
+                  action: "Ticket created from Noch+ submission",
+                  performedBy: "System",
+                },
+              ],
+              metadata: { campaignName: `Submission ${updated.submission_id}` },
+            });
+            toast.success(`Service ticket ${ticketId} created in Service Desk.`, { duration: 5000 });
+          } else {
+            // Multiple chargers → parent-child
+            const parentId = store.createParentWithChildren(
+              customerInfo,
+              chargerData,
+              "noch_plus",
+              `Submission ${updated.submission_id}`
+            );
+            const parent = store.getTicketById(parentId);
+            toast.success(
+              `${newServiceChargers.length} service tickets created under ${parent?.ticketId || "new parent"}.`,
+              { duration: 5000 }
+            );
+          }
+        } else if (serviceChargers.length > 0) {
+          toast.success("Changes saved (service tickets already created for flagged chargers).");
         } else {
-          // Multiple chargers → parent-child
-          const parentId = store.createParentWithChildren(customerInfo, chargerData, "noch_plus", `Submission ${updated.submission_id}`);
-          const parent = store.getTicketById(parentId);
-          toast.success(`${newServiceChargers.length} service tickets created under ${parent?.ticketId || "new parent"}.`, { duration: 5000 });
+          toast.success("Changes saved");
         }
-      } else if (serviceChargers.length > 0) {
-        toast.success("Changes saved (service tickets already created for flagged chargers).");
       } else {
         toast.success("Changes saved");
       }
