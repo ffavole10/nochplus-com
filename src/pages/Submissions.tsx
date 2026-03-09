@@ -185,32 +185,52 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
       const legacyChargers = (legacyChargersRes as any).data || [];
       const assessmentChargers = (assessmentChargersRes as any).data || [];
 
-      const mergedLegacy: Submission[] = legacySubs.map((s: any) => ({
-        ...s,
-        source: "legacy" as const,
-        submission_type: null,
-        chargers: legacyChargers
+      const mergedLegacy: Submission[] = legacySubs.map((s: any) => {
+        const chargers = legacyChargers
           .filter((c: any) => c.submission_id === s.id)
           .map((c: any) => ({
             ...c,
             status: c.status === "pending_review" ? "pending" : c.status || "pending",
             service_needed: c.service_needed ?? null,
             staff_notes: c.staff_notes || null,
-          })),
-      }));
+          }));
 
-      const mergedAssessments: Submission[] = assessmentSubs.map((s: any) => ({
-        ...s,
-        source: "assessment" as const,
-        chargers: assessmentChargers
+        const derivedStatus =
+          chargers.length > 0 && chargers.every((c: any) => c.status === "approved")
+            ? "approved"
+            : s.status;
+
+        return {
+          ...s,
+          status: derivedStatus,
+          source: "legacy" as const,
+          submission_type: null,
+          chargers,
+        };
+      });
+
+      const mergedAssessments: Submission[] = assessmentSubs.map((s: any) => {
+        const chargers = assessmentChargers
           .filter((c: any) => c.submission_id === s.id)
           .map((c: any) => ({
             ...c,
             status: c.status || "pending",
             service_needed: null,
             staff_notes: null,
-          })),
-      }));
+          }));
+
+        const derivedStatus =
+          chargers.length > 0 && chargers.every((c: any) => c.status === "approved")
+            ? "approved"
+            : s.status;
+
+        return {
+          ...s,
+          status: derivedStatus,
+          source: "assessment" as const,
+          chargers,
+        };
+      });
 
       const mergedAll = [...mergedLegacy, ...mergedAssessments].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
