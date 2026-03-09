@@ -274,6 +274,36 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
 
   const hasPhotos = (s: Submission) => s.chargers.some((c) => c.photo_urls && c.photo_urls.length > 0);
 
+  const syncSubmissionStatusFromChargers = async (
+    sub: Submission,
+    nextStatuses: Record<string, string>
+  ) => {
+    const allApproved =
+      sub.chargers.length > 0 &&
+      sub.chargers.every((ch) => (nextStatuses[ch.id] || "pending") === "approved");
+
+    const nextSubmissionStatus = allApproved ? "approved" : "pending_review";
+    if (sub.status === nextSubmissionStatus) return;
+
+    const submissionTable = sub.source === "assessment" ? "noch_plus_submissions" : "submissions";
+    const { error } = await supabase
+      .from(submissionTable)
+      .update({ status: nextSubmissionStatus } as any)
+      .eq("id", sub.id);
+
+    if (error) {
+      toast.error("Failed to sync submission status");
+      return;
+    }
+
+    setSelectedSubmission((prev) =>
+      prev && prev.id === sub.id ? { ...prev, status: nextSubmissionStatus } : prev
+    );
+    setSubmissions((prev) =>
+      prev.map((item) => (item.id === sub.id ? { ...item, status: nextSubmissionStatus } : item))
+    );
+  };
+
   const openDetail = (sub: Submission) => {
     // If draft, open the modal for editing instead
     if (sub.status === "draft") {
