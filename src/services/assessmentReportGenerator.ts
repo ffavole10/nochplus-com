@@ -354,12 +354,14 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   doc.setFont("helvetica", "bold");
   doc.text("Report Information", REPORT_INFO_X + 14 * PT, REPORT_INFO_Y + 18 * PT);
 
-  // Divider line (white at ~20% opacity simulated with light teal)
+  // Divider line (white at ~20% opacity — approximate with a muted teal matching the box bg)
   doc.setDrawColor(255, 255, 255);
   doc.setLineWidth(0.4 * PT);
-  doc.setGState(new (jsPDF as any).API.GState({ opacity: 0.2 }));
+  const gState = new (doc as any).GState({ "stroke-opacity": 0.2 });
+  (doc as any).setGState(gState);
   doc.line(REPORT_INFO_X + 10 * PT, REPORT_INFO_Y + 30 * PT, REPORT_INFO_X + 265 * PT, REPORT_INFO_Y + 30 * PT);
-  doc.setGState(new (jsPDF as any).API.GState({ opacity: 1 }));
+  const gStateReset = new (doc as any).GState({ "stroke-opacity": 1 });
+  (doc as any).setGState(gStateReset);
 
   // Data rows
   const labels = ["Customer", "Prepared by", "Date", "Submission ID"];
