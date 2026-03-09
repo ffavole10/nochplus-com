@@ -950,17 +950,13 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                             onClick={async () => {
                               const newStatuses = { ...chargerStatuses, [currentChargerId]: "approved" };
                               setChargerStatuses(newStatuses);
-                              // Persist charger status immediately
                               const table = selectedSubmission.source === "assessment" ? "assessment_chargers" : "charger_submissions";
-                              await supabase.from(table).update({ status: "approved" }).eq("id", currentChargerId);
-                              // Check if all chargers are now approved → update submission status
-                              const allNowApproved = selectedSubmission.chargers.every(ch => (newStatuses[ch.id] || "pending") === "approved");
-                              if (allNowApproved && selectedSubmission.status !== "approved") {
-                                const subTable = selectedSubmission.source === "assessment" ? "noch_plus_submissions" : "submissions";
-                                await supabase.from(subTable).update({ status: "approved" } as any).eq("id", selectedSubmission.id);
-                                setSelectedSubmission(prev => prev ? { ...prev, status: "approved" } : prev);
-                                setSubmissions(prev => prev.map(s => s.id === selectedSubmission.id ? { ...s, status: "approved" } : s));
+                              const { error } = await supabase.from(table).update({ status: "approved" }).eq("id", currentChargerId);
+                              if (error) {
+                                toast.error("Failed to approve charger");
+                                return;
                               }
+                              await syncSubmissionStatusFromChargers(selectedSubmission, newStatuses);
                               toast.success(`Charger ${activeChargerIndex + 1} approved`);
                             }}
                           >
@@ -973,10 +969,16 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                             size="sm"
                             variant="outline"
                             className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
-                            onClick={() => {
-                              setChargerStatuses((prev) => ({ ...prev, [currentChargerId]: "archived" }));
+                            onClick={async () => {
+                              const newStatuses = { ...chargerStatuses, [currentChargerId]: "archived" };
+                              setChargerStatuses(newStatuses);
                               const table = selectedSubmission.source === "assessment" ? "assessment_chargers" : "charger_submissions";
-                              supabase.from(table).update({ status: "archived" }).eq("id", currentChargerId);
+                              const { error } = await supabase.from(table).update({ status: "archived" }).eq("id", currentChargerId);
+                              if (error) {
+                                toast.error("Failed to reject charger");
+                                return;
+                              }
+                              await syncSubmissionStatusFromChargers(selectedSubmission, newStatuses);
                               toast.success(`Charger ${activeChargerIndex + 1} archived`);
                             }}
                           >
@@ -989,10 +991,16 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                             size="sm"
                             variant="ghost"
                             className="gap-1.5 text-muted-foreground"
-                            onClick={() => {
-                              setChargerStatuses((prev) => ({ ...prev, [currentChargerId]: "pending" }));
+                            onClick={async () => {
+                              const newStatuses = { ...chargerStatuses, [currentChargerId]: "pending" };
+                              setChargerStatuses(newStatuses);
                               const table = selectedSubmission.source === "assessment" ? "assessment_chargers" : "charger_submissions";
-                              supabase.from(table).update({ status: "pending" }).eq("id", currentChargerId);
+                              const { error } = await supabase.from(table).update({ status: "pending" }).eq("id", currentChargerId);
+                              if (error) {
+                                toast.error("Failed to reset charger status");
+                                return;
+                              }
+                              await syncSubmissionStatusFromChargers(selectedSubmission, newStatuses);
                             }}
                           >
                             <Clock className="h-4 w-4" />
