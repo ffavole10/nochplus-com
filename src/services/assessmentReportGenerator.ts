@@ -570,26 +570,43 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     const issue = ch.known_issues || "No issues reported";
 
     const col3W = (PAGE_W - 2 * M) / 3;
+    const contentW = PAGE_W - 2 * M;
+    const issueColW = col3W - 8;
+
+    // Split issue into paragraphs, then wrap each paragraph
+    const issueParagraphs = issue.split(/\n+/).filter(p => p.trim());
     doc.setFontSize(8);
-    const issueLines = doc.splitTextToSize(issue, col3W - 8);
+    const allIssueLines: string[] = [];
+    for (const para of issueParagraphs) {
+      const wrapped = doc.splitTextToSize(para.trim(), issueColW);
+      allIssueLines.push(...wrapped);
+    }
+
     const recText = ch.service_needed
       ? "Schedule professional service to address identified issues. Prioritize based on severity rating."
       : "No immediate action required. Continue regular maintenance schedule.";
     doc.setFontSize(8.5);
-    const recLines = doc.splitTextToSize(recText, PAGE_W - 2 * M - 12);
+    const recLines = doc.splitTextToSize(recText, contentW - 12);
 
     const cardHeaderH = 9;
-    const statusRowH = Math.max(10, 6 + issueLines.length * 3.5);
-    const recH = 8 + recLines.length * 3.8;
+    const LINE_H_ISSUE = 3.8;
+    const LINE_H_REC = 4;
+
+    // Issue text can be very long - render it as a separate block below status/priority
+    // Status row: just status + priority labels (fixed height)
+    const statusRowH = 12;
+    // Issue block: label + all issue lines
+    const issueBlockH = 6 + allIssueLines.length * LINE_H_ISSUE + 2;
+    const recH = 8 + recLines.length * LINE_H_REC;
     const photoCount = ch.photo_urls ? Math.min(ch.photo_urls.length, MAX_PHOTOS_PER_CHARGER) : 0;
     const photoH = photoCount > 0 ? 38 : 10;
-    const totalCardH = cardHeaderH + statusRowH + recH + photoH + 6;
 
-    y = needsNewPage(doc, y, totalCardH, logoB64, sub.submission_id, pageCounter);
+    // Check if card header + status fits; if not, new page
+    y = needsNewPage(doc, y, cardHeaderH + statusRowH + 10, logoB64, sub.submission_id, pageCounter);
 
     // Card header (teal)
     setFill(doc, BRAND.tealPrimary);
-    doc.rect(M, y, PAGE_W - 2 * M, cardHeaderH, "F");
+    doc.rect(M, y, contentW, cardHeaderH, "F");
     setTextC(doc, BRAND.white);
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
@@ -600,9 +617,9 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.text(`${ch.brand} ${ch.charger_type}`, PAGE_W - M - 4, y + 6, { align: "right" });
     y += cardHeaderH;
 
-    // Status row
+    // Status + Priority row (compact, fixed height)
     setFill(doc, status.bgColor);
-    doc.rect(M, y, PAGE_W - 2 * M, statusRowH, "F");
+    doc.rect(M, y, contentW, statusRowH, "F");
 
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
@@ -621,31 +638,62 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text(priority.label, M + col3W + 4, y + 8);
+    y += statusRowH;
+
+    // Issue description block - renders line by line with page breaks
+    y = needsNewPage(doc, y, 14, logoB64, sub.submission_id, pageCounter);
+    setFill(doc, BRAND.white);
+    setDraw(doc, "#E5E7EB");
+    doc.setLineWidth(0.3);
 
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    doc.text("ISSUE IDENTIFIED", M + 2 * col3W + 4, y + 3.5);
+    doc.text("ISSUE IDENTIFIED", M + 4, y + 4);
+    y += 6;
+
     setTextC(doc, BRAND.darkText);
     doc.setFontSize(8);
     doc.setFont("helvetica", "bold");
-    doc.text(issueLines, M + 2 * col3W + 4, y + 8);
-    y += statusRowH;
+    const maxY = PAGE_H - 0.4 * MM_PER_IN - 10;
+    for (let li = 0; li < allIssueLines.length; li++) {
+      if (y + LINE_H_ISSUE > maxY) {
+        drawInteriorFooter(doc, pageCounter.n);
+        doc.addPage();
+        pageCounter.n++;
+        drawInteriorHeader(doc, logoB64, sub.submission_id);
+        y = 0.5 * MM_PER_IN + 5;
+      }
+      doc.text(allIssueLines[li], M + 4, y + 3);
+      y += LINE_H_ISSUE;
+    }
+    y += 2;
 
     // Recommendation
+    y = needsNewPage(doc, y, 14, logoB64, sub.submission_id, pageCounter);
     setDraw(doc, "#E5E7EB");
     doc.setLineWidth(0.3);
-    setFill(doc, BRAND.white);
-    doc.rect(M, y, PAGE_W - 2 * M, recH, "FD");
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
     doc.text("RECOMMENDATION", M + 4, y + 4);
+    y += 6;
+
     setTextC(doc, BRAND.darkText);
     doc.setFontSize(8.5);
     doc.setFont("helvetica", "normal");
-    doc.text(recLines, M + 4, y + 8.5);
-    y += recH;
+    for (let li = 0; li < recLines.length; li++) {
+      if (y + LINE_H_REC > maxY) {
+        drawInteriorFooter(doc, pageCounter.n);
+        doc.addPage();
+        pageCounter.n++;
+        drawInteriorHeader(doc, logoB64, sub.submission_id);
+        y = 0.5 * MM_PER_IN + 5;
+      }
+      doc.text(recLines[li], M + 4, y + 3);
+      y += LINE_H_REC;
+    }
+    y += 2;
 
     // Photo grid — using pre-compressed images from photoMap
     if (photoCount > 0) {
