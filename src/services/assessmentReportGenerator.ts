@@ -606,9 +606,8 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     const priority = getChargerPriority(ch);
     const issue = ch.known_issues || "No issues reported";
 
-    const col3W = (PAGE_W - 2 * M) / 3;
     const contentW = PAGE_W - 2 * M;
-    const issueColW = col3W - 8;
+    const issueColW = contentW - 8;
 
     // Split issue into paragraphs, then wrap each paragraph
     const issueParagraphs = issue.split(/\n+/).filter(p => p.trim());
