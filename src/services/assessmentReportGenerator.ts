@@ -342,25 +342,39 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   }
 
   // Overlay Report Information text onto the existing dark-green box
-  // Position matches the box in the cover PDF (bottom-right area)
-  const infoW = PAGE_W * 0.44;
-  const infoH = 1.55 * MM_PER_IN;
-  const infoX = PAGE_W - 0.45 * MM_PER_IN - infoW;
-  const infoY = PAGE_H - 0.45 * MM_PER_IN - infoH;
+  // Coordinates in pt, converted to mm (1pt = 0.3528mm)
+  const PT = 0.3528;
+  const REPORT_INFO_X = 318 * PT;
+  const REPORT_INFO_Y = 580 * PT;
+  const REPORT_INFO_ROW_HEIGHT = 26 * PT;
 
+  // Title
+  setTextC(doc, BRAND.white);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("Report Information", REPORT_INFO_X + 14 * PT, REPORT_INFO_Y + 18 * PT);
+
+  // Divider line (white at ~20% opacity simulated with light teal)
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.4 * PT);
+  doc.setGState(new (jsPDF as any).API.GState({ opacity: 0.2 }));
+  doc.line(REPORT_INFO_X + 10 * PT, REPORT_INFO_Y + 30 * PT, REPORT_INFO_X + 265 * PT, REPORT_INFO_Y + 30 * PT);
+  doc.setGState(new (jsPDF as any).API.GState({ opacity: 1 }));
+
+  // Data rows
   const labels = ["Customer", "Prepared by", "Date", "Submission ID"];
   const values = [sub.company_name, NOCH_COMPANY, dateStr, sub.submission_id];
-  let iy = infoY + 17;
+  let iy = REPORT_INFO_Y + 48 * PT;
   for (let i = 0; i < labels.length; i++) {
-    setTextC(doc, BRAND.tealAccent);
+    setTextC(doc, "#A8D5CF");
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    doc.text(labels[i], infoX + 6, iy);
+    doc.text(labels[i], REPORT_INFO_X + 14 * PT, iy);
     setTextC(doc, BRAND.white);
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setFont("helvetica", "bold");
-    doc.text(values[i], infoX + 6, iy + 4);
-    iy += 9;
+    doc.text(values[i], REPORT_INFO_X + 90 * PT, iy);
+    iy += REPORT_INFO_ROW_HEIGHT;
   }
 
   // ════════════════════════════════════════════════════════
