@@ -985,7 +985,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                                   variant="outline"
                                   size="sm"
                                   className="gap-1.5 text-xs h-7"
-                                  disabled={uploadingPhotos || ((isEditing ? editChargers[activeChargerIndex]?.photo_urls : charger.photo_urls) || []).length >= 10}
+                                  disabled={uploadingPhotos || ((editChargers[activeChargerIndex]?.photo_urls) || []).length >= 10}
                                   onClick={() => photoInputRef.current?.click()}
                                 >
                                   {uploadingPhotos ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
@@ -998,43 +998,62 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                             const displayPhotos = isEditing
                               ? editChargers[activeChargerIndex]?.photo_urls
                               : charger.photo_urls;
-                            return displayPhotos && displayPhotos.length > 0 ? (
-                              <div className="flex gap-3 flex-wrap">
-                                {displayPhotos.map((url, i) => (
-                                  <div key={i} className="relative group">
-                                    <SubmissionPhotoThumb
-                                      path={url}
-                                      alt={photoLabels[i] || `Photo ${i + 1}`}
-                                      onClick={(resolvedUrl) => setLightboxUrl(resolvedUrl)}
-                                    />
-                                    {isEditing && (
+                            const photoCount = (displayPhotos || []).length;
+
+                            return (
+                              <div
+                                className={`${isEditing ? "border-2 border-dashed rounded-lg p-3 transition-colors " + (draggingOver ? "border-primary bg-primary/5" : "border-border/60") : ""}`}
+                                onDragOver={isEditing ? (e) => { e.preventDefault(); e.stopPropagation(); setDraggingOver(true); } : undefined}
+                                onDragLeave={isEditing ? (e) => { e.preventDefault(); e.stopPropagation(); setDraggingOver(false); } : undefined}
+                                onDrop={isEditing ? (e) => { e.preventDefault(); e.stopPropagation(); setDraggingOver(false); handlePhotoUpload(e.dataTransfer.files); } : undefined}
+                              >
+                                {photoCount > 0 ? (
+                                  <div className="flex gap-3 flex-wrap">
+                                    {displayPhotos!.map((url, i) => (
+                                      <div key={`${url}-${i}`} className="relative group">
+                                        <SubmissionPhotoThumb
+                                          path={url}
+                                          alt={photoLabels[i] || `Photo ${i + 1}`}
+                                          onClick={(resolvedUrl) => setLightboxUrl(resolvedUrl)}
+                                        />
+                                        {isEditing && (
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); handleRemovePhoto(i); }}
+                                            className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    ))}
+                                    {isEditing && photoCount < 10 && (
                                       <button
-                                        onClick={(e) => { e.stopPropagation(); handleRemovePhoto(i); }}
-                                        className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => photoInputRef.current?.click()}
+                                        className="w-24 h-24 rounded-lg border-2 border-dashed border-primary/30 flex flex-col items-center justify-center text-primary/50 hover:border-primary hover:text-primary transition-colors cursor-pointer"
                                       >
-                                        <X className="h-3 w-3" />
+                                        <Plus className="h-5 w-5 mb-0.5" />
+                                        <span className="text-[10px]">Add more</span>
                                       </button>
                                     )}
                                   </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="flex gap-3">
-                                {isEditing ? (
+                                ) : isEditing ? (
                                   <button
                                     onClick={() => photoInputRef.current?.click()}
-                                    className="w-24 h-24 rounded-lg border-2 border-dashed border-primary/40 flex flex-col items-center justify-center text-primary/60 hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                                    className="w-full py-8 rounded-lg flex flex-col items-center justify-center text-primary/60 hover:text-primary transition-colors cursor-pointer"
                                   >
-                                    <Plus className="h-6 w-6 mb-1" />
-                                    <span className="text-xs">Upload</span>
+                                    <Camera className="h-8 w-8 mb-2" />
+                                    <span className="text-sm font-medium">Click or drag photos here</span>
+                                    <span className="text-xs text-muted-foreground mt-1">Up to 10 photos, 10MB each</span>
                                   </button>
                                 ) : (
-                                  photoLabels.map((label) => (
-                                    <div key={label} className="w-24 h-24 rounded-lg border-2 border-dashed border-border/60 flex flex-col items-center justify-center text-muted-foreground/50">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-1"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                                      <span className="text-xs">{label}</span>
-                                    </div>
-                                  ))
+                                  <div className="flex gap-3">
+                                    {photoLabels.map((label) => (
+                                      <div key={label} className="w-24 h-24 rounded-lg border-2 border-dashed border-border/60 flex flex-col items-center justify-center text-muted-foreground/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-1"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                        <span className="text-xs">{label}</span>
+                                      </div>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
                             );
