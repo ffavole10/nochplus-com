@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X, Play, FileDown, Plus } from "lucide-react";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
@@ -82,8 +82,46 @@ const STATUS_LABELS: Record<string, string> = {
   archived: "Archived",
 };
 
-export default function Submissions() {
-  usePageTitle('Submissions');
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+/** Resolve a photo path to a public storage URL. If already a full URL, return as-is. */
+function getPublicPhotoUrl(path: string): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return `${SUPABASE_URL}/storage/v1/object/public/submission-photos/${path}`;
+}
+
+/** Thumbnail with loading skeleton and error fallback */
+function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: string; onClick: (url: string) => void }) {
+  const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const url = getPublicPhotoUrl(path);
+
+  return (
+    <button
+      onClick={() => status === "loaded" && onClick(url)}
+      className="w-24 h-24 rounded-lg overflow-hidden border border-border bg-muted hover:opacity-80 transition-opacity cursor-zoom-in relative"
+    >
+      {status === "loading" && (
+        <div className="absolute inset-0 animate-pulse bg-muted" />
+      )}
+      {status === "error" ? (
+        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/50 gap-1">
+          <CameraOff className="h-5 w-5" />
+          <span className="text-[10px] leading-tight text-center">Photo unavailable</span>
+        </div>
+      ) : (
+        <img
+          src={url}
+          alt={alt}
+          className={`w-full h-full object-cover transition-opacity ${status === "loaded" ? "opacity-100" : "opacity-0"}`}
+          onLoad={() => setStatus("loaded")}
+          onError={() => setStatus("error")}
+        />
+      )}
+    </button>
+  );
+}
+
+  export default function Submissions() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -812,9 +850,12 @@ export default function Submissions() {
                           {charger.photo_urls && charger.photo_urls.length > 0 ? (
                             <div className="flex gap-3">
                               {charger.photo_urls.map((url, i) => (
-                                <button key={i} onClick={() => setLightboxUrl(url)} className="w-24 h-24 rounded-lg overflow-hidden border border-border bg-muted hover:opacity-80 transition-opacity cursor-zoom-in">
-                                  <img src={url} alt={photoLabels[i] || `Photo ${i + 1}`} className="w-full h-full object-cover" />
-                                </button>
+                                <SubmissionPhotoThumb
+                                  key={i}
+                                  path={url}
+                                  alt={photoLabels[i] || `Photo ${i + 1}`}
+                                  onClick={(resolvedUrl) => setLightboxUrl(resolvedUrl)}
+                                />
                               ))}
                             </div>
                           ) : (
