@@ -3,6 +3,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { BRAND, NOCH_ADDRESS, NOCH_WEBSITE, NOCH_COMPANY, loadLogoBase64 } from "@/constants/brandAssets";
 import { toast } from "sonner";
+import * as pdfjsLib from "pdfjs-dist";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
+
+async function loadCoverAsImage(): Promise<string | null> {
+  try {
+    const response = await fetch("/assets/report-cover.pdf");
+    if (!response.ok) return null;
+    const arrayBuffer = await response.arrayBuffer();
+    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const page = await pdfDoc.getPage(1);
+    const viewport = page.getViewport({ scale: 2.0 });
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext("2d")!;
+    await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+    return canvas.toDataURL("image/jpeg", 0.92);
+  } catch (e) {
+    console.warn("Failed to load cover PDF as image:", e);
+    return null;
+  }
+}
 
 // ── Helpers ──────────────────────────────────────────────
 
