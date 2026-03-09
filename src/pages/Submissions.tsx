@@ -233,7 +233,7 @@ export default function Submissions() {
     const serviceNeeded: Record<string, boolean | null> = {};
     const notes: Record<string, string> = {};
     sub.chargers.forEach((c) => {
-      statuses[c.id] = c.status || "pending_review";
+      statuses[c.id] = c.status || "pending";
       serviceNeeded[c.id] = c.service_needed;
       notes[c.id] = c.staff_notes || "";
     });
