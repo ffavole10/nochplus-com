@@ -8,6 +8,7 @@ import { chargerRecordToAssessment } from "@/lib/assessmentParser";
 import { AssessmentCharger } from "@/types/assessment";
 import { Database } from "lucide-react";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
+import { persistTicketToDB } from "@/hooks/useServiceTicketsDB";
 import { ServiceTicket, WORKFLOW_STEPS_TEMPLATE } from "@/types/serviceTicket";
 
 const IssuesQueue = () => {
