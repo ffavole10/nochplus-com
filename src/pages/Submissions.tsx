@@ -995,7 +995,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                 </div>
 
                 {/* Per-charger Notes */}
-                {selectedSubmission.source !== "assessment" && (
+                {(
                   <Card className="border border-border/60">
                     <CardContent className="p-5 space-y-3">
                       <h3 className="font-semibold text-foreground text-sm">
