@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { NewSubmissionModal } from "@/components/submissions/NewSubmissionModal";
 
+type SubmissionSource = "legacy" | "assessment";
+
 interface ChargerSubmission {
   id: string;
   brand: string;
@@ -28,7 +30,9 @@ interface ChargerSubmission {
   installation_location: string | null;
   photo_urls: string[] | null;
   known_issues: string | null;
+  /** Charger-level workflow status (legacy used pending_review; new assessments use pending) */
   status: string;
+  /** Legacy-only fields (not stored for assessment_chargers) */
   service_needed: boolean | null;
   staff_notes: string | null;
 }
@@ -36,7 +40,12 @@ interface ChargerSubmission {
 interface Submission {
   id: string;
   submission_id: string;
+  /** Submission-level status */
   status: string;
+  /** Present only for noch_plus_submissions (assessment/repair) */
+  submission_type?: string | null;
+  source: SubmissionSource;
+
   full_name: string;
   company_name: string;
   email: string;
@@ -59,6 +68,8 @@ interface Submission {
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-secondary/15 text-secondary border-secondary/30",
   pending_review: "bg-medium/15 text-medium border-medium/30",
+  // Alias for assessment_chargers default status
+  pending: "bg-medium/15 text-medium border-medium/30",
   approved: "bg-optimal/15 text-optimal border-optimal/30",
   archived: "bg-muted text-muted-foreground border-border",
 };
@@ -66,6 +77,7 @@ const STATUS_STYLES: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
   pending_review: "Pending",
+  pending: "Pending",
   approved: "Approved",
   archived: "Archived",
 };
@@ -107,34 +119,71 @@ export default function Submissions() {
 
   const fetchSubmissions = async () => {
     setLoading(true);
-    const { data: subs, error } = await supabase
-      .from("submissions")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const [legacyRes, assessmentRes] = await Promise.all([
+        supabase.from("submissions").select("*").order("created_at", { ascending: false }),
+        supabase.from("noch_plus_submissions").select("*").order("created_at", { ascending: false }),
+      ]);
 
-    if (error) {
+      if (legacyRes.error || assessmentRes.error) {
+        throw legacyRes.error || assessmentRes.error;
+      }
+
+      const legacySubs = legacyRes.data || [];
+      const assessmentSubs = assessmentRes.data || [];
+
+      const legacyIds = legacySubs.map((s) => s.id);
+      const assessmentIds = assessmentSubs.map((s) => s.id);
+
+      const [legacyChargersRes, assessmentChargersRes] = await Promise.all([
+        legacyIds.length
+          ? supabase.from("charger_submissions").select("*").in("submission_id", legacyIds)
+          : Promise.resolve({ data: [] as any[] }),
+        assessmentIds.length
+          ? supabase.from("assessment_chargers").select("*").in("submission_id", assessmentIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const legacyChargers = (legacyChargersRes as any).data || [];
+      const assessmentChargers = (assessmentChargersRes as any).data || [];
+
+      const mergedLegacy: Submission[] = legacySubs.map((s: any) => ({
+        ...s,
+        source: "legacy" as const,
+        submission_type: null,
+        chargers: legacyChargers
+          .filter((c: any) => c.submission_id === s.id)
+          .map((c: any) => ({
+            ...c,
+            status: c.status === "pending_review" ? "pending" : c.status || "pending",
+            service_needed: c.service_needed ?? null,
+            staff_notes: c.staff_notes || null,
+          })),
+      }));
+
+      const mergedAssessments: Submission[] = assessmentSubs.map((s: any) => ({
+        ...s,
+        source: "assessment" as const,
+        chargers: assessmentChargers
+          .filter((c: any) => c.submission_id === s.id)
+          .map((c: any) => ({
+            ...c,
+            status: c.status || "pending",
+            service_needed: null,
+            staff_notes: null,
+          })),
+      }));
+
+      const mergedAll = [...mergedLegacy, ...mergedAssessments].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setSubmissions(mergedAll);
+    } catch (e) {
       toast.error("Failed to load submissions");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const subIds = (subs || []).map((s) => s.id);
-    const { data: chargers } = subIds.length
-      ? await supabase.from("charger_submissions").select("*").in("submission_id", subIds)
-      : { data: [] };
-
-    const merged: Submission[] = (subs || []).map((s) => ({
-      ...s,
-      chargers: (chargers || []).filter((c) => c.submission_id === s.id).map((c) => ({
-        ...c,
-        status: (c as any).status || "pending_review",
-        service_needed: (c as any).service_needed ?? null,
-        staff_notes: (c as any).staff_notes || null,
-      })),
-    }));
-
-    setSubmissions(merged);
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -184,7 +233,7 @@ export default function Submissions() {
     const serviceNeeded: Record<string, boolean | null> = {};
     const notes: Record<string, string> = {};
     sub.chargers.forEach((c) => {
-      statuses[c.id] = c.status || "pending_review";
+      statuses[c.id] = c.status || "pending";
       serviceNeeded[c.id] = c.service_needed;
       notes[c.id] = c.staff_notes || "";
     });
@@ -242,9 +291,14 @@ export default function Submissions() {
     if (!selectedSubmission) return;
     setSavingEdit(true);
     try {
+      const submissionTable =
+        selectedSubmission.source === "assessment" ? "noch_plus_submissions" : "submissions";
+      const chargerTable =
+        selectedSubmission.source === "assessment" ? "assessment_chargers" : "charger_submissions";
+
       // Save customer info
       const { error: subError } = await supabase
-        .from("submissions")
+        .from(submissionTable)
         .update({
           full_name: editForm.full_name,
           company_name: editForm.company_name,
@@ -254,50 +308,67 @@ export default function Submissions() {
           city: editForm.city,
           state: editForm.state,
           zip_code: editForm.zip_code,
-        })
+        } as any)
         .eq("id", selectedSubmission.id);
 
       if (subError) throw subError;
 
-      // Save each charger's details + per-charger status/service/notes
+      // Save each charger's details + per-charger status
       for (const ch of editChargers) {
+        const chargerUpdate: Record<string, any> = {
+          brand: ch.brand,
+          serial_number: ch.serial_number,
+          charger_type: ch.charger_type,
+          installation_location: ch.installation_location,
+          known_issues: ch.known_issues,
+          status: chargerStatuses[ch.id] || "pending",
+        };
+
+        // Legacy-only fields (assessment_chargers does not store these)
+        if (selectedSubmission.source !== "assessment") {
+          chargerUpdate.service_needed = chargerServiceNeeded[ch.id] ?? null;
+          chargerUpdate.staff_notes = chargerNotes[ch.id] || null;
+        }
+
         const { error: chError } = await supabase
-          .from("charger_submissions")
-          .update({
-            brand: ch.brand,
-            serial_number: ch.serial_number,
-            charger_type: ch.charger_type,
-            installation_location: ch.installation_location,
-            known_issues: ch.known_issues,
-            status: chargerStatuses[ch.id] || "pending_review",
-            service_needed: chargerServiceNeeded[ch.id] ?? null,
-            staff_notes: chargerNotes[ch.id] || null,
-          })
+          .from(chargerTable)
+          .update(chargerUpdate as any)
           .eq("id", ch.id);
         if (chError) throw chError;
       }
 
       // Update submission-level status based on charger statuses
-      const allApproved = editChargers.every(ch => chargerStatuses[ch.id] === "approved");
-      const anyApproved = editChargers.some(ch => chargerStatuses[ch.id] === "approved");
+      const allApproved = editChargers.every(
+        (ch) => (chargerStatuses[ch.id] || "pending") === "approved"
+      );
+      const anyApproved = editChargers.some(
+        (ch) => (chargerStatuses[ch.id] || "pending") === "approved"
+      );
       let newSubStatus = selectedSubmission.status;
       if (allApproved) newSubStatus = "approved";
       else if (anyApproved) newSubStatus = "approved";
 
       if (newSubStatus !== selectedSubmission.status) {
-        await supabase.from("submissions").update({ status: newSubStatus }).eq("id", selectedSubmission.id);
+        await supabase
+          .from(submissionTable)
+          .update({ status: newSubStatus } as any)
+          .eq("id", selectedSubmission.id);
       }
 
-      const updatedChargers = editChargers.map(ch => ({
+      const updatedChargers = editChargers.map((ch) => ({
         ...ch,
-        status: chargerStatuses[ch.id] || "pending_review",
-        service_needed: chargerServiceNeeded[ch.id] ?? null,
-        staff_notes: chargerNotes[ch.id] || null,
+        status: chargerStatuses[ch.id] || "pending",
+        service_needed:
+          selectedSubmission.source === "assessment"
+            ? null
+            : (chargerServiceNeeded[ch.id] ?? null),
+        staff_notes:
+          selectedSubmission.source === "assessment" ? null : chargerNotes[ch.id] || null,
       }));
 
       const updated: Submission = {
         ...selectedSubmission,
-        ...editForm as any,
+        ...(editForm as any),
         status: newSubStatus,
         chargers: updatedChargers,
       };
@@ -306,74 +377,96 @@ export default function Submissions() {
       setSelectedSubmission(updated);
       setIsEditing(false);
 
-      // Create service tickets for chargers flagged with service_needed=true
-      // Only create tickets for chargers that are newly flagged (weren't already flagged before)
-      const serviceChargers = updatedChargers.filter(ch => ch.service_needed === true);
-      const previouslyFlagged = selectedSubmission.chargers
-        .filter(ch => ch.service_needed === true)
-        .map(ch => ch.id);
-      const newServiceChargers = serviceChargers.filter(ch => !previouslyFlagged.includes(ch.id));
+      if (selectedSubmission.source !== "assessment") {
+        // Create service tickets for chargers flagged with service_needed=true
+        // Only create tickets for chargers that are newly flagged (weren't already flagged before)
+        const serviceChargers = updatedChargers.filter((ch) => ch.service_needed === true);
+        const previouslyFlagged = selectedSubmission.chargers
+          .filter((ch) => ch.service_needed === true)
+          .map((ch) => ch.id);
+        const newServiceChargers = serviceChargers.filter((ch) => !previouslyFlagged.includes(ch.id));
 
-      if (newServiceChargers.length > 0) {
-        const store = useServiceTicketsStore.getState();
-        const customerInfo = {
-          name: updated.full_name,
-          company: updated.company_name,
-          email: updated.email,
-          phone: updated.phone,
-          address: `${updated.street_address}, ${updated.city}, ${updated.state} ${updated.zip_code}`,
-        };
+        if (newServiceChargers.length > 0) {
+          const store = useServiceTicketsStore.getState();
+          const customerInfo = {
+            name: updated.full_name,
+            company: updated.company_name,
+            email: updated.email,
+            phone: updated.phone,
+            address: `${updated.street_address}, ${updated.city}, ${updated.state} ${updated.zip_code}`,
+          };
 
-        const validBrands: ChargerBrand[] = ["BTC", "ABB", "Delta", "Tritium", "Signet", "Other"];
-        const mapBrand = (b: string): ChargerBrand | "" => {
-          const upper = b?.toUpperCase() || "";
-          const found = validBrands.find(v => upper.includes(v.toUpperCase()));
-          return found || (b ? "Other" : "");
-        };
+          const validBrands: ChargerBrand[] = ["BTC", "ABB", "Delta", "Tritium", "Signet", "Other"];
+          const mapBrand = (b: string): ChargerBrand | "" => {
+            const upper = b?.toUpperCase() || "";
+            const found = validBrands.find((v) => upper.includes(v.toUpperCase()));
+            return found || (b ? "Other" : "");
+          };
 
-        const chargerData = newServiceChargers.map(ch => ({
-          charger: {
-            brand: mapBrand(ch.brand),
-            serialNumber: ch.serial_number || "",
-            type: (ch.charger_type === "DC" || ch.charger_type === "DC | Level 3" ? "DC_L3" : "AC_L2") as TicketChargerInfo["type"],
-            location: `${updated.city}, ${updated.state}`,
-          },
-          issue: {
-            description: ch.known_issues || chargerNotes[ch.id] || "Service requested via Noch+ submission.",
-          },
-        }));
+          const chargerData = newServiceChargers.map((ch) => ({
+            charger: {
+              brand: mapBrand(ch.brand),
+              serialNumber: ch.serial_number || "",
+              type: (
+                ch.charger_type === "DC" || ch.charger_type === "DC | Level 3" ? "DC_L3" : "AC_L2"
+              ) as TicketChargerInfo["type"],
+              location: `${updated.city}, ${updated.state}`,
+            },
+            issue: {
+              description:
+                ch.known_issues || chargerNotes[ch.id] || "Service requested via Noch+ submission.",
+            },
+          }));
 
-        if (chargerData.length === 1) {
-          // Single charger → standalone ticket
-          const now = new Date().toISOString();
-          const ticketId = store.getNextTicketId();
-          const cd = chargerData[0];
-          store.addTicket({
-            id: `st-${Date.now()}`,
-            ticketId,
-            source: "noch_plus",
-            customer: customerInfo,
-            charger: cd.charger,
-            photos: [],
-            issue: cd.issue,
-            priority: "Medium",
-            status: "pending_review",
-            currentStep: 1,
-            workflowSteps: makeSteps(1),
-            createdAt: now,
-            updatedAt: now,
-            history: [{ id: `h-${Date.now()}`, timestamp: now, action: "Ticket created from Noch+ submission", performedBy: "System" }],
-            metadata: { campaignName: `Submission ${updated.submission_id}` },
-          });
-          toast.success(`Service ticket ${ticketId} created in Service Desk.`, { duration: 5000 });
+          if (chargerData.length === 1) {
+            // Single charger → standalone ticket
+            const now = new Date().toISOString();
+            const ticketId = store.getNextTicketId();
+            const cd = chargerData[0];
+            store.addTicket({
+              id: `st-${Date.now()}`,
+              ticketId,
+              source: "noch_plus",
+              customer: customerInfo,
+              charger: cd.charger,
+              photos: [],
+              issue: cd.issue,
+              priority: "Medium",
+              status: "pending_review",
+              currentStep: 1,
+              workflowSteps: makeSteps(1),
+              createdAt: now,
+              updatedAt: now,
+              history: [
+                {
+                  id: `h-${Date.now()}`,
+                  timestamp: now,
+                  action: "Ticket created from Noch+ submission",
+                  performedBy: "System",
+                },
+              ],
+              metadata: { campaignName: `Submission ${updated.submission_id}` },
+            });
+            toast.success(`Service ticket ${ticketId} created in Service Desk.`, { duration: 5000 });
+          } else {
+            // Multiple chargers → parent-child
+            const parentId = store.createParentWithChildren(
+              customerInfo,
+              chargerData,
+              "noch_plus",
+              `Submission ${updated.submission_id}`
+            );
+            const parent = store.getTicketById(parentId);
+            toast.success(
+              `${newServiceChargers.length} service tickets created under ${parent?.ticketId || "new parent"}.`,
+              { duration: 5000 }
+            );
+          }
+        } else if (serviceChargers.length > 0) {
+          toast.success("Changes saved (service tickets already created for flagged chargers).");
         } else {
-          // Multiple chargers → parent-child
-          const parentId = store.createParentWithChildren(customerInfo, chargerData, "noch_plus", `Submission ${updated.submission_id}`);
-          const parent = store.getTicketById(parentId);
-          toast.success(`${newServiceChargers.length} service tickets created under ${parent?.ticketId || "new parent"}.`, { duration: 5000 });
+          toast.success("Changes saved");
         }
-      } else if (serviceChargers.length > 0) {
-        toast.success("Changes saved (service tickets already created for flagged chargers).");
       } else {
         toast.success("Changes saved");
       }
@@ -749,102 +842,114 @@ export default function Submissions() {
                 </Card>
 
                 {/* Per-charger Status + Service Request row */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className={`grid gap-4 ${selectedSubmission.source === "assessment" ? "grid-cols-1" : "grid-cols-2"}`}>
                   {/* Status */}
                   <Card className="border border-border/60">
                     <CardContent className="p-5 space-y-3">
                       <h3 className="font-semibold text-foreground text-sm">Status</h3>
                       {isEditing ? (
                         <div className="flex items-center gap-3">
-                          <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending_review"] || ""}>
-                            {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending_review"] || "Pending"}
+                          <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending"] || ""}>
+                            {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending"] || "Pending"}
                           </Badge>
                           <Select
-                            value={chargerStatuses[currentChargerId] || "pending_review"}
-                            onValueChange={(v) => setChargerStatuses(prev => ({ ...prev, [currentChargerId]: v }))}
+                            value={chargerStatuses[currentChargerId] || "pending"}
+                            onValueChange={(v) =>
+                              setChargerStatuses((prev) => ({ ...prev, [currentChargerId]: v }))
+                            }
                           >
                             <SelectTrigger className="flex-1">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="pending_review">Pending</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
                               <SelectItem value="approved">Approved</SelectItem>
                               <SelectItem value="archived">Archived</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       ) : (
-                        <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending_review"] || ""}>
-                          {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending_review"] || "Pending"}
+                        <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending"] || ""}>
+                          {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending"] || "Pending"}
                         </Badge>
                       )}
                     </CardContent>
                   </Card>
 
                   {/* Service Request */}
-                  <Card className="border border-border/60">
-                    <CardContent className="p-5 space-y-3">
-                      <h3 className="font-semibold text-foreground text-sm">Service Request</h3>
-                      {isEditing ? (
-                        <div className="flex items-center gap-3">
-                          <Button
-                            size="sm"
-                            variant={chargerServiceNeeded[currentChargerId] === true ? "default" : "outline"}
-                            className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === true ? "bg-optimal text-optimal-foreground hover:bg-optimal/90" : ""}`}
-                            onClick={() => setChargerServiceNeeded(prev => ({ ...prev, [currentChargerId]: true }))}
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                            Yes
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={chargerServiceNeeded[currentChargerId] === false ? "default" : "outline"}
-                            className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === false ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}`}
-                            onClick={() => setChargerServiceNeeded(prev => ({ ...prev, [currentChargerId]: false }))}
-                          >
-                            <XCircle className="h-4 w-4" />
-                            No
-                          </Button>
-                        </div>
-                      ) : (
-                        <div>
-                          {chargerServiceNeeded[currentChargerId] === true && (
-                            <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
-                              <CheckCircle className="h-3 w-3" /> Yes — Send to Service Desk
-                            </Badge>
-                          )}
-                          {chargerServiceNeeded[currentChargerId] === false && (
-                            <Badge className="bg-muted text-muted-foreground gap-1">
-                              <XCircle className="h-3 w-3" /> No
-                            </Badge>
-                          )}
-                          {chargerServiceNeeded[currentChargerId] == null && (
-                            <p className="text-sm text-muted-foreground">Not decided</p>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                  {selectedSubmission.source !== "assessment" && (
+                    <Card className="border border-border/60">
+                      <CardContent className="p-5 space-y-3">
+                        <h3 className="font-semibold text-foreground text-sm">Service Request</h3>
+                        {isEditing ? (
+                          <div className="flex items-center gap-3">
+                            <Button
+                              size="sm"
+                              variant={chargerServiceNeeded[currentChargerId] === true ? "default" : "outline"}
+                              className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === true ? "bg-optimal text-optimal-foreground hover:bg-optimal/90" : ""}`}
+                              onClick={() =>
+                                setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: true }))
+                              }
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                              Yes
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={chargerServiceNeeded[currentChargerId] === false ? "default" : "outline"}
+                              className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === false ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}`}
+                              onClick={() =>
+                                setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: false }))
+                              }
+                            >
+                              <XCircle className="h-4 w-4" />
+                              No
+                            </Button>
+                          </div>
+                        ) : (
+                          <div>
+                            {chargerServiceNeeded[currentChargerId] === true && (
+                              <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
+                                <CheckCircle className="h-3 w-3" /> Yes — Send to Service Desk
+                              </Badge>
+                            )}
+                            {chargerServiceNeeded[currentChargerId] === false && (
+                              <Badge className="bg-muted text-muted-foreground gap-1">
+                                <XCircle className="h-3 w-3" /> No
+                              </Badge>
+                            )}
+                            {chargerServiceNeeded[currentChargerId] == null && (
+                              <p className="text-sm text-muted-foreground">Not decided</p>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
 
                 {/* Per-charger Notes */}
-                <Card className="border border-border/60">
-                  <CardContent className="p-5 space-y-3">
-                    <h3 className="font-semibold text-foreground text-sm">Notes — Charger {activeChargerIndex + 1}</h3>
-                    {isEditing ? (
-                      <Textarea
-                        value={chargerNotes[currentChargerId] || ""}
-                        onChange={(e) => setChargerNotes(prev => ({ ...prev, [currentChargerId]: e.target.value }))}
-                        placeholder="Add notes for this charger..."
-                        rows={3}
-                      />
-                    ) : (
-                      <p className="text-sm text-foreground">
-                        {chargerNotes[currentChargerId] || "No notes"}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                {selectedSubmission.source !== "assessment" && (
+                  <Card className="border border-border/60">
+                    <CardContent className="p-5 space-y-3">
+                      <h3 className="font-semibold text-foreground text-sm">
+                        Notes — Charger {activeChargerIndex + 1}
+                      </h3>
+                      {isEditing ? (
+                        <Textarea
+                          value={chargerNotes[currentChargerId] || ""}
+                          onChange={(e) =>
+                            setChargerNotes((prev) => ({ ...prev, [currentChargerId]: e.target.value }))
+                          }
+                          placeholder="Add notes for this charger..."
+                          rows={3}
+                        />
+                      ) : (
+                        <p className="text-sm text-foreground">{chargerNotes[currentChargerId] || "No notes"}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Save / Cancel bar when editing */}
                 {isEditing && (
