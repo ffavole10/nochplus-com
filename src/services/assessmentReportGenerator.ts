@@ -499,9 +499,15 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     y = drawSectionHeader(doc, "Priority Actions", y);
 
     for (let i = 0; i < priorityChargers.length; i++) {
-      y = needsNewPage(doc, y, 16, logoB64, sub.submission_id, pageCounter);
       const { ch, idx, priority } = priorityChargers[i];
       const issue = ch.known_issues || "Issue identified during assessment";
+      const recLine = `Charger ${idx + 1}: Recommend immediate ${priority.label === "CRITICAL" ? "critical" : "priority"} service.`;
+      const maxTextW = PAGE_W - 2 * M - 14;
+      const issueLines = doc.splitTextToSize(`${issue} — ${ch.serial_number || ch.brand}`, maxTextW);
+      const recLines = doc.splitTextToSize(recLine, maxTextW);
+      const itemH = 6 + issueLines.length * 4 + recLines.length * 3.5 + 4;
+
+      y = needsNewPage(doc, y, itemH, logoB64, sub.submission_id, pageCounter);
 
       setTextC(doc, priority.color);
       doc.setFontSize(10);
@@ -510,19 +516,21 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
 
       setTextC(doc, BRAND.darkText);
       doc.setFontSize(9);
-      doc.text(`${issue} — ${ch.serial_number || ch.brand}`, M + 10, y + 4);
+      doc.text(issueLines, M + 10, y + 4);
+      const afterIssue = y + 4 + issueLines.length * 4;
 
       setTextC(doc, BRAND.gray);
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      doc.text(`Charger ${idx + 1}: Recommend immediate ${priority.label === "CRITICAL" ? "critical" : "priority"} service.`, M + 10, y + 9);
+      doc.text(recLines, M + 10, afterIssue);
+      const afterRec = afterIssue + recLines.length * 3.5 + 2;
 
       if (i < priorityChargers.length - 1) {
         setDraw(doc, "#E5E7EB");
         doc.setLineWidth(0.1);
-        doc.line(M + 2, y + 12, PAGE_W - M - 2, y + 12);
+        doc.line(M + 2, afterRec, PAGE_W - M - 2, afterRec);
       }
-      y += 14;
+      y = afterRec + 2;
     }
     y += 2;
   }
