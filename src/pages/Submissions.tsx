@@ -1011,76 +1011,47 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                   <Card className="border border-border/60">
                     <CardContent className="p-5 space-y-3">
                       <h3 className="font-semibold text-foreground text-sm">Service Request</h3>
-                      <div className="flex items-center gap-3">
-                        <Button
-                          size="sm"
-                          variant={chargerServiceNeeded[currentChargerId] === true ? "default" : "outline"}
-                          className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === true ? "bg-optimal text-optimal-foreground hover:bg-optimal/90" : ""}`}
-                          onClick={async () => {
-                            setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: true }));
-                            // Create service ticket immediately
-                            const store = useServiceTicketsStore.getState();
-                            const validBrands: ChargerBrand[] = ["BTC", "ABB", "Delta", "Tritium", "Signet", "Other"];
-                            const mapBrand = (b: string): ChargerBrand | "" => {
-                              const upper = b?.toUpperCase() || "";
-                              const found = validBrands.find((v) => upper.includes(v.toUpperCase()));
-                              return found || (b ? "Other" : "");
-                            };
-                            const ch = selectedSubmission.chargers.find(c => c.id === currentChargerId);
-                            if (ch) {
-                              const now = new Date().toISOString();
-                              const ticketId = store.getNextTicketId();
-                              store.addTicket({
-                                id: `st-${Date.now()}`,
-                                ticketId,
-                                source: "noch_plus",
-                                customer: {
-                                  name: selectedSubmission.full_name,
-                                  company: selectedSubmission.company_name,
-                                  email: selectedSubmission.email,
-                                  phone: selectedSubmission.phone,
-                                  address: `${selectedSubmission.street_address}, ${selectedSubmission.city}, ${selectedSubmission.state} ${selectedSubmission.zip_code}`,
-                                },
-                                charger: {
-                                  brand: mapBrand(ch.brand),
-                                  serialNumber: ch.serial_number || "",
-                                  type: (ch.charger_type === "DC" || ch.charger_type === "DC | Level 3" ? "DC_L3" : "AC_L2") as TicketChargerInfo["type"],
-                                  location: `${selectedSubmission.city}, ${selectedSubmission.state}`,
-                                },
-                                photos: [],
-                                issue: { description: ch.known_issues || chargerNotes[currentChargerId] || "Service requested via Noch+ submission." },
-                                priority: "Medium",
-                                status: "pending_review",
-                                currentStep: 1,
-                                workflowSteps: makeSteps(1),
-                                createdAt: now,
-                                updatedAt: now,
-                                history: [{ id: `h-${Date.now()}`, timestamp: now, action: "Ticket created from Noch+ submission", performedBy: "System" }],
-                                metadata: { campaignName: `Submission ${selectedSubmission.submission_id}` },
-                              });
-                              toast.success(`Service ticket ${ticketId} created in Service Desk.`, { duration: 5000 });
+                      {isEditing ? (
+                        <div className="flex items-center gap-3">
+                          <Button
+                            size="sm"
+                            variant={chargerServiceNeeded[currentChargerId] === true ? "default" : "outline"}
+                            className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === true ? "bg-optimal text-optimal-foreground hover:bg-optimal/90" : ""}`}
+                            onClick={() =>
+                              setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: true }))
                             }
-                          }}
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                          Yes — Open Ticket
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={chargerServiceNeeded[currentChargerId] === false ? "default" : "outline"}
-                          className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === false ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}`}
-                          onClick={() =>
-                            setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: false }))
-                          }
-                        >
-                          <XCircle className="h-4 w-4" />
-                          No
-                        </Button>
-                      </div>
-                      {chargerServiceNeeded[currentChargerId] === true && (
-                        <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
-                          <CheckCircle className="h-3 w-3" /> Ticket Created
-                        </Badge>
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Yes — Open Ticket
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={chargerServiceNeeded[currentChargerId] === false ? "default" : "outline"}
+                            className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === false ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}`}
+                            onClick={() =>
+                              setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: false }))
+                            }
+                          >
+                            <XCircle className="h-4 w-4" />
+                            No
+                          </Button>
+                        </div>
+                      ) : (
+                        <div>
+                          {chargerServiceNeeded[currentChargerId] === true && (
+                            <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
+                              <CheckCircle className="h-3 w-3" /> Yes — Open Ticket
+                            </Badge>
+                          )}
+                          {chargerServiceNeeded[currentChargerId] === false && (
+                            <Badge className="bg-muted text-muted-foreground gap-1">
+                              <XCircle className="h-3 w-3" /> No
+                            </Badge>
+                          )}
+                          {chargerServiceNeeded[currentChargerId] == null && (
+                            <p className="text-sm text-muted-foreground">Not decided</p>
+                          )}
+                        </div>
                       )}
                     </CardContent>
                   </Card>
