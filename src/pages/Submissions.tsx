@@ -516,16 +516,16 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
             const now = new Date().toISOString();
             const ticketId = store.getNextTicketId();
             const cd = chargerData[0];
-            store.addTicket({
+            const newTicket = {
               id: `st-${Date.now()}`,
               ticketId,
-              source: "noch_plus",
+              source: "noch_plus" as const,
               customer: customerInfo,
               charger: cd.charger,
-              photos: [],
+              photos: [] as any[],
               issue: cd.issue,
-              priority: "Medium",
-              status: "pending_review",
+              priority: "Medium" as const,
+              status: "pending_review" as const,
               currentStep: 1,
               workflowSteps: makeSteps(1),
               createdAt: now,
@@ -539,7 +539,9 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                 },
               ],
               metadata: { campaignName: `Submission ${updated.submission_id}` },
-            });
+            };
+            store.addTicket(newTicket);
+            persistTicketToDB(newTicket);
             toast.success(`Service ticket ${ticketId} created in Service Desk.`, { duration: 5000 });
           } else {
             // Multiple chargers → parent-child
@@ -550,6 +552,11 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
               `Submission ${updated.submission_id}`
             );
             const parent = store.getTicketById(parentId);
+            // Persist all children to DB
+            const children = parent?.childTicketIds?.map((cid) => store.getTicketById(cid)).filter(Boolean) || [];
+            for (const child of children) {
+              if (child) persistTicketToDB(child);
+            }
             toast.success(
               `${newServiceChargers.length} service tickets created under ${parent?.ticketId || "new parent"}.`,
               { duration: 5000 }
