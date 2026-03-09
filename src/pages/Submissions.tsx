@@ -119,34 +119,71 @@ export default function Submissions() {
 
   const fetchSubmissions = async () => {
     setLoading(true);
-    const { data: subs, error } = await supabase
-      .from("submissions")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const [legacyRes, assessmentRes] = await Promise.all([
+        supabase.from("submissions").select("*").order("created_at", { ascending: false }),
+        supabase.from("noch_plus_submissions").select("*").order("created_at", { ascending: false }),
+      ]);
 
-    if (error) {
+      if (legacyRes.error || assessmentRes.error) {
+        throw legacyRes.error || assessmentRes.error;
+      }
+
+      const legacySubs = legacyRes.data || [];
+      const assessmentSubs = assessmentRes.data || [];
+
+      const legacyIds = legacySubs.map((s) => s.id);
+      const assessmentIds = assessmentSubs.map((s) => s.id);
+
+      const [legacyChargersRes, assessmentChargersRes] = await Promise.all([
+        legacyIds.length
+          ? supabase.from("charger_submissions").select("*").in("submission_id", legacyIds)
+          : Promise.resolve({ data: [] as any[] }),
+        assessmentIds.length
+          ? supabase.from("assessment_chargers").select("*").in("submission_id", assessmentIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const legacyChargers = (legacyChargersRes as any).data || [];
+      const assessmentChargers = (assessmentChargersRes as any).data || [];
+
+      const mergedLegacy: Submission[] = legacySubs.map((s: any) => ({
+        ...s,
+        source: "legacy" as const,
+        submission_type: null,
+        chargers: legacyChargers
+          .filter((c: any) => c.submission_id === s.id)
+          .map((c: any) => ({
+            ...c,
+            status: c.status === "pending_review" ? "pending" : c.status || "pending",
+            service_needed: c.service_needed ?? null,
+            staff_notes: c.staff_notes || null,
+          })),
+      }));
+
+      const mergedAssessments: Submission[] = assessmentSubs.map((s: any) => ({
+        ...s,
+        source: "assessment" as const,
+        chargers: assessmentChargers
+          .filter((c: any) => c.submission_id === s.id)
+          .map((c: any) => ({
+            ...c,
+            status: c.status || "pending",
+            service_needed: null,
+            staff_notes: null,
+          })),
+      }));
+
+      const mergedAll = [...mergedLegacy, ...mergedAssessments].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setSubmissions(mergedAll);
+    } catch (e) {
       toast.error("Failed to load submissions");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const subIds = (subs || []).map((s) => s.id);
-    const { data: chargers } = subIds.length
-      ? await supabase.from("charger_submissions").select("*").in("submission_id", subIds)
-      : { data: [] };
-
-    const merged: Submission[] = (subs || []).map((s) => ({
-      ...s,
-      chargers: (chargers || []).filter((c) => c.submission_id === s.id).map((c) => ({
-        ...c,
-        status: (c as any).status || "pending_review",
-        service_needed: (c as any).service_needed ?? null,
-        staff_notes: (c as any).staff_notes || null,
-      })),
-    }));
-
-    setSubmissions(merged);
-    setLoading(false);
   };
 
   useEffect(() => {
