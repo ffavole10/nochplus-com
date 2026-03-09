@@ -461,11 +461,9 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
       };
 
       setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-      setSelectedSubmission(updated);
       setIsEditing(false);
 
-      {
-        // Create service tickets for chargers flagged with service_needed=true
+      // Create service tickets for chargers flagged with service_needed=true
         // Only create tickets for chargers that are newly flagged (weren't already flagged before)
         const serviceChargers = updatedChargers.filter((ch) => ch.service_needed === true);
         const previouslyFlagged = selectedSubmission.chargers
