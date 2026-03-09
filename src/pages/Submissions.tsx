@@ -883,94 +883,119 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                 </Card>
 
                 {/* Per-charger Status + Service Request row */}
-                <div className={`grid gap-4 ${selectedSubmission.source === "assessment" ? "grid-cols-1" : "grid-cols-2"}`}>
+                <div className="grid gap-4 grid-cols-2">
                   {/* Status */}
                   <Card className="border border-border/60">
                     <CardContent className="p-5 space-y-3">
                       <h3 className="font-semibold text-foreground text-sm">Status</h3>
-                      {isEditing ? (
-                        <div className="flex items-center gap-3">
-                          <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending"] || ""}>
-                            {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending"] || "Pending"}
-                          </Badge>
-                          <Select
-                            value={chargerStatuses[currentChargerId] || "pending"}
-                            onValueChange={(v) =>
-                              setChargerStatuses((prev) => ({ ...prev, [currentChargerId]: v }))
-                            }
-                          >
-                            <SelectTrigger className="flex-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="approved">Approved</SelectItem>
-                              <SelectItem value="archived">Archived</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ) : (
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending"] || ""}>
                           {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending"] || "Pending"}
                         </Badge>
-                      )}
+                        {chargerStatuses[currentChargerId] !== "approved" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 border-green-600/30 text-green-600 hover:bg-green-600/10"
+                            onClick={async () => {
+                              setChargerStatuses((prev) => ({ ...prev, [currentChargerId]: "approved" }));
+                              // Persist immediately
+                              const table = selectedSubmission.source === "assessment" ? "assessment_chargers" : "charger_submissions";
+                              await supabase.from(table).update({ status: "approved" }).eq("id", currentChargerId);
+                              toast.success(`Charger ${activeChargerIndex + 1} approved`);
+                            }}
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Approve
+                          </Button>
+                        )}
+                        {chargerStatuses[currentChargerId] !== "archived" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              setChargerStatuses((prev) => ({ ...prev, [currentChargerId]: "archived" }));
+                              const table = selectedSubmission.source === "assessment" ? "assessment_chargers" : "charger_submissions";
+                              supabase.from(table).update({ status: "archived" }).eq("id", currentChargerId);
+                              toast.success(`Charger ${activeChargerIndex + 1} archived`);
+                            }}
+                          >
+                            <XCircle className="h-4 w-4" />
+                            Reject
+                          </Button>
+                        )}
+                        {chargerStatuses[currentChargerId] !== "pending" && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="gap-1.5 text-muted-foreground"
+                            onClick={() => {
+                              setChargerStatuses((prev) => ({ ...prev, [currentChargerId]: "pending" }));
+                              const table = selectedSubmission.source === "assessment" ? "assessment_chargers" : "charger_submissions";
+                              supabase.from(table).update({ status: "pending" }).eq("id", currentChargerId);
+                            }}
+                          >
+                            <Clock className="h-4 w-4" />
+                            Reset
+                          </Button>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
 
                   {/* Service Request */}
-                  {selectedSubmission.source !== "assessment" && (
-                    <Card className="border border-border/60">
-                      <CardContent className="p-5 space-y-3">
-                        <h3 className="font-semibold text-foreground text-sm">Service Request</h3>
-                        {isEditing ? (
-                          <div className="flex items-center gap-3">
-                            <Button
-                              size="sm"
-                              variant={chargerServiceNeeded[currentChargerId] === true ? "default" : "outline"}
-                              className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === true ? "bg-optimal text-optimal-foreground hover:bg-optimal/90" : ""}`}
-                              onClick={() =>
-                                setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: true }))
-                              }
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                              Yes
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={chargerServiceNeeded[currentChargerId] === false ? "default" : "outline"}
-                              className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === false ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}`}
-                              onClick={() =>
-                                setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: false }))
-                              }
-                            >
-                              <XCircle className="h-4 w-4" />
-                              No
-                            </Button>
-                          </div>
-                        ) : (
-                          <div>
-                            {chargerServiceNeeded[currentChargerId] === true && (
-                              <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
-                                <CheckCircle className="h-3 w-3" /> Yes — Send to Service Desk
-                              </Badge>
-                            )}
-                            {chargerServiceNeeded[currentChargerId] === false && (
-                              <Badge className="bg-muted text-muted-foreground gap-1">
-                                <XCircle className="h-3 w-3" /> No
-                              </Badge>
-                            )}
-                            {chargerServiceNeeded[currentChargerId] == null && (
-                              <p className="text-sm text-muted-foreground">Not decided</p>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
+                  <Card className="border border-border/60">
+                    <CardContent className="p-5 space-y-3">
+                      <h3 className="font-semibold text-foreground text-sm">Service Request</h3>
+                      {isEditing ? (
+                        <div className="flex items-center gap-3">
+                          <Button
+                            size="sm"
+                            variant={chargerServiceNeeded[currentChargerId] === true ? "default" : "outline"}
+                            className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === true ? "bg-optimal text-optimal-foreground hover:bg-optimal/90" : ""}`}
+                            onClick={() =>
+                              setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: true }))
+                            }
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Yes
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={chargerServiceNeeded[currentChargerId] === false ? "default" : "outline"}
+                            className={`gap-1.5 ${chargerServiceNeeded[currentChargerId] === false ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}`}
+                            onClick={() =>
+                              setChargerServiceNeeded((prev) => ({ ...prev, [currentChargerId]: false }))
+                            }
+                          >
+                            <XCircle className="h-4 w-4" />
+                            No
+                          </Button>
+                        </div>
+                      ) : (
+                        <div>
+                          {chargerServiceNeeded[currentChargerId] === true && (
+                            <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
+                              <CheckCircle className="h-3 w-3" /> Yes — Send to Service Desk
+                            </Badge>
+                          )}
+                          {chargerServiceNeeded[currentChargerId] === false && (
+                            <Badge className="bg-muted text-muted-foreground gap-1">
+                              <XCircle className="h-3 w-3" /> No
+                            </Badge>
+                          )}
+                          {chargerServiceNeeded[currentChargerId] == null && (
+                            <p className="text-sm text-muted-foreground">Not decided</p>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
 
                 {/* Per-charger Notes */}
-                {selectedSubmission.source !== "assessment" && (
+                {(
                   <Card className="border border-border/60">
                     <CardContent className="p-5 space-y-3">
                       <h3 className="font-semibold text-foreground text-sm">
