@@ -521,7 +521,7 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
       const { ch, idx, priority } = priorityChargers[i];
       const issue = ch.known_issues || "Issue identified during assessment";
       const recLine = `Charger ${idx + 1}: Recommend immediate ${priority.label === "CRITICAL" ? "critical" : "priority"} service.`;
-      const maxTextW = PAGE_W - 2 * M - 14;
+      const maxTextW = PAGE_W - 2 * M - 12;
 
       // Split issue into paragraphs then wrap
       const issueParagraphs = issue.split(/\n+/).filter(p => p.trim());
