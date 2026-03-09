@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { generateAssessmentReport } from "@/services/assessmentReportGenerator";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X, Play, FileDown, Plus } from "lucide-react";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
@@ -136,6 +137,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [newSubmissionOpen, setNewSubmissionOpen] = useState(false);
   const [editingDraft, setEditingDraft] = useState<any>(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   // Assessment state
   const [assessmentStatus, setAssessmentStatus] = useState<"idle" | "running" | "done">("idle");
@@ -708,9 +710,25 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
               Email Customer
               {assessmentStatus === "done" && <FileText className="h-3 w-3 text-primary ml-1" />}
             </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => toast.info("PDF export coming soon")}>
-              <Download className="h-4 w-4" />
-              Export PDF
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={exportingPdf}
+              onClick={async () => {
+                setExportingPdf(true);
+                try {
+                  await generateAssessmentReport(selectedSubmission.id);
+                } catch (err: any) {
+                  console.error("PDF export error:", err);
+                  toast.error("Failed to generate report. Please try again.");
+                } finally {
+                  setExportingPdf(false);
+                }
+              }}
+            >
+              {exportingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {exportingPdf ? "Generating..." : "Export PDF"}
             </Button>
           </div>
         </div>
