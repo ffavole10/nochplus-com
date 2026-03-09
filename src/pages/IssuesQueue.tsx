@@ -98,6 +98,7 @@ const IssuesQueue = () => {
     };
 
     addTicket(newTicket);
+    persistTicketToDB(newTicket);
     return ticketId;
   }, [addTicket, getNextTicketId, selectedCampaignId, selectedCampaignName, selectedCustomer]);
 
