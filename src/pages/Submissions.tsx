@@ -412,9 +412,11 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
           status: chargerStatuses[ch.id] || "pending",
         };
 
-        // Legacy-only fields (assessment_chargers does not store these)
+        // Persist per-charger service request selection for both submission sources
+        chargerUpdate.service_needed = chargerServiceNeeded[ch.id] ?? null;
+
+        // Legacy-only notes field
         if (selectedSubmission.source !== "assessment") {
-          chargerUpdate.service_needed = chargerServiceNeeded[ch.id] ?? null;
           chargerUpdate.staff_notes = chargerNotes[ch.id] || null;
         }
 
