@@ -521,34 +521,70 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
       const issue = ch.known_issues || "Issue identified during assessment";
       const recLine = `Charger ${idx + 1}: Recommend immediate ${priority.label === "CRITICAL" ? "critical" : "priority"} service.`;
       const maxTextW = PAGE_W - 2 * M - 14;
-      const issueLines = doc.splitTextToSize(`${issue} — ${ch.serial_number || ch.brand}`, maxTextW);
+
+      // Split issue into paragraphs then wrap
+      const issueParagraphs = issue.split(/\n+/).filter(p => p.trim());
+      doc.setFontSize(9);
+      const issueLines: string[] = [];
+      for (const para of issueParagraphs) {
+        issueLines.push(...doc.splitTextToSize(`${para.trim()} — ${ch.serial_number || ch.brand}`, maxTextW));
+      }
+      // Only add serial suffix to last paragraph
+      // Actually re-do: wrap issue text, append serial at end
+      const allIssueText = issueParagraphs.join(" ") + ` — ${ch.serial_number || ch.brand}`;
+      const wrappedIssue = doc.splitTextToSize(allIssueText, maxTextW);
       const recLines = doc.splitTextToSize(recLine, maxTextW);
-      const itemH = 6 + issueLines.length * 4 + recLines.length * 3.5 + 4;
 
-      y = needsNewPage(doc, y, itemH, logoB64, sub.submission_id, pageCounter);
+      const LINE_H = 4;
+      const maxY = PAGE_H - 0.4 * MM_PER_IN - 10;
 
+      // Number
+      y = needsNewPage(doc, y, 10, logoB64, sub.submission_id, pageCounter);
       setTextC(doc, priority.color);
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
       doc.text(`${i + 1}.`, M + 2, y + 4);
 
+      // Issue text line by line
       setTextC(doc, BRAND.darkText);
       doc.setFontSize(9);
-      doc.text(issueLines, M + 10, y + 4);
-      const afterIssue = y + 4 + issueLines.length * 4;
+      doc.setFont("helvetica", "bold");
+      let lineY = y + 4;
+      for (const line of wrappedIssue) {
+        if (lineY + LINE_H > maxY) {
+          drawInteriorFooter(doc, pageCounter.n);
+          doc.addPage();
+          pageCounter.n++;
+          drawInteriorHeader(doc, logoB64, sub.submission_id);
+          lineY = 0.5 * MM_PER_IN + 8;
+        }
+        doc.text(line, M + 10, lineY);
+        lineY += LINE_H;
+      }
 
+      // Rec text line by line
       setTextC(doc, BRAND.gray);
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      doc.text(recLines, M + 10, afterIssue);
-      const afterRec = afterIssue + recLines.length * 3.5 + 2;
+      for (const line of recLines) {
+        if (lineY + 3.5 > maxY) {
+          drawInteriorFooter(doc, pageCounter.n);
+          doc.addPage();
+          pageCounter.n++;
+          drawInteriorHeader(doc, logoB64, sub.submission_id);
+          lineY = 0.5 * MM_PER_IN + 8;
+        }
+        doc.text(line, M + 10, lineY);
+        lineY += 3.5;
+      }
+      lineY += 2;
 
       if (i < priorityChargers.length - 1) {
         setDraw(doc, "#E5E7EB");
         doc.setLineWidth(0.1);
-        doc.line(M + 2, afterRec, PAGE_W - M - 2, afterRec);
+        doc.line(M + 2, lineY, PAGE_W - M - 2, lineY);
       }
-      y = afterRec + 2;
+      y = lineY + 2;
     }
     y += 2;
   }
