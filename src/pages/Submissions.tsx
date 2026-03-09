@@ -812,9 +812,12 @@ export default function Submissions() {
                           {charger.photo_urls && charger.photo_urls.length > 0 ? (
                             <div className="flex gap-3">
                               {charger.photo_urls.map((url, i) => (
-                                <button key={i} onClick={() => setLightboxUrl(url)} className="w-24 h-24 rounded-lg overflow-hidden border border-border bg-muted hover:opacity-80 transition-opacity cursor-zoom-in">
-                                  <img src={url} alt={photoLabels[i] || `Photo ${i + 1}`} className="w-full h-full object-cover" />
-                                </button>
+                                <SubmissionPhotoThumb
+                                  key={i}
+                                  path={url}
+                                  alt={photoLabels[i] || `Photo ${i + 1}`}
+                                  onClick={(resolvedUrl) => setLightboxUrl(resolvedUrl)}
+                                />
                               ))}
                             </div>
                           ) : (
