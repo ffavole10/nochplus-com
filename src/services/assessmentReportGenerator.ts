@@ -2,12 +2,9 @@ import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { BRAND, NOCH_ADDRESS, NOCH_WEBSITE, NOCH_COMPANY, loadLogoBase64 } from "@/constants/brandAssets";
+import { toast } from "sonner";
 
 // ── Helpers ──────────────────────────────────────────────
-
-const PW = 612; // points – letter width
-const PH = 792; // points – letter height
-const IN = 72;  // 1 inch in points
 
 function hex(doc: jsPDF, color: string) {
   const r = parseInt(color.slice(1, 3), 16);
@@ -26,11 +23,12 @@ function setTextC(doc: jsPDF, color: string) {
   doc.setTextColor(...hex(doc, color));
 }
 
-/** Convert mm-based jsPDF coordinates. jsPDF default unit is mm, page = 215.9 x 279.4 mm */
 const MM_PER_IN = 25.4;
 const PAGE_W = 215.9;
 const PAGE_H = 279.4;
 const M = 0.5 * MM_PER_IN; // 0.5 inch margin in mm
+
+const MAX_PHOTOS_PER_CHARGER = 3;
 
 interface ChargerData {
   id: string;
@@ -63,7 +61,6 @@ interface SubmissionData {
 // ── Status & Priority Logic ──────────────────────────────
 
 function getChargerStatus(ch: ChargerData): { label: string; color: string; bgColor: string } {
-  // service_needed is the primary indicator set by staff in the platform
   if (ch.service_needed === true) {
     const issues = (ch.known_issues || "").toLowerCase();
     if (issues.includes("critical")) {
@@ -74,7 +71,6 @@ function getChargerStatus(ch: ChargerData): { label: string; color: string; bgCo
     }
     return { label: "Needs Repair", color: BRAND.amber, bgColor: "#FEF3C7" };
   }
-  // service_needed is false or null → charger is functional
   return { label: "Functional", color: BRAND.green, bgColor: "#D1FAE5" };
 }
 
@@ -99,7 +95,7 @@ function getOverallRisk(chargers: ChargerData[]): { level: string; color: string
   return { level: "LOW", color: BRAND.green, bgColor: "#D1FAE5" };
 }
 
-// ── Image loading helper ─────────────────────────────────
+// ── Image compression helper ─────────────────────────────
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -108,16 +104,39 @@ function getPublicPhotoUrl(path: string): string {
   return `${SUPABASE_URL}/storage/v1/object/public/submission-photos/${path}`;
 }
 
-async function loadImage(url: string): Promise<string | null> {
+async function compressImage(
+  url: string,
+  maxWidth: number = 800,
+  maxHeight: number = 600,
+  quality: number = 0.55
+): Promise<string | null> {
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
     const blob = await res.blob();
+
+    const bitmap = await createImageBitmap(blob);
+    let w = bitmap.width;
+    let h = bitmap.height;
+
+    // Scale down proportionally
+    if (w > maxWidth || h > maxHeight) {
+      const ratio = Math.min(maxWidth / w, maxHeight / h);
+      w = Math.round(w * ratio);
+      h = Math.round(h * ratio);
+    }
+
+    const canvas = new OffscreenCanvas(w, h);
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+
+    const compressedBlob = await canvas.convertToBlob({ type: "image/jpeg", quality });
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);
       reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
+      reader.readAsDataURL(compressedBlob);
     });
   } catch {
     return null;
@@ -131,7 +150,6 @@ function drawInteriorHeader(doc: jsPDF, logoB64: string, submissionId: string) {
   setFill(doc, BRAND.tealPrimary);
   doc.rect(0, 0, PAGE_W, barH, "F");
 
-  // Logo
   try {
     const logoW = 0.9 * MM_PER_IN;
     const logoH = 0.43 * MM_PER_IN;
@@ -140,7 +158,6 @@ function drawInteriorHeader(doc: jsPDF, logoB64: string, submissionId: string) {
     doc.addImage(logoB64, "PNG", logoX, logoY, logoW, logoH);
   } catch { /* logo failed */ }
 
-  // Right text
   setTextC(doc, BRAND.white);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
@@ -154,22 +171,18 @@ function drawInteriorFooter(doc: jsPDF, pageNum: number) {
   const footerH = 0.4 * MM_PER_IN;
   const footerY = PAGE_H - footerH;
 
-  // Top border
   setDraw(doc, BRAND.tealPrimary);
   doc.setLineWidth(0.7);
   doc.line(0, footerY, PAGE_W, footerY);
 
-  // Background
   setFill(doc, BRAND.grayLight);
   doc.rect(0, footerY, PAGE_W, footerH, "F");
 
-  // Left text
   setTextC(doc, BRAND.gray);
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.text(`${NOCH_COMPANY}  |  ${NOCH_ADDRESS}  |  ${NOCH_WEBSITE}`, M, footerY + footerH / 2 + 1);
 
-  // Right text
   setTextC(doc, BRAND.tealPrimary);
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
@@ -180,13 +193,10 @@ function drawInteriorFooter(doc: jsPDF, pageNum: number) {
 
 function drawSectionHeader(doc: jsPDF, title: string, y: number): number {
   const h = 8;
-  // Teal light bg
   setFill(doc, BRAND.tealLight);
   doc.rect(M, y, PAGE_W - 2 * M, h, "F");
-  // Left teal bar
   setFill(doc, BRAND.tealPrimary);
   doc.rect(M, y, 1.4, h, "F");
-  // Text
   setTextC(doc, BRAND.tealDark);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
@@ -256,26 +266,48 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     service_urgency: submission.service_urgency,
   };
 
-  const logoB64 = await loadLogoBase64();
+  // ── Load logo + compress all photos in parallel ──
+  const logoB64Promise = loadLogoBase64();
+
+  // Build list of all photos to compress (max 3 per charger)
+  const photoJobs: { chargerIdx: number; photoIdx: number; url: string }[] = [];
+  chargerList.forEach((ch, ci) => {
+    if (ch.photo_urls && ch.photo_urls.length > 0) {
+      const limited = ch.photo_urls.slice(0, MAX_PHOTOS_PER_CHARGER);
+      limited.forEach((url, pi) => {
+        photoJobs.push({ chargerIdx: ci, photoIdx: pi, url: getPublicPhotoUrl(url) });
+      });
+    }
+  });
+
+  const [logoB64, ...compressedPhotos] = await Promise.all([
+    logoB64Promise,
+    ...photoJobs.map(job => compressImage(job.url, 400, 300, 0.5)),
+  ]);
+
+  // Map compressed photos back to chargers
+  const photoMap: Map<string, string | null> = new Map();
+  photoJobs.forEach((job, i) => {
+    photoMap.set(`${job.chargerIdx}-${job.photoIdx}`, compressedPhotos[i]);
+  });
+
   const dateStr = format(new Date(sub.created_at), "MMMM d, yyyy");
   const dateShort = format(new Date(), "yyyy-MM-dd");
 
-  const doc = new jsPDF({ unit: "mm", format: "letter" });
+  // FIX 3: Enable compression
+  const doc = new jsPDF({ unit: "mm", format: "letter", compress: true });
   const pageCounter = { n: 1 };
 
   // ════════════════════════════════════════════════════════
   // COVER PAGE
   // ════════════════════════════════════════════════════════
 
-  // Full teal background
   setFill(doc, BRAND.tealPrimary);
   doc.rect(0, 0, PAGE_W, PAGE_H, "F");
 
-  // Darker top overlay (top 55%)
   setFill(doc, BRAND.coverDark);
   doc.rect(0, 0, PAGE_W, PAGE_H * 0.55, "F");
 
-  // White border rectangle (top 52%, inset 0.5in)
   setDraw(doc, BRAND.white);
   doc.setLineWidth(1);
   const boxX = M;
@@ -284,7 +316,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   const boxH = PAGE_H * 0.52;
   doc.rect(boxX, boxY, boxW, boxH);
 
-  // Title text inside box
   setTextC(doc, BRAND.white);
   doc.setFontSize(52);
   doc.setFont("helvetica", "bold");
@@ -294,7 +325,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   doc.setFontSize(52);
   doc.text("Report", boxX + 8, boxY + 68);
 
-  // Submission ID pill at bottom left inside box
   const pillY = boxY + boxH - 14;
   const pillText = sub.submission_id;
   doc.setFontSize(9);
@@ -305,16 +335,14 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   doc.setFont("helvetica", "bold");
   doc.text(pillText, boxX + 8 + pillW / 2, pillY + 5, { align: "center" });
 
-  // Logo bottom left
   try {
     const logoW = 1.6 * MM_PER_IN;
     const logoH = 0.77 * MM_PER_IN;
     const logoX = 0.45 * MM_PER_IN;
-    const logoY = PAGE_H - 0.55 * MM_PER_IN - logoH;
-    doc.addImage(logoB64, "PNG", logoX, logoY, logoW, logoH);
+    const logoCoverY = PAGE_H - 0.55 * MM_PER_IN - logoH;
+    doc.addImage(logoB64, "PNG", logoX, logoCoverY, logoW, logoH);
   } catch { /* logo failed */ }
 
-  // Report Information box (bottom right)
   const infoW = PAGE_W * 0.44;
   const infoH = 1.55 * MM_PER_IN;
   const infoX = PAGE_W - 0.45 * MM_PER_IN - infoW;
@@ -328,12 +356,10 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   doc.setFont("helvetica", "bold");
   doc.text("Report Information", infoX + 6, infoY + 9);
 
-  // Divider
   setDraw(doc, BRAND.tealPrimary);
   doc.setLineWidth(0.3);
   doc.line(infoX + 6, infoY + 12, infoX + infoW - 6, infoY + 12);
 
-  // Info rows
   const labels = ["Customer", "Prepared by", "Date", "Submission ID"];
   const values = [sub.company_name, NOCH_COMPANY, dateStr, sub.submission_id];
   let iy = infoY + 17;
@@ -349,7 +375,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     iy += 9;
   }
 
-  // Footer strip
   const footStripH = 0.42 * MM_PER_IN;
   setFill(doc, BRAND.tealDark);
   doc.rect(0, PAGE_H - footStripH, PAGE_W, footStripH, "F");
@@ -366,7 +391,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   drawInteriorHeader(doc, logoB64, sub.submission_id);
   let y = 0.5 * MM_PER_IN + 8;
 
-  // Section 1: Customer & Submission Information
   y = drawSectionHeader(doc, "Customer & Submission Information", y);
 
   const address = [sub.street_address, sub.city, sub.state, sub.zip_code].filter(Boolean).join(", ");
@@ -377,11 +401,10 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
 
   const colW = (PAGE_W - 2 * M) / 4;
 
-  function drawInfoGrid(headers: string[], values: string[], startY: number, highlightCol?: number): number {
+  function drawInfoGrid(headers: string[], vals: string[], startY: number, highlightCol?: number): number {
     const hH = 6;
     const vH = 7;
 
-    // Header row
     setFill(doc, BRAND.grayLight);
     doc.rect(M, startY, PAGE_W - 2 * M, hH, "F");
     setTextC(doc, BRAND.gray);
@@ -391,23 +414,21 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
       doc.text(headers[i], M + i * colW + 3, startY + 4);
     }
 
-    // Value row
     setFill(doc, BRAND.white);
     doc.rect(M, startY + hH, PAGE_W - 2 * M, vH, "F");
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    for (let i = 0; i < values.length; i++) {
+    for (let i = 0; i < vals.length; i++) {
       if (i === highlightCol) {
         setTextC(doc, BRAND.tealPrimary);
       } else {
         setTextC(doc, BRAND.darkText);
       }
       const maxW = colW - 6;
-      const lines = doc.splitTextToSize(values[i] || "—", maxW);
+      const lines = doc.splitTextToSize(vals[i] || "—", maxW);
       doc.text(lines[0] || "—", M + i * colW + 3, startY + hH + 4.5);
     }
 
-    // Grid borders
     setDraw(doc, "#D1D5DB");
     doc.setLineWidth(0.3);
     doc.rect(M, startY, PAGE_W - 2 * M, hH + vH);
@@ -426,7 +447,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   // Section 2: Executive Summary
   y = drawSectionHeader(doc, "Executive Summary", y);
 
-  // Stats bar
   const totalChargers = chargerList.length;
   const functional = chargerList.filter(c => getChargerStatus(c).label === "Functional").length;
   const critical = chargerList.filter(c => getChargerStatus(c).label === "Critical").length;
@@ -436,7 +456,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   const statsBarH = 18;
   setFill(doc, BRAND.tealLight);
   doc.rect(M, y, PAGE_W - 2 * M, statsBarH, "F");
-  // Top teal border
   setFill(doc, BRAND.tealPrimary);
   doc.rect(M, y, PAGE_W - 2 * M, 1, "F");
 
@@ -467,7 +486,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   const riskH = 12;
   setFill(doc, risk.bgColor);
   doc.rect(M, y, PAGE_W - 2 * M, riskH, "F");
-  // Left color bar
   setFill(doc, risk.color);
   doc.rect(M, y, 1.4, riskH, "F");
 
@@ -551,7 +569,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     const priority = getChargerPriority(ch);
     const issue = ch.known_issues || "No issues reported";
 
-    // Pre-calculate text heights for proper card sizing
     const col3W = (PAGE_W - 2 * M) / 3;
     doc.setFontSize(8);
     const issueLines = doc.splitTextToSize(issue, col3W - 8);
@@ -561,11 +578,11 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.setFontSize(8.5);
     const recLines = doc.splitTextToSize(recText, PAGE_W - 2 * M - 12);
 
-    // Estimate card height
     const cardHeaderH = 9;
     const statusRowH = Math.max(10, 6 + issueLines.length * 3.5);
     const recH = 8 + recLines.length * 3.8;
-    const photoH = ch.photo_urls && ch.photo_urls.length > 0 ? 38 : 10;
+    const photoCount = ch.photo_urls ? Math.min(ch.photo_urls.length, MAX_PHOTOS_PER_CHARGER) : 0;
+    const photoH = photoCount > 0 ? 38 : 10;
     const totalCardH = cardHeaderH + statusRowH + recH + photoH + 6;
 
     y = needsNewPage(doc, y, totalCardH, logoB64, sub.submission_id, pageCounter);
@@ -587,7 +604,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     setFill(doc, status.bgColor);
     doc.rect(M, y, PAGE_W - 2 * M, statusRowH, "F");
 
-    // STATUS column
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
@@ -597,7 +613,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.setFont("helvetica", "bold");
     doc.text(status.label, M + 4, y + 8);
 
-    // PRIORITY column
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
@@ -607,7 +622,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.setFont("helvetica", "bold");
     doc.text(priority.label, M + col3W + 4, y + 8);
 
-    // ISSUE column — properly wrapped
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
@@ -618,7 +632,7 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.text(issueLines, M + 2 * col3W + 4, y + 8);
     y += statusRowH;
 
-    // Recommendation — properly wrapped
+    // Recommendation
     setDraw(doc, "#E5E7EB");
     doc.setLineWidth(0.3);
     setFill(doc, BRAND.white);
@@ -633,8 +647,8 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.text(recLines, M + 4, y + 8.5);
     y += recH;
 
-    // Photo grid
-    if (ch.photo_urls && ch.photo_urls.length > 0) {
+    // Photo grid — using pre-compressed images from photoMap
+    if (photoCount > 0) {
       setFill(doc, BRAND.grayLight);
       doc.rect(M, y, PAGE_W - 2 * M, photoH, "F");
 
@@ -644,42 +658,46 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
       const thumbW = availW / photoCols;
       const thumbH = photoH - 10;
 
-      for (let p = 0; p < Math.min(ch.photo_urls.length, 6); p++) {
+      for (let p = 0; p < photoCount; p++) {
         const col = p % photoCols;
-        const row = Math.floor(p / photoCols);
-
-        if (row > 0) {
-          y = needsNewPage(doc, y, thumbH + 10, logoB64, sub.submission_id, pageCounter);
-        }
-
         const px = M + photoMargin + col * (thumbW + photoMargin);
-        const py = y + 3 + row * (thumbH + 6);
+        const py = y + 3;
 
-        try {
-          const imgData = await loadImage(getPublicPhotoUrl(ch.photo_urls[p]));
-          if (imgData) {
+        const imgData = photoMap.get(`${i}-${p}`);
+        if (imgData) {
+          try {
             doc.addImage(imgData, "JPEG", px, py, thumbW, thumbH);
-          } else {
+          } catch {
             setFill(doc, "#E5E7EB");
             doc.rect(px, py, thumbW, thumbH, "F");
             setTextC(doc, BRAND.gray);
             doc.setFontSize(7);
             doc.text("Photo unavailable", px + thumbW / 2, py + thumbH / 2, { align: "center" });
           }
-        } catch {
+        } else {
           setFill(doc, "#E5E7EB");
           doc.rect(px, py, thumbW, thumbH, "F");
+          setTextC(doc, BRAND.gray);
+          doc.setFontSize(7);
+          doc.text("Photo unavailable", px + thumbW / 2, py + thumbH / 2, { align: "center" });
         }
 
-        // Photo label
         setTextC(doc, BRAND.gray);
         doc.setFontSize(6);
         doc.text(`Photo ${p + 1}`, px + thumbW / 2, py + thumbH + 3, { align: "center" });
       }
 
+      // "more photos" note
+      if (ch.photo_urls && ch.photo_urls.length > MAX_PHOTOS_PER_CHARGER) {
+        const extra = ch.photo_urls.length - MAX_PHOTOS_PER_CHARGER;
+        setTextC(doc, BRAND.gray);
+        doc.setFontSize(6.5);
+        doc.setFont("helvetica", "italic");
+        doc.text(`+ ${extra} more photo${extra > 1 ? "s" : ""} available in platform`, PAGE_W - M - 4, y + photoH - 2, { align: "right" });
+      }
+
       y += photoH;
     } else {
-      // No photos placeholder
       setFill(doc, BRAND.grayLight);
       doc.rect(M, y, PAGE_W - 2 * M, 8, "F");
       setTextC(doc, BRAND.gray);
@@ -689,7 +707,7 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
       y += 10;
     }
 
-    y += 6; // spacing between cards
+    y += 6;
   }
 
   // ════════════════════════════════════════════════════════
@@ -708,20 +726,18 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
   doc.text(certLines, M + 4, y + 4);
   y += certLines.length * 4 + 10;
 
-  // 3-column signature table
   const sigColW = (PAGE_W - 2 * M) / 3;
   const sigLabels = ["Prepared by:", "Authorized by:", "Date:"];
   const sigValues = [NOCH_COMPANY, NOCH_COMPANY, dateStr];
 
-  for (let i = 0; i < 3; i++) {
-    const sx = M + i * sigColW + 4;
+  for (let si = 0; si < 3; si++) {
+    const sx = M + si * sigColW + 4;
 
     setTextC(doc, BRAND.gray);
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text(sigLabels[i], sx, y);
+    doc.text(sigLabels[si], sx, y);
 
-    // Underline
     setDraw(doc, BRAND.tealPrimary);
     doc.setLineWidth(0.5);
     doc.line(sx, y + 12, sx + sigColW - 12, y + 12);
@@ -729,11 +745,10 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     setTextC(doc, BRAND.darkText);
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text(sigValues[i], sx, y + 18);
+    doc.text(sigValues[si], sx, y + 18);
   }
   y += 26;
 
-  // Full-width teal closing bar
   const closingH = 12;
   y = needsNewPage(doc, y, closingH + 5, logoB64, sub.submission_id, pageCounter);
   setFill(doc, BRAND.tealPrimary);
@@ -754,7 +769,21 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     drawInteriorFooter(doc, p - 1);
   }
 
-  // ── Save ───────────────────────────────────────────────
+  // ── FIX 6: Show file size before download ──────────────
+  const pdfBlob = doc.output("blob");
+  const fileSizeMB = (pdfBlob.size / 1024 / 1024).toFixed(1);
+
   const filename = `Noch_Assessment_${sub.submission_id}_${dateShort}.pdf`;
-  doc.save(filename);
+  // Save via blob URL for consistency
+  const url = URL.createObjectURL(pdfBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  toast.success(`Report ready — ${fileSizeMB} MB`);
+  if (parseFloat(fileSizeMB) > 10) {
+    toast.warning("Large file — consider sharing via link instead of email");
+  }
 }
