@@ -145,6 +145,7 @@ export type Database = {
           location_descriptor: string | null
           photo_urls: string[] | null
           serial_number: string | null
+          service_needed: boolean | null
           status: string
           submission_id: string
         }
@@ -158,6 +159,7 @@ export type Database = {
           location_descriptor?: string | null
           photo_urls?: string[] | null
           serial_number?: string | null
+          service_needed?: boolean | null
           status?: string
           submission_id: string
         }
@@ -171,6 +173,7 @@ export type Database = {
           location_descriptor?: string | null
           photo_urls?: string[] | null
           serial_number?: string | null
+          service_needed?: boolean | null
           status?: string
           submission_id?: string
         }
