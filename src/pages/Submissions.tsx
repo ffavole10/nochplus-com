@@ -82,7 +82,45 @@ const STATUS_LABELS: Record<string, string> = {
   archived: "Archived",
 };
 
-export default function Submissions() {
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+/** Resolve a photo path to a public storage URL. If already a full URL, return as-is. */
+function getPublicPhotoUrl(path: string): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return `${SUPABASE_URL}/storage/v1/object/public/submission-photos/${path}`;
+}
+
+/** Thumbnail with loading skeleton and error fallback */
+function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: string; onClick: (url: string) => void }) {
+  const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const url = getPublicPhotoUrl(path);
+
+  return (
+    <button
+      onClick={() => status === "loaded" && onClick(url)}
+      className="w-24 h-24 rounded-lg overflow-hidden border border-border bg-muted hover:opacity-80 transition-opacity cursor-zoom-in relative"
+    >
+      {status === "loading" && (
+        <div className="absolute inset-0 animate-pulse bg-muted" />
+      )}
+      {status === "error" ? (
+        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/50 gap-1">
+          <CameraOff className="h-5 w-5" />
+          <span className="text-[10px] leading-tight text-center">Photo unavailable</span>
+        </div>
+      ) : (
+        <img
+          src={url}
+          alt={alt}
+          className={`w-full h-full object-cover transition-opacity ${status === "loaded" ? "opacity-100" : "opacity-0"}`}
+          onLoad={() => setStatus("loaded")}
+          onError={() => setStatus("error")}
+        />
+      )}
+    </button>
+  );
+}
+
   usePageTitle('Submissions');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
