@@ -448,10 +448,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
       const updatedChargers = editChargers.map((ch) => ({
         ...ch,
         status: chargerStatuses[ch.id] || "pending",
-        service_needed:
-          selectedSubmission.source === "assessment"
-            ? null
-            : (chargerServiceNeeded[ch.id] ?? null),
+        service_needed: chargerServiceNeeded[ch.id] ?? null,
         staff_notes:
           selectedSubmission.source === "assessment" ? null : chargerNotes[ch.id] || null,
       }));
