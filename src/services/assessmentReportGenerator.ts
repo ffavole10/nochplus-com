@@ -341,42 +341,47 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.text("EVSE Assessment Report", PAGE_W / 2, PAGE_H / 2, { align: "center" });
   }
 
-  // Overlay Report Information text onto the existing dark-green box
+  // Overlay Report Information — text floats on open teal area, no box
   // Coordinates in pt, converted to mm (1pt = 0.3528mm)
   const PT = 0.3528;
-  const REPORT_INFO_X = 318 * PT;
-  const REPORT_INFO_Y = 580 * PT;
-  const REPORT_INFO_ROW_HEIGHT = 26 * PT;
+  const COVER_INFO_X = 342 * PT;
+  const COVER_INFO_Y = 532 * PT;
+  const COVER_ROW_HEIGHT = 32 * PT;
+
+  const truncate = (s: string, max = 28) => s.length > max ? s.slice(0, max - 1) + "…" : s;
 
   // Title
   setTextC(doc, BRAND.white);
-  doc.setFontSize(10);
+  doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("Report Information", REPORT_INFO_X + 14 * PT, REPORT_INFO_Y + 18 * PT);
+  doc.text("Report Information", COVER_INFO_X, COVER_INFO_Y);
 
-  // Divider line (white at ~20% opacity — approximate with a muted teal matching the box bg)
+  // Divider line (white at 25% opacity)
   doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(0.4 * PT);
-  const gState = new (doc as any).GState({ "stroke-opacity": 0.2 });
+  doc.setLineWidth(0.5 * PT);
+  const gState = new (doc as any).GState({ "stroke-opacity": 0.25 });
   (doc as any).setGState(gState);
-  doc.line(REPORT_INFO_X + 10 * PT, REPORT_INFO_Y + 30 * PT, REPORT_INFO_X + 265 * PT, REPORT_INFO_Y + 30 * PT);
+  doc.line(338 * PT, (COVER_INFO_Y / PT + 12) * PT, 577 * PT, (COVER_INFO_Y / PT + 12) * PT);
   const gStateReset = new (doc as any).GState({ "stroke-opacity": 1 });
   (doc as any).setGState(gStateReset);
 
   // Data rows
-  const labels = ["Customer", "Prepared by", "Date", "Submission ID"];
-  const values = [sub.company_name, NOCH_COMPANY, dateStr, sub.submission_id];
-  let iy = REPORT_INFO_Y + 48 * PT;
-  for (let i = 0; i < labels.length; i++) {
-    setTextC(doc, "#A8D5CF");
+  const coverLabels = ["Customer", "Prepared by", "Date", "Submission ID"];
+  const coverValues = [truncate(sub.company_name), truncate(NOCH_COMPANY), truncate(dateStr), truncate(sub.submission_id)];
+  const rowOffsets = [32, 64, 96, 128];
+  const valGap = 11;
+
+  for (let i = 0; i < coverLabels.length; i++) {
+    const labelY = (COVER_INFO_Y / PT + rowOffsets[i]) * PT;
+    const valueY = (COVER_INFO_Y / PT + rowOffsets[i] + valGap) * PT;
+    setTextC(doc, "#9ED8D3");
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    doc.text(labels[i], REPORT_INFO_X + 14 * PT, iy);
+    doc.text(coverLabels[i], COVER_INFO_X, labelY);
     setTextC(doc, BRAND.white);
-    doc.setFontSize(8.5);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text(values[i], REPORT_INFO_X + 90 * PT, iy);
-    iy += REPORT_INFO_ROW_HEIGHT;
+    doc.text(coverValues[i], COVER_INFO_X, valueY);
   }
 
   // ════════════════════════════════════════════════════════
