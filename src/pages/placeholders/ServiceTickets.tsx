@@ -15,6 +15,7 @@ import { ParentTicketDetail } from "@/components/tickets/ParentTicketDetail";
 
 import { ServiceTicket } from "@/types/serviceTicket";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
+import { useServiceTicketsSync, persistTicketToDB } from "@/hooks/useServiceTicketsDB";
 import { AutoHealResult } from "@/services/autoHealService";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
@@ -63,6 +64,7 @@ function getHighestPriority(tickets: ServiceTicket[]): string {
 
 export default function ServiceTickets() {
   usePageTitle('Tickets');
+  useServiceTicketsSync();
   const tickets = useServiceTicketsStore((s) => s.tickets);
   const updateTicketInStore = useServiceTicketsStore((s) => s.updateTicket);
   const [formOpen, setFormOpen] = useState(false);
@@ -189,6 +191,7 @@ export default function ServiceTickets() {
       history: [{ id: "h1", timestamp: new Date().toISOString(), action: "Manual ticket created", performedBy: "Current User" }],
     };
     addTicket(newTicket);
+    persistTicketToDB(newTicket);
     toast.success(`Ticket ${newTicket.ticketId} created successfully`);
     setFormOpen(false);
   };
