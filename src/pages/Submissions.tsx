@@ -215,7 +215,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
           .map((c: any) => ({
             ...c,
             status: c.status || "pending",
-            service_needed: null,
+            service_needed: c.service_needed ?? null,
             staff_notes: null,
           }));
 
