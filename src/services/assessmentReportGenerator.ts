@@ -63,45 +63,40 @@ interface SubmissionData {
 // ── Status & Priority Logic ──────────────────────────────
 
 function getChargerStatus(ch: ChargerData): { label: string; color: string; bgColor: string } {
-  const issues = ch.known_issues?.trim() || "";
-  const statusVal = ch.status?.toLowerCase() || "";
-
-  if (statusVal === "approved" && !issues) {
-    return { label: "Functional", color: BRAND.green, bgColor: "#D1FAE5" };
-  }
-  if (issues.toLowerCase().includes("critical") || statusVal === "critical") {
-    return { label: "Critical", color: BRAND.red, bgColor: "#FEE2E2" };
-  }
-  if (ch.service_needed === true || issues.length > 0) {
-    // Check if minor
-    if (issues.toLowerCase().includes("minor")) {
+  // service_needed is the primary indicator set by staff in the platform
+  if (ch.service_needed === true) {
+    const issues = (ch.known_issues || "").toLowerCase();
+    if (issues.includes("critical")) {
+      return { label: "Critical", color: BRAND.red, bgColor: "#FEE2E2" };
+    }
+    if (issues.includes("minor")) {
       return { label: "Minor Issue", color: BRAND.blue, bgColor: "#DBEAFE" };
     }
     return { label: "Needs Repair", color: BRAND.amber, bgColor: "#FEF3C7" };
   }
+  // service_needed is false or null → charger is functional
   return { label: "Functional", color: BRAND.green, bgColor: "#D1FAE5" };
 }
 
 function getChargerPriority(ch: ChargerData): { label: string; color: string } {
+  if (ch.service_needed !== true) return { label: "NONE", color: BRAND.green };
   const issues = (ch.known_issues || "").toLowerCase();
   if (issues.includes("critical")) return { label: "CRITICAL", color: BRAND.red };
-  if (issues.includes("high") || ch.service_needed === true) return { label: "HIGH", color: BRAND.amber };
-  if (issues.includes("low")) return { label: "LOW", color: BRAND.blue };
-  return { label: "NONE", color: BRAND.green };
+  if (issues.includes("high")) return { label: "HIGH", color: BRAND.amber };
+  if (issues.includes("low") || issues.includes("minor")) return { label: "LOW", color: BRAND.blue };
+  return { label: "HIGH", color: BRAND.amber };
 }
 
 function getOverallRisk(chargers: ChargerData[]): { level: string; color: string; bgColor: string } {
   const total = chargers.length || 1;
-  const hasCritical = chargers.some(c => getChargerPriority(c).label === "CRITICAL");
-  const needsRepairCount = chargers.filter(c => {
-    const s = getChargerStatus(c);
-    return s.label !== "Functional";
-  }).length;
+  const hasCritical = chargers.some(c => getChargerStatus(c).label === "Critical");
+  const needsRepairCount = chargers.filter(c => getChargerStatus(c).label !== "Functional").length;
   const ratio = needsRepairCount / total;
 
   if (hasCritical) return { level: "HIGH", color: BRAND.red, bgColor: "#FEE2E2" };
   if (ratio >= 0.3) return { level: "MODERATE–HIGH", color: BRAND.amber, bgColor: "#FEF3C7" };
-  return { level: "LOW–MODERATE", color: BRAND.green, bgColor: "#D1FAE5" };
+  if (ratio > 0) return { level: "LOW–MODERATE", color: BRAND.amber, bgColor: "#FEF3C7" };
+  return { level: "LOW", color: BRAND.green, bgColor: "#D1FAE5" };
 }
 
 // ── Image loading helper ─────────────────────────────────
