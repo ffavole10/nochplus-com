@@ -464,7 +464,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
       setSelectedSubmission(updated);
       setIsEditing(false);
 
-      if (selectedSubmission.source !== "assessment") {
+      {
         // Create service tickets for chargers flagged with service_needed=true
         // Only create tickets for chargers that are newly flagged (weren't already flagged before)
         const serviceChargers = updatedChargers.filter((ch) => ch.service_needed === true);
