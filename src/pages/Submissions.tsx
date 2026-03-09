@@ -929,23 +929,27 @@ export default function Submissions() {
                 </div>
 
                 {/* Per-charger Notes */}
-                <Card className="border border-border/60">
-                  <CardContent className="p-5 space-y-3">
-                    <h3 className="font-semibold text-foreground text-sm">Notes — Charger {activeChargerIndex + 1}</h3>
-                    {isEditing ? (
-                      <Textarea
-                        value={chargerNotes[currentChargerId] || ""}
-                        onChange={(e) => setChargerNotes(prev => ({ ...prev, [currentChargerId]: e.target.value }))}
-                        placeholder="Add notes for this charger..."
-                        rows={3}
-                      />
-                    ) : (
-                      <p className="text-sm text-foreground">
-                        {chargerNotes[currentChargerId] || "No notes"}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                {selectedSubmission.source !== "assessment" && (
+                  <Card className="border border-border/60">
+                    <CardContent className="p-5 space-y-3">
+                      <h3 className="font-semibold text-foreground text-sm">
+                        Notes — Charger {activeChargerIndex + 1}
+                      </h3>
+                      {isEditing ? (
+                        <Textarea
+                          value={chargerNotes[currentChargerId] || ""}
+                          onChange={(e) =>
+                            setChargerNotes((prev) => ({ ...prev, [currentChargerId]: e.target.value }))
+                          }
+                          placeholder="Add notes for this charger..."
+                          rows={3}
+                        />
+                      ) : (
+                        <p className="text-sm text-foreground">{chargerNotes[currentChargerId] || "No notes"}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Save / Cancel bar when editing */}
                 {isEditing && (
