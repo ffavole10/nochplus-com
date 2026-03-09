@@ -969,28 +969,76 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
 
                         {/* Photos */}
                         <div>
-                          <p className="text-sm text-muted-foreground mb-3">Photos</p>
-                          {charger.photo_urls && charger.photo_urls.length > 0 ? (
-                            <div className="flex gap-3">
-                              {charger.photo_urls.map((url, i) => (
-                                <SubmissionPhotoThumb
-                                  key={i}
-                                  path={url}
-                                  alt={photoLabels[i] || `Photo ${i + 1}`}
-                                  onClick={(resolvedUrl) => setLightboxUrl(resolvedUrl)}
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-sm text-muted-foreground">Photos</p>
+                            {isEditing && (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  ref={photoInputRef}
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp,image/heic"
+                                  multiple
+                                  className="hidden"
+                                  onChange={(e) => handlePhotoUpload(e.target.files)}
                                 />
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="flex gap-3">
-                              {photoLabels.map((label) => (
-                                <div key={label} className="w-24 h-24 rounded-lg border-2 border-dashed border-border/60 flex flex-col items-center justify-center text-muted-foreground/50">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-1"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                                  <span className="text-xs">{label}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-1.5 text-xs h-7"
+                                  disabled={uploadingPhotos || ((isEditing ? editChargers[activeChargerIndex]?.photo_urls : charger.photo_urls) || []).length >= 10}
+                                  onClick={() => photoInputRef.current?.click()}
+                                >
+                                  {uploadingPhotos ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                                  {uploadingPhotos ? "Uploading..." : "Add Photos"}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                          {(() => {
+                            const displayPhotos = isEditing
+                              ? editChargers[activeChargerIndex]?.photo_urls
+                              : charger.photo_urls;
+                            return displayPhotos && displayPhotos.length > 0 ? (
+                              <div className="flex gap-3 flex-wrap">
+                                {displayPhotos.map((url, i) => (
+                                  <div key={i} className="relative group">
+                                    <SubmissionPhotoThumb
+                                      path={url}
+                                      alt={photoLabels[i] || `Photo ${i + 1}`}
+                                      onClick={(resolvedUrl) => setLightboxUrl(resolvedUrl)}
+                                    />
+                                    {isEditing && (
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); handleRemovePhoto(i); }}
+                                        className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="flex gap-3">
+                                {isEditing ? (
+                                  <button
+                                    onClick={() => photoInputRef.current?.click()}
+                                    className="w-24 h-24 rounded-lg border-2 border-dashed border-primary/40 flex flex-col items-center justify-center text-primary/60 hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                                  >
+                                    <Plus className="h-6 w-6 mb-1" />
+                                    <span className="text-xs">Upload</span>
+                                  </button>
+                                ) : (
+                                  photoLabels.map((label) => (
+                                    <div key={label} className="w-24 h-24 rounded-lg border-2 border-dashed border-border/60 flex flex-col items-center justify-center text-muted-foreground/50">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-1"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                      <span className="text-xs">{label}</span>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         {/* Customer-submitted notes */}
