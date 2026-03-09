@@ -551,10 +551,20 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     const priority = getChargerPriority(ch);
     const issue = ch.known_issues || "No issues reported";
 
+    // Pre-calculate text heights for proper card sizing
+    const col3W = (PAGE_W - 2 * M) / 3;
+    doc.setFontSize(8);
+    const issueLines = doc.splitTextToSize(issue, col3W - 8);
+    const recText = ch.service_needed
+      ? "Schedule professional service to address identified issues. Prioritize based on severity rating."
+      : "No immediate action required. Continue regular maintenance schedule.";
+    doc.setFontSize(8.5);
+    const recLines = doc.splitTextToSize(recText, PAGE_W - 2 * M - 12);
+
     // Estimate card height
     const cardHeaderH = 9;
-    const statusRowH = 10;
-    const recH = 16;
+    const statusRowH = Math.max(10, 6 + issueLines.length * 3.5);
+    const recH = 8 + recLines.length * 3.8;
     const photoH = ch.photo_urls && ch.photo_urls.length > 0 ? 38 : 10;
     const totalCardH = cardHeaderH + statusRowH + recH + photoH + 6;
 
@@ -577,8 +587,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     setFill(doc, status.bgColor);
     doc.rect(M, y, PAGE_W - 2 * M, statusRowH, "F");
 
-    const col3W = (PAGE_W - 2 * M) / 3;
-
     // STATUS column
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
@@ -599,7 +607,7 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     doc.setFont("helvetica", "bold");
     doc.text(priority.label, M + col3W + 4, y + 8);
 
-    // ISSUE column
+    // ISSUE column — properly wrapped
     setTextC(doc, BRAND.gray);
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
@@ -607,11 +615,10 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     setTextC(doc, BRAND.darkText);
     doc.setFontSize(8);
     doc.setFont("helvetica", "bold");
-    const issueLines = doc.splitTextToSize(issue, col3W - 8);
-    doc.text(issueLines[0] || "—", M + 2 * col3W + 4, y + 8);
+    doc.text(issueLines, M + 2 * col3W + 4, y + 8);
     y += statusRowH;
 
-    // Recommendation
+    // Recommendation — properly wrapped
     setDraw(doc, "#E5E7EB");
     doc.setLineWidth(0.3);
     setFill(doc, BRAND.white);
@@ -623,10 +630,6 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     setTextC(doc, BRAND.darkText);
     doc.setFontSize(8.5);
     doc.setFont("helvetica", "normal");
-    const recText = ch.service_needed
-      ? "Schedule professional service to address identified issues. Prioritize based on severity rating."
-      : "No immediate action required. Continue regular maintenance schedule.";
-    const recLines = doc.splitTextToSize(recText, PAGE_W - 2 * M - 12);
     doc.text(recLines, M + 4, y + 8.5);
     y += recH;
 
