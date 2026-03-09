@@ -27,7 +27,7 @@ export const NOCH_COMPANY = "Noch Power Inc.";
 export async function loadLogoBase64(): Promise<string> {
   const FALLBACK = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
   try {
-    const res = await fetch("/images/noch-power-logo-white.png");
+    const res = await fetch("/images/noch-power-logo-white-3.png");
     if (!res.ok) return FALLBACK;
     const blob = await res.blob();
     // Force PNG mime type to preserve transparency
