@@ -138,6 +138,8 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
   const [newSubmissionOpen, setNewSubmissionOpen] = useState(false);
   const [editingDraft, setEditingDraft] = useState<any>(null);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Assessment state
   const [assessmentStatus, setAssessmentStatus] = useState<"idle" | "running" | "done">("idle");
