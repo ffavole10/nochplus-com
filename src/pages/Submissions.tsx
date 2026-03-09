@@ -414,6 +414,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
           installation_location: ch.installation_location,
           known_issues: ch.known_issues,
           status: chargerStatuses[ch.id] || "pending",
+          photo_urls: ch.photo_urls || [],
         };
 
         // Persist per-charger service request selection for both submission sources
