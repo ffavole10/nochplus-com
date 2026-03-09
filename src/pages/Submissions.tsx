@@ -137,6 +137,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [newSubmissionOpen, setNewSubmissionOpen] = useState(false);
   const [editingDraft, setEditingDraft] = useState<any>(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   // Assessment state
   const [assessmentStatus, setAssessmentStatus] = useState<"idle" | "running" | "done">("idle");
