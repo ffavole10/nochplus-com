@@ -842,33 +842,35 @@ export default function Submissions() {
                 </Card>
 
                 {/* Per-charger Status + Service Request row */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className={`grid gap-4 ${selectedSubmission.source === "assessment" ? "grid-cols-1" : "grid-cols-2"}`}>
                   {/* Status */}
                   <Card className="border border-border/60">
                     <CardContent className="p-5 space-y-3">
                       <h3 className="font-semibold text-foreground text-sm">Status</h3>
                       {isEditing ? (
                         <div className="flex items-center gap-3">
-                          <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending_review"] || ""}>
-                            {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending_review"] || "Pending"}
+                          <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending"] || ""}>
+                            {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending"] || "Pending"}
                           </Badge>
                           <Select
-                            value={chargerStatuses[currentChargerId] || "pending_review"}
-                            onValueChange={(v) => setChargerStatuses(prev => ({ ...prev, [currentChargerId]: v }))}
+                            value={chargerStatuses[currentChargerId] || "pending"}
+                            onValueChange={(v) =>
+                              setChargerStatuses((prev) => ({ ...prev, [currentChargerId]: v }))
+                            }
                           >
                             <SelectTrigger className="flex-1">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="pending_review">Pending</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
                               <SelectItem value="approved">Approved</SelectItem>
                               <SelectItem value="archived">Archived</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       ) : (
-                        <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending_review"] || ""}>
-                          {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending_review"] || "Pending"}
+                        <Badge className={STATUS_STYLES[chargerStatuses[currentChargerId] || "pending"] || ""}>
+                          {STATUS_LABELS[chargerStatuses[currentChargerId] || "pending"] || "Pending"}
                         </Badge>
                       )}
                     </CardContent>
