@@ -521,19 +521,16 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
       const { ch, idx, priority } = priorityChargers[i];
       const issue = ch.known_issues || "Issue identified during assessment";
       const recLine = `Charger ${idx + 1}: Recommend immediate ${priority.label === "CRITICAL" ? "critical" : "priority"} service.`;
-      const maxTextW = PAGE_W - 2 * M - 14;
+      const maxTextW = PAGE_W - 2 * M - 12;
 
-      // Split issue into paragraphs then wrap
+      // Split issue into paragraphs then wrap — must set bold before measuring
       const issueParagraphs = issue.split(/\n+/).filter(p => p.trim());
       doc.setFontSize(9);
-      const issueLines: string[] = [];
-      for (const para of issueParagraphs) {
-        issueLines.push(...doc.splitTextToSize(`${para.trim()} — ${ch.serial_number || ch.brand}`, maxTextW));
-      }
-      // Only add serial suffix to last paragraph
-      // Actually re-do: wrap issue text, append serial at end
+      doc.setFont("helvetica", "bold");
       const allIssueText = issueParagraphs.join(" ") + ` — ${ch.serial_number || ch.brand}`;
       const wrappedIssue = doc.splitTextToSize(allIssueText, maxTextW);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
       const recLines = doc.splitTextToSize(recLine, maxTextW);
 
       const LINE_H = 4;
@@ -609,9 +606,10 @@ export async function generateAssessmentReport(submissionId: string): Promise<vo
     const contentW = PAGE_W - 2 * M;
     const issueColW = contentW - 8;
 
-    // Split issue into paragraphs, then wrap each paragraph
+    // Split issue into paragraphs, then wrap each paragraph (measure with bold font)
     const issueParagraphs = issue.split(/\n+/).filter(p => p.trim());
     doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
     const allIssueLines: string[] = [];
     for (const para of issueParagraphs) {
       const wrapped = doc.splitTextToSize(para.trim(), issueColW);
