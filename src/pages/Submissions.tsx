@@ -467,6 +467,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
       };
 
       setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      setSelectedSubmission(updated);
       setIsEditing(false);
 
       // Create service tickets for chargers flagged with service_needed=true
