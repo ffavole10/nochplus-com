@@ -1,0 +1,1 @@
+UPDATE noch_plus_submissions SET tickets_created = false, tickets_created_at = NULL, updated_at = now() WHERE submission_id = 'NP-2026-D2804046';
