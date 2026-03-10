@@ -1170,7 +1170,11 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                   <Card className="border border-border/60">
                     <CardContent className="p-5 space-y-3">
                       <h3 className="font-semibold text-foreground text-sm">Service Request</h3>
-                      {isEditing ? (
+                      {selectedSubmission?.tickets_created ? (
+                        <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
+                          <CheckCircle className="h-3 w-3" /> Tickets Created ✓
+                        </Badge>
+                      ) : isEditing ? (
                         <div className="flex items-center gap-3">
                           <Button
                             size="sm"
