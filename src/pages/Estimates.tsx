@@ -427,6 +427,35 @@ const Estimates = () => {
     toast.success(`Downloading all ${filteredEstimates.length} estimate${filteredEstimates.length > 1 ? "s" : ""}`);
   };
 
+  const handleBulkReject = async () => {
+    const ids = Array.from(selectedIds);
+    let count = 0;
+    for (const id of ids) {
+      try {
+        await updateEstimate.mutateAsync({ id, status: "rejected" });
+        count++;
+      } catch {}
+    }
+    toast.success(`${count} estimate${count !== 1 ? "s" : ""} marked as rejected`);
+    setSelectedIds(new Set());
+    setBulkAction(null);
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    let count = 0;
+    for (const id of ids) {
+      const est = estimates.find(e => e.id === id);
+      try {
+        await deleteEstimate.mutateAsync({ id, campaignId: est?.campaign_id || "" });
+        count++;
+      } catch {}
+    }
+    toast.success(`${count} estimate${count !== 1 ? "s" : ""} deleted`);
+    setSelectedIds(new Set());
+    setBulkAction(null);
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* KPI Cards */}
