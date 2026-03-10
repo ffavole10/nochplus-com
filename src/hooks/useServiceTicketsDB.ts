@@ -26,6 +26,10 @@ interface DBServiceTicket {
   oem_ticket_number: string | null;
   created_at: string;
   updated_at: string;
+  is_parent: boolean | null;
+  parent_ticket_id: string | null;
+  charger_count: number | null;
+  submission_id: string | null;
 }
 
 interface DBTicketCharger {
@@ -41,7 +45,11 @@ interface DBTicketCharger {
   under_warranty: string | null;
 }
 
-function dbTicketToStore(ticket: DBServiceTicket, chargers: DBTicketCharger[]): ServiceTicket {
+function dbTicketToStore(
+  ticket: DBServiceTicket,
+  chargers: DBTicketCharger[],
+  childDbIds?: string[],
+): ServiceTicket {
   const charger = chargers[0];
   const validBrands: ChargerBrand[] = ["BTC", "ABB", "Delta", "Tritium", "Signet", "Other"];
   const brand = charger
@@ -91,6 +99,10 @@ function dbTicketToStore(ticket: DBServiceTicket, chargers: DBTicketCharger[]): 
         performedBy: "System",
       },
     ],
+    // Parent-child fields
+    isParent: ticket.is_parent || false,
+    parentTicketId: ticket.parent_ticket_id || undefined,
+    childTicketIds: childDbIds,
   };
 }
 
@@ -132,22 +144,25 @@ export function useServiceTicketsSync() {
         chargersByTicket[c.ticket_id].push(c);
       });
 
+      // Build parent→children map from DB relationships
+      const childrenByParent: Record<string, string[]> = {};
+      for (const t of dbTickets) {
+        const dt = t as any;
+        if (dt.parent_ticket_id) {
+          if (!childrenByParent[dt.parent_ticket_id]) childrenByParent[dt.parent_ticket_id] = [];
+          childrenByParent[dt.parent_ticket_id].push(dt.id);
+        }
+      }
+
       // Replace store with DB data (DB is source of truth)
-      const dbIds = new Set(dbTickets.map((t: any) => t.id));
-      const store = useServiceTicketsStore.getState();
-      
-      // Remove tickets from store that no longer exist in DB
-      const keptTickets = store.tickets.filter((t) => dbIds.has(t.id));
-      const existingIds = new Set(keptTickets.map((t) => t.id));
-      
-      // Add new tickets from DB
       const newTickets: ServiceTicket[] = [];
       for (const dbTicket of dbTickets) {
-        if (existingIds.has(dbTicket.id)) continue;
-        newTickets.push(dbTicketToStore(dbTicket as any, chargersByTicket[dbTicket.id] || []));
+        const dt = dbTicket as any as DBServiceTicket;
+        const childIds = dt.is_parent ? (childrenByParent[dt.id] || []) : undefined;
+        newTickets.push(dbTicketToStore(dt, chargersByTicket[dt.id] || [], childIds));
       }
       
-      useServiceTicketsStore.setState({ tickets: [...newTickets, ...keptTickets] });
+      useServiceTicketsStore.setState({ tickets: newTickets });
     }
 
     loadFromDB();
@@ -193,8 +208,8 @@ export async function persistTicketToDB(ticket: ServiceTicket, opts?: {
 
   const dbId = (data as any)?.id as string;
 
-  // Insert charger record
-  if (ticket.charger.serialNumber || ticket.charger.brand) {
+  // Insert charger record (skip for parent tickets which have no individual charger data)
+  if (!opts?.isParent) {
     await supabase.from("ticket_chargers").insert({
       ticket_id: dbId,
       brand: ticket.charger.brand || "Unknown",
