@@ -32,6 +32,7 @@ import AIAgent from "./pages/placeholders/AIAgent";
 import SWILibrary from "./pages/SWILibrary";
 import Locations from "./pages/placeholders/Locations";
 import Parts from "./pages/placeholders/Parts";
+import PartsCatalog from "./pages/PartsCatalog";
 
 const queryClient = new QueryClient({
   defaultOptions: {
