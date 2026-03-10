@@ -36,6 +36,8 @@ import { DispatchModal } from "./DispatchModal";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCampaignContext } from "@/contexts/CampaignContext";
+import { syncAllLineItemsToCatalog } from "@/utils/partsCatalogSync";
+import { PartsCatalogAutocomplete } from "@/components/estimates/PartsCatalogAutocomplete";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
