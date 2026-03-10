@@ -111,7 +111,13 @@ export function useServiceTicketsSync() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error || !dbTickets?.length) return;
+      if (error) return;
+
+      // If DB is empty, clear the store to remove stale localStorage data
+      if (!dbTickets?.length) {
+        useServiceTicketsStore.setState({ tickets: [] });
+        return;
+      }
 
       // Load all chargers for these tickets
       const ticketIds = dbTickets.map((t: any) => t.id);
@@ -126,14 +132,22 @@ export function useServiceTicketsSync() {
         chargersByTicket[c.ticket_id].push(c);
       });
 
+      // Replace store with DB data (DB is source of truth)
+      const dbIds = new Set(dbTickets.map((t: any) => t.id));
       const store = useServiceTicketsStore.getState();
-      const existingIds = new Set(store.tickets.map((t) => t.id));
-
+      
+      // Remove tickets from store that no longer exist in DB
+      const keptTickets = store.tickets.filter((t) => dbIds.has(t.id));
+      const existingIds = new Set(keptTickets.map((t) => t.id));
+      
+      // Add new tickets from DB
+      const newTickets: ServiceTicket[] = [];
       for (const dbTicket of dbTickets) {
         if (existingIds.has(dbTicket.id)) continue;
-        const storeTicket = dbTicketToStore(dbTicket as any, chargersByTicket[dbTicket.id] || []);
-        store.addTicket(storeTicket);
+        newTickets.push(dbTicketToStore(dbTicket as any, chargersByTicket[dbTicket.id] || []));
       }
+      
+      useServiceTicketsStore.setState({ tickets: [...newTickets, ...keptTickets] });
     }
 
     loadFromDB();
