@@ -57,7 +57,43 @@ function StepIcon({ status }: { status: StepStatus }) {
 export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }: TicketDetailPanelProps) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [swiPreviewOpen, setSwiPreviewOpen] = useState(false);
+  const [isRerunning, setIsRerunning] = useState(false);
+  const [rerunProgress, setRerunProgress] = useState("");
+  const updateTicket = useServiceTicketsStore(s => s.updateTicket);
   const progressPercent = ((ticket.currentStep - 1) / 10) * 100;
+
+  const handleRerunAssessment = async () => {
+    if (isRerunning) return;
+    setIsRerunning(true);
+    setRerunProgress("Starting...");
+    try {
+      const result = await runAutoHealAssessment(
+        {
+          ticketId: ticket.ticketId,
+          serialNumber: ticket.charger.serial || "",
+          chargerType: ticket.charger.type === "DC_L3" ? "DC | Level 3" : "AC | Level 2",
+          issueDescription: ticket.issue.description,
+          priority: ticket.priority,
+          customerName: ticket.customer.name,
+          customerCompany: ticket.customer.company,
+          photoCount: ticket.photos.length,
+          notes: ticket.reviewNotes || undefined,
+        },
+        (step) => setRerunProgress(step),
+        () => {},
+      );
+      updateTicket(ticket.id, {
+        assessmentData: result.assessment,
+        swiMatchData: result.swiMatch,
+      });
+      toast.success("Assessment re-run complete");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Assessment failed");
+    } finally {
+      setIsRerunning(false);
+      setRerunProgress("");
+    }
+  };
 
   return (
     <div className="border-t border-border bg-muted/30 p-5 space-y-4 animate-in slide-in-from-top-2 duration-200">
