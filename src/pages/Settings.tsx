@@ -289,7 +289,12 @@ const Settings = () => {
 
       <main className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
         {activeTab === "campaigns" && <CampaignManagement />}
-        {activeTab === "data" && <DataManagement />}
+        {activeTab === "data" && (
+          <div className="space-y-6">
+            <DataManagement />
+            <DuplicateTicketCleanup />
+          </div>
+        )}
         {activeTab === "partners" && <PartnerManagement />}
         {activeTab === "quoting" && <QuotingAndRatesSection />}
         {activeTab === "users" && (
