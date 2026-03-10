@@ -444,6 +444,10 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
 
       setStatus("draft");
       toast.success("Estimate saved as draft");
+
+      // Sync line items to parts catalog
+      const estId = savedEstimateId || data?.id;
+      if (estId) syncAllLineItemsToCatalog(estId);
     } catch (err: any) {
       console.error("Save draft error:", err);
       toast.error(`Failed to save: ${err.message || "Unknown error"}`);
