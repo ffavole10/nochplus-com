@@ -500,7 +500,11 @@ const Estimates = () => {
           </div>
           <div className="flex items-center gap-2">
             {selectedIds.size > 0 && (
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadSelected}><Download className="h-3.5 w-3.5" />Download Selected ({selectedIds.size})</Button>
+              <>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadSelected}><Download className="h-3.5 w-3.5" />Download ({selectedIds.size})</Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setBulkAction("reject")}><XCircle className="h-3.5 w-3.5" />Reject ({selectedIds.size})</Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setBulkAction("delete")}><Trash2 className="h-3.5 w-3.5" />Delete ({selectedIds.size})</Button>
+              </>
             )}
             <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadAll}><Download className="h-3.5 w-3.5" />Download All</Button>
           </div>
