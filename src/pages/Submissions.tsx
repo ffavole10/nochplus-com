@@ -528,19 +528,26 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
               const children = parent?.childTicketIds?.map((cid) => store.getTicketById(cid)).filter(Boolean) || [];
 
               // Persist parent to DB
+              let parentDbId: string | null = null;
               if (parent) {
-                await persistTicketToDB(parent, {
+                parentDbId = await persistTicketToDB(parent, {
                   submissionId: updated.id,
                   isParent: true,
                   chargerCount: chargerData.length,
                 });
               }
+
+              if (!parentDbId) {
+                toast.error("Failed to create service ticket in database. Please try again.");
+                return;
+              }
+
               // Persist children to DB
               for (const child of children) {
                 if (child) {
                   await persistTicketToDB(child, {
                     submissionId: updated.id,
-                    parentTicketDbId: parentId,
+                    parentTicketDbId: parentDbId,
                   });
                 }
               }
