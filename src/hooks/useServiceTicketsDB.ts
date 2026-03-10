@@ -144,22 +144,25 @@ export function useServiceTicketsSync() {
         chargersByTicket[c.ticket_id].push(c);
       });
 
+      // Build parent→children map from DB relationships
+      const childrenByParent: Record<string, string[]> = {};
+      for (const t of dbTickets) {
+        const dt = t as any;
+        if (dt.parent_ticket_id) {
+          if (!childrenByParent[dt.parent_ticket_id]) childrenByParent[dt.parent_ticket_id] = [];
+          childrenByParent[dt.parent_ticket_id].push(dt.id);
+        }
+      }
+
       // Replace store with DB data (DB is source of truth)
-      const dbIds = new Set(dbTickets.map((t: any) => t.id));
-      const store = useServiceTicketsStore.getState();
-      
-      // Remove tickets from store that no longer exist in DB
-      const keptTickets = store.tickets.filter((t) => dbIds.has(t.id));
-      const existingIds = new Set(keptTickets.map((t) => t.id));
-      
-      // Add new tickets from DB
       const newTickets: ServiceTicket[] = [];
       for (const dbTicket of dbTickets) {
-        if (existingIds.has(dbTicket.id)) continue;
-        newTickets.push(dbTicketToStore(dbTicket as any, chargersByTicket[dbTicket.id] || []));
+        const dt = dbTicket as any as DBServiceTicket;
+        const childIds = dt.is_parent ? (childrenByParent[dt.id] || []) : undefined;
+        newTickets.push(dbTicketToStore(dt, chargersByTicket[dt.id] || [], childIds));
       }
       
-      useServiceTicketsStore.setState({ tickets: [...newTickets, ...keptTickets] });
+      useServiceTicketsStore.setState({ tickets: newTickets });
     }
 
     loadFromDB();
