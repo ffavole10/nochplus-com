@@ -577,6 +577,30 @@ const Estimates = () => {
       </Card>
 
       <EstimateDetailModal estimate={selectedEstimate} open={!!selectedEstimate} onOpenChange={(o) => { if (!o) setSelectedEstimate(null); }} partnerName={partnerName} onUpdated={(updated) => setSelectedEstimate(updated)} />
+
+      <AlertDialog open={bulkAction !== null} onOpenChange={(o) => { if (!o) setBulkAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkAction === "delete" ? "Delete Estimates" : "Reject Estimates"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction === "delete"
+                ? `Are you sure you want to permanently delete ${selectedIds.size} estimate${selectedIds.size !== 1 ? "s" : ""}? This action cannot be undone.`
+                : `Are you sure you want to mark ${selectedIds.size} estimate${selectedIds.size !== 1 ? "s" : ""} as rejected?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={bulkAction === "delete" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+              onClick={bulkAction === "delete" ? handleBulkDelete : handleBulkReject}
+            >
+              {bulkAction === "delete" ? "Delete" : "Reject"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
