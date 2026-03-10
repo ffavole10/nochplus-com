@@ -26,6 +26,10 @@ interface DBServiceTicket {
   oem_ticket_number: string | null;
   created_at: string;
   updated_at: string;
+  is_parent: boolean | null;
+  parent_ticket_id: string | null;
+  charger_count: number | null;
+  submission_id: string | null;
 }
 
 interface DBTicketCharger {
