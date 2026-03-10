@@ -20,6 +20,10 @@ import { AssessmentReportTab } from "@/components/assessment-report/AssessmentRe
 import { useState } from "react";
 import { PricingTypeBadge } from "@/pages/placeholders/Customers";
 import { useCustomers } from "@/hooks/useCustomers";
+import { runAutoHealAssessment, AgentStep } from "@/services/autoHealService";
+import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
+import { toast } from "sonner";
+import { Brain, RefreshCw } from "lucide-react";
 
 interface ServiceTicketDetailModalProps {
   ticket: ServiceTicket | null;
@@ -57,6 +61,42 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [swiPreviewOpen, setSwiPreviewOpen] = useState(false);
   const { data: dbCustomers = [] } = useCustomers();
+  const [isRerunning, setIsRerunning] = useState(false);
+  const [rerunProgress, setRerunProgress] = useState("");
+  const updateTicket = useServiceTicketsStore(s => s.updateTicket);
+
+  const handleRerunAssessment = async () => {
+    if (!ticket || isRerunning) return;
+    setIsRerunning(true);
+    setRerunProgress("Starting...");
+    try {
+      const result = await runAutoHealAssessment(
+        {
+          ticketId: ticket.ticketId,
+          serialNumber: ticket.charger.serialNumber || "",
+          chargerType: ticket.charger.type === "DC_L3" ? "DC | Level 3" : "AC | Level 2",
+          issueDescription: ticket.issue.description,
+          priority: ticket.priority,
+          customerName: ticket.customer.name,
+          customerCompany: ticket.customer.company,
+          photoCount: ticket.photos.length,
+          notes: ticket.reviewNotes || undefined,
+        },
+        (step) => setRerunProgress(step),
+        () => {},
+      );
+      updateTicket(ticket.id, {
+        assessmentData: result.assessment,
+        swiMatchData: result.swiMatch,
+      });
+      toast.success("Assessment re-run complete");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Assessment failed");
+    } finally {
+      setIsRerunning(false);
+      setRerunProgress("");
+    }
+  };
 
   if (!ticket) return null;
 
@@ -181,9 +221,24 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
 
             {/* AutoHeal Assessment */}
             <div className="border-t pt-4">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-2">
-                <CheckCircle className="h-4 w-4" /> AutoHeal Assessment
-              </h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" /> AutoHeal Assessment
+                </h4>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs h-7"
+                  onClick={handleRerunAssessment}
+                  disabled={isRerunning}
+                >
+                  {isRerunning ? (
+                    <><Loader2 className="h-3 w-3 animate-spin" /> {rerunProgress}</>
+                  ) : (
+                    <><RefreshCw className="h-3 w-3" /> Re-run Assessment</>
+                  )}
+                </Button>
+              </div>
               {ticket.assessmentData ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
