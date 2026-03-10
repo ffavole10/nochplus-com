@@ -208,8 +208,8 @@ export async function persistTicketToDB(ticket: ServiceTicket, opts?: {
 
   const dbId = (data as any)?.id as string;
 
-  // Insert charger record
-  if (ticket.charger.serialNumber || ticket.charger.brand) {
+  // Insert charger record (skip for parent tickets which have no individual charger data)
+  if (!opts?.isParent) {
     await supabase.from("ticket_chargers").insert({
       ticket_id: dbId,
       brand: ticket.charger.brand || "Unknown",
