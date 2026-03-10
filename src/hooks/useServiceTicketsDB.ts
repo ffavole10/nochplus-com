@@ -144,7 +144,12 @@ export function useServiceTicketsSync() {
  * Persist a service ticket to the database.
  * Call this alongside store.addTicket() to ensure DB persistence.
  */
-export async function persistTicketToDB(ticket: ServiceTicket, submissionId?: string) {
+export async function persistTicketToDB(ticket: ServiceTicket, opts?: {
+  submissionId?: string;
+  parentTicketDbId?: string;
+  isParent?: boolean;
+  chargerCount?: number;
+}) {
   const { error: ticketError } = await supabase.from("service_tickets").insert({
     id: ticket.id,
     ticket_id: ticket.ticketId,
@@ -162,7 +167,11 @@ export async function persistTicketToDB(ticket: ServiceTicket, submissionId?: st
       : ticket.priority === "High" ? "high"
       : ticket.priority === "Low" ? "low"
       : "standard",
-  });
+    submission_id: opts?.submissionId || null,
+    parent_ticket_id: opts?.parentTicketDbId || null,
+    is_parent: opts?.isParent || false,
+    charger_count: opts?.chargerCount || 1,
+  } as any);
 
   if (ticketError) {
     console.error("Failed to persist ticket to DB:", ticketError);
@@ -179,4 +188,21 @@ export async function persistTicketToDB(ticket: ServiceTicket, submissionId?: st
       known_issues: ticket.issue.description || null,
     });
   }
+}
+
+/**
+ * Check if tickets already exist for a given submission.
+ */
+export async function checkDuplicateTickets(submissionId: string): Promise<{ exists: boolean; ticketId?: string }> {
+  const { data } = await supabase
+    .from("service_tickets")
+    .select("id, ticket_id")
+    .eq("submission_id", submissionId)
+    .not("status", "in", '("cancelled","closed")')
+    .limit(1);
+
+  if (data && data.length > 0) {
+    return { exists: true, ticketId: (data[0] as any).ticket_id };
+  }
+  return { exists: false };
 }
