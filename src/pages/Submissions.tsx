@@ -517,15 +517,15 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                 },
               }));
 
-              // Always use parent-child model (even for single charger, for consistency)
-              const parentId = store.createParentWithChildren(
+              // Create parent ticket in Zustand store for UI
+              const ticketStore = useServiceTicketsStore.getState();
+              const parentStoreId = ticketStore.createParentWithChildren(
                 customerInfo,
                 chargerData,
                 "noch_plus",
                 `Submission ${updated.submission_id}`
               );
-              const parent = store.getTicketById(parentId);
-              const children = parent?.childTicketIds?.map((cid) => store.getTicketById(cid)).filter(Boolean) || [];
+              const parent = ticketStore.getTicketById(parentStoreId);
 
               // Persist parent to DB
               let parentDbId: string | null = null;
@@ -542,14 +542,32 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                 return;
               }
 
-              // Persist children to DB
-              for (const child of children) {
-                if (child) {
-                  await persistTicketToDB(child, {
-                    submissionId: updated.id,
-                    parentTicketDbId: parentDbId,
-                  });
-                }
+              // Persist children directly from chargerData (don't rely on store lookups)
+              const parentTicketId = parent?.ticketId || "NP-?";
+              for (let i = 0; i < chargerData.length; i++) {
+                const cd = chargerData[i];
+                const childTicket = {
+                  id: `temp-child-${i}`,
+                  ticketId: `${parentTicketId}/${i + 1}`,
+                  source: "noch_plus" as const,
+                  customer: customerInfo,
+                  charger: cd.charger,
+                  photos: [],
+                  issue: cd.issue,
+                  priority: "Medium" as const,
+                  status: "pending_review" as const,
+                  currentStep: 1 as number,
+                  workflowSteps: makeSteps(1),
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  history: [],
+                  parentTicketId: parentDbId,
+                  childIndex: i + 1,
+                };
+                await persistTicketToDB(childTicket, {
+                  submissionId: updated.id,
+                  parentTicketDbId: parentDbId,
+                });
               }
 
               // Mark submission as tickets_created
