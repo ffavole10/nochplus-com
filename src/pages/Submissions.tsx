@@ -546,7 +546,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
               const parentTicketId = parent?.ticketId || "NP-?";
               for (let i = 0; i < chargerData.length; i++) {
                 const cd = chargerData[i];
-                const childTicket: ServiceTicket = {
+                const childTicket = {
                   id: `temp-child-${i}`,
                   ticketId: `${parentTicketId}/${i + 1}`,
                   source: "noch_plus",
