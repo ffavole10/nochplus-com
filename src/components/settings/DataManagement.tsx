@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Database, Download, Upload, Trash2, FileSpreadsheet, AlertTriangle } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Database, Download, Upload, Trash2, FileSpreadsheet, AlertTriangle, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useCampaigns, useChargerRecords, useCreateChargerRecords, type ChargerRecord } from "@/hooks/useCampaigns";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import * as XLSX from "xlsx";
+import { cleanupDuplicateSubmissionTickets } from "@/services/ticketCleanupService";
 
 export function DataManagement() {
   const { data: campaigns = [] } = useCampaigns();
