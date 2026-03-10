@@ -163,9 +163,8 @@ export async function persistTicketToDB(ticket: ServiceTicket, opts?: {
   parentTicketDbId?: string;
   isParent?: boolean;
   chargerCount?: number;
-}) {
-  const { error: ticketError } = await supabase.from("service_tickets").insert({
-    id: ticket.id,
+}): Promise<string | null> {
+  const { data, error: ticketError } = await supabase.from("service_tickets").insert({
     ticket_id: ticket.ticketId,
     source: ticket.source,
     status: "New",
@@ -185,23 +184,27 @@ export async function persistTicketToDB(ticket: ServiceTicket, opts?: {
     parent_ticket_id: opts?.parentTicketDbId || null,
     is_parent: opts?.isParent || false,
     charger_count: opts?.chargerCount || 1,
-  } as any);
+  } as any).select("id").single();
 
   if (ticketError) {
     console.error("Failed to persist ticket to DB:", ticketError);
-    return;
+    return null;
   }
+
+  const dbId = (data as any)?.id as string;
 
   // Insert charger record
   if (ticket.charger.serialNumber || ticket.charger.brand) {
     await supabase.from("ticket_chargers").insert({
-      ticket_id: ticket.id,
+      ticket_id: dbId,
       brand: ticket.charger.brand || "Unknown",
       charger_type: ticket.charger.type === "DC_L3" ? "DC | Level 3" : "AC | Level 2",
       serial_number: ticket.charger.serialNumber || null,
       known_issues: ticket.issue.description || null,
     });
   }
+
+  return dbId;
 }
 
 /**
