@@ -494,16 +494,16 @@ const Estimates = () => {
 
       {/* Action Bar */}
       {filteredEstimates.length > 0 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {selectedIds.size > 0 && <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {selectedIds.size > 0 && (
               <>
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadSelected}><Download className="h-3.5 w-3.5" />Download ({selectedIds.size})</Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setBulkAction("reject")}><XCircle className="h-3.5 w-3.5" />Reject ({selectedIds.size})</Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setBulkAction("delete")}><Trash2 className="h-3.5 w-3.5" />Delete ({selectedIds.size})</Button>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadSelected}><Download className="h-3.5 w-3.5" />Download Selected ({selectedIds.size})</Button>
+                <Button variant="outline" size="sm" className="gap-1.5 border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-900/20" onClick={() => setBulkAction("reject")}><XCircle className="h-3.5 w-3.5" />Reject ({selectedIds.size})</Button>
+                <Button variant="destructive" size="sm" className="gap-1.5" onClick={() => setBulkAction("delete")}><Trash2 className="h-3.5 w-3.5" />Delete ({selectedIds.size})</Button>
               </>
             )}
             <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadAll}><Download className="h-3.5 w-3.5" />Download All</Button>
