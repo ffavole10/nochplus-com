@@ -62,6 +62,7 @@ export interface ServiceTicketMetadata {
   approvedBy?: string;
   approvedByName?: string;
   approvedAt?: string;
+  submissionId?: string;
 }
 
 export interface ServiceTicket {

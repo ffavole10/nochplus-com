@@ -3,7 +3,7 @@ import { generateAssessmentReport } from "@/services/assessmentReportGenerator";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X, Play, FileDown, Plus } from "lucide-react";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
-import { persistTicketToDB } from "@/hooks/useServiceTicketsDB";
+import { persistTicketToDB, checkDuplicateTickets } from "@/hooks/useServiceTicketsDB";
 import type { TicketChargerInfo, ChargerBrand } from "@/types/ticket";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,6 +65,8 @@ interface Submission {
   created_at: string;
   updated_at: string;
   chargers: ChargerSubmission[];
+  tickets_created?: boolean;
+  tickets_created_at?: string | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -472,100 +474,103 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
       setIsEditing(false);
 
       // Create service tickets for chargers flagged with service_needed=true
-        // Only create tickets for chargers that are newly flagged (weren't already flagged before)
-        const serviceChargers = updatedChargers.filter((ch) => ch.service_needed === true);
-        const previouslyFlagged = selectedSubmission.chargers
-          .filter((ch) => ch.service_needed === true)
-          .map((ch) => ch.id);
-        const newServiceChargers = serviceChargers.filter((ch) => !previouslyFlagged.includes(ch.id));
-
-        if (newServiceChargers.length > 0) {
-          const store = useServiceTicketsStore.getState();
-          const customerInfo = {
-            name: updated.full_name,
-            company: updated.company_name,
-            email: updated.email,
-            phone: updated.phone,
-            address: `${updated.street_address}, ${updated.city}, ${updated.state} ${updated.zip_code}`,
-          };
-
-          const validBrands: ChargerBrand[] = ["BTC", "ABB", "Delta", "Tritium", "Signet", "Other"];
-          const mapBrand = (b: string): ChargerBrand | "" => {
-            const upper = b?.toUpperCase() || "";
-            const found = validBrands.find((v) => upper.includes(v.toUpperCase()));
-            return found || (b ? "Other" : "");
-          };
-
-          const chargerData = newServiceChargers.map((ch) => ({
-            charger: {
-              brand: mapBrand(ch.brand),
-              serialNumber: ch.serial_number || "",
-              type: (
-                ch.charger_type === "DC" || ch.charger_type === "DC | Level 3" ? "DC_L3" : "AC_L2"
-              ) as TicketChargerInfo["type"],
-              location: `${updated.city}, ${updated.state}`,
-            },
-            issue: {
-              description:
-                ch.known_issues || chargerNotes[ch.id] || "Service requested via Noch+ submission.",
-            },
-          }));
-
-          if (chargerData.length === 1) {
-            // Single charger → standalone ticket
-            const now = new Date().toISOString();
-            const ticketId = store.getNextTicketId();
-            const cd = chargerData[0];
-            const newTicket = {
-              id: `st-${Date.now()}`,
-              ticketId,
-              source: "noch_plus" as const,
-              customer: customerInfo,
-              charger: cd.charger,
-              photos: [] as any[],
-              issue: cd.issue,
-              priority: "Medium" as const,
-              status: "pending_review" as const,
-              currentStep: 1,
-              workflowSteps: makeSteps(1),
-              createdAt: now,
-              updatedAt: now,
-              history: [
-                {
-                  id: `h-${Date.now()}`,
-                  timestamp: now,
-                  action: "Ticket created from Noch+ submission",
-                  performedBy: "System",
-                },
-              ],
-              metadata: { campaignName: `Submission ${updated.submission_id}` },
-            };
-            store.addTicket(newTicket);
-            persistTicketToDB(newTicket);
-            toast.success(`Service ticket ${ticketId} created in Service Desk.`, { duration: 5000 });
-          } else {
-            // Multiple chargers → parent-child
-            const parentId = store.createParentWithChildren(
-              customerInfo,
-              chargerData,
-              "noch_plus",
-              `Submission ${updated.submission_id}`
-            );
-            const parent = store.getTicketById(parentId);
-            // Persist all children to DB
-            const children = parent?.childTicketIds?.map((cid) => store.getTicketById(cid)).filter(Boolean) || [];
-            for (const child of children) {
-              if (child) persistTicketToDB(child);
-            }
-            toast.success(
-              `${newServiceChargers.length} service tickets created under ${parent?.ticketId || "new parent"}.`,
-              { duration: 5000 }
-            );
-          }
-        } else if (serviceChargers.length > 0) {
-          toast.success("Changes saved (service tickets already created for flagged chargers).");
+        // Skip if tickets already created for this submission
+        if (updated.tickets_created) {
+          toast.info("Tickets already created for this submission.");
         } else {
-          toast.success("Changes saved");
+          const serviceChargers = updatedChargers.filter((ch) => ch.service_needed === true);
+          const previouslyFlagged = selectedSubmission.chargers
+            .filter((ch) => ch.service_needed === true)
+            .map((ch) => ch.id);
+          const newServiceChargers = serviceChargers.filter((ch) => !previouslyFlagged.includes(ch.id));
+
+          if (newServiceChargers.length > 0) {
+            // Duplicate check at DB level
+            const dupCheck = await checkDuplicateTickets(updated.id);
+            if (dupCheck.exists) {
+              toast.warning(`Ticket ${dupCheck.ticketId} already exists for this submission. Skipping.`);
+            } else {
+              const store = useServiceTicketsStore.getState();
+              const customerInfo = {
+                name: updated.full_name,
+                company: updated.company_name,
+                email: updated.email,
+                phone: updated.phone,
+                address: `${updated.street_address}, ${updated.city}, ${updated.state} ${updated.zip_code}`,
+              };
+
+              const validBrands: ChargerBrand[] = ["BTC", "ABB", "Delta", "Tritium", "Signet", "Other"];
+              const mapBrand = (b: string): ChargerBrand | "" => {
+                const upper = b?.toUpperCase() || "";
+                const found = validBrands.find((v) => upper.includes(v.toUpperCase()));
+                return found || (b ? "Other" : "");
+              };
+
+              const chargerData = newServiceChargers.map((ch) => ({
+                charger: {
+                  brand: mapBrand(ch.brand),
+                  serialNumber: ch.serial_number || "",
+                  type: (
+                    ch.charger_type === "DC" || ch.charger_type === "DC | Level 3" ? "DC_L3" : "AC_L2"
+                  ) as TicketChargerInfo["type"],
+                  location: `${updated.city}, ${updated.state}`,
+                },
+                issue: {
+                  description:
+                    ch.known_issues || chargerNotes[ch.id] || "Service requested via Noch+ submission.",
+                },
+              }));
+
+              // Always use parent-child model (even for single charger, for consistency)
+              const parentId = store.createParentWithChildren(
+                customerInfo,
+                chargerData,
+                "noch_plus",
+                `Submission ${updated.submission_id}`
+              );
+              const parent = store.getTicketById(parentId);
+              const children = parent?.childTicketIds?.map((cid) => store.getTicketById(cid)).filter(Boolean) || [];
+
+              // Persist parent to DB
+              if (parent) {
+                await persistTicketToDB(parent, {
+                  submissionId: updated.id,
+                  isParent: true,
+                  chargerCount: chargerData.length,
+                });
+              }
+              // Persist children to DB
+              for (const child of children) {
+                if (child) {
+                  await persistTicketToDB(child, {
+                    submissionId: updated.id,
+                    parentTicketDbId: parentId,
+                  });
+                }
+              }
+
+              // Mark submission as tickets_created
+              const submissionTable = updated.source === "assessment" ? "noch_plus_submissions" : "submissions";
+              await supabase
+                .from(submissionTable)
+                .update({ tickets_created: true, tickets_created_at: new Date().toISOString() } as any)
+                .eq("id", updated.id);
+
+              // Update local state
+              const withFlag = { ...updated, tickets_created: true, tickets_created_at: new Date().toISOString() };
+              setSubmissions((prev) => prev.map((s) => (s.id === withFlag.id ? withFlag : s)));
+              setSelectedSubmission(withFlag);
+
+              toast.success(
+                `${newServiceChargers.length} service ticket${newServiceChargers.length > 1 ? "s" : ""} created under ${parent?.ticketId || "new parent"}.`,
+                { duration: 5000 }
+              );
+            }
+          } else if (serviceChargers.length > 0) {
+            toast.success("Changes saved (service tickets already created for flagged chargers).");
+          } else {
+            toast.success("Changes saved");
+          }
         }
     }
     catch (err: any) {
@@ -1165,7 +1170,11 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                   <Card className="border border-border/60">
                     <CardContent className="p-5 space-y-3">
                       <h3 className="font-semibold text-foreground text-sm">Service Request</h3>
-                      {isEditing ? (
+                      {selectedSubmission?.tickets_created ? (
+                        <Badge className="bg-optimal/15 text-optimal border-optimal/30 gap-1">
+                          <CheckCircle className="h-3 w-3" /> Tickets Created ✓
+                        </Badge>
+                      ) : isEditing ? (
                         <div className="flex items-center gap-3">
                           <Button
                             size="sm"

@@ -827,6 +827,8 @@ export type Database = {
           street_address: string
           submission_id: string
           submission_type: string
+          tickets_created: boolean | null
+          tickets_created_at: string | null
           updated_at: string
           zip_code: string
         }
@@ -851,6 +853,8 @@ export type Database = {
           street_address: string
           submission_id: string
           submission_type?: string
+          tickets_created?: boolean | null
+          tickets_created_at?: string | null
           updated_at?: string
           zip_code: string
         }
@@ -875,6 +879,8 @@ export type Database = {
           street_address?: string
           submission_id?: string
           submission_type?: string
+          tickets_created?: boolean | null
+          tickets_created_at?: string | null
           updated_at?: string
           zip_code?: string
         }
@@ -1558,6 +1564,7 @@ export type Database = {
       }
       service_tickets: {
         Row: {
+          charger_count: number | null
           city: string
           company_id: string | null
           company_name: string
@@ -1566,9 +1573,11 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_parent: boolean | null
           location_id: string | null
           oem_ticket_exists: string | null
           oem_ticket_number: string | null
+          parent_ticket_id: string | null
           phone: string
           service_urgency: string | null
           source: string
@@ -1576,11 +1585,13 @@ export type Database = {
           state: string
           status: string
           street_address: string | null
+          submission_id: string | null
           ticket_id: string
           updated_at: string
           zip_code: string | null
         }
         Insert: {
+          charger_count?: number | null
           city: string
           company_id?: string | null
           company_name: string
@@ -1589,9 +1600,11 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          is_parent?: boolean | null
           location_id?: string | null
           oem_ticket_exists?: string | null
           oem_ticket_number?: string | null
+          parent_ticket_id?: string | null
           phone: string
           service_urgency?: string | null
           source?: string
@@ -1599,11 +1612,13 @@ export type Database = {
           state: string
           status?: string
           street_address?: string | null
+          submission_id?: string | null
           ticket_id: string
           updated_at?: string
           zip_code?: string | null
         }
         Update: {
+          charger_count?: number | null
           city?: string
           company_id?: string | null
           company_name?: string
@@ -1612,9 +1627,11 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          is_parent?: boolean | null
           location_id?: string | null
           oem_ticket_exists?: string | null
           oem_ticket_number?: string | null
+          parent_ticket_id?: string | null
           phone?: string
           service_urgency?: string | null
           source?: string
@@ -1622,6 +1639,7 @@ export type Database = {
           state?: string
           status?: string
           street_address?: string | null
+          submission_id?: string | null
           ticket_id?: string
           updated_at?: string
           zip_code?: string | null
@@ -1639,6 +1657,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_tickets_parent_ticket_id_fkey"
+            columns: ["parent_ticket_id"]
+            isOneToOne: false
+            referencedRelation: "service_tickets"
             referencedColumns: ["id"]
           },
         ]
