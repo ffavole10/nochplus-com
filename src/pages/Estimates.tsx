@@ -177,6 +177,7 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
         toast.success("Estimate saved");
         setEditing(false);
         onUpdated?.(data);
+        syncAllLineItemsToCatalog(data.id);
       },
       onError: (e: any) => toast.error(e.message),
     });
