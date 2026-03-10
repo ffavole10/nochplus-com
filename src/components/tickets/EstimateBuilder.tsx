@@ -36,6 +36,8 @@ import { DispatchModal } from "./DispatchModal";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCampaignContext } from "@/contexts/CampaignContext";
+import { syncAllLineItemsToCatalog } from "@/utils/partsCatalogSync";
+import { PartsCatalogAutocomplete } from "@/components/estimates/PartsCatalogAutocomplete";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -166,12 +168,19 @@ function LineItemRow({
         </Badge>
       </td>
       <td className="py-2 pr-2 w-full">
-        <Input
-          value={item.description}
-          onChange={(e) => update({ description: e.target.value })}
-          className="h-8 text-sm"
-          disabled={readOnly}
-        />
+        {readOnly ? (
+          <Input value={item.description} className="h-8 text-sm" disabled />
+        ) : (
+          <PartsCatalogAutocomplete
+            value={item.description}
+            onChange={(val) => update({ description: val })}
+            onSelect={(catalogItem) => update({
+              description: catalogItem.description,
+              rate: catalogItem.unit_price,
+              ...(catalogItem.unit ? { unit: catalogItem.unit as any } : {}),
+            })}
+          />
+        )}
       </td>
       <td className="py-2 pr-2">
         <Input
@@ -376,6 +385,7 @@ export function EstimateBuilder({
         status: "draft" as const,
       };
 
+      let currentEstimateId = savedEstimateId;
       if (savedEstimateId) {
         const { error } = await supabase
           .from("estimates")
@@ -390,11 +400,15 @@ export function EstimateBuilder({
           .single();
         if (error) throw error;
         setSavedEstimateId(data.id);
+        currentEstimateId = data.id;
       }
 
       setStatus("draft");
       onStatusChange?.("draft");
       toast.success("Estimate saved as draft");
+
+      // Sync line items to parts catalog
+      if (currentEstimateId) syncAllLineItemsToCatalog(currentEstimateId);
     } catch (err: any) {
       console.error("Save draft error:", err);
       toast.error(`Failed to save draft: ${err.message || "Unknown error"}`);
@@ -481,6 +495,9 @@ export function EstimateBuilder({
       setStatus("sent");
       onStatusChange?.("sent");
       toast.success(`Estimate sent to ${customerEmail}`);
+
+      // Sync line items to parts catalog
+      if (savedEstimate?.id) syncAllLineItemsToCatalog(savedEstimate.id);
     } catch (err: any) {
       console.error("Send estimate error:", err);
       toast.error(`Failed to send estimate: ${err.message || "Unknown error"}`);

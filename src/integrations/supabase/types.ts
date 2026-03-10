@@ -1048,6 +1048,51 @@ export type Database = {
         }
         Relationships: []
       }
+      parts_catalog: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string
+          id: string
+          last_used_at: string | null
+          manufacturer: string | null
+          notes: string | null
+          part_number: string | null
+          unit: string | null
+          unit_price: number
+          updated_at: string | null
+          usage_count: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          last_used_at?: string | null
+          manufacturer?: string | null
+          notes?: string | null
+          part_number?: string | null
+          unit?: string | null
+          unit_price?: number
+          updated_at?: string | null
+          usage_count?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          last_used_at?: string | null
+          manufacturer?: string | null
+          notes?: string | null
+          part_number?: string | null
+          unit?: string | null
+          unit_price?: number
+          updated_at?: string | null
+          usage_count?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1985,6 +2030,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role:

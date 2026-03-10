@@ -17,6 +17,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { syncAllLineItemsToCatalog } from "@/utils/partsCatalogSync";
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground border-muted" },
@@ -176,6 +177,7 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
         toast.success("Estimate saved");
         setEditing(false);
         onUpdated?.(data);
+        syncAllLineItemsToCatalog(data.id);
       },
       onError: (e: any) => toast.error(e.message),
     });

@@ -32,6 +32,7 @@ import AIAgent from "./pages/placeholders/AIAgent";
 import SWILibrary from "./pages/SWILibrary";
 import Locations from "./pages/placeholders/Locations";
 import Parts from "./pages/placeholders/Parts";
+import PartsCatalog from "./pages/PartsCatalog";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/autoheal/ai-agent" element={<AIAgent />} />
             <Route path="/autoheal/swi-library" element={<SWILibrary />} />
             <Route path="/autoheal/parts" element={<Parts />} />
+            <Route path="/autoheal/parts-catalog" element={<PartsCatalog />} />
             <Route path="/autoheal/locations" element={<Locations />} />
 
             {/* Settings */}

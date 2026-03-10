@@ -177,7 +177,8 @@ export function PlatformSidebar() {
   const autohealPages = [
   { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
   { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen },
-  { title: "Parts", url: "/autoheal/parts", icon: Package },
+  { title: "Parts Inventory", url: "/autoheal/parts", icon: Package },
+  { title: "Parts Catalog", url: "/autoheal/parts-catalog", icon: BookOpen },
   { title: "Locations", url: "/autoheal/locations", icon: MapPinned }];
 
 

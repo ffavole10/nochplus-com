@@ -29,6 +29,8 @@ import { SWI_CATALOG } from "@/data/swiCatalog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
+import { syncAllLineItemsToCatalog } from "@/utils/partsCatalogSync";
+import { PartsCatalogAutocomplete } from "@/components/estimates/PartsCatalogAutocomplete";
 import { lookupRateSheetPricing, buildRateSheetLineItems, type RateSheetPricingResult } from "@/services/rateSheetPricingService";
 
 /* ------------------------------------------------------------------ */
@@ -158,12 +160,19 @@ function LineItemRow({
         </Badge>
       </td>
       <td className="py-2 pr-2 w-full">
-        <Input
-          value={item.description}
-          onChange={(e) => update({ description: e.target.value })}
-          className="h-8 text-sm"
-          disabled={readOnly}
-        />
+        {readOnly ? (
+          <Input value={item.description} className="h-8 text-sm" disabled />
+        ) : (
+          <PartsCatalogAutocomplete
+            value={item.description}
+            onChange={(val) => update({ description: val })}
+            onSelect={(catalogItem) => update({
+              description: catalogItem.description,
+              rate: catalogItem.unit_price,
+              ...(catalogItem.unit ? { unit: catalogItem.unit as any } : {}),
+            })}
+          />
+        )}
       </td>
       <td className="py-2 pr-2">
         <Input
@@ -417,6 +426,7 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
         status: "draft" as const,
       };
 
+      let currentEstimateId = savedEstimateId;
       if (savedEstimateId) {
         const { error } = await supabase
           .from("estimates")
@@ -431,10 +441,14 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
           .single();
         if (error) throw error;
         setSavedEstimateId(data.id);
+        currentEstimateId = data.id;
       }
 
       setStatus("draft");
       toast.success("Estimate saved as draft");
+
+      // Sync line items to parts catalog
+      if (currentEstimateId) syncAllLineItemsToCatalog(currentEstimateId);
     } catch (err: any) {
       console.error("Save draft error:", err);
       toast.error(`Failed to save: ${err.message || "Unknown error"}`);
@@ -521,6 +535,9 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
 
       setStatus("sent");
       setSentAt(new Date().toISOString());
+
+      // Sync line items to parts catalog
+      if (savedEstimate?.id) syncAllLineItemsToCatalog(savedEstimate.id);
       setSavedEstimateId(savedEstimate.id);
 
       // Advance ticket workflow: steps 3-4 complete, step 5 in progress
