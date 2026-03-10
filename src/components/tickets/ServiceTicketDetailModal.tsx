@@ -61,6 +61,42 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [swiPreviewOpen, setSwiPreviewOpen] = useState(false);
   const { data: dbCustomers = [] } = useCustomers();
+  const [isRerunning, setIsRerunning] = useState(false);
+  const [rerunProgress, setRerunProgress] = useState("");
+  const updateTicket = useServiceTicketsStore(s => s.updateTicket);
+
+  const handleRerunAssessment = async () => {
+    if (!ticket || isRerunning) return;
+    setIsRerunning(true);
+    setRerunProgress("Starting...");
+    try {
+      const result = await runAutoHealAssessment(
+        {
+          ticketId: ticket.ticketId,
+          serialNumber: ticket.charger.serial || "",
+          chargerType: ticket.charger.type === "DC_L3" ? "DC | Level 3" : "AC | Level 2",
+          issueDescription: ticket.issue.description,
+          priority: ticket.priority,
+          customerName: ticket.customer.name,
+          customerCompany: ticket.customer.company,
+          photoCount: ticket.photos.length,
+          notes: ticket.reviewNotes || undefined,
+        },
+        (step) => setRerunProgress(step),
+        () => {},
+      );
+      updateTicket(ticket.id, {
+        assessmentData: result.assessment,
+        swiMatchData: result.swiMatch,
+      });
+      toast.success("Assessment re-run complete");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Assessment failed");
+    } finally {
+      setIsRerunning(false);
+      setRerunProgress("");
+    }
+  };
 
   if (!ticket) return null;
 
