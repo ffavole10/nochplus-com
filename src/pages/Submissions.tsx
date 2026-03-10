@@ -549,7 +549,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                 const childTicket = {
                   id: `temp-child-${i}`,
                   ticketId: `${parentTicketId}/${i + 1}`,
-                  source: "noch_plus",
+                  source: "noch_plus" as const,
                   customer: customerInfo,
                   charger: cd.charger,
                   photos: [],
