@@ -67,6 +67,7 @@ export async function cleanupDuplicateSubmissionTickets(
       .select("id", { count: "exact", head: true })
       .eq("submission_id", submissionId);
 
+    // Use the full group size (including the one we keep as parent)
     const totalChargers = chargerCount || ungrouped.length;
 
     // Sort by ticket_id to find the lowest (natural string sort works for NP-XXXX format)
