@@ -65,6 +65,8 @@ interface Submission {
   created_at: string;
   updated_at: string;
   chargers: ChargerSubmission[];
+  tickets_created?: boolean;
+  tickets_created_at?: string | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
