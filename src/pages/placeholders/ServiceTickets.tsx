@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Plus, Ticket, Search, ArrowUpDown, Crosshair, Diamond, UserPlus, Loader2, Eye, Camera, FileText, Wrench, Shield, Brain, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { ServiceTicket } from "@/types/serviceTicket";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useServiceTicketsSync, persistTicketToDB } from "@/hooks/useServiceTicketsDB";
 import { AutoHealResult } from "@/services/autoHealService";
+import { cleanupDuplicateSubmissionTickets } from "@/services/ticketCleanupService";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 
@@ -65,6 +66,24 @@ function getHighestPriority(tickets: ServiceTicket[]): string {
 export default function ServiceTickets() {
   usePageTitle('Tickets');
   useServiceTicketsSync();
+
+  // One-time auto-cleanup for NP-2026-D2804046
+  const cleanupRan = useRef(false);
+  useEffect(() => {
+    if (cleanupRan.current) return;
+    const key = "cleanup_NP-2026-D2804046_done";
+    if (localStorage.getItem(key)) return;
+    cleanupRan.current = true;
+    cleanupDuplicateSubmissionTickets("NP-2026-D2804046").then((result) => {
+      localStorage.setItem(key, "true");
+      if (result.duplicatesRemoved > 0) {
+        toast.success(`Auto-cleanup: ${result.duplicatesRemoved} duplicate tickets removed for NP-2026-D2804046`);
+        // Reload tickets from store
+        window.location.reload();
+      }
+    }).catch(console.error);
+  }, []);
+
   const tickets = useServiceTicketsStore((s) => s.tickets);
   const updateTicketInStore = useServiceTicketsStore((s) => s.updateTicket);
   const [formOpen, setFormOpen] = useState(false);
