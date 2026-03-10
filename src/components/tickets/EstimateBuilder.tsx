@@ -168,12 +168,19 @@ function LineItemRow({
         </Badge>
       </td>
       <td className="py-2 pr-2 w-full">
-        <Input
-          value={item.description}
-          onChange={(e) => update({ description: e.target.value })}
-          className="h-8 text-sm"
-          disabled={readOnly}
-        />
+        {readOnly ? (
+          <Input value={item.description} className="h-8 text-sm" disabled />
+        ) : (
+          <PartsCatalogAutocomplete
+            value={item.description}
+            onChange={(val) => update({ description: val })}
+            onSelect={(catalogItem) => update({
+              description: catalogItem.description,
+              rate: catalogItem.unit_price,
+              ...(catalogItem.unit ? { unit: catalogItem.unit as any } : {}),
+            })}
+          />
+        )}
       </td>
       <td className="py-2 pr-2">
         <Input
