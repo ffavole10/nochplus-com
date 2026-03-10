@@ -404,3 +404,65 @@ export function DataManagement() {
     </>
   );
 }
+
+export function DuplicateTicketCleanup() {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [running, setRunning] = useState(false);
+
+  const handleCleanup = async () => {
+    setRunning(true);
+    setConfirmOpen(false);
+    try {
+      const result = await cleanupDuplicateSubmissionTickets();
+      if (result.duplicatesRemoved === 0) {
+        toast.info("No duplicate tickets found — everything looks clean.");
+      } else {
+        toast.success(
+          `Cleanup complete — ${result.duplicatesRemoved} duplicate tickets removed, ${result.groupedTicketsCreated} grouped tickets created.`
+        );
+      }
+    } catch (err) {
+      console.error("Cleanup failed:", err);
+      toast.error("Cleanup failed. Check console for details.");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Ticket Cleanup</CardTitle>
+        <CardDescription>
+          Remove duplicate individual tickets from Noch+ submissions and consolidate them into grouped tickets.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button
+          variant="destructive"
+          onClick={() => setConfirmOpen(true)}
+          disabled={running}
+          className="gap-2"
+        >
+          {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+          {running ? "Cleaning up…" : "Clean Up Duplicate Submission Tickets"}
+        </Button>
+
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Cleanup</DialogTitle>
+              <DialogDescription>
+                This will delete all duplicate individual tickets from Noch+ submissions and keep one grouped ticket per submission. This cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={handleCleanup}>Confirm Delete</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
+}
