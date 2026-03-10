@@ -479,12 +479,8 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
           toast.info("Tickets already created for this submission.");
         } else {
           const serviceChargers = updatedChargers.filter((ch) => ch.service_needed === true);
-          const previouslyFlagged = selectedSubmission.chargers
-            .filter((ch) => ch.service_needed === true)
-            .map((ch) => ch.id);
-          const newServiceChargers = serviceChargers.filter((ch) => !previouslyFlagged.includes(ch.id));
 
-          if (newServiceChargers.length > 0) {
+          if (serviceChargers.length > 0) {
             // Duplicate check at DB level
             const dupCheck = await checkDuplicateTickets(updated.id);
             if (dupCheck.exists) {
@@ -506,7 +502,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                 return found || (b ? "Other" : "");
               };
 
-              const chargerData = newServiceChargers.map((ch) => ({
+              const chargerData = serviceChargers.map((ch) => ({
                 charger: {
                   brand: mapBrand(ch.brand),
                   serialNumber: ch.serial_number || "",
@@ -562,12 +558,10 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
               setSelectedSubmission(withFlag);
 
               toast.success(
-                `${newServiceChargers.length} service ticket${newServiceChargers.length > 1 ? "s" : ""} created under ${parent?.ticketId || "new parent"}.`,
+                `${serviceChargers.length} service ticket${serviceChargers.length > 1 ? "s" : ""} created under ${parent?.ticketId || "new parent"}.`,
                 { duration: 5000 }
               );
             }
-          } else if (serviceChargers.length > 0) {
-            toast.success("Changes saved (service tickets already created for flagged chargers).");
           } else {
             toast.success("Changes saved");
           }
