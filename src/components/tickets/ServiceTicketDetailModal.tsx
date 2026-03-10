@@ -221,9 +221,24 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
 
             {/* AutoHeal Assessment */}
             <div className="border-t pt-4">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-2">
-                <CheckCircle className="h-4 w-4" /> AutoHeal Assessment
-              </h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" /> AutoHeal Assessment
+                </h4>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs h-7"
+                  onClick={handleRerunAssessment}
+                  disabled={isRerunning}
+                >
+                  {isRerunning ? (
+                    <><Loader2 className="h-3 w-3 animate-spin" /> {rerunProgress}</>
+                  ) : (
+                    <><RefreshCw className="h-3 w-3" /> Re-run Assessment</>
+                  )}
+                </Button>
+              </div>
               {ticket.assessmentData ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">

@@ -184,17 +184,32 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
             <p className="text-sm text-muted-foreground leading-relaxed">{ticket.issue.description}</p>
           </div>
 
-          {/* Recommendation */}
-          {ticket.assessmentData && (
-            <div className="border-t pt-3">
+          {/* Recommendation + Re-run */}
+          <div className="border-t pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5 uppercase tracking-wide">
+                <Wrench className="h-3.5 w-3.5 text-primary" /> Assessment
+              </h4>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs h-7"
+                onClick={handleRerunAssessment}
+                disabled={isRerunning}
+              >
+                {isRerunning ? (
+                  <><Loader2 className="h-3 w-3 animate-spin" /> {rerunProgress}</>
+                ) : (
+                  <><RefreshCw className="h-3 w-3" /> Re-run Assessment</>
+                )}
+              </Button>
+            </div>
+            {ticket.assessmentData && (
               <div className="bg-muted/50 rounded-lg p-4">
-                <h4 className="text-xs font-semibold text-foreground flex items-center gap-2 mb-2 uppercase tracking-wide">
-                  <Wrench className="h-3.5 w-3.5 text-primary" /> Recommendation
-                </h4>
                 <p className="text-sm text-muted-foreground leading-relaxed">{ticket.assessmentData.recommendation}</p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Assessment Report PDF */}
           {ticket.assessmentData && (
