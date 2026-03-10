@@ -20,6 +20,10 @@ import { AssessmentReportTab } from "@/components/assessment-report/AssessmentRe
 import { useState } from "react";
 import { PricingTypeBadge } from "@/pages/placeholders/Customers";
 import { useCustomers } from "@/hooks/useCustomers";
+import { runAutoHealAssessment, AgentStep } from "@/services/autoHealService";
+import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
+import { toast } from "sonner";
+import { Brain, RefreshCw } from "lucide-react";
 
 interface ServiceTicketDetailModalProps {
   ticket: ServiceTicket | null;
