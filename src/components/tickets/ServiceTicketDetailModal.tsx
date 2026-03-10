@@ -73,7 +73,7 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
       const result = await runAutoHealAssessment(
         {
           ticketId: ticket.ticketId,
-          serialNumber: ticket.charger.serial || "",
+          serialNumber: ticket.charger.serialNumber || "",
           chargerType: ticket.charger.type === "DC_L3" ? "DC | Level 3" : "AC | Level 2",
           issueDescription: ticket.issue.description,
           priority: ticket.priority,
