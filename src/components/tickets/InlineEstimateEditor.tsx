@@ -534,6 +534,9 @@ export function InlineEstimateEditor({ ticket, campaignId }: InlineEstimateEdito
 
       setStatus("sent");
       setSentAt(new Date().toISOString());
+
+      // Sync line items to parts catalog
+      if (savedEstimate?.id) syncAllLineItemsToCatalog(savedEstimate.id);
       setSavedEstimateId(savedEstimate.id);
 
       // Advance ticket workflow: steps 3-4 complete, step 5 in progress

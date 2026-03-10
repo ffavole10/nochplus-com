@@ -494,6 +494,9 @@ export function EstimateBuilder({
       setStatus("sent");
       onStatusChange?.("sent");
       toast.success(`Estimate sent to ${customerEmail}`);
+
+      // Sync line items to parts catalog
+      if (savedEstimate?.id) syncAllLineItemsToCatalog(savedEstimate.id);
     } catch (err: any) {
       console.error("Send estimate error:", err);
       toast.error(`Failed to send estimate: ${err.message || "Unknown error"}`);
