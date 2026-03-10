@@ -525,7 +525,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                 "noch_plus",
                 `Submission ${updated.submission_id}`
               );
-              const parent = store.getTicketById(parentStoreId);
+              const parent = ticketStore.getTicketById(parentStoreId);
 
               // Persist parent to DB
               let parentDbId: string | null = null;
