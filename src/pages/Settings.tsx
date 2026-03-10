@@ -16,7 +16,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { CampaignManagement } from "@/components/settings/CampaignManagement";
 import { PartnerManagement } from "@/components/settings/PartnerManagement";
-import { DataManagement } from "@/components/settings/DataManagement";
+import { DataManagement, DuplicateTicketCleanup } from "@/components/settings/DataManagement";
 import { RateCardsTab } from "@/components/settings/RateCardsTab";
 import { QuoteRulesTab } from "@/components/settings/QuoteRulesTab";
 import { CustomerOverridesTab } from "@/components/settings/CustomerOverridesTab";
