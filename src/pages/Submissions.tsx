@@ -518,8 +518,8 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
               }));
 
               // Create parent ticket in Zustand store for UI
-              const store = useServiceTicketsStore.getState();
-              const parentStoreId = store.createParentWithChildren(
+              const ticketStore = useServiceTicketsStore.getState();
+              const parentStoreId = ticketStore.createParentWithChildren(
                 customerInfo,
                 chargerData,
                 "noch_plus",
