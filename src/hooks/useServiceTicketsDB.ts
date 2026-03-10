@@ -45,7 +45,11 @@ interface DBTicketCharger {
   under_warranty: string | null;
 }
 
-function dbTicketToStore(ticket: DBServiceTicket, chargers: DBTicketCharger[]): ServiceTicket {
+function dbTicketToStore(
+  ticket: DBServiceTicket,
+  chargers: DBTicketCharger[],
+  childDbIds?: string[],
+): ServiceTicket {
   const charger = chargers[0];
   const validBrands: ChargerBrand[] = ["BTC", "ABB", "Delta", "Tritium", "Signet", "Other"];
   const brand = charger
@@ -95,6 +99,10 @@ function dbTicketToStore(ticket: DBServiceTicket, chargers: DBTicketCharger[]): 
         performedBy: "System",
       },
     ],
+    // Parent-child fields
+    isParent: ticket.is_parent || false,
+    parentTicketId: ticket.parent_ticket_id || undefined,
+    childTicketIds: childDbIds,
   };
 }
 
