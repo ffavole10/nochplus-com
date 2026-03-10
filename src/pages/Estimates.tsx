@@ -368,6 +368,10 @@ const Estimates = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [bulkAction, setBulkAction] = useState<"delete" | "reject" | null>(null);
+
+  const deleteEstimate = useDeleteEstimate();
+  const updateEstimate = useUpdateEstimate();
 
   const partnerName = "Partner";
 
