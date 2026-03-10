@@ -29,6 +29,8 @@ import { SWI_CATALOG } from "@/data/swiCatalog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
+import { syncAllLineItemsToCatalog } from "@/utils/partsCatalogSync";
+import { PartsCatalogAutocomplete } from "@/components/estimates/PartsCatalogAutocomplete";
 import { lookupRateSheetPricing, buildRateSheetLineItems, type RateSheetPricingResult } from "@/services/rateSheetPricingService";
 
 /* ------------------------------------------------------------------ */
