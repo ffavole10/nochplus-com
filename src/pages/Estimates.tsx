@@ -1,5 +1,9 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Download, Search, Crosshair, Diamond, UserPlus, DollarSign, XCircle, Plus, Trash2, Pencil, Save, UserCheck } from "lucide-react";
-import { useEstimates, useUpdateEstimate, EstimateRecord } from "@/hooks/useEstimates";
+import { useEstimates, useUpdateEstimate, useDeleteEstimate, EstimateRecord } from "@/hooks/useEstimates";
 import { format } from "date-fns";
 import { downloadEstimatePDF, downloadMultipleEstimatePDFs } from "@/lib/estimatePdf";
 import {
@@ -364,6 +368,10 @@ const Estimates = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [bulkAction, setBulkAction] = useState<"delete" | "reject" | null>(null);
+
+  const deleteEstimate = useDeleteEstimate();
+  const updateEstimate = useUpdateEstimate();
 
   const partnerName = "Partner";
 
@@ -419,6 +427,35 @@ const Estimates = () => {
     toast.success(`Downloading all ${filteredEstimates.length} estimate${filteredEstimates.length > 1 ? "s" : ""}`);
   };
 
+  const handleBulkReject = async () => {
+    const ids = Array.from(selectedIds);
+    let count = 0;
+    for (const id of ids) {
+      try {
+        await updateEstimate.mutateAsync({ id, status: "rejected" });
+        count++;
+      } catch {}
+    }
+    toast.success(`${count} estimate${count !== 1 ? "s" : ""} marked as rejected`);
+    setSelectedIds(new Set());
+    setBulkAction(null);
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    let count = 0;
+    for (const id of ids) {
+      const est = estimates.find(e => e.id === id);
+      try {
+        await deleteEstimate.mutateAsync({ id, campaignId: est?.campaign_id || "" });
+        count++;
+      } catch {}
+    }
+    toast.success(`${count} estimate${count !== 1 ? "s" : ""} deleted`);
+    setSelectedIds(new Set());
+    setBulkAction(null);
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* KPI Cards */}
@@ -463,7 +500,11 @@ const Estimates = () => {
           </div>
           <div className="flex items-center gap-2">
             {selectedIds.size > 0 && (
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadSelected}><Download className="h-3.5 w-3.5" />Download Selected ({selectedIds.size})</Button>
+              <>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadSelected}><Download className="h-3.5 w-3.5" />Download ({selectedIds.size})</Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setBulkAction("reject")}><XCircle className="h-3.5 w-3.5" />Reject ({selectedIds.size})</Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setBulkAction("delete")}><Trash2 className="h-3.5 w-3.5" />Delete ({selectedIds.size})</Button>
+              </>
             )}
             <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadAll}><Download className="h-3.5 w-3.5" />Download All</Button>
           </div>
@@ -536,6 +577,30 @@ const Estimates = () => {
       </Card>
 
       <EstimateDetailModal estimate={selectedEstimate} open={!!selectedEstimate} onOpenChange={(o) => { if (!o) setSelectedEstimate(null); }} partnerName={partnerName} onUpdated={(updated) => setSelectedEstimate(updated)} />
+
+      <AlertDialog open={bulkAction !== null} onOpenChange={(o) => { if (!o) setBulkAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkAction === "delete" ? "Delete Estimates" : "Reject Estimates"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction === "delete"
+                ? `Are you sure you want to permanently delete ${selectedIds.size} estimate${selectedIds.size !== 1 ? "s" : ""}? This action cannot be undone.`
+                : `Are you sure you want to mark ${selectedIds.size} estimate${selectedIds.size !== 1 ? "s" : ""} as rejected?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={bulkAction === "delete" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+              onClick={bulkAction === "delete" ? handleBulkDelete : handleBulkReject}
+            >
+              {bulkAction === "delete" ? "Delete" : "Reject"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
