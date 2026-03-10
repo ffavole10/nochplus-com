@@ -15,9 +15,12 @@ import { AssessmentReportActions } from "@/components/tickets/AssessmentReportAc
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
   MapPin, Wrench, FileText, Send, Eye, ExternalLink, Download,
-  Image as ImageIcon, AlertTriangle, X, ChevronDown, ChevronUp, ClipboardCopy,
+  Image as ImageIcon, AlertTriangle, X, ChevronDown, ChevronUp, ClipboardCopy, RefreshCw,
 } from "lucide-react";
 import { useState } from "react";
+import { runAutoHealAssessment } from "@/services/autoHealService";
+import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
+import { toast } from "sonner";
 
 interface TicketDetailPanelProps {
   ticket: ServiceTicket;
