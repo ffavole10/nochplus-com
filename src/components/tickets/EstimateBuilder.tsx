@@ -385,6 +385,7 @@ export function EstimateBuilder({
         status: "draft" as const,
       };
 
+      let currentEstimateId = savedEstimateId;
       if (savedEstimateId) {
         const { error } = await supabase
           .from("estimates")
@@ -399,6 +400,7 @@ export function EstimateBuilder({
           .single();
         if (error) throw error;
         setSavedEstimateId(data.id);
+        currentEstimateId = data.id;
       }
 
       setStatus("draft");
@@ -406,8 +408,7 @@ export function EstimateBuilder({
       toast.success("Estimate saved as draft");
 
       // Sync line items to parts catalog
-      const estId = savedEstimateId || data?.id;
-      if (estId) syncAllLineItemsToCatalog(estId);
+      if (currentEstimateId) syncAllLineItemsToCatalog(currentEstimateId);
     } catch (err: any) {
       console.error("Save draft error:", err);
       toast.error(`Failed to save draft: ${err.message || "Unknown error"}`);
