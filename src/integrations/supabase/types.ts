@@ -276,6 +276,42 @@ export type Database = {
           },
         ]
       }
+      autoheal_config: {
+        Row: {
+          agent_settings: Json
+          created_at: string
+          execution_rules: Json
+          id: string
+          model_config: Json
+          output_formatting: Json
+          retry_logic: Json
+          token_controls: Json
+          updated_at: string
+        }
+        Insert: {
+          agent_settings?: Json
+          created_at?: string
+          execution_rules?: Json
+          id?: string
+          model_config?: Json
+          output_formatting?: Json
+          retry_logic?: Json
+          token_controls?: Json
+          updated_at?: string
+        }
+        Update: {
+          agent_settings?: Json
+          created_at?: string
+          execution_rules?: Json
+          id?: string
+          model_config?: Json
+          output_formatting?: Json
+          retry_logic?: Json
+          token_controls?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           created_at: string
