@@ -781,6 +781,51 @@ export type Database = {
         }
         Relationships: []
       }
+      deep_learning_uploads: {
+        Row: {
+          error_message: string | null
+          file_size_kb: number
+          file_type: string
+          filename: string
+          id: string
+          notes: string | null
+          patterns_added: number | null
+          quality_score: number | null
+          records_extracted: number | null
+          status: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          error_message?: string | null
+          file_size_kb?: number
+          file_type?: string
+          filename: string
+          id?: string
+          notes?: string | null
+          patterns_added?: number | null
+          quality_score?: number | null
+          records_extracted?: number | null
+          status?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Update: {
+          error_message?: string | null
+          file_size_kb?: number
+          file_type?: string
+          filename?: string
+          id?: string
+          notes?: string | null
+          patterns_added?: number | null
+          quality_score?: number | null
+          records_extracted?: number | null
+          status?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       estimates: {
         Row: {
           account_manager: string | null
