@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import {
@@ -455,6 +456,8 @@ const Estimates = () => {
     setBulkAction(null);
   };
 
+  const queryClient = useQueryClient();
+
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
     let count = 0;
@@ -465,6 +468,8 @@ const Estimates = () => {
         count++;
       } catch {}
     }
+    // Force refresh all estimate queries
+    await queryClient.invalidateQueries({ queryKey: ["estimates"] });
     toast.success(`${count} estimate${count !== 1 ? "s" : ""} deleted`);
     setSelectedIds(new Set());
     setBulkAction(null);
