@@ -147,6 +147,7 @@ export function PlatformSidebar() {
   const campaignPages = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Dataset", url: "/dataset", icon: Database },
+  { title: "Assets", url: "/service-desk/chargers", icon: HardDrive },
   { title: "Flagged", url: "/issues", icon: SearchIcon },
   { title: "Schedule", url: "/schedule", icon: CalendarDays },
   { title: "Field Reports", url: "/field-reports", icon: FolderOpen }];
@@ -164,7 +165,8 @@ export function PlatformSidebar() {
   { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: totalTicketCount },
   { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: estimateCount },
   { title: "Customers", url: "/service-desk/customers", icon: Users },
-  { title: "All Chargers", url: "/service-desk/chargers", icon: HardDrive }];
+  { title: "Parts Inventory", url: "/autoheal/parts", icon: Package },
+  { title: "Parts Catalog", url: "/autoheal/parts-catalog", icon: BookOpen }];
 
 
   const nochPlusPages = [
