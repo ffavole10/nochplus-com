@@ -699,8 +699,12 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                     className="gap-2"
                     disabled={!allApproved || assessmentStatus === "running"}
                     onClick={async () => {
+                      console.log("[RunAssessment] clicked, allApproved:", allApproved, "assessmentStatus:", assessmentStatus);
+                      console.log("[RunAssessment] chargerStatuses:", JSON.stringify(chargerStatuses));
+                      console.log("[RunAssessment] chargers:", selectedSubmission.chargers.map(c => ({ id: c.id, status: chargerStatuses[c.id] })));
                       setAssessmentStatus("running");
                       try {
+                        console.log("[RunAssessment] invoking ai-chat...");
                         const { data, error } = await supabase.functions.invoke("ai-chat", {
                           body: {
                             messages: [
