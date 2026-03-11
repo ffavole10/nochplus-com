@@ -178,8 +178,7 @@ export function PlatformSidebar() {
   { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
 
   const autohealPages = [
-  { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
-  { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen }];
+  { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot }];
 
 
   const SectionHeader = ({
