@@ -5,7 +5,8 @@ import {
   AlertTriangle, ChevronDown, ChevronRight,
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
-  Filter, Crosshair, Home, Bot, BookOpen, MapPinned } from
+  Filter, Crosshair, Home, Bot, BookOpen, MapPinned,
+  Brain, Sliders, BarChart3 } from
 "lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
@@ -178,7 +179,10 @@ export function PlatformSidebar() {
   { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
 
   const autohealPages = [
-  { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot }];
+  { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
+  { title: "Deep Learning", url: "/autoheal/deep-learning", icon: Brain },
+  { title: "Configuration", url: "/autoheal/configuration", icon: Sliders },
+  { title: "Performance", url: "/autoheal/performance", icon: BarChart3 }];
 
 
   const SectionHeader = ({

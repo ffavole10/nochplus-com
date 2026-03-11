@@ -8,10 +8,6 @@ import { toast } from "sonner";
 import { AgentCard, type AgentPrompt } from "@/components/ai-agent/AgentCard";
 import { AgentTestModal } from "@/components/ai-agent/AgentTestModal";
 import { AgentEditModal } from "@/components/ai-agent/AgentEditModal";
-import { MLSection } from "@/components/ai-agent/MLSection";
-import { WebSearchSection } from "@/components/ai-agent/WebSearchSection";
-import { ConfigSection } from "@/components/ai-agent/ConfigSection";
-import { MetricsDashboard } from "@/components/ai-agent/MetricsDashboard";
 
 const AIAgent = () => {
   usePageTitle('AutoHeal™');
@@ -187,25 +183,6 @@ const AIAgent = () => {
           }
         </div>
 
-        {/* ML Section */}
-        <div className="border-t border-border pt-8">
-          <MLSection />
-        </div>
-
-        {/* Web Search */}
-        <div className="border-t border-border pt-8">
-          <WebSearchSection />
-        </div>
-
-        {/* Config */}
-        <div className="border-t border-border pt-8">
-          <ConfigSection />
-        </div>
-
-        {/* Metrics */}
-        <div className="border-t border-border pt-8">
-          <MetricsDashboard />
-        </div>
       </div>
 
       {/* Modals */}
