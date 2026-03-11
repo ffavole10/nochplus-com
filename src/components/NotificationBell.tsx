@@ -23,8 +23,13 @@ const typeColors: Record<string, string> = {
   submission_approved: "text-optimal",
 };
 
+const notificationRoutes: Record<string, (refId: string | null) => string | null> = {
+  estimate_approved: (refId) => refId ? `/service-desk/estimates?id=${refId}` : null,
+};
+
 export function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const navigate = useNavigate();
 
   return (
     <Popover>
