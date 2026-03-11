@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 const typeIcons: Record<string, typeof AlertTriangle> = {
   campaign_created: FolderPlus,
@@ -22,8 +23,13 @@ const typeColors: Record<string, string> = {
   submission_approved: "text-optimal",
 };
 
+const notificationRoutes: Record<string, (refId: string | null) => string | null> = {
+  estimate_approved: (refId) => refId ? `/service-desk/estimates?id=${refId}` : null,
+};
+
 export function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const navigate = useNavigate();
 
   return (
     <Popover>
@@ -60,7 +66,12 @@ export function NotificationBell() {
                 return (
                   <button
                     key={n.id}
-                    onClick={() => !n.is_read && markAsRead(n.id)}
+                    onClick={() => {
+                      if (!n.is_read) markAsRead(n.id);
+                      const getRoute = notificationRoutes[n.type];
+                      const route = getRoute?.(n.reference_id);
+                      if (route) navigate(route);
+                    }}
                     className={cn(
                       "w-full text-left px-4 py-3 flex gap-3 hover:bg-accent/50 transition-colors",
                       !n.is_read && "bg-accent/20"

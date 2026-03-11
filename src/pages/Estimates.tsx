@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -361,9 +362,22 @@ function EstimateDetailModal({ estimate, open, onOpenChange, partnerName, onUpda
 /* ── Main Page ─────────────────────────────────── */
 const Estimates = () => {
   usePageTitle('Estimates');
+  const [searchParams, setSearchParams] = useSearchParams();
   // Load estimates from all campaigns (pass null to get all)
   const { data: estimates = [], isLoading } = useEstimates(null);
   const [selectedEstimate, setSelectedEstimate] = useState<EstimateRecord | null>(null);
+
+  // Auto-open estimate from URL param (e.g. from notification click)
+  useEffect(() => {
+    const estimateId = searchParams.get("id");
+    if (estimateId && estimates.length > 0) {
+      const found = estimates.find(e => e.id === estimateId);
+      if (found) {
+        setSelectedEstimate(found);
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, estimates, setSearchParams]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
