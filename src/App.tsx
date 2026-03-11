@@ -76,6 +76,7 @@ const App = () => (
             <Route path="/noch-plus/members" element={<NochPlusMembers />} />
             <Route path="/noch-plus/chargers" element={<NochPlusChargers />} />
             <Route path="/noch-plus/assessments" element={<NochPlusAssessments />} />
+            <Route path="/noch-plus/monitoring" element={<NochPlusMonitoring />} />
 
             {/* AutoHeal section */}
             <Route path="/autoheal/ai-agent" element={<AIAgent />} />
