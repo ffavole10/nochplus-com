@@ -17,12 +17,7 @@ const Performance = () => {
       <div className="container mx-auto px-4 py-8 max-w-5xl space-y-8">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Performance</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              AutoHeal™ accuracy metrics and diagnostic outcomes over time
-            </p>
-          </div>
+          <div />
           <div className="flex gap-1">
             {DATE_RANGES.map((r) => (
               <Button
