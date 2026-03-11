@@ -375,6 +375,48 @@ export type Database = {
         }
         Relationships: []
       }
+      charger_health_scores: {
+        Row: {
+          charger_id: string | null
+          communication_score: number | null
+          connector_wear_score: number | null
+          cvs_score: number
+          error_recurrence_index: number | null
+          firmware_currency_score: number | null
+          id: string
+          last_calculated_at: string
+          predicted_failure_days: number | null
+          session_completion_rate: number | null
+          thermal_stress_index: number | null
+        }
+        Insert: {
+          charger_id?: string | null
+          communication_score?: number | null
+          connector_wear_score?: number | null
+          cvs_score?: number
+          error_recurrence_index?: number | null
+          firmware_currency_score?: number | null
+          id?: string
+          last_calculated_at?: string
+          predicted_failure_days?: number | null
+          session_completion_rate?: number | null
+          thermal_stress_index?: number | null
+        }
+        Update: {
+          charger_id?: string | null
+          communication_score?: number | null
+          connector_wear_score?: number | null
+          cvs_score?: number
+          error_recurrence_index?: number | null
+          firmware_currency_score?: number | null
+          id?: string
+          last_calculated_at?: string
+          predicted_failure_days?: number | null
+          session_completion_rate?: number | null
+          thermal_stress_index?: number | null
+        }
+        Relationships: []
+      }
       charger_locations: {
         Row: {
           created_at: string
@@ -826,6 +868,53 @@ export type Database = {
         }
         Relationships: []
       }
+      environmental_correlations: {
+        Row: {
+          altitude_modifier: number | null
+          coastal_corrosion_risk: number | null
+          heat_vulnerability_index: number | null
+          id: string
+          last_updated_at: string
+          last_weather_event_at: string | null
+          location_id: string | null
+          seasonal_drift_active: boolean | null
+          storm_impact_score: number | null
+          uv_exposure_index: number | null
+        }
+        Insert: {
+          altitude_modifier?: number | null
+          coastal_corrosion_risk?: number | null
+          heat_vulnerability_index?: number | null
+          id?: string
+          last_updated_at?: string
+          last_weather_event_at?: string | null
+          location_id?: string | null
+          seasonal_drift_active?: boolean | null
+          storm_impact_score?: number | null
+          uv_exposure_index?: number | null
+        }
+        Update: {
+          altitude_modifier?: number | null
+          coastal_corrosion_risk?: number | null
+          heat_vulnerability_index?: number | null
+          id?: string
+          last_updated_at?: string
+          last_weather_event_at?: string | null
+          location_id?: string | null
+          seasonal_drift_active?: boolean | null
+          storm_impact_score?: number | null
+          uv_exposure_index?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environmental_correlations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estimates: {
         Row: {
           account_manager: string | null
@@ -1100,6 +1189,79 @@ export type Database = {
           type?: string
         }
         Relationships: []
+      }
+      ocpp_events: {
+        Row: {
+          charger_id: string | null
+          customer_id: string | null
+          error_code: string
+          error_description: string
+          id: string
+          location_id: string | null
+          max_action_taken: string | null
+          max_confidence: number | null
+          ocpp_status: string
+          received_at: string
+          resolution_type: string | null
+          resolved_at: string | null
+          severity: string
+          ticket_id: string | null
+        }
+        Insert: {
+          charger_id?: string | null
+          customer_id?: string | null
+          error_code?: string
+          error_description?: string
+          id?: string
+          location_id?: string | null
+          max_action_taken?: string | null
+          max_confidence?: number | null
+          ocpp_status?: string
+          received_at?: string
+          resolution_type?: string | null
+          resolved_at?: string | null
+          severity?: string
+          ticket_id?: string | null
+        }
+        Update: {
+          charger_id?: string | null
+          customer_id?: string | null
+          error_code?: string
+          error_description?: string
+          id?: string
+          location_id?: string | null
+          max_action_taken?: string | null
+          max_confidence?: number | null
+          ocpp_status?: string
+          received_at?: string
+          resolution_type?: string | null
+          resolved_at?: string | null
+          severity?: string
+          ticket_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocpp_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ocpp_events_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ocpp_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "service_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partners: {
         Row: {
