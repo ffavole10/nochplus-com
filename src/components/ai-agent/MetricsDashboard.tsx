@@ -10,12 +10,15 @@ const METRICS = [
   { label: "Flags for Review", value: "14.2%", icon: AlertTriangle, color: "text-orange-500" },
 ];
 
-export function MetricsDashboard() {
+export function MetricsDashboard({ headerRight }: { headerRight?: React.ReactNode }) {
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-foreground">Success Metrics</h2>
-        <p className="text-sm text-muted-foreground">This month's performance overview.</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Success Metrics</h2>
+          <p className="text-sm text-muted-foreground">This month's performance overview.</p>
+        </div>
+        {headerRight}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
