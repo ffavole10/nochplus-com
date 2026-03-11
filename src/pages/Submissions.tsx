@@ -326,18 +326,21 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
     setAssessmentPdfBlob(null);
 
     // Check if assessment report already exists for this submission
-    const { data: existingReport } = await supabase
-      .from("assessment_reports" as any)
-      .select("id, pdf_storage_path")
-      .eq("submission_id", sub.id)
-      .maybeSingle();
+    const existingReport = reportRes?.data as any;
     
     if (existingReport?.pdf_storage_path) {
-      // Load existing PDF
       const { data: pdfData } = await supabase.storage
         .from("field-reports")
-        .download(existingReport.pdf_storage_path as string);
+        .download(existingReport.pdf_storage_path);
       if (pdfData) {
+        setAssessmentPdfBlob(pdfData);
+        setAssessmentStatus("done");
+      } else {
+        setAssessmentStatus("idle");
+      }
+    } else {
+      setAssessmentStatus("idle");
+    }
         setAssessmentPdfBlob(pdfData);
         setAssessmentStatus("done");
       } else {
