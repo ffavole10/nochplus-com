@@ -66,7 +66,12 @@ export function NotificationBell() {
                 return (
                   <button
                     key={n.id}
-                    onClick={() => !n.is_read && markAsRead(n.id)}
+                    onClick={() => {
+                      if (!n.is_read) markAsRead(n.id);
+                      const getRoute = notificationRoutes[n.type];
+                      const route = getRoute?.(n.reference_id);
+                      if (route) navigate(route);
+                    }}
                     className={cn(
                       "w-full text-left px-4 py-3 flex gap-3 hover:bg-accent/50 transition-colors",
                       !n.is_read && "bg-accent/20"
