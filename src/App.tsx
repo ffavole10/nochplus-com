@@ -83,6 +83,7 @@ const App = () => (
             {/* Settings */}
             <Route path="/settings" element={<Settings />} />
           </Route>
+
           {/* Legacy redirects */}
           <Route path="/tickets" element={<Navigate to="/issues" replace />} />
           <Route path="/campaigns/reports" element={<Navigate to="/field-reports" replace />} />
