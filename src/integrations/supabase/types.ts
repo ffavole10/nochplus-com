@@ -98,6 +98,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_knowledge_sources: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          relevance_score: number | null
+          searched_at: string
+          source_url: string | null
+          summary: string
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          relevance_score?: number | null
+          searched_at?: string
+          source_url?: string | null
+          summary: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          relevance_score?: number | null
+          searched_at?: string
+          source_url?: string | null
+          summary?: string
+          title?: string
+        }
+        Relationships: []
+      }
       ai_learning_patterns: {
         Row: {
           confidence_boost: number | null
