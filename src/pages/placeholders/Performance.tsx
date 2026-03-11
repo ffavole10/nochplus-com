@@ -14,27 +14,25 @@ const Performance = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-5xl space-y-8">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div />
-          <div className="flex gap-1">
-            {DATE_RANGES.map((r) => (
-              <Button
-                key={r}
-                variant={dateRange === r ? "default" : "outline"}
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => setDateRange(r)}
-              >
-                {r}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Metrics */}
-        <MetricsDashboard />
+      <div className="container mx-auto px-4 py-4 max-w-5xl space-y-6">
+        {/* Metrics with date filter */}
+        <MetricsDashboard
+          headerRight={
+            <div className="flex gap-1">
+              {DATE_RANGES.map((r) => (
+                <Button
+                  key={r}
+                  variant={dateRange === r ? "default" : "outline"}
+                  size="sm"
+                  className="text-xs h-8"
+                  onClick={() => setDateRange(r)}
+                >
+                  {r}
+                </Button>
+              ))}
+            </div>
+          }
+        />
 
         {/* Recent Activity */}
         <div className="border-t border-border pt-8">
