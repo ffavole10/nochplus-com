@@ -164,6 +164,7 @@ export function PlatformSidebar() {
   { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: totalTicketCount },
   { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: estimateCount },
   { title: "Customers", url: "/service-desk/customers", icon: Users },
+  { title: "Locations", url: "/autoheal/locations", icon: MapPinned },
   { title: "Parts Inventory", url: "/autoheal/parts", icon: Package },
   { title: "Parts Catalog", url: "/autoheal/parts-catalog", icon: BookOpen }];
 
