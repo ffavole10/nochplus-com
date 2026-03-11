@@ -28,6 +28,7 @@ import NochPlusDashboard from "./pages/placeholders/NochPlusDashboard";
 import NochPlusChargers from "./pages/placeholders/NochPlusChargers";
 import NochPlusMembers from "./pages/placeholders/NochPlusMembers";
 import NochPlusAssessments from "./pages/placeholders/NochPlusAssessments";
+import NochPlusMonitoring from "./pages/NochPlusMonitoring";
 import AIAgent from "./pages/placeholders/AIAgent";
 import DeepLearning from "./pages/placeholders/DeepLearning";
 import AutoHealConfig from "./pages/placeholders/AutoHealConfig";
