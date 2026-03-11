@@ -183,25 +183,6 @@ const AIAgent = () => {
           }
         </div>
 
-        {/* ML Section */}
-        <div className="border-t border-border pt-8">
-          <MLSection />
-        </div>
-
-        {/* Web Search */}
-        <div className="border-t border-border pt-8">
-          <WebSearchSection />
-        </div>
-
-        {/* Config */}
-        <div className="border-t border-border pt-8">
-          <ConfigSection />
-        </div>
-
-        {/* Metrics */}
-        <div className="border-t border-border pt-8">
-          <MetricsDashboard />
-        </div>
       </div>
 
       {/* Modals */}

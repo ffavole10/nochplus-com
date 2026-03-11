@@ -78,6 +78,9 @@ const App = () => (
 
             {/* AutoHeal section */}
             <Route path="/autoheal/ai-agent" element={<AIAgent />} />
+            <Route path="/autoheal/deep-learning" element={<DeepLearning />} />
+            <Route path="/autoheal/configuration" element={<AutoHealConfig />} />
+            <Route path="/autoheal/performance" element={<Performance />} />
             <Route path="/autoheal/swi-library" element={<SWILibrary />} />
             <Route path="/autoheal/parts" element={<Parts />} />
             <Route path="/autoheal/parts-catalog" element={<PartsCatalog />} />
