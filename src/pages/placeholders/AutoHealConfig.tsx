@@ -41,16 +41,6 @@ const AutoHealConfig = () => {
           <Button onClick={handleSave}>Save Changes</Button>
         </div>
 
-        {/* Warning */}
-        <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-          <div className="flex gap-3">
-            <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
-              Changes to configuration affect all active agents immediately.
-            </p>
-          </div>
-        </div>
-
         {/* Model Configuration */}
         <div>
           <h2 className="text-lg font-bold text-foreground mb-4">Model Configuration</h2>
@@ -114,6 +104,16 @@ const AutoHealConfig = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </div>
+
+        {/* Warning */}
+        <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          <div className="flex gap-3">
+            <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+              Changes to configuration affect all active agents immediately.
+            </p>
           </div>
         </div>
 
