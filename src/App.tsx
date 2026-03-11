@@ -23,7 +23,7 @@ import MainPlatformLayout from "./layouts/MainPlatformLayout";
 import ServiceTickets from "./pages/placeholders/ServiceTickets";
 import Submissions from "./pages/Submissions";
 import Customers from "./pages/placeholders/Customers";
-import AllChargers from "./pages/placeholders/AllChargers";
+
 import NochPlusDashboard from "./pages/placeholders/NochPlusDashboard";
 import NochPlusChargers from "./pages/placeholders/NochPlusChargers";
 import NochPlusMembers from "./pages/placeholders/NochPlusMembers";
