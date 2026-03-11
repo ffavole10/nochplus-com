@@ -178,8 +178,7 @@ export function PlatformSidebar() {
 
   const autohealPages = [
   { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
-  { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen },
-  { title: "Locations", url: "/autoheal/locations", icon: MapPinned }];
+  { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen }];
 
 
   const SectionHeader = ({
