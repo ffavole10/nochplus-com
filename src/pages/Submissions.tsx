@@ -312,7 +312,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
     );
   };
 
-  const openDetail = (sub: Submission) => {
+  const openDetail = async (sub: Submission) => {
     // If draft, open the modal for editing instead
     if (sub.status === "draft") {
       openDraftForEditing(sub);
@@ -323,8 +323,30 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
     setIsEditing(false);
     setEditForm({});
     setEditChargers([]);
-    setAssessmentStatus("idle");
     setAssessmentPdfBlob(null);
+
+    // Check if assessment report already exists for this submission
+    const reportRes = await supabase
+      .from("assessment_reports" as any)
+      .select("id, pdf_storage_path")
+      .eq("submission_id", sub.id)
+      .maybeSingle();
+    const existingReport = reportRes?.data as any;
+    
+    if (existingReport?.pdf_storage_path) {
+      const { data: pdfData } = await supabase.storage
+        .from("field-reports")
+        .download(existingReport.pdf_storage_path);
+      if (pdfData) {
+        setAssessmentPdfBlob(pdfData);
+        setAssessmentStatus("done");
+      } else {
+        setAssessmentStatus("idle");
+      }
+    } else {
+      setAssessmentStatus("idle");
+    }
+
     const statuses: Record<string, string> = {};
     const serviceNeeded: Record<string, boolean | null> = {};
     const notes: Record<string, string> = {};
@@ -699,24 +721,25 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                     className="gap-2"
                     disabled={!allApproved || assessmentStatus === "running"}
                     onClick={async () => {
-                      console.log("[RunAssessment] clicked, allApproved:", allApproved, "assessmentStatus:", assessmentStatus);
-                      console.log("[RunAssessment] chargerStatuses:", JSON.stringify(chargerStatuses));
-                      console.log("[RunAssessment] chargers:", selectedSubmission.chargers.map(c => ({ id: c.id, status: chargerStatuses[c.id] })));
                       setAssessmentStatus("running");
                       try {
-                        console.log("[RunAssessment] invoking ai-chat...");
                         const { data, error } = await supabase.functions.invoke("ai-chat", {
                           body: {
                             messages: [
                               {
                                 role: "user",
-                                content: `Generate a brief EV charger assessment report summary for this submission:\n\nCustomer: ${selectedSubmission.full_name} (${selectedSubmission.company_name})\nLocation: ${selectedSubmission.street_address}, ${selectedSubmission.city}, ${selectedSubmission.state} ${selectedSubmission.zip_code}\n\nChargers:\n${selectedSubmission.chargers.map((ch, i) => `${i + 1}. ${ch.brand} ${ch.charger_type} (SN: ${ch.serial_number || "N/A"}) — Issues: ${ch.known_issues || "None reported"} — Location: ${ch.installation_location || "N/A"}`).join("\n")}\n\nProvide: 1) Overall risk assessment 2) Per-charger recommendations 3) Priority actions. Keep it professional and concise.`
+                                content: `Generate a brief EV charger assessment report summary for this submission:\n\nCustomer: ${selectedSubmission.full_name} (${selectedSubmission.company_name})\nLocation: ${selectedSubmission.street_address}, ${selectedSubmission.city}, ${selectedSubmission.state} ${selectedSubmission.zip_code}\n\nChargers:\n${selectedSubmission.chargers.map((ch, i) => `${i + 1}. ${ch.brand} ${ch.charger_type} (SN: ${ch.serial_number || "N/A"}) — Issues: ${ch.known_issues || "None reported"} — Location: ${ch.installation_location || "N/A"}`).join("\n")}\n\nProvide: 1) Overall risk assessment (Critical/High/Medium/Low) 2) Per-charger recommendations 3) Priority actions. Start your response with the risk level on the first line like "Risk: Medium". Keep it professional and concise.`
                               }
                             ]
                           }
                         });
                         if (error) throw error;
                         const aiText = data?.reply || data?.content || "Assessment complete.";
+
+                        // Extract risk level from AI response
+                        const riskMatch = aiText.match(/Risk:\s*(Critical|High|Medium|Low)/i);
+                        const riskLevel = riskMatch ? riskMatch[1].charAt(0).toUpperCase() + riskMatch[1].slice(1).toLowerCase() : "Medium";
+
                         const { default: jsPDF } = await import("jspdf");
                         const doc = new jsPDF();
                         doc.setFontSize(18);
@@ -735,9 +758,35 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                         const lines = doc.splitTextToSize(aiText, 170);
                         doc.text(lines, 20, 65);
                         const blob = doc.output("blob");
+
+                        // Persist PDF to storage and save record
+                        const pdfPath = `assessments/${selectedSubmission.id}/${selectedSubmission.submission_id}.pdf`;
+                        const { error: uploadErr } = await supabase.storage
+                          .from("field-reports")
+                          .upload(pdfPath, blob, { contentType: "application/pdf", upsert: true });
+                        if (uploadErr) console.warn("PDF upload error:", uploadErr);
+
+                        // Upsert assessment_reports record
+                        const { error: dbErr } = await supabase
+                          .from("assessment_reports" as any)
+                          .upsert({
+                            submission_id: selectedSubmission.id,
+                            submission_display_id: selectedSubmission.submission_id,
+                            customer_name: selectedSubmission.full_name,
+                            company_name: selectedSubmission.company_name,
+                            city: selectedSubmission.city,
+                            state: selectedSubmission.state,
+                            ai_summary: aiText,
+                            risk_level: riskLevel,
+                            charger_count: selectedSubmission.chargers.length,
+                            pdf_storage_path: pdfPath,
+                            updated_at: new Date().toISOString(),
+                          } as any, { onConflict: "submission_id" as any });
+                        if (dbErr) console.warn("Assessment record save error:", dbErr);
+
                         setAssessmentPdfBlob(blob);
                         setAssessmentStatus("done");
-                        toast.success("Assessment report generated");
+                        toast.success("Assessment report generated & saved");
                       } catch (err: any) {
                         console.error("Assessment error:", err);
                         toast.error(`Assessment failed: ${err.message}`);

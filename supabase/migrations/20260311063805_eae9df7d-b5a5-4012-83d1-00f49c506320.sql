@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX assessment_reports_submission_id_key ON public.assessment_reports (submission_id);

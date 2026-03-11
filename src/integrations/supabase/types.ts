@@ -187,6 +187,62 @@ export type Database = {
           },
         ]
       }
+      assessment_reports: {
+        Row: {
+          ai_summary: string
+          charger_count: number
+          city: string
+          company_name: string
+          created_at: string
+          customer_name: string
+          id: string
+          pdf_storage_path: string | null
+          risk_level: string
+          state: string
+          submission_display_id: string
+          submission_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_summary?: string
+          charger_count?: number
+          city?: string
+          company_name: string
+          created_at?: string
+          customer_name: string
+          id?: string
+          pdf_storage_path?: string | null
+          risk_level?: string
+          state?: string
+          submission_display_id: string
+          submission_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_summary?: string
+          charger_count?: number
+          city?: string
+          company_name?: string
+          created_at?: string
+          customer_name?: string
+          id?: string
+          pdf_storage_path?: string | null
+          risk_level?: string
+          state?: string
+          submission_display_id?: string
+          submission_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_reports_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "noch_plus_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string
