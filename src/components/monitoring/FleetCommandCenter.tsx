@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Activity, Shield, Zap, AlertTriangle, Ticket, DollarSign } from "lucide-react";
@@ -32,93 +31,92 @@ const MOCK_STATS = {
   revenueProtected: 18400,
 };
 
-const severityColor: Record<string, string> = {
-  critical: "bg-destructive text-destructive-foreground",
-  warning: "bg-amber-500/20 text-amber-400",
-  info: "bg-muted text-muted-foreground",
+const severityVariant: Record<string, "destructive" | "secondary" | "outline"> = {
+  critical: "destructive",
+  warning: "secondary",
+  info: "outline",
 };
 
 const maxStatusStyle: Record<string, string> = {
-  "Auto-healed ✓": "text-emerald-400",
-  "Escalated →": "text-orange-400",
-  "Analyzing...": "text-amber-400 animate-pulse",
+  "Auto-healed ✓": "text-emerald-500",
+  "Escalated →": "text-orange-500",
+  "Analyzing...": "text-amber-500 animate-pulse",
   "Monitoring": "text-muted-foreground",
 };
 
 export function FleetCommandCenter({ timeRange, customer }: Props) {
   return (
-    <Card className="overflow-hidden border-0" style={{ background: "#0D1117" }}>
-      <div className="p-6">
-        <h2 className="text-lg font-bold text-white mb-1">Fleet Command Center</h2>
-        <p className="text-xs text-gray-500 mb-5">Mission control for your connected charger network</p>
-
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Fleet Command Center</CardTitle>
+        <CardDescription>Mission control for your connected charger network</CardDescription>
+      </CardHeader>
+      <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Left: KPI Stats */}
           <div className="lg:col-span-3 grid grid-cols-3 gap-3">
-            {/* Row 1 */}
             <StatBlock
               icon={<Activity className="h-4 w-4" />}
-              label="CONNECTED CHARGERS"
+              label="Connected Chargers"
               value={`${MOCK_STATS.connected.value} / ${MOCK_STATS.connected.total}`}
               subtitle="online now"
               accent={MOCK_STATS.connected.pct > 90 ? "teal" : MOCK_STATS.connected.pct > 70 ? "amber" : "red"}
             />
             <StatBlock
               icon={<Shield className="h-4 w-4" />}
-              label="FLEET HEALTH INDEX"
+              label="Fleet Health Index"
               value={`${MOCK_STATS.fleetHealth.value}%`}
               subtitle={`↑ ${MOCK_STATS.fleetHealth.trend}% vs 24h`}
               accent="teal"
             />
             <StatBlock
               icon={<Zap className="h-4 w-4" />}
-              label="AUTONOMOUS RESOLUTION"
+              label="Autonomous Resolution"
               value={`${MOCK_STATS.autoResolution}%`}
               subtitle="errors resolved by Max"
               accent="teal"
               prominent
             />
-            {/* Row 2 */}
             <StatBlock
               icon={<AlertTriangle className="h-4 w-4" />}
-              label="ACTIVE ALERTS"
+              label="Active Alerts"
               value={`${MOCK_STATS.activeAlerts}`}
               subtitle="require attention"
-              accent={MOCK_STATS.activeAlerts > 0 ? "red" : "green"}
+              accent={MOCK_STATS.activeAlerts > 0 ? "red" : "teal"}
             />
             <StatBlock
               icon={<Ticket className="h-4 w-4" />}
-              label="TICKETS PREVENTED TODAY"
+              label="Tickets Prevented Today"
               value={`${MOCK_STATS.ticketsPrevented}`}
               subtitle="remote interventions"
               accent="teal"
             />
             <StatBlock
               icon={<DollarSign className="h-4 w-4" />}
-              label="REVENUE PROTECTED"
+              label="Revenue Protected"
               value={`$${MOCK_STATS.revenueProtected.toLocaleString()}`}
               subtitle="downtime revenue saved"
-              accent="green"
+              accent="teal"
             />
           </div>
 
           {/* Right: Live Error Feed */}
           <div className="lg:col-span-2">
-            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Live Error Feed</div>
-            <div className="space-y-1.5 max-h-[260px] overflow-y-auto custom-scrollbar pr-1">
+            <h3 className="text-sm font-semibold text-foreground mb-2">Live Error Feed</h3>
+            <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
               {MOCK_EVENTS.map((evt, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
-                  <span className="text-gray-600 w-14 shrink-0 font-mono">{evt.time}</span>
-                  <span className="text-gray-300 font-medium w-24 shrink-0">{evt.serial}</span>
-                  <span className="text-gray-400 truncate flex-1">{evt.code}</span>
-                  <Badge className={cn("text-[10px] px-1.5 py-0", severityColor[evt.severity])}>{evt.severity}</Badge>
+                <div key={i} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded-md border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <span className="text-muted-foreground w-14 shrink-0 font-mono">{evt.time}</span>
+                  <span className="text-foreground font-medium w-24 shrink-0">{evt.serial}</span>
+                  <span className="text-muted-foreground truncate flex-1">{evt.code}</span>
+                  <Badge variant={severityVariant[evt.severity]} className="text-[10px]">{evt.severity}</Badge>
                   <span className={cn("text-[10px] font-medium w-24 text-right shrink-0", maxStatusStyle[evt.maxStatus])}>{evt.maxStatus}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 }
@@ -128,20 +126,22 @@ function StatBlock({ icon, label, value, subtitle, accent, prominent }: {
   label: string;
   value: string;
   subtitle: string;
-  accent: "teal" | "amber" | "red" | "green";
+  accent: "teal" | "amber" | "red";
   prominent?: boolean;
 }) {
-  const accentColors = {
-    teal: "text-teal-400 border-teal-500/30",
-    amber: "text-amber-400 border-amber-500/30",
-    red: "text-red-400 border-red-500/30",
-    green: "text-emerald-400 border-emerald-500/30",
+  const accentText = {
+    teal: "text-emerald-500",
+    amber: "text-amber-500",
+    red: "text-destructive",
   };
   return (
-    <div className={cn("rounded-lg border bg-white/[0.03] p-3", accentColors[accent])}>
-      <div className="flex items-center gap-1.5 mb-1 opacity-60">{icon}<span className="text-[10px] font-semibold tracking-wider uppercase text-gray-400">{label}</span></div>
-      <div className={cn("font-bold text-white", prominent ? "text-2xl" : "text-xl")}>{value}</div>
-      <div className="text-[10px] text-gray-500 mt-0.5">{subtitle}</div>
-    </div>
+    <Card className="p-3">
+      <div className="flex items-center gap-1.5 mb-1 text-muted-foreground">
+        {icon}
+        <span className="text-[10px] font-semibold tracking-wider uppercase">{label}</span>
+      </div>
+      <div className={cn("font-bold", prominent ? "text-2xl" : "text-xl", accentText[accent])}>{value}</div>
+      <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>
+    </Card>
   );
 }

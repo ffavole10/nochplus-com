@@ -38,7 +38,7 @@ export function MaxLiveActivity({ timeRange, customer }: Props) {
             <h3 className="text-sm font-semibold text-foreground mb-3">Action Queue</h3>
             <div className="space-y-3">
               {MOCK_ACTIONS.map((a, i) => (
-                <div key={i} className="p-3 rounded-lg border border-border space-y-2">
+                <Card key={i} className="p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground font-mono">{a.time}</span>
                     <span className="text-xs font-medium text-foreground">{a.serial} — {a.error}</span>
@@ -48,15 +48,15 @@ export function MaxLiveActivity({ timeRange, customer }: Props) {
                       <div key={j} className="flex items-center gap-1 flex-1">
                         <div className={cn(
                           "w-2 h-2 rounded-full",
-                          j < a.step ? "bg-teal-500" : "bg-muted"
+                          j < a.step ? "bg-primary" : "bg-muted"
                         )} />
                         <span className={cn("text-[10px]", j < a.step ? "text-foreground" : "text-muted-foreground")}>{step}</span>
-                        {j < PIPELINE_STEPS.length - 1 && <div className={cn("flex-1 h-px", j < a.step - 1 ? "bg-teal-500" : "bg-muted")} />}
+                        {j < PIPELINE_STEPS.length - 1 && <div className={cn("flex-1 h-px", j < a.step - 1 ? "bg-primary" : "bg-muted")} />}
                       </div>
                     ))}
                   </div>
-                  {a.result && <div className="text-xs text-emerald-500 italic">{a.result}</div>}
-                </div>
+                  {a.result && <p className="text-xs text-emerald-500 italic">{a.result}</p>}
+                </Card>
               ))}
             </div>
           </div>
@@ -70,18 +70,18 @@ export function MaxLiveActivity({ timeRange, customer }: Props) {
                 value={`${MOCK_PERFORMANCE.autoResolutionRate.value}%`}
                 target={`target: >${MOCK_PERFORMANCE.autoResolutionRate.target}%`}
                 progress={MOCK_PERFORMANCE.autoResolutionRate.value}
-                color={MOCK_PERFORMANCE.autoResolutionRate.value >= MOCK_PERFORMANCE.autoResolutionRate.target ? "teal" : "amber"}
+                good={MOCK_PERFORMANCE.autoResolutionRate.value >= MOCK_PERFORMANCE.autoResolutionRate.target}
               />
               <MetricCard
                 label="Avg Time to First Action"
                 value={`${MOCK_PERFORMANCE.avgTimeToAction.value}s`}
                 target={`target: <${MOCK_PERFORMANCE.avgTimeToAction.target}s`}
                 progress={100 - (MOCK_PERFORMANCE.avgTimeToAction.value / MOCK_PERFORMANCE.avgTimeToAction.target) * 100}
-                color={MOCK_PERFORMANCE.avgTimeToAction.value <= MOCK_PERFORMANCE.avgTimeToAction.target ? "teal" : "amber"}
+                good={MOCK_PERFORMANCE.avgTimeToAction.value <= MOCK_PERFORMANCE.avgTimeToAction.target}
               />
               <Card className="p-3 col-span-2">
-                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Remote Actions Taken</div>
-                <div className="flex items-center gap-4 text-sm">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Remote Actions Taken</p>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span>Reboots: <strong className="text-foreground">{MOCK_PERFORMANCE.remoteActions.reboots}</strong></span>
                   <span>Firmware: <strong className="text-foreground">{MOCK_PERFORMANCE.remoteActions.firmware}</strong></span>
                   <span>Config: <strong className="text-foreground">{MOCK_PERFORMANCE.remoteActions.config}</strong></span>
@@ -92,14 +92,14 @@ export function MaxLiveActivity({ timeRange, customer }: Props) {
                 value={`${MOCK_PERFORMANCE.escalationPrecision}%`}
                 target="of escalations confirmed necessary"
                 progress={MOCK_PERFORMANCE.escalationPrecision}
-                color="teal"
+                good
               />
               <MetricCard
                 label="False Positive Rate"
                 value={`${MOCK_PERFORMANCE.falsePositiveRate}%`}
                 target="actions that didn't fix issue"
                 progress={100 - MOCK_PERFORMANCE.falsePositiveRate}
-                color={MOCK_PERFORMANCE.falsePositiveRate < 10 ? "teal" : "amber"}
+                good={MOCK_PERFORMANCE.falsePositiveRate < 10}
               />
             </div>
           </div>
@@ -109,15 +109,15 @@ export function MaxLiveActivity({ timeRange, customer }: Props) {
   );
 }
 
-function MetricCard({ label, value, target, progress, color }: {
-  label: string; value: string; target: string; progress: number; color: "teal" | "amber";
+function MetricCard({ label, value, target, progress, good }: {
+  label: string; value: string; target: string; progress: number; good: boolean;
 }) {
   return (
     <Card className="p-3 space-y-1.5">
-      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</div>
-      <div className={cn("text-xl font-bold", color === "teal" ? "text-teal-500" : "text-amber-500")}>{value}</div>
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
+      <div className={cn("text-xl font-bold", good ? "text-emerald-500" : "text-amber-500")}>{value}</div>
       <Progress value={progress} className="h-1.5" />
-      <div className="text-[10px] text-muted-foreground">{target}</div>
+      <p className="text-[10px] text-muted-foreground">{target}</p>
     </Card>
   );
 }
