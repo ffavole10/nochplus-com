@@ -103,6 +103,7 @@ export function useDeleteEstimate() {
     },
     onSuccess: (campaignId) => {
       queryClient.invalidateQueries({ queryKey: ["estimates", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["estimates", "all"] });
     },
   });
 }
