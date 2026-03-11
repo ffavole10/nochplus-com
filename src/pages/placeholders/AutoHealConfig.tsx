@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Shield, Thermometer, Cpu, Key, AlertTriangle } from "lucide-react";
+import { Shield, Thermometer, Cpu, Key, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { TokenCostControls, DEFAULT_TOKEN_CONTROLS, type TokenControlsConfig } from "@/components/ai-agent/TokenCostControls";
+import { ExecutionRules, DEFAULT_EXECUTION_RULES, type ExecutionRulesConfig } from "@/components/ai-agent/ExecutionRules";
+import { RetryFallbackLogic, DEFAULT_RETRY_LOGIC, type RetryLogicConfig } from "@/components/ai-agent/RetryFallbackLogic";
+import { OutputFormattingRules, DEFAULT_OUTPUT_FORMATTING, type OutputFormattingConfig } from "@/components/ai-agent/OutputFormattingRules";
 
 const MODELS = [
   "google/gemini-2.5-flash",
@@ -21,30 +26,119 @@ const MODELS = [
 const AutoHealConfig = () => {
   usePageTitle("Configuration");
 
+  const [configId, setConfigId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Model config
+  const [primaryModel, setPrimaryModel] = useState("google/gemini-2.5-flash");
+  const [fallbackModel, setFallbackModel] = useState("openai/gpt-5-mini");
+
+  // Agent settings
   const [confidenceThreshold, setConfidenceThreshold] = useState(70);
   const [diagTemp, setDiagTemp] = useState(0.3);
   const [creativeTemp, setCreativeTemp] = useState(0.4);
   const [validationTemp, setValidationTemp] = useState(0.1);
-  const [primaryModel, setPrimaryModel] = useState("google/gemini-2.5-flash");
-  const [fallbackModel, setFallbackModel] = useState("openai/gpt-5-mini");
 
-  const handleSave = () => {
-    toast.success("Configuration saved successfully");
+  // New sections
+  const [tokenControls, setTokenControls] = useState<TokenControlsConfig>(DEFAULT_TOKEN_CONTROLS);
+  const [executionRules, setExecutionRules] = useState<ExecutionRulesConfig>(DEFAULT_EXECUTION_RULES);
+  const [retryLogic, setRetryLogic] = useState<RetryLogicConfig>(DEFAULT_RETRY_LOGIC);
+  const [outputFormatting, setOutputFormatting] = useState<OutputFormattingConfig>(DEFAULT_OUTPUT_FORMATTING);
+
+  useEffect(() => {
+    loadConfig();
+  }, []);
+
+  const loadConfig = async () => {
+    const { data, error } = await supabase
+      .from("autoheal_config")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+
+    if (data) {
+      setConfigId(data.id);
+      const mc = data.model_config as any || {};
+      const as_ = data.agent_settings as any || {};
+      if (mc.primaryModel) setPrimaryModel(mc.primaryModel);
+      if (mc.fallbackModel) setFallbackModel(mc.fallbackModel);
+      if (as_.confidenceThreshold != null) setConfidenceThreshold(as_.confidenceThreshold);
+      if (as_.diagTemp != null) setDiagTemp(as_.diagTemp);
+      if (as_.creativeTemp != null) setCreativeTemp(as_.creativeTemp);
+      if (as_.validationTemp != null) setValidationTemp(as_.validationTemp);
+      if (data.token_controls && Object.keys(data.token_controls as object).length > 0)
+        setTokenControls(data.token_controls as unknown as TokenControlsConfig);
+      if (data.execution_rules && Object.keys(data.execution_rules as object).length > 0)
+        setExecutionRules(data.execution_rules as unknown as ExecutionRulesConfig);
+      if (data.retry_logic && Object.keys(data.retry_logic as object).length > 0)
+        setRetryLogic(data.retry_logic as unknown as RetryLogicConfig);
+      if (data.output_formatting && Object.keys(data.output_formatting as object).length > 0)
+        setOutputFormatting(data.output_formatting as unknown as OutputFormattingConfig);
+    }
+    setLoading(false);
   };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const payload = {
+      model_config: { primaryModel, fallbackModel } as any,
+      agent_settings: { confidenceThreshold, diagTemp, creativeTemp, validationTemp } as any,
+      token_controls: tokenControls as any,
+      execution_rules: executionRules as any,
+      retry_logic: retryLogic as any,
+      output_formatting: outputFormatting as any,
+      updated_at: new Date().toISOString(),
+    };
+
+    let error;
+    if (configId) {
+      ({ error } = await supabase
+        .from("autoheal_config")
+        .update(payload)
+        .eq("id", configId));
+    } else {
+      const { data, error: insertError } = await supabase
+        .from("autoheal_config")
+        .insert(payload)
+        .select("id")
+        .single();
+      error = insertError;
+      if (data) setConfigId(data.id);
+    }
+
+    setSaving(false);
+    if (error) {
+      toast.error("Failed to save configuration");
+      console.error(error);
+    } else {
+      toast.success("Configuration saved — changes apply to next AutoHeal execution");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-4 max-w-5xl space-y-6">
         {/* Header */}
         <div className="flex justify-end">
-          <Button onClick={handleSave}>Save Changes</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Save Changes
+          </Button>
         </div>
 
         {/* Model Configuration */}
         <div>
           <h2 className="text-lg font-bold text-foreground mb-4">Model Configuration</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Model Selection */}
             <Card>
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center gap-2">
@@ -74,7 +168,6 @@ const AutoHealConfig = () => {
               </CardContent>
             </Card>
 
-            {/* API Config */}
             <Card>
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center gap-2">
@@ -120,7 +213,6 @@ const AutoHealConfig = () => {
         <div className="border-t border-border pt-8">
           <h2 className="text-lg font-bold text-foreground mb-4">Agent Settings</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Confidence Threshold */}
             <Card>
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center gap-2">
@@ -147,7 +239,6 @@ const AutoHealConfig = () => {
               </CardContent>
             </Card>
 
-            {/* Temperature */}
             <Card>
               <CardContent className="p-5 space-y-3">
                 <div className="flex items-center gap-2">
@@ -181,6 +272,12 @@ const AutoHealConfig = () => {
             </Card>
           </div>
         </div>
+
+        {/* New Sections */}
+        <TokenCostControls value={tokenControls} onChange={setTokenControls} />
+        <ExecutionRules value={executionRules} onChange={setExecutionRules} />
+        <RetryFallbackLogic value={retryLogic} onChange={setRetryLogic} />
+        <OutputFormattingRules value={outputFormatting} onChange={setOutputFormatting} />
       </div>
     </div>
   );
