@@ -312,7 +312,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
     );
   };
 
-  const openDetail = (sub: Submission) => {
+  const openDetail = async (sub: Submission) => {
     // If draft, open the modal for editing instead
     if (sub.status === "draft") {
       openDraftForEditing(sub);
@@ -323,8 +323,30 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
     setIsEditing(false);
     setEditForm({});
     setEditChargers([]);
-    setAssessmentStatus("idle");
     setAssessmentPdfBlob(null);
+
+    // Check if assessment report already exists for this submission
+    const { data: existingReport } = await supabase
+      .from("assessment_reports" as any)
+      .select("id, pdf_storage_path")
+      .eq("submission_id", sub.id)
+      .maybeSingle();
+    
+    if (existingReport?.pdf_storage_path) {
+      // Load existing PDF
+      const { data: pdfData } = await supabase.storage
+        .from("field-reports")
+        .download(existingReport.pdf_storage_path as string);
+      if (pdfData) {
+        setAssessmentPdfBlob(pdfData);
+        setAssessmentStatus("done");
+      } else {
+        setAssessmentStatus("idle");
+      }
+    } else {
+      setAssessmentStatus("idle");
+    }
+
     const statuses: Record<string, string> = {};
     const serviceNeeded: Record<string, boolean | null> = {};
     const notes: Record<string, string> = {};
