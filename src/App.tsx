@@ -23,7 +23,7 @@ import MainPlatformLayout from "./layouts/MainPlatformLayout";
 import ServiceTickets from "./pages/placeholders/ServiceTickets";
 import Submissions from "./pages/Submissions";
 import Customers from "./pages/placeholders/Customers";
-import AllChargers from "./pages/placeholders/AllChargers";
+
 import NochPlusDashboard from "./pages/placeholders/NochPlusDashboard";
 import NochPlusChargers from "./pages/placeholders/NochPlusChargers";
 import NochPlusMembers from "./pages/placeholders/NochPlusMembers";
@@ -65,7 +65,7 @@ const App = () => (
             <Route path="/noch-plus/submissions" element={<Submissions />} />
             <Route path="/service-desk/estimates" element={<Estimates />} />
             <Route path="/service-desk/customers" element={<Customers />} />
-            <Route path="/service-desk/chargers" element={<AllChargers />} />
+            
 
             {/* Noch+ section */}
             <Route path="/noch-plus/dashboard" element={<NochPlusDashboard />} />
