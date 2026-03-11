@@ -165,6 +165,7 @@ export function PlatformSidebar() {
   { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: estimateCount },
   { title: "Customers", url: "/service-desk/customers", icon: Users },
   { title: "Locations", url: "/autoheal/locations", icon: MapPinned },
+  { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen },
   { title: "Parts Inventory", url: "/autoheal/parts", icon: Package },
   { title: "Parts Catalog", url: "/autoheal/parts-catalog", icon: BookOpen }];
 
@@ -177,8 +178,7 @@ export function PlatformSidebar() {
   { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
 
   const autohealPages = [
-  { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
-  { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen }];
+  { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot }];
 
 
   const SectionHeader = ({
