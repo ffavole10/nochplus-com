@@ -124,7 +124,7 @@ serve(async (req) => {
     try {
       await supabase.from("notifications").insert({
         title: "Estimate Approved",
-        message: "Customer approved estimate for ticket #" + (estimate.ticket_id || estimate.station_id || "N/A") + " - " + (estimate.site_name || "Unknown site") + " ($" + (estimate.total?.toFixed(2) || "0.00") + ")",
+        message: (estimate.customer_name || "Customer") + " approved estimate for ticket #" + (estimate.ticket_id || estimate.station_id || "N/A") + " - " + (estimate.site_name || "Unknown site") + " ($" + (estimate.total?.toFixed(2) || "0.00") + ")",
         type: "estimate_approved",
         reference_id: estimateId,
       });
