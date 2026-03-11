@@ -30,13 +30,7 @@ const MOCK_CORRELATIONS = [
 ];
 
 function riskColor(score: number) {
-  if (score >= 75) return "border-red-500/40 bg-red-500/5";
-  if (score >= 50) return "border-amber-500/40 bg-amber-500/5";
-  return "border-emerald-500/40 bg-emerald-500/5";
-}
-
-function riskTextColor(score: number) {
-  if (score >= 75) return "text-red-500";
+  if (score >= 75) return "text-destructive";
   if (score >= 50) return "text-amber-500";
   return "text-emerald-500";
 }
@@ -61,14 +55,14 @@ export function EnvironmentalIntelligence({ timeRange, customer }: Props) {
             <h3 className="text-sm font-semibold text-foreground mb-3">Environmental Risk Map</h3>
             <div className="grid grid-cols-2 gap-2 mb-3">
               {filtered.map(loc => (
-                <div key={loc.name} className={cn("rounded-lg border p-3", riskColor(loc.riskScore))}>
+                <Card key={loc.name} className="p-3">
                   <div className="text-sm font-semibold text-foreground">{loc.name}</div>
-                  <div className="text-xs text-muted-foreground">{loc.topRisk}</div>
+                  <p className="text-xs text-muted-foreground">{loc.topRisk}</p>
                   <div className="flex items-center justify-between mt-2">
-                    <span className={cn("text-lg font-bold", riskTextColor(loc.riskScore))}>{loc.riskScore}</span>
+                    <span className={cn("text-lg font-bold", riskColor(loc.riskScore))}>{loc.riskScore}</span>
                     <span className="text-xs text-muted-foreground">{loc.chargers} chargers</span>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -98,19 +92,19 @@ export function EnvironmentalIntelligence({ timeRange, customer }: Props) {
               <div className="space-y-3">
                 {MOCK_CORRELATIONS.map((c, i) => (
                   <Card key={i} className="p-4 space-y-2">
-                    <div className="text-xs font-bold text-amber-500 uppercase tracking-wider">
+                    <p className="text-xs font-bold text-amber-500 uppercase tracking-wider">
                       {RISK_FACTORS.find(r => r.key === c.type)?.emoji} {c.title}
-                    </div>
+                    </p>
                     <div className="text-sm font-medium text-foreground">{c.location}</div>
-                    <div className="text-xs text-muted-foreground">{c.detail}</div>
-                    <div className="text-xs text-muted-foreground">{c.weather}</div>
+                    <p className="text-xs text-muted-foreground">{c.detail}</p>
+                    <p className="text-xs text-muted-foreground">{c.weather}</p>
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-muted-foreground">Correlation:</span>
                       <Progress value={c.strength} className="h-1.5 flex-1" />
                       <span className="font-bold text-foreground">{c.strength}%</span>
                     </div>
-                    <div className="text-xs text-muted-foreground italic">{c.recommendation}</div>
-                    <Button size="sm" variant="outline" className="h-7 text-xs mt-1">Create Ticket</Button>
+                    <p className="text-xs text-muted-foreground italic">{c.recommendation}</p>
+                    <Button size="sm" variant="outline">Create Ticket</Button>
                   </Card>
                 ))}
               </div>

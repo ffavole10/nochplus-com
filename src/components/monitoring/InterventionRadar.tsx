@@ -21,9 +21,10 @@ const MOCK_MAX_HANDLING = [
   { serial: "HLT-AC-006", error: "InternalError", action: "Diagnostic analysis running", eta: "~8m" },
 ];
 
-function ColumnHeader({ title, count, borderColor }: { title: string; count: number; borderColor: string }) {
+function ColumnHeader({ title, count, variant }: { title: string; count: number; variant: "destructive" | "warning" | "default" }) {
+  const borderClass = variant === "destructive" ? "border-destructive" : variant === "warning" ? "border-amber-500" : "border-primary";
   return (
-    <div className={cn("flex items-center justify-between mb-3 pb-2 border-b-2", borderColor)}>
+    <div className={cn("flex items-center justify-between mb-3 pb-2 border-b-2", borderClass)}>
       <span className="text-sm font-semibold text-foreground">{title}</span>
       <Badge variant="outline" className="text-xs">{count}</Badge>
     </div>
@@ -41,17 +42,17 @@ export function InterventionRadar({ timeRange, customer }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Dispatch Now */}
           <div>
-            <ColumnHeader title="Dispatch Now" count={MOCK_DISPATCH.length} borderColor="border-red-500" />
+            <ColumnHeader title="Dispatch Now" count={MOCK_DISPATCH.length} variant="destructive" />
             {MOCK_DISPATCH.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-6">Nothing critical ✓</p>
             ) : (
               <div className="space-y-2">
                 {MOCK_DISPATCH.map((d, i) => (
-                  <Card key={i} className="p-3 border-red-500/20 space-y-1.5">
+                  <Card key={i} className="p-3 space-y-1.5">
                     <div className="text-sm font-medium text-foreground">{d.serial}</div>
-                    <div className="text-xs text-muted-foreground">{d.reason}</div>
-                    <div className="text-xs text-muted-foreground">Recommended SWI: <span className="font-medium text-foreground">{d.swi}</span></div>
-                    <Button size="sm" variant="destructive" className="h-7 text-xs w-full">Create Estimate</Button>
+                    <p className="text-xs text-muted-foreground">{d.reason}</p>
+                    <p className="text-xs text-muted-foreground">Recommended SWI: <span className="font-medium text-foreground">{d.swi}</span></p>
+                    <Button size="sm" variant="destructive" className="w-full">Create Estimate</Button>
                   </Card>
                 ))}
               </div>
@@ -60,17 +61,17 @@ export function InterventionRadar({ timeRange, customer }: Props) {
 
           {/* Schedule This Week */}
           <div>
-            <ColumnHeader title="Schedule This Week" count={MOCK_SCHEDULE.length} borderColor="border-amber-500" />
+            <ColumnHeader title="Schedule This Week" count={MOCK_SCHEDULE.length} variant="warning" />
             {MOCK_SCHEDULE.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-6">Fleet is healthy ✓</p>
             ) : (
               <div className="space-y-2">
                 {MOCK_SCHEDULE.map((s, i) => (
-                  <Card key={i} className="p-3 border-amber-500/20 space-y-1.5">
+                  <Card key={i} className="p-3 space-y-1.5">
                     <div className="text-sm font-medium text-foreground">{s.serial}</div>
-                    <div className="text-xs text-muted-foreground">{s.reason}</div>
-                    <div className="text-xs text-muted-foreground">Optimal window: <span className="font-medium text-foreground">{s.window}</span></div>
-                    <Button size="sm" variant="outline" className="h-7 text-xs w-full">Schedule</Button>
+                    <p className="text-xs text-muted-foreground">{s.reason}</p>
+                    <p className="text-xs text-muted-foreground">Optimal window: <span className="font-medium text-foreground">{s.window}</span></p>
+                    <Button size="sm" variant="outline" className="w-full">Schedule</Button>
                   </Card>
                 ))}
               </div>
@@ -79,17 +80,17 @@ export function InterventionRadar({ timeRange, customer }: Props) {
 
           {/* Max Is Handling */}
           <div>
-            <ColumnHeader title="Max Is Handling" count={MOCK_MAX_HANDLING.length} borderColor="border-teal-500" />
+            <ColumnHeader title="Max Is Handling" count={MOCK_MAX_HANDLING.length} variant="default" />
             {MOCK_MAX_HANDLING.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-6">No active auto-healing</p>
             ) : (
               <div className="space-y-2">
                 {MOCK_MAX_HANDLING.map((m, i) => (
-                  <Card key={i} className="p-3 border-teal-500/20 space-y-1.5">
+                  <Card key={i} className="p-3 space-y-1.5">
                     <div className="text-sm font-medium text-foreground">{m.serial}</div>
                     <Badge variant="outline" className="text-[10px]">{m.error}</Badge>
-                    <div className="text-xs text-muted-foreground">{m.action}</div>
-                    <div className="text-xs text-teal-500 font-medium">ETA: {m.eta}</div>
+                    <p className="text-xs text-muted-foreground">{m.action}</p>
+                    <p className="text-xs text-primary font-medium">ETA: {m.eta}</p>
                   </Card>
                 ))}
               </div>

@@ -23,7 +23,7 @@ function cvsColor(cvs: number) {
   if (cvs >= 75) return "text-emerald-500";
   if (cvs >= 60) return "text-amber-500";
   if (cvs >= 40) return "text-orange-500";
-  return "text-red-500";
+  return "text-destructive";
 }
 
 function cvsLabel(cvs: number) {
@@ -38,7 +38,7 @@ function failureColor(days: number) {
   if (days > 90) return "text-emerald-500";
   if (days > 30) return "text-amber-500";
   if (days > 7) return "text-orange-500";
-  return "text-red-500";
+  return "text-destructive";
 }
 
 function failureLabel(days: number) {
@@ -47,7 +47,8 @@ function failureLabel(days: number) {
 }
 
 function statusIcon(val: string) {
-  if (val === "Normal" || val === "Good" || val === "Excellent" || val === "Current" || val === "Stable") return <CheckCircle className="h-3 w-3 text-emerald-500 inline ml-1" />;
+  const good = ["Normal", "Good", "Excellent", "Current", "Stable"];
+  if (good.includes(val)) return <CheckCircle className="h-3 w-3 text-emerald-500 inline ml-1" />;
   return <AlertTriangle className="h-3 w-3 text-amber-500 inline ml-1" />;
 }
 
