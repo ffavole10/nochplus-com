@@ -65,7 +65,7 @@ const App = () => (
             <Route path="/noch-plus/submissions" element={<Submissions />} />
             <Route path="/service-desk/estimates" element={<Estimates />} />
             <Route path="/service-desk/customers" element={<Customers />} />
-            <Route path="/service-desk/chargers" element={<AllChargers />} />
+            
 
             {/* Noch+ section */}
             <Route path="/noch-plus/dashboard" element={<NochPlusDashboard />} />
