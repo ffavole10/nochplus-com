@@ -5,7 +5,8 @@ import {
   AlertTriangle, ChevronDown, ChevronRight,
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
-  Filter, Crosshair, Home, Bot, BookOpen, MapPinned } from
+  Filter, Crosshair, Home, Bot, BookOpen, MapPinned,
+  Brain, Sliders, BarChart3 } from
 "lucide-react";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
