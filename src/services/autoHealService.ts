@@ -127,6 +127,7 @@ export async function runAutoHealAssessment(
     photos: [],
     dataSources,
     notes: ticket.notes || "",
+    regulatory_context: regulatoryContext,
   };
 
   // Initialize steps
