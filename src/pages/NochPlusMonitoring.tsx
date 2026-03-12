@@ -1,109 +1,95 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { supabase } from "@/integrations/supabase/client";
-import { FleetCommandCenter } from "@/components/monitoring/FleetCommandCenter";
-import { ChargerHealthMatrix } from "@/components/monitoring/ChargerHealthMatrix";
-import { EnvironmentalIntelligence } from "@/components/monitoring/EnvironmentalIntelligence";
-import { PatternIntelligence } from "@/components/monitoring/PatternIntelligence";
-import { MaxLiveActivity } from "@/components/monitoring/MaxLiveActivity";
-import { InterventionRadar } from "@/components/monitoring/InterventionRadar";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MonitoringMapView } from "@/components/monitoring/MonitoringMapView";
+import { MonitoringAnalyticsView } from "@/components/monitoring/MonitoringAnalyticsView";
+import { ChargerSchematicModal } from "@/components/monitoring/ChargerSchematicModal";
+import { MonitoringInterventionBar } from "@/components/monitoring/MonitoringInterventionBar";
+import { KPI_CHIPS } from "@/components/monitoring/monitoringData";
 import { cn } from "@/lib/utils";
 
-const TIME_RANGES = ["1H", "6H", "24H", "7D", "30D"] as const;
-type TimeRange = typeof TIME_RANGES[number];
-
-// MOCK — replace with live OCPP data when integration is complete
-const MOCK_CUSTOMERS = ["All Customers", "Fontainebleau", "Hilton Hotels", "Marriott Corp", "Tesla Supercharger Network"];
+const FILTERS = ['All', 'Critical', 'Warning', 'Healthy', 'Offline', 'Env. Risks'] as const;
 
 export default function NochPlusMonitoring() {
-  usePageTitle("Monitoring");
-  const [timeRange, setTimeRange] = useState<TimeRange>("24H");
-  const [customer, setCustomer] = useState("All Customers");
+  usePageTitle("Fleet Monitoring");
+  const [view, setView] = useState<'map' | 'analytics'>('map');
+  const [filter, setFilter] = useState('All');
+  const [selectedCharger, setSelectedCharger] = useState<string | null>(null);
   const [pulse, setPulse] = useState(true);
 
-  // Pulse animation cycle
+  // Pulse animation
   useEffect(() => {
-    const interval = setInterval(() => setPulse(p => !p), 1500);
-    return () => clearInterval(interval);
+    const iv = setInterval(() => setPulse(p => !p), 1500);
+    return () => clearInterval(iv);
   }, []);
 
-  // Auto-refresh every 30s via realtime subscription
+  // Auto-open NAS-B04 on load
   useEffect(() => {
-    const channel = supabase
-      .channel("ocpp-events-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "ocpp_events" }, () => {})
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const t = setTimeout(() => setSelectedCharger('NAS-B04'), 800);
+    return () => clearTimeout(t);
   }, []);
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="flex flex-col h-full">
+      {/* Topbar */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Noch+ Monitoring</h1>
-          <p className="text-sm text-muted-foreground">
-            Real-time proactive intelligence across your connected charger network
-          </p>
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Live indicator */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <h1 className="text-xl font-bold text-foreground">Fleet Monitoring</h1>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className={cn("w-2 h-2 rounded-full bg-emerald-500", pulse && "animate-pulse")} />
-            <span>Live — updating every 30s</span>
+            Fontainebleau Las Vegas · 12 Chargers · Live
           </div>
-
-          {/* Time range */}
-          <div className="flex items-center rounded-md border border-border bg-muted/30">
-            {TIME_RANGES.map(t => (
-              <button
-                key={t}
-                onClick={() => setTimeRange(t)}
-                className={cn(
-                  "px-2.5 py-1 text-xs font-medium transition-colors",
-                  timeRange === t
-                    ? "bg-primary text-primary-foreground rounded-md"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
-          {/* Customer filter */}
-          <Select value={customer} onValueChange={setCustomer}>
-            <SelectTrigger className="w-[180px] h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {MOCK_CUSTOMERS.map(c => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        </div>
+        <div className="flex items-center rounded-full border border-border p-0.5 bg-muted/30">
+          <button onClick={() => setView('map')}
+            className={cn("px-4 py-1.5 text-xs font-medium rounded-full transition-all",
+              view === 'map' ? "bg-[#1B8A7A] text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}>Map View</button>
+          <button onClick={() => setView('analytics')}
+            className={cn("px-4 py-1.5 text-xs font-medium rounded-full transition-all",
+              view === 'analytics' ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}>Analytics</button>
         </div>
       </div>
 
-      {/* Section 1 */}
-      <FleetCommandCenter timeRange={timeRange} customer={customer} />
+      {/* KPI Ribbon */}
+      <div className="flex items-center gap-2 px-6 py-2 border-b border-border bg-card overflow-x-auto">
+        {KPI_CHIPS.map(kpi => (
+          <div key={kpi.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-xs whitespace-nowrap flex-shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: kpi.color }} />
+            <span className="text-muted-foreground">{kpi.label}</span>
+            <span className="font-bold" style={{ color: kpi.color }}>{kpi.value}</span>
+          </div>
+        ))}
+      </div>
 
-      {/* Section 2 */}
-      <ChargerHealthMatrix timeRange={timeRange} customer={customer} />
+      {/* Filter chips (map view only) */}
+      {view === 'map' && (
+        <div className="flex items-center gap-1.5 px-6 py-2 bg-card border-b border-border">
+          {FILTERS.map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={cn("px-3 py-1 text-[11px] font-medium rounded-full transition-colors border",
+                filter === f ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+              )}>{f}</button>
+          ))}
+        </div>
+      )}
 
-      {/* Section 3 */}
-      <EnvironmentalIntelligence timeRange={timeRange} customer={customer} />
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto p-4">
+        {view === 'map' ? (
+          <MonitoringMapView filter={filter} onSelectCharger={setSelectedCharger} />
+        ) : (
+          <MonitoringAnalyticsView onSelectCharger={setSelectedCharger} />
+        )}
+      </div>
 
-      {/* Section 4 */}
-      <PatternIntelligence timeRange={timeRange} customer={customer} />
+      {/* Intervention Bar */}
+      <div className="px-4 pb-3">
+        <MonitoringInterventionBar />
+      </div>
 
-      {/* Section 5 */}
-      <MaxLiveActivity timeRange={timeRange} customer={customer} />
-
-      {/* Section 6 */}
-      <InterventionRadar timeRange={timeRange} customer={customer} />
+      {/* Schematic Modal */}
+      <ChargerSchematicModal chargerId={selectedCharger} onClose={() => setSelectedCharger(null)} />
     </div>
   );
 }
