@@ -220,6 +220,19 @@ export async function persistTicketToDB(ticket: ServiceTicket, opts?: {
     });
   }
 
+  // Build regulatory context for the ticket based on location state/city
+  try {
+    const state = ticket.customer.address?.split(",").slice(-1)[0]?.trim() || "";
+    const city = ticket.customer.address?.split(",").slice(-2, -1)[0]?.trim() || "";
+    if (state && dbId) {
+      buildTicketRegulatoryContext(dbId, state, city).catch(err =>
+        console.warn("Regulatory context build failed:", err)
+      );
+    }
+  } catch (err) {
+    console.warn("Regulatory context setup failed:", err);
+  }
+
   return dbId;
 }
 
