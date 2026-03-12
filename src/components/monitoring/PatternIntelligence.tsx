@@ -40,10 +40,10 @@ export function PatternIntelligence({ timeRange, customer }: Props) {
                 {MOCK_CASCADE.map((c, i) => (
                   <div key={i} className="space-y-2">
                     <div className="text-sm font-medium text-foreground">{c.serial} · {c.location}</div>
-                    <div className="flex items-center gap-1 text-xs">
+                    <div className="flex items-center gap-1 text-xs flex-wrap overflow-hidden">
                       {c.sequence.map((s, j) => (
-                        <span key={j} className="flex items-center gap-1">
-                          <Badge variant={j < c.step ? "default" : "outline"} className="text-[10px]">{s}</Badge>
+                        <span key={j} className="flex items-center gap-1 min-w-0">
+                          <Badge variant={j < c.step ? "default" : "outline"} className="text-[10px] truncate max-w-[120px]">{s}</Badge>
                           {j < c.sequence.length - 1 && <span className="text-muted-foreground">→</span>}
                         </span>
                       ))}
