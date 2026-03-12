@@ -83,7 +83,7 @@ export const MAX_MESSAGES = [
 ];
 
 export const FAULT_COMPONENT_MAP: Record<string, { cx: number; cy: number; label: string }> = {
-  ConnectorLockFailure: { cx: 285, cy: 670, label: '⚠ CONNECTOR LOCK FAILURE' },
+  PowerModuleFailure: { cx: 780, cy: 340, label: '⚠ POWER MODULE FAILURE' },
   EVCommunicationError: { cx: 820, cy: 700, label: '⚠ EV COMMUNICATION ERROR' },
   HighTemperature: { cx: 820, cy: 480, label: '⚠ HIGH TEMPERATURE — COOLING' },
   NetworkDisconnected: { cx: 700, cy: 90, label: '⚠ NETWORK DISCONNECTED' },
