@@ -97,6 +97,7 @@ interface RegulatoryDocument {
   effective_date: string | null;
   fetched_at: string;
   is_current: boolean;
+  region_name?: string;
 }
 
 export function RegionalRegulatoryIntelligence() {

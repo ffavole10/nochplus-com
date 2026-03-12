@@ -10,6 +10,7 @@ import { SWI_CATALOG } from "@/data/swiCatalog";
 import { TicketCloseStep } from "@/components/tickets/TicketCloseStep";
 import { WorkflowStepper } from "@/components/tickets/WorkflowStepper";
 import { SWIPreviewDialog } from "@/components/tickets/SWIPreviewDialog";
+import { TicketRegulatoryContext } from "@/components/tickets/TicketRegulatoryContext";
 import { getSWIPublicUrl } from "@/lib/swiStorage";
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
