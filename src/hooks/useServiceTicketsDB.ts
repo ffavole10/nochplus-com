@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
 import { ServiceTicket } from "@/types/serviceTicket";
+import { buildTicketRegulatoryContext } from "@/services/regulatorySync";
 import type { ChargerBrand, ChargerType } from "@/types/ticket";
 
 interface DBServiceTicket {
