@@ -11,28 +11,28 @@ interface Props {
 
 const TABS = ['Isometric Cutaway', 'Front View', 'Side Profile', 'Top (Heli) View'] as const;
 
-function CvsArc({ cvs, status, size = 120 }: { cvs: number; status: string; size?: number }) {
+function CvsArc({ cvs, status, size = 100 }: { cvs: number; status: string; size?: number }) {
   const color = STATUS_COLORS[status] || '#9E9E9E';
-  const r = (size - 12) / 2;
+  const r = (size - 10) / 2;
   const circ = 2 * Math.PI * r;
   const pct = Math.min(cvs, 100) / 100;
   const dashLen = circ * 0.75;
   const filled = dashLen * pct;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e5e7eb" strokeWidth={8}
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--border))" strokeWidth={6}
         strokeDasharray={`${dashLen} ${circ - dashLen}`} strokeDashoffset={-circ * 0.125} strokeLinecap="round" />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={8}
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={6}
         strokeDasharray={`${filled} ${circ - filled}`} strokeDashoffset={-circ * 0.125} strokeLinecap="round">
         <animate attributeName="stroke-dasharray" from={`0 ${circ}`} to={`${filled} ${circ - filled}`} dur="1s" fill="freeze" />
       </circle>
-      <text x={size / 2} y={size / 2 + 2} textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.28} fontWeight="bold" fill={color}>{cvs}</text>
-      <text x={size / 2} y={size / 2 + size * 0.18} textAnchor="middle" fontSize={size * 0.1} fill="#6b7280">CVS</text>
+      <text x={size / 2} y={size / 2 + 1} textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.26} fontWeight="bold" fill={color}>{cvs}</text>
+      <text x={size / 2} y={size / 2 + size * 0.16} textAnchor="middle" fontSize={size * 0.1} fill="hsl(var(--muted-foreground))">CVS</text>
     </svg>
   );
 }
 
-function Sparkline({ data, color, width = 140, height = 40 }: { data: number[]; color: string; width?: number; height?: number }) {
+function Sparkline({ data, color, width = 120, height = 32 }: { data: number[]; color: string; width?: number; height?: number }) {
   const max = Math.max(...data, 100);
   const min = Math.min(...data, 0);
   const range = max - min || 1;
@@ -40,9 +40,9 @@ function Sparkline({ data, color, width = 140, height = 40 }: { data: number[]; 
   return (
     <div className="flex flex-col items-center">
       <svg width={width} height={height} className="overflow-visible">
-        <polyline points={pts} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
       </svg>
-      <div className="flex justify-between w-full text-[9px] text-muted-foreground mt-0.5">
+      <div className="flex justify-between w-full text-[8px] text-muted-foreground mt-0.5">
         <span>D-6</span><span>NOW</span>
       </div>
     </div>
@@ -53,9 +53,9 @@ function HeartbeatOverlay({ error }: { error: string }) {
   const fault = FAULT_COMPONENT_MAP[error];
   if (!fault) return null;
   const { cx, cy, label } = fault;
-  const labelW = label.length * 10 + 50;
+  const labelW = label.length * 9 + 44;
   const labelX = Math.max(0, cx - labelW / 2);
-  const labelY = cy - 112;
+  const labelY = cy - 100;
 
   return (
     <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1186 974" preserveAspectRatio="xMidYMid meet">
@@ -93,16 +93,16 @@ function HeartbeatOverlay({ error }: { error: string }) {
           </polyline>
         </g>
       </g>
-      <line x1={cx} y1={labelY + 40} x2={cx} y2={cy - 50} stroke="rgba(217,48,37,.65)" strokeWidth="1.8" strokeDasharray="6,4" />
+      <line x1={cx} y1={labelY + 36} x2={cx} y2={cy - 50} stroke="rgba(217,48,37,.65)" strokeWidth="1.8" strokeDasharray="6,4" />
       <g transform={`translate(${labelX}, ${labelY})`}>
-        <rect x="0" y="0" width={labelW} height="40" rx="8" fill="#C62828">
+        <rect x="0" y="0" width={labelW} height="36" rx="8" fill="#C62828">
           <animate attributeName="opacity" values="1;.88;1;.9;1" dur="1.3s" repeatCount="indefinite" />
         </rect>
-        <rect x="0" y="0" width={labelW} height="20" rx="8" fill="rgba(255,255,255,.06)" />
-        <circle cx="20" cy="20" r="7" fill="white">
+        <rect x="0" y="0" width={labelW} height="18" rx="8" fill="rgba(255,255,255,.06)" />
+        <circle cx="18" cy="18" r="6" fill="white">
           <animate attributeName="opacity" values="1;.1;1;.25;1" dur="1s" repeatCount="indefinite" />
         </circle>
-        <text x="38" y="26" fill="white" fontSize="14" fontFamily="monospace" fontWeight="700" letterSpacing="0.6">{label}</text>
+        <text x="34" y="23" fill="white" fontSize="12" fontFamily="monospace" fontWeight="700" letterSpacing="0.6">{label}</text>
       </g>
     </svg>
   );
@@ -143,42 +143,43 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
   return (
     <Dialog open={!!chargerId} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-[1100px] w-[95vw] max-h-[92vh] p-0 gap-0 overflow-hidden border-0 bg-card">
+      <DialogContent className="max-w-[900px] w-[90vw] max-h-[80vh] p-0 gap-0 overflow-hidden border border-border bg-card/90 backdrop-blur-xl shadow-2xl rounded-xl">
         <DialogTitle className="sr-only">Charger {chargerId} Details</DialogTitle>
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3" style={{ background: 'linear-gradient(135deg, #07100E, #142220)' }}>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold text-white" style={{ background: color }}>
-              {charger.status === 'critical' && <span className="w-2 h-2 rounded-full bg-white animate-pulse" />}
+
+        {/* Header — light, matches site */}
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/40">
+          <div className="flex items-center gap-2.5">
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold text-white" style={{ background: color }}>
+              {charger.status === 'critical' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
               {statusLabel}
             </span>
             <div>
-              <div className="text-white font-bold text-sm">{chargerId}</div>
-              <div className="text-white/60 text-xs">Fontainebleau Las Vegas · Stall {shortId}</div>
+              <div className="text-foreground font-bold text-sm">{chargerId}</div>
+              <div className="text-muted-foreground text-[11px]">Fontainebleau Las Vegas · Stall {shortId}</div>
             </div>
           </div>
-          <button onClick={onClose} className="text-white/60 hover:text-white transition-colors">
-            <X className="h-5 w-5" />
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted">
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border bg-muted/30">
+        <div className="flex border-b border-border bg-muted/20">
           {TABS.map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={cn("px-4 py-2 text-xs font-medium transition-colors border-b-2",
+              className={cn("px-3 py-1.5 text-[11px] font-medium transition-colors border-b-2",
                 tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
               )}>{t}</button>
           ))}
         </div>
 
         {/* Body */}
-        <div className="flex flex-col md:flex-row overflow-hidden" style={{ height: 'calc(92vh - 100px)', maxHeight: '680px' }}>
+        <div className="flex flex-col md:flex-row overflow-hidden" style={{ height: 'calc(80vh - 88px)', maxHeight: '540px' }}>
           {/* LEFT — Schematic */}
-          <div className="flex-1 relative bg-[#f8fafa] overflow-hidden flex items-center justify-center min-h-[300px]">
+          <div className="flex-1 relative bg-muted/10 overflow-hidden flex items-center justify-center min-h-[240px]">
             {tab === 'Isometric Cutaway' && (
               <>
-                <img src="/assets/charger-schematic-iso.jpg" alt="Charger isometric cutaway" className="w-full h-full object-contain" />
+                <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="w-full h-full object-contain p-2" />
                 {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
               </>
             )}
@@ -200,64 +201,64 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
           </div>
 
           {/* RIGHT — Info Panel */}
-          <div className="w-full md:w-[340px] border-l border-border overflow-y-auto p-4 space-y-4">
+          <div className="w-full md:w-[300px] border-l border-border overflow-y-auto p-3 space-y-3">
             {/* CVS Arc */}
             <div className="flex flex-col items-center">
-              <CvsArc cvs={charger.cvs} status={charger.status} />
-              <div className="font-bold text-sm mt-1">{chargerId}</div>
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ color, background: `${color}18` }}>{statusLabel}</span>
+              <CvsArc cvs={charger.cvs} status={charger.status} size={90} />
+              <div className="font-bold text-xs mt-0.5">{chargerId}</div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ color, background: `${color}18` }}>{statusLabel}</span>
             </div>
 
             {/* Sparkline */}
             <div className="flex flex-col items-center">
-              <div className="text-[10px] text-muted-foreground mb-1 font-medium">7-Day CVS Trend</div>
-              <Sparkline data={charger.trend} color={color} />
+              <div className="text-[9px] text-muted-foreground mb-0.5 font-medium">7-Day CVS Trend</div>
+              <Sparkline data={charger.trend} color={color} width={110} height={28} />
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-md border border-border p-2">
-                <div className="text-muted-foreground text-[10px]">Session Rate</div>
+            <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+              <div className="rounded-md border border-border p-1.5">
+                <div className="text-muted-foreground text-[9px]">Session Rate</div>
                 <div className="font-bold">{charger.sessions}</div>
               </div>
-              <div className="rounded-md border border-border p-2">
-                <div className="text-muted-foreground text-[10px]">Error Duration</div>
+              <div className="rounded-md border border-border p-1.5">
+                <div className="text-muted-foreground text-[9px]">Error Duration</div>
                 <div className="font-bold">{charger.since}</div>
               </div>
-              <div className="rounded-md border border-border p-2">
-                <div className="text-muted-foreground text-[10px]">Thermal</div>
+              <div className="rounded-md border border-border p-1.5">
+                <div className="text-muted-foreground text-[9px]">Thermal</div>
                 <div className="font-bold">{charger.thermal}</div>
               </div>
-              <div className="rounded-md border border-border p-2">
-                <div className="text-muted-foreground text-[10px]">Failure ETA</div>
+              <div className="rounded-md border border-border p-1.5">
+                <div className="text-muted-foreground text-[9px]">Failure ETA</div>
                 <div className="font-bold">{charger.status === 'critical' ? '~8 days' : charger.status === 'warning' ? '~3 weeks' : '—'}</div>
               </div>
             </div>
 
             {/* Error Box */}
             {charger.error && (
-              <div className="rounded-md border-l-4 p-3 text-xs" style={{ borderColor: color, background: `${color}08` }}>
+              <div className="rounded-md border-l-4 p-2 text-[11px]" style={{ borderColor: color, background: `${color}08` }}>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: color }} />
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: color }} />
                   <span className="font-mono font-bold" style={{ color }}>{charger.error}</span>
                 </div>
-                <div className="text-muted-foreground mt-1">{charger.errorDesc}</div>
+                <div className="text-muted-foreground mt-0.5 text-[10px]">{charger.errorDesc}</div>
               </div>
             )}
 
             {/* Component Status */}
             <div>
-              <div className="text-[10px] text-muted-foreground font-medium mb-1.5">Component Status</div>
-              <div className="space-y-1">
+              <div className="text-[9px] text-muted-foreground font-medium mb-1">Component Status</div>
+              <div className="space-y-0.5">
                 {COMPONENT_LIST.map(comp => {
                   const s = getComponentStatus(charger, comp);
                   return (
-                    <div key={comp} className="flex items-center justify-between text-xs py-1 px-2 rounded border border-border/50">
-                      <div className="flex items-center gap-1.5">
-                        <span className={cn("w-2 h-2 rounded-full", s === 'fail' && "animate-pulse")} style={{ background: compStatusColor(s) }} />
+                    <div key={comp} className="flex items-center justify-between text-[11px] py-0.5 px-1.5 rounded border border-border/50">
+                      <div className="flex items-center gap-1">
+                        <span className={cn("w-1.5 h-1.5 rounded-full", s === 'fail' && "animate-pulse")} style={{ background: compStatusColor(s) }} />
                         <span>{comp}</span>
                       </div>
-                      <span className="font-bold text-[10px]" style={{ color: compStatusColor(s) }}>{compStatusLabel(s)}</span>
+                      <span className="font-bold text-[9px]" style={{ color: compStatusColor(s) }}>{compStatusLabel(s)}</span>
                     </div>
                   );
                 })}
@@ -265,24 +266,24 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
             </div>
 
             {/* Max AI Assessment */}
-            <div className="rounded-md p-3 text-xs" style={{ background: '#1B8A7A12', border: '1px solid #1B8A7A30' }}>
-              <div className="flex items-center gap-1.5 mb-1">
+            <div className="rounded-md p-2 text-[11px]" style={{ background: 'hsl(var(--primary) / 0.08)', border: '1px solid hsl(var(--primary) / 0.2)' }}>
+              <div className="flex items-center gap-1 mb-0.5">
                 <span>🤖</span>
-                <span className="font-bold text-[#1B8A7A]">Max AI Assessment</span>
+                <span className="font-bold text-primary text-[10px]">Max AI Assessment</span>
               </div>
-              <div className="text-muted-foreground">{charger.maxNote}</div>
+              <div className="text-muted-foreground text-[10px]">{charger.maxNote}</div>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2">
-              <button className="flex-1 text-xs font-medium py-2 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : 'hsl(var(--primary))' }}>
+            <div className="flex gap-1.5">
+              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : 'hsl(var(--primary))' }}>
                 Open Ticket
               </button>
-              <button className="flex-1 text-xs font-medium py-2 rounded-md border border-border text-foreground hover:bg-muted transition-colors">
-                Create Estimate
+              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors">
+                Estimate
               </button>
-              <button className="flex-1 text-xs font-medium py-2 rounded-md border border-border text-foreground hover:bg-muted transition-colors">
-                View History
+              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors">
+                History
               </button>
             </div>
           </div>

@@ -21,7 +21,7 @@ export const CHARGERS: Record<string, ChargerData> = {
   'NAS-B01': { status: 'healthy',  cvs: 90, sessions: '94.2%', since: '—',      thermal: 'Normal ✓',   fw: 'v2.4.1', error: null,                  errorDesc: null,                                              maxNote: 'All nominal. High session rate.',                                              trend: [88,89,90,90,90,90,90] },
   'NAS-B02': { status: 'healthy',  cvs: 85, sessions: '87.7%', since: '—',      thermal: 'Normal ✓',   fw: 'v2.4.1', error: null,                  errorDesc: null,                                              maxNote: 'Stable. FW updated 4d ago.',                                                   trend: [83,84,84,85,85,85,85] },
   'NAS-B03': { status: 'healthy',  cvs: 77, sessions: '79.9%', since: '—',      thermal: 'Normal ✓',   fw: 'v2.3.9', error: null,                  errorDesc: null,                                              maxNote: 'Minor wear. Flag for 60-day PM.',                                              trend: [80,79,79,78,78,77,77] },
-  'NAS-B04': { status: 'critical', cvs: 33, sessions: '52.3%', since: '8h 14m', thermal: 'High 🌡',    fw: 'v2.3.9', error: 'ConnectorLockFailure',  errorDesc: 'Connector lock not engaging. No new sessions.',    maxNote: 'Physical jam likely. Dispatch for inspection. Lock assembly $124.',             trend: [71,65,58,50,44,38,33] },
+  'NAS-B04': { status: 'critical', cvs: 33, sessions: '52.3%', since: '8h 14m', thermal: 'High 🌡',    fw: 'v2.3.9', error: 'PowerModuleFailure',  errorDesc: 'Power module degraded. Output dropping below threshold.',    maxNote: 'Power module failing. Dispatch for replacement. Module assembly $340.',             trend: [71,65,58,50,44,38,33] },
   'NAS-B05': { status: 'warning',  cvs: 58, sessions: '64.1%', since: '1d ago', thermal: 'Elevated ⚠', fw: 'v2.4.1', error: 'HighTemperature',      errorDesc: '87°C vs 65°C threshold. Heat-driven.',            maxNote: 'Heat stress. Throttle applied. Consider shade shield.',                        trend: [68,66,64,62,60,59,58] },
   'NAS-B06': { status: 'offline',  cvs: 0,  sessions: '—',     since: '14h',    thermal: '—',          fw: 'v2.3.8', error: 'NetworkDisconnected',   errorDesc: 'No OCPP heartbeat 14h. Likely powered off.',      maxNote: 'Cannot reach unit. Physical visit required.',                                  trend: [72,68,60,40,18,5,0]  },
 };
@@ -62,9 +62,9 @@ export const ENV_BADGES = [
 ];
 
 export const ERROR_FEED = [
-  { time: '2m ago', charger: 'NAS-B04', error: 'ConnectorLockFailure', severity: 'CRIT' },
+  { time: '2m ago', charger: 'NAS-B04', error: 'PowerModuleFailure', severity: 'CRIT' },
   { time: '5m ago', charger: 'NAS-A03', error: 'EVCommunicationError', severity: 'WARN' },
-  { time: '8m ago', charger: 'HLT-DC-003', error: 'ConnectorLockFailure', severity: 'CRIT' },
+  { time: '8m ago', charger: 'HLT-DC-003', error: 'PowerModuleFailure', severity: 'CRIT' },
   { time: '12m ago', charger: 'NAS-B05', error: 'HighTemperature', severity: 'WARN' },
   { time: '15m ago', charger: 'NAS-DC-042', error: 'HighTemp — auto-healed', severity: 'HEAL' },
   { time: '22m ago', charger: 'SEA-DC-011', error: 'InternalError — healed', severity: 'HEAL' },
@@ -77,13 +77,13 @@ export const ML_PATTERNS = [
 ];
 
 export const MAX_MESSAGES = [
-  'Monitoring NAS-B04 · ConnectorLockFailure · Dispatch recommended',
+  'Monitoring NAS-B04 · PowerModuleFailure · Dispatch recommended',
   '3 env. risk zones active · UV correlation 83%',
   'Auto-healing NAS-A03 comm retry · Attempt 4/6',
 ];
 
 export const FAULT_COMPONENT_MAP: Record<string, { cx: number; cy: number; label: string }> = {
-  ConnectorLockFailure: { cx: 285, cy: 670, label: '⚠ CONNECTOR LOCK FAILURE' },
+  PowerModuleFailure: { cx: 780, cy: 340, label: '⚠ POWER MODULE FAILURE' },
   EVCommunicationError: { cx: 820, cy: 700, label: '⚠ EV COMMUNICATION ERROR' },
   HighTemperature: { cx: 820, cy: 480, label: '⚠ HIGH TEMPERATURE — COOLING' },
   NetworkDisconnected: { cx: 700, cy: 90, label: '⚠ NETWORK DISCONNECTED' },
@@ -101,7 +101,7 @@ export const COMPONENT_LIST = [
 export function getComponentStatus(charger: ChargerData, component: string): 'ok' | 'warn' | 'fail' {
   if (!charger.error) return 'ok';
   const map: Record<string, string[]> = {
-    ConnectorLockFailure: ['Connector Lock'],
+    PowerModuleFailure: ['DC Power Stack ×5'],
     EVCommunicationError: ['Internal Controller Stack'],
     HighTemperature: ['Thermal Module', 'Liquid Cooling System'],
     NetworkDisconnected: ['Internal Controller Stack', 'HMI / Display'],
