@@ -9,7 +9,7 @@ interface Props {
   onClose: () => void;
 }
 
-const TABS = ['Isometric Cutaway', 'Front View', 'Side Profile', 'Top (Heli) View'] as const;
+
 
 function CvsArc({ cvs, status, size = 100 }: { cvs: number; status: string; size?: number }) {
   const color = STATUS_COLORS[status] || '#9E9E9E';
@@ -128,7 +128,7 @@ function HealthyOverlay() {
 }
 
 export function ChargerSchematicModal({ chargerId, onClose }: Props) {
-  const [tab, setTab] = useState<typeof TABS[number]>('Isometric Cutaway');
+  const [_tab] = useState('Isometric Cutaway');
 
   if (!chargerId) return null;
   const charger = CHARGERS[chargerId];
@@ -163,41 +163,11 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-border bg-muted/20">
-          {TABS.map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={cn("px-3 py-1.5 text-[11px] font-medium transition-colors border-b-2",
-                tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-              )}>{t}</button>
-          ))}
-        </div>
-
-        {/* Body */}
-        <div className="flex flex-col md:flex-row overflow-hidden" style={{ height: 'calc(80vh - 88px)', maxHeight: '540px' }}>
+        <div className="flex flex-col md:flex-row overflow-hidden" style={{ height: 'calc(80vh - 52px)', maxHeight: '560px' }}>
           {/* LEFT — Schematic */}
           <div className="flex-1 relative bg-muted/10 overflow-hidden flex items-center justify-center min-h-[240px]">
-            {tab === 'Isometric Cutaway' && (
-              <>
-                <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="w-full h-full object-contain p-2" />
-                {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
-              </>
-            )}
-            {tab === 'Front View' && (
-              <div className="w-full h-full overflow-hidden relative">
-                <img src="/assets/charger-schematic-multi.jpg" alt="Front view" className="absolute" style={{ top: 0, left: '-50%', width: '200%', height: '50%', objectFit: 'cover', objectPosition: 'right top' }} />
-              </div>
-            )}
-            {tab === 'Side Profile' && (
-              <div className="w-full h-full overflow-hidden relative">
-                <img src="/assets/charger-schematic-multi.jpg" alt="Side profile" className="absolute" style={{ top: '-50%', left: 0, width: '50%', height: '200%', objectFit: 'cover', objectPosition: 'left bottom' }} />
-              </div>
-            )}
-            {tab === 'Top (Heli) View' && (
-              <div className="w-full h-full overflow-hidden relative">
-                <img src="/assets/charger-schematic-multi.jpg" alt="Top view" className="absolute" style={{ top: 0, left: 0, width: '50%', height: '50%', objectFit: 'cover', objectPosition: 'left top' }} />
-              </div>
-            )}
+            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="w-full h-full object-contain p-2" />
+            {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
           </div>
 
           {/* RIGHT — Info Panel */}
