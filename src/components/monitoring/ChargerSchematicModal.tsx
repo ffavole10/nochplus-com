@@ -9,7 +9,7 @@ interface Props {
   onClose: () => void;
 }
 
-const TABS = ['Isometric Cutaway', 'Front View', 'Side Profile', 'Top (Heli) View'] as const;
+
 
 function CvsArc({ cvs, status, size = 100 }: { cvs: number; status: string; size?: number }) {
   const color = STATUS_COLORS[status] || '#9E9E9E';
