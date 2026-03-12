@@ -163,18 +163,6 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-border bg-muted/20">
-          {TABS.map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={cn("px-3 py-1.5 text-[11px] font-medium transition-colors border-b-2",
-                tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-              )}>{t}</button>
-          ))}
-        </div>
-
-        {/* Body */}
-        <div className="flex flex-col md:flex-row overflow-hidden" style={{ height: 'calc(80vh - 88px)', maxHeight: '540px' }}>
           {/* LEFT — Schematic */}
           <div className="flex-1 relative bg-muted/10 overflow-hidden flex items-center justify-center min-h-[240px]">
             {tab === 'Isometric Cutaway' && (
