@@ -163,29 +163,11 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
           </button>
         </div>
 
+        <div className="flex flex-col md:flex-row overflow-hidden" style={{ height: 'calc(80vh - 52px)', maxHeight: '560px' }}>
           {/* LEFT — Schematic */}
           <div className="flex-1 relative bg-muted/10 overflow-hidden flex items-center justify-center min-h-[240px]">
-            {tab === 'Isometric Cutaway' && (
-              <>
-                <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="w-full h-full object-contain p-2" />
-                {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
-              </>
-            )}
-            {tab === 'Front View' && (
-              <div className="w-full h-full overflow-hidden relative">
-                <img src="/assets/charger-schematic-multi.jpg" alt="Front view" className="absolute" style={{ top: 0, left: '-50%', width: '200%', height: '50%', objectFit: 'cover', objectPosition: 'right top' }} />
-              </div>
-            )}
-            {tab === 'Side Profile' && (
-              <div className="w-full h-full overflow-hidden relative">
-                <img src="/assets/charger-schematic-multi.jpg" alt="Side profile" className="absolute" style={{ top: '-50%', left: 0, width: '50%', height: '200%', objectFit: 'cover', objectPosition: 'left bottom' }} />
-              </div>
-            )}
-            {tab === 'Top (Heli) View' && (
-              <div className="w-full h-full overflow-hidden relative">
-                <img src="/assets/charger-schematic-multi.jpg" alt="Top view" className="absolute" style={{ top: 0, left: 0, width: '50%', height: '50%', objectFit: 'cover', objectPosition: 'left top' }} />
-              </div>
-            )}
+            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="w-full h-full object-contain p-2" />
+            {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
           </div>
 
           {/* RIGHT — Info Panel */}
