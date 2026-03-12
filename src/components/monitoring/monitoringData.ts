@@ -101,7 +101,7 @@ export const COMPONENT_LIST = [
 export function getComponentStatus(charger: ChargerData, component: string): 'ok' | 'warn' | 'fail' {
   if (!charger.error) return 'ok';
   const map: Record<string, string[]> = {
-    ConnectorLockFailure: ['Connector Lock'],
+    PowerModuleFailure: ['DC Power Stack ×5'],
     EVCommunicationError: ['Internal Controller Stack'],
     HighTemperature: ['Thermal Module', 'Liquid Cooling System'],
     NetworkDisconnected: ['Internal Controller Stack', 'HMI / Display'],
