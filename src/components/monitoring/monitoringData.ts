@@ -77,7 +77,7 @@ export const ML_PATTERNS = [
 ];
 
 export const MAX_MESSAGES = [
-  'Monitoring NAS-B04 · ConnectorLockFailure · Dispatch recommended',
+  'Monitoring NAS-B04 · PowerModuleFailure · Dispatch recommended',
   '3 env. risk zones active · UV correlation 83%',
   'Auto-healing NAS-A03 comm retry · Attempt 4/6',
 ];
