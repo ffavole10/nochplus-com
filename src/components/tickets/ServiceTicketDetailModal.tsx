@@ -10,6 +10,7 @@ import { SWI_CATALOG } from "@/data/swiCatalog";
 import { TicketCloseStep } from "@/components/tickets/TicketCloseStep";
 import { WorkflowStepper } from "@/components/tickets/WorkflowStepper";
 import { SWIPreviewDialog } from "@/components/tickets/SWIPreviewDialog";
+import { TicketRegulatoryContext } from "@/components/tickets/TicketRegulatoryContext";
 import { getSWIPublicUrl } from "@/lib/swiStorage";
 import {
   CheckCircle, Circle, Loader2, XCircle, Clock, User, Building2, Mail, Phone,
@@ -186,6 +187,8 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
 
           {/* Charger Info */}
           <TabsContent value="charger" className="space-y-4 mt-4">
+            {/* Regulatory Context Panel */}
+            <TicketRegulatoryContext ticketId={ticket.id} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InfoRow icon={Wrench} label="Brand" value={ticket.charger.brand || "—"} />
               <InfoRow icon={FileText} label="Serial Number" value={ticket.charger.serialNumber} />

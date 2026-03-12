@@ -1864,6 +1864,188 @@ export type Database = {
         }
         Relationships: []
       }
+      regulatory_changes: {
+        Row: {
+          change_summary: string | null
+          change_type: string
+          detected_at: string
+          document_id: string
+          id: string
+          new_hash: string | null
+          previous_hash: string | null
+          region_id: string
+          reviewed: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+        }
+        Insert: {
+          change_summary?: string | null
+          change_type: string
+          detected_at?: string
+          document_id: string
+          id?: string
+          new_hash?: string | null
+          previous_hash?: string | null
+          region_id: string
+          reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Update: {
+          change_summary?: string | null
+          change_type?: string
+          detected_at?: string
+          document_id?: string
+          id?: string
+          new_hash?: string | null
+          previous_hash?: string | null
+          region_id?: string
+          reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regulatory_changes_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "regulatory_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "regulatory_changes_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regulatory_regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      regulatory_documents: {
+        Row: {
+          category: string
+          content_summary: string | null
+          effective_date: string | null
+          fetched_at: string
+          full_text: string | null
+          id: string
+          is_current: boolean
+          region_id: string
+          source_name: string | null
+          source_url: string | null
+          title: string
+          version_hash: string | null
+        }
+        Insert: {
+          category: string
+          content_summary?: string | null
+          effective_date?: string | null
+          fetched_at?: string
+          full_text?: string | null
+          id?: string
+          is_current?: boolean
+          region_id: string
+          source_name?: string | null
+          source_url?: string | null
+          title: string
+          version_hash?: string | null
+        }
+        Update: {
+          category?: string
+          content_summary?: string | null
+          effective_date?: string | null
+          fetched_at?: string
+          full_text?: string | null
+          id?: string
+          is_current?: boolean
+          region_id?: string
+          source_name?: string | null
+          source_url?: string | null
+          title?: string
+          version_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regulatory_documents_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regulatory_regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      regulatory_regions: {
+        Row: {
+          city: string | null
+          county: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          last_synced_at: string | null
+          name: string
+          next_sync_at: string | null
+          region_type: string
+          state_code: string
+        }
+        Insert: {
+          city?: string | null
+          county?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          name: string
+          next_sync_at?: string | null
+          region_type?: string
+          state_code: string
+        }
+        Update: {
+          city?: string | null
+          county?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          name?: string
+          next_sync_at?: string | null
+          region_type?: string
+          state_code?: string
+        }
+        Relationships: []
+      }
+      regulatory_sync_log: {
+        Row: {
+          changes_detected: number
+          completed_at: string | null
+          documents_added: number
+          id: string
+          regions_updated: number
+          started_at: string
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          changes_detected?: number
+          completed_at?: string | null
+          documents_added?: number
+          id?: string
+          regions_updated?: number
+          started_at?: string
+          status?: string
+          sync_type?: string
+        }
+        Update: {
+          changes_detected?: number
+          completed_at?: string | null
+          documents_added?: number
+          id?: string
+          regions_updated?: number
+          started_at?: string
+          status?: string
+          sync_type?: string
+        }
+        Relationships: []
+      }
       service_regions: {
         Row: {
           cities: string[] | null
@@ -2347,6 +2529,66 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ticket_chargers_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "service_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_regulatory_context: {
+        Row: {
+          applicable_docs: string[] | null
+          available_incentives: string | null
+          compliance_flags: string[] | null
+          context_injected_at: string
+          id: string
+          licensing_requirement: string | null
+          max_prompt_version: string | null
+          permit_authority: string | null
+          region_id: string
+          requires_licensed_contractor: boolean | null
+          requires_permit: boolean | null
+          ticket_id: string
+        }
+        Insert: {
+          applicable_docs?: string[] | null
+          available_incentives?: string | null
+          compliance_flags?: string[] | null
+          context_injected_at?: string
+          id?: string
+          licensing_requirement?: string | null
+          max_prompt_version?: string | null
+          permit_authority?: string | null
+          region_id: string
+          requires_licensed_contractor?: boolean | null
+          requires_permit?: boolean | null
+          ticket_id: string
+        }
+        Update: {
+          applicable_docs?: string[] | null
+          available_incentives?: string | null
+          compliance_flags?: string[] | null
+          context_injected_at?: string
+          id?: string
+          licensing_requirement?: string | null
+          max_prompt_version?: string | null
+          permit_authority?: string | null
+          region_id?: string
+          requires_licensed_contractor?: boolean | null
+          requires_permit?: boolean | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_regulatory_context_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regulatory_regions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_regulatory_context_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "service_tickets"

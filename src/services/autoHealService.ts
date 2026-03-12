@@ -1,5 +1,6 @@
 import { lookupCharger, ChargerDatabaseRecord } from "./BtcDatabaseService";
 import { supabase } from "@/integrations/supabase/client";
+import { getRegulatoryContextForPrompt } from "./regulatorySync";
 
 export interface AutoHealAssessment {
   riskLevel: "Critical" | "High" | "Medium" | "Low";
@@ -86,6 +87,18 @@ export async function runAutoHealAssessment(
   if (ticket.photoCount > 0) dataSources.push(`Photos analyzed (${ticket.photoCount})`);
   if (ticket.notes) dataSources.push("Account manager notes");
 
+  // Fetch regulatory context for this ticket
+  let regulatoryContext = "No jurisdiction-specific regulatory context available.";
+  try {
+    const ctx = await getRegulatoryContextForPrompt(ticket.ticketId);
+    if (ctx) {
+      regulatoryContext = ctx;
+      dataSources.push("Regional regulatory intelligence");
+    }
+  } catch (err) {
+    console.warn("Regulatory context fetch failed:", err);
+  }
+
   const chargerTypeLabel = btcData?.chargerType || (ticket.chargerType.includes("DC") ? "DC | Level 3" : "AC | Level 2");
 
   // Build ticket data for edge function
@@ -114,6 +127,7 @@ export async function runAutoHealAssessment(
     photos: [],
     dataSources,
     notes: ticket.notes || "",
+    regulatory_context: regulatoryContext,
   };
 
   // Initialize steps

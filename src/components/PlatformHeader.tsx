@@ -33,6 +33,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/noch-plus/assessments": "Assessments",
   "/noch-plus/members": "Members",
   "/noch-plus/chargers": "Chargers",
+  "/noch-plus/monitoring": "Monitoring",
 };
 
 export function PlatformHeader() {

@@ -3,6 +3,7 @@ import { MLSection } from "@/components/ai-agent/MLSection";
 import { WebSearchSection } from "@/components/ai-agent/WebSearchSection";
 import { TrainingHistory } from "@/components/ai-agent/TrainingHistory";
 import { DataQualitySection } from "@/components/ai-agent/DataQualitySection";
+import { RegionalRegulatoryIntelligence } from "@/components/regulatory/RegionalRegulatoryIntelligence";
 
 const DeepLearning = () => {
   usePageTitle("Deep Learning");
@@ -18,6 +19,10 @@ const DeepLearning = () => {
 
         <div className="border-t border-border pt-8">
           <DataQualitySection />
+        </div>
+
+        <div className="border-t border-border pt-8">
+          <RegionalRegulatoryIntelligence />
         </div>
 
         <div className="border-t border-border pt-8">

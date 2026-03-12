@@ -236,6 +236,8 @@ serve(async (req) => {
             // Build template variables
             const templateVars: Record<string, unknown> = {
               ...ticketData,
+              // Regulatory context injection
+              regulatory_context: ticketData.regulatory_context || "No jurisdiction-specific regulatory context available for this ticket.",
               // Pass previous agent results
               diagnostic_results: results["diagnostic-agent"] || "N/A",
               // Extract specific fields from diagnostic results for SWI matcher

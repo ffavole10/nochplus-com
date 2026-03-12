@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
 import { ServiceTicket } from "@/types/serviceTicket";
+import { buildTicketRegulatoryContext } from "@/services/regulatorySync";
 import type { ChargerBrand, ChargerType } from "@/types/ticket";
 
 interface DBServiceTicket {
@@ -217,6 +218,19 @@ export async function persistTicketToDB(ticket: ServiceTicket, opts?: {
       serial_number: ticket.charger.serialNumber || null,
       known_issues: ticket.issue.description || null,
     });
+  }
+
+  // Build regulatory context for the ticket based on location state/city
+  try {
+    const state = ticket.customer.address?.split(",").slice(-1)[0]?.trim() || "";
+    const city = ticket.customer.address?.split(",").slice(-2, -1)[0]?.trim() || "";
+    if (state && dbId) {
+      buildTicketRegulatoryContext(dbId, state, city).catch(err =>
+        console.warn("Regulatory context build failed:", err)
+      );
+    }
+  } catch (err) {
+    console.warn("Regulatory context setup failed:", err);
   }
 
   return dbId;
