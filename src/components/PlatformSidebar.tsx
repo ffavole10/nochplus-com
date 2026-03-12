@@ -172,12 +172,12 @@ export function PlatformSidebar() {
 
 
   const nochPlusPages = [
+  { title: "Monitoring", url: "/noch-plus/monitoring", icon: BarChart3 },
   { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard },
   { title: "Submissions", url: "/noch-plus/submissions", icon: FileCheck },
   { title: "Assessments", url: "/noch-plus/assessments", icon: FolderOpen },
   { title: "Members", url: "/noch-plus/members", icon: Users },
-  { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive },
-  { title: "Monitoring", url: "/noch-plus/monitoring", icon: BarChart3 }];
+  { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
 
   const autohealPages = [
   { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
