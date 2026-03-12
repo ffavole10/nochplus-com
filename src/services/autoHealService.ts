@@ -1,5 +1,6 @@
 import { lookupCharger, ChargerDatabaseRecord } from "./BtcDatabaseService";
 import { supabase } from "@/integrations/supabase/client";
+import { getRegulatoryContextForPrompt } from "./regulatorySync";
 
 export interface AutoHealAssessment {
   riskLevel: "Critical" | "High" | "Medium" | "Low";
