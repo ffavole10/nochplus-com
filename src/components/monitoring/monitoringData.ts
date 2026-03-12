@@ -62,9 +62,9 @@ export const ENV_BADGES = [
 ];
 
 export const ERROR_FEED = [
-  { time: '2m ago', charger: 'NAS-B04', error: 'ConnectorLockFailure', severity: 'CRIT' },
+  { time: '2m ago', charger: 'NAS-B04', error: 'PowerModuleFailure', severity: 'CRIT' },
   { time: '5m ago', charger: 'NAS-A03', error: 'EVCommunicationError', severity: 'WARN' },
-  { time: '8m ago', charger: 'HLT-DC-003', error: 'ConnectorLockFailure', severity: 'CRIT' },
+  { time: '8m ago', charger: 'HLT-DC-003', error: 'PowerModuleFailure', severity: 'CRIT' },
   { time: '12m ago', charger: 'NAS-B05', error: 'HighTemperature', severity: 'WARN' },
   { time: '15m ago', charger: 'NAS-DC-042', error: 'HighTemp — auto-healed', severity: 'HEAL' },
   { time: '22m ago', charger: 'SEA-DC-011', error: 'InternalError — healed', severity: 'HEAL' },
