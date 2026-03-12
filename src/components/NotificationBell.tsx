@@ -24,7 +24,11 @@ const typeColors: Record<string, string> = {
 };
 
 const notificationRoutes: Record<string, (refId: string | null) => string | null> = {
-  estimate_approved: (refId) => refId ? `/service-desk/estimates?id=${refId}` : null,
+  estimate_approved: (refId) => refId ? `/service-desk/estimates?id=${refId}` : `/service-desk/estimates`,
+  campaign_created: () => `/service-desk/campaigns`,
+  charger_critical: () => `/noch-plus/monitoring`,
+  new_submission: (refId) => refId ? `/noch-plus/submissions?id=${refId}` : `/noch-plus/submissions`,
+  submission_approved: (refId) => refId ? `/noch-plus/submissions?id=${refId}` : `/noch-plus/submissions`,
 };
 
 export function NotificationBell() {
@@ -53,7 +57,7 @@ export function NotificationBell() {
             </Button>
           )}
         </div>
-        <ScrollArea className="max-h-[320px]">
+        <ScrollArea className="h-[320px]">
           {notifications.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               No notifications yet
