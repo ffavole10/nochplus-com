@@ -231,17 +231,17 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
               </div>
             </div>
 
-            {/* Max AI Assessment */}
+            {/* AutoHeal Assessment */}
             <div className="rounded-md p-1.5 text-[10px] mt-1" style={{ background: 'rgba(27,138,122,0.12)', border: '1px solid rgba(27,138,122,0.25)' }}>
               <div className="flex items-center gap-1 mb-0.5">
-                <span>🤖</span>
-                <span className="font-bold text-[#1B8A7A] text-[9px]">Max AI Assessment</span>
+                <Brain className="h-3 w-3 text-[#1B8A7A]" />
+                <span className="font-bold text-[#1B8A7A] text-[9px]">AutoHeal™ Assessment</span>
               </div>
               <div className="text-white/50 text-[9px]">{charger.maxNote}</div>
             </div>
 
             {/* Actions */}
-            <div className="mt-auto flex gap-1.5">
+            <div className="mt-1.5 flex gap-1.5">
               <button onClick={() => { onClose(); navigate('/service-desk/tickets'); }} className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : '#1B8A7A' }}>
                 Open Ticket
               </button>
