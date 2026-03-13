@@ -145,7 +145,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
   return (
     <Dialog open={!!chargerId} onOpenChange={() => onClose()}>
-      <DialogContent className="hide-default-close max-w-[1100px] w-[95vw] h-[85vh] max-h-[700px] p-0 gap-0 overflow-hidden border border-white/10 rounded-xl shadow-2xl" style={{ background: 'rgba(28, 28, 30, 0.65)', backdropFilter: 'blur(24px)' }}>
+      <DialogContent className="hide-default-close max-w-[1000px] w-[90vw] h-auto max-h-[85vh] p-0 gap-0 overflow-hidden border border-white/10 rounded-xl shadow-2xl" style={{ background: 'rgba(28, 28, 30, 0.65)', backdropFilter: 'blur(24px)' }}>
         <DialogTitle className="sr-only">Charger {chargerId} Details</DialogTitle>
 
         <div className="flex flex-col md:flex-row h-full">
