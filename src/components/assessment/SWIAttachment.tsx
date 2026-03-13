@@ -68,7 +68,7 @@ function SWICard({ match, onRemove, ticketId }: { match: EnrichedSWIMatch; onRem
               )}
               {!match.manual_override && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span>🤖</span><span>AI matched</span>
+                  <span>🧠</span><span>AI matched</span>
                 </div>
               )}
             </div>
