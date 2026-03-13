@@ -150,8 +150,8 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
         <div className="flex flex-col md:flex-row h-full">
           {/* LEFT — Schematic */}
-          <div className="flex-1 relative overflow-hidden min-w-0">
-            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="flex-1 relative overflow-hidden min-w-0 flex items-center justify-center">
+            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="w-full h-full object-contain" />
             {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
           </div>
 
