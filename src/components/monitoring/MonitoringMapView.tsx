@@ -79,7 +79,16 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
   return (
     <div className="relative w-full" style={{ height: 'calc(100vh - 280px)', minHeight: 480 }}>
       {/* SVG Map */}
-      <div className="absolute inset-0 overflow-hidden rounded-lg border border-border bg-[#F1F5F4]">
+      <div
+        ref={containerRef}
+        className={cn("absolute inset-0 overflow-hidden rounded-lg border border-border bg-[#F1F5F4]", dragging ? "cursor-grabbing" : "cursor-grab")}
+        onWheel={handleWheel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        style={{ touchAction: 'none' }}
+      >
         <svg
           width="100%" height="100%"
           viewBox={`0 0 ${1000 * (100 / zoom)} ${500 * (100 / zoom)}`}
