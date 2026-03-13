@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CHARGERS, STATUS_COLORS, FAULT_COMPONENT_MAP, COMPONENT_LIST, getComponentStatus, type ChargerData } from "./monitoringData";
 import { cn } from "@/lib/utils";
@@ -128,6 +129,7 @@ function HealthyOverlay() {
 }
 
 export function ChargerSchematicModal({ chargerId, onClose }: Props) {
+  const navigate = useNavigate();
   const [_tab] = useState('Isometric Cutaway');
 
   if (!chargerId) return null;
@@ -149,7 +151,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
         <div className="flex flex-col md:flex-row h-full">
           {/* LEFT — Schematic */}
           <div className="flex-1 relative overflow-hidden flex items-center justify-center min-w-0">
-            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="max-h-full max-w-full object-contain p-4" style={{ height: '100%', width: 'auto' }} />
+            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="max-h-full max-w-full object-contain p-4" style={{ height: '80%', width: 'auto' }} />
             {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
           </div>
 
@@ -240,11 +242,11 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
             {/* Actions */}
             <div className="flex gap-1.5 mt-auto">
-              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : '#1B8A7A' }}>
+              <button onClick={() => { onClose(); navigate('/service-desk/tickets'); }} className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : '#1B8A7A' }}>
                 Open Ticket
               </button>
-              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
-                Estimate
+              <button onClick={() => { onClose(); navigate('/service-desk/tickets'); }} className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
+                Service Ticket
               </button>
               <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
                 History
