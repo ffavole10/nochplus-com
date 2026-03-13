@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CHARGERS, STATUS_COLORS, FAULT_COMPONENT_MAP, COMPONENT_LIST, getComponentStatus, type ChargerData } from "./monitoringData";
 import { cn } from "@/lib/utils";
