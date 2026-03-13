@@ -259,9 +259,7 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
 
           {/* Close zoom: SVG site overlay */}
           {showSVG && (
-            <SVGOverlay bounds={SVG_BOUNDS}>
-              <SiteOverlaySVG filter={filter} onSelectCharger={onSelectCharger} />
-            </SVGOverlay>
+            <NativeSVGOverlay filter={filter} onSelectCharger={onSelectCharger} />
           )}
 
           {/* Far zoom: site markers */}
