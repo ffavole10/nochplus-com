@@ -143,90 +143,84 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
   return (
     <Dialog open={!!chargerId} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-[900px] w-[90vw] max-h-[80vh] p-0 gap-0 overflow-hidden border border-border bg-card/90 backdrop-blur-xl shadow-2xl rounded-xl">
+      <DialogContent className="hide-default-close max-w-[1100px] w-[95vw] h-[85vh] max-h-[700px] p-0 gap-0 overflow-hidden border border-white/10 rounded-xl shadow-2xl" style={{ background: 'rgba(28, 28, 30, 0.65)', backdropFilter: 'blur(24px)' }}>
         <DialogTitle className="sr-only">Charger {chargerId} Details</DialogTitle>
 
-        {/* Header — light, matches site */}
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/40">
-          <div className="flex items-center gap-2.5">
-            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold text-white" style={{ background: color }}>
-              {charger.status === 'critical' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
-              {statusLabel}
-            </span>
-            <div>
-              <div className="text-foreground font-bold text-sm">{chargerId}</div>
-              <div className="text-muted-foreground text-[11px]">Fontainebleau Las Vegas · Stall {shortId}</div>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="flex flex-col md:flex-row overflow-hidden" style={{ height: 'calc(80vh - 52px)', maxHeight: '560px' }}>
+        <div className="flex flex-col md:flex-row h-full">
           {/* LEFT — Schematic */}
-          <div className="flex-1 relative bg-muted/10 overflow-hidden flex items-center justify-center min-h-[240px]">
+          <div className="flex-1 relative overflow-hidden flex items-center justify-center">
             <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="w-full h-full object-contain p-2" />
             {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
           </div>
 
           {/* RIGHT — Info Panel */}
-          <div className="w-full md:w-[300px] border-l border-border overflow-y-auto p-3 space-y-3">
-            {/* CVS Arc */}
-            <div className="flex flex-col items-center">
-              <CvsArc cvs={charger.cvs} status={charger.status} size={90} />
-              <div className="font-bold text-xs mt-0.5">{chargerId}</div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ color, background: `${color}18` }}>{statusLabel}</span>
+          <div className="w-full md:w-[280px] border-l border-white/10 p-3 flex flex-col gap-2">
+            {/* Header — left aligned */}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-white font-bold text-sm">{chargerId}</div>
+                <div className="text-white/50 text-[11px]">Fontainebleau Las Vegas · Stall {shortId}</div>
+                <span className="inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-white" style={{ background: color }}>
+                  {charger.status === 'critical' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
+                  {statusLabel}
+                </span>
+              </div>
+              <button onClick={onClose} className="text-white/50 hover:text-white transition-colors p-1 rounded-md hover:bg-white/10">
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-            {/* Sparkline */}
-            <div className="flex flex-col items-center">
-              <div className="text-[9px] text-muted-foreground mb-0.5 font-medium">7-Day CVS Trend</div>
-              <Sparkline data={charger.trend} color={color} width={110} height={28} />
+            {/* CVS Arc + Sparkline side by side */}
+            <div className="flex items-center gap-2">
+              <CvsArc cvs={charger.cvs} status={charger.status} size={70} />
+              <div className="flex flex-col items-center">
+                <div className="text-[9px] text-white/40 mb-0.5 font-medium">7-Day CVS</div>
+                <Sparkline data={charger.trend} color={color} width={90} height={24} />
+              </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-              <div className="rounded-md border border-border p-1.5">
-                <div className="text-muted-foreground text-[9px]">Session Rate</div>
-                <div className="font-bold">{charger.sessions}</div>
+            <div className="grid grid-cols-2 gap-1 text-[10px]">
+              <div className="rounded-md border border-white/10 p-1.5">
+                <div className="text-white/40 text-[9px]">Session Rate</div>
+                <div className="font-bold text-white">{charger.sessions}</div>
               </div>
-              <div className="rounded-md border border-border p-1.5">
-                <div className="text-muted-foreground text-[9px]">Error Duration</div>
-                <div className="font-bold">{charger.since}</div>
+              <div className="rounded-md border border-white/10 p-1.5">
+                <div className="text-white/40 text-[9px]">Error Duration</div>
+                <div className="font-bold text-white">{charger.since}</div>
               </div>
-              <div className="rounded-md border border-border p-1.5">
-                <div className="text-muted-foreground text-[9px]">Thermal</div>
-                <div className="font-bold">{charger.thermal}</div>
+              <div className="rounded-md border border-white/10 p-1.5">
+                <div className="text-white/40 text-[9px]">Thermal</div>
+                <div className="font-bold text-white">{charger.thermal}</div>
               </div>
-              <div className="rounded-md border border-border p-1.5">
-                <div className="text-muted-foreground text-[9px]">Failure ETA</div>
-                <div className="font-bold">{charger.status === 'critical' ? '~8 days' : charger.status === 'warning' ? '~3 weeks' : '—'}</div>
+              <div className="rounded-md border border-white/10 p-1.5">
+                <div className="text-white/40 text-[9px]">Failure ETA</div>
+                <div className="font-bold text-white">{charger.status === 'critical' ? '~8 days' : charger.status === 'warning' ? '~3 weeks' : '—'}</div>
               </div>
             </div>
 
             {/* Error Box */}
             {charger.error && (
-              <div className="rounded-md border-l-4 p-2 text-[11px]" style={{ borderColor: color, background: `${color}08` }}>
+              <div className="rounded-md border-l-4 p-1.5 text-[10px]" style={{ borderColor: color, background: `${color}15` }}>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: color }} />
                   <span className="font-mono font-bold" style={{ color }}>{charger.error}</span>
                 </div>
-                <div className="text-muted-foreground mt-0.5 text-[10px]">{charger.errorDesc}</div>
+                <div className="text-white/50 mt-0.5 text-[9px]">{charger.errorDesc}</div>
               </div>
             )}
 
             {/* Component Status */}
             <div>
-              <div className="text-[9px] text-muted-foreground font-medium mb-1">Component Status</div>
+              <div className="text-[9px] text-white/40 font-medium mb-0.5">Component Status</div>
               <div className="space-y-0.5">
                 {COMPONENT_LIST.map(comp => {
                   const s = getComponentStatus(charger, comp);
                   return (
-                    <div key={comp} className="flex items-center justify-between text-[11px] py-0.5 px-1.5 rounded border border-border/50">
+                    <div key={comp} className="flex items-center justify-between text-[10px] py-0.5 px-1.5 rounded border border-white/10">
                       <div className="flex items-center gap-1">
                         <span className={cn("w-1.5 h-1.5 rounded-full", s === 'fail' && "animate-pulse")} style={{ background: compStatusColor(s) }} />
-                        <span>{comp}</span>
+                        <span className="text-white/80">{comp}</span>
                       </div>
                       <span className="font-bold text-[9px]" style={{ color: compStatusColor(s) }}>{compStatusLabel(s)}</span>
                     </div>
@@ -236,23 +230,23 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
             </div>
 
             {/* Max AI Assessment */}
-            <div className="rounded-md p-2 text-[11px]" style={{ background: 'hsl(var(--primary) / 0.08)', border: '1px solid hsl(var(--primary) / 0.2)' }}>
+            <div className="rounded-md p-1.5 text-[10px]" style={{ background: 'rgba(27,138,122,0.12)', border: '1px solid rgba(27,138,122,0.25)' }}>
               <div className="flex items-center gap-1 mb-0.5">
                 <span>🤖</span>
-                <span className="font-bold text-primary text-[10px]">Max AI Assessment</span>
+                <span className="font-bold text-[#1B8A7A] text-[9px]">Max AI Assessment</span>
               </div>
-              <div className="text-muted-foreground text-[10px]">{charger.maxNote}</div>
+              <div className="text-white/50 text-[9px]">{charger.maxNote}</div>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-1.5">
-              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : 'hsl(var(--primary))' }}>
+            <div className="flex gap-1.5 mt-auto">
+              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : '#1B8A7A' }}>
                 Open Ticket
               </button>
-              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors">
+              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
                 Estimate
               </button>
-              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors">
+              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
                 History
               </button>
             </div>
