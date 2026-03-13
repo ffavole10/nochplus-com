@@ -339,7 +339,7 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
         <button onClick={() => setZoom(z => Math.min(200, z + 20))} className="w-7 h-7 rounded bg-white/90 border border-border text-sm font-bold shadow-sm hover:bg-muted">+</button>
         <span className="text-[9px] text-muted-foreground bg-white/80 px-1.5 rounded">{zoom}%</span>
         <button onClick={() => setZoom(z => Math.max(50, z - 20))} className="w-7 h-7 rounded bg-white/90 border border-border text-sm font-bold shadow-sm hover:bg-muted">−</button>
-        <button onClick={() => setZoom(100)} className="w-7 h-7 rounded bg-white/90 border border-border text-[9px] font-medium shadow-sm hover:bg-muted mt-1">↺</button>
+        <button onClick={() => { setZoom(100); setPan({ x: 0, y: 0 }); }} className="w-7 h-7 rounded bg-white/90 border border-border text-[9px] font-medium shadow-sm hover:bg-muted mt-1">↺</button>
       </div>
     </div>
   );
