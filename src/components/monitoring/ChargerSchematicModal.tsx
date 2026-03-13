@@ -145,13 +145,13 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
   return (
     <Dialog open={!!chargerId} onOpenChange={() => onClose()}>
-      <DialogContent className="hide-default-close max-w-[1100px] w-[95vw] h-[85vh] max-h-[700px] p-0 gap-0 overflow-hidden border border-white/10 rounded-xl shadow-2xl" style={{ background: 'rgba(28, 28, 30, 0.65)', backdropFilter: 'blur(24px)' }}>
+      <DialogContent className="hide-default-close max-w-[1100px] w-[95vw] h-[85vh] max-h-[700px] p-0 gap-0 overflow-hidden border border-white/10 rounded-xl shadow-2xl" style={{ background: '#1a1a1c', backdropFilter: 'blur(24px)' }}>
         <DialogTitle className="sr-only">Charger {chargerId} Details</DialogTitle>
 
         <div className="flex flex-col md:flex-row h-full">
           {/* LEFT — Schematic */}
-          <div className="flex-1 relative overflow-hidden flex items-center justify-center min-w-0" style={{ background: 'transparent' }}>
-            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="object-contain" style={{ maxHeight: '65%', maxWidth: '90%' }} />
+          <div className="flex-1 relative overflow-hidden flex items-center justify-center min-w-0" style={{ background: '#1a1a1c' }}>
+            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="object-contain" style={{ maxHeight: '60%', maxWidth: '85%' }} />
             {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
           </div>
 
