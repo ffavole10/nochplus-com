@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { CHARGERS, ROW_A, ROW_B, STATUS_COLORS, SORTED_BY_CVS, KPI_CHIPS, ENV_BADGES, ERROR_FEED, ML_PATTERNS, MAX_MESSAGES, type ChargerData } from "./monitoringData";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
