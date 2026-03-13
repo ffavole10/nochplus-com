@@ -50,6 +50,46 @@ function ZoomWatcher({ onZoomChange }: { onZoomChange: (z: number) => void }) {
   return null;
 }
 
+/** Native Leaflet SVG overlay that renders the site SVG */
+function NativeSVGOverlay({ filter, onSelectCharger }: { filter: string; onSelectCharger: (id: string) => void }) {
+  const map = useMap();
+  const overlayRef = useRef<L.SVGOverlay | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (overlayRef.current) {
+      map.removeLayer(overlayRef.current);
+    }
+
+    // Create SVG element
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svgEl = document.createElementNS(svgNS, "svg");
+    svgEl.setAttribute("viewBox", "0 0 1000 500");
+    svgEl.setAttribute("xmlns", svgNS);
+
+    // Render SVG content via a hidden container + innerHTML
+    const tempDiv = document.createElement("div");
+    const svgContent = renderSiteOverlaySVGString(filter, onSelectCharger);
+    svgEl.innerHTML = svgContent;
+
+    const bounds = L.latLngBounds(
+      [36.1200, -115.1760],
+      [36.1230, -115.1718]
+    );
+    const overlay = L.svgOverlay(svgEl, bounds);
+    overlay.addTo(map);
+    overlayRef.current = overlay;
+
+    return () => {
+      if (overlayRef.current) {
+        map.removeLayer(overlayRef.current);
+      }
+    };
+  }, [map, filter, onSelectCharger]);
+
+  return null;
+}
+
 /** The full charger-grid SVG rendered inside the Leaflet SVGOverlay */
 function SiteOverlaySVG({ filter, onSelectCharger }: { filter: string; onSelectCharger: (id: string) => void }) {
   const [hovered, setHovered] = useState<string | null>(null);
