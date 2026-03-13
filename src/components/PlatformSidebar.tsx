@@ -172,7 +172,7 @@ export function PlatformSidebar() {
 
 
   const nochPlusPages = [
-  { title: "Monitoring", url: "/noch-plus/monitoring", icon: BarChart3 },
+  { title: "Mission Control", url: "/noch-plus/monitoring", icon: BarChart3 },
   { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard },
   { title: "Submissions", url: "/noch-plus/submissions", icon: FileCheck },
   { title: "Assessments", url: "/noch-plus/assessments", icon: FolderOpen },
