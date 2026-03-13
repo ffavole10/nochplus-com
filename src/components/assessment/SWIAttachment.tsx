@@ -136,7 +136,7 @@ function SWICard({ match, onRemove, ticketId }: { match: EnrichedSWIMatch; onRem
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Matched: {new Date(match.timestamp || Date.now()).toLocaleString()}</span>
               {match.model_used && (
-                <span className="font-mono">{match.model_used === "manual" ? "✋ Manual" : match.model_used.includes("claude") ? "🤖 Claude" : "AI"}</span>
+                <span className="font-mono">{match.model_used === "manual" ? "✋ Manual" : match.model_used.includes("claude") ? "🧠 Claude" : "AI"}</span>
               )}
             </div>
           </div>
