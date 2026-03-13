@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CHARGERS, STATUS_COLORS, FAULT_COMPONENT_MAP, COMPONENT_LIST, getComponentStatus, type ChargerData } from "./monitoringData";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
+import { X, Brain } from "lucide-react";
 
 interface Props {
   chargerId: string | null;
@@ -150,8 +150,8 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
         <div className="flex flex-col md:flex-row h-full">
           {/* LEFT — Schematic */}
-          <div className="flex-1 relative overflow-hidden min-w-0">
-            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="flex-1 relative overflow-hidden min-w-0 flex items-center justify-center">
+            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="w-full h-full object-contain" />
             {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
           </div>
 
@@ -162,7 +162,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
               <div>
                 <div className="text-white font-bold text-sm">{chargerId}</div>
                 <div className="text-white/50 text-[11px]">Fontainebleau Las Vegas · Stall {shortId}</div>
-                <span className="inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-white" style={{ background: color }}>
+                <span className="inline-flex items-center gap-1.5 mt-1 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold text-white" style={{ background: color }}>
                   {charger.status === 'critical' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
                   {statusLabel}
                 </span>
@@ -231,17 +231,17 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
               </div>
             </div>
 
-            {/* Max AI Assessment */}
+            {/* AutoHeal Assessment */}
             <div className="rounded-md p-1.5 text-[10px] mt-1" style={{ background: 'rgba(27,138,122,0.12)', border: '1px solid rgba(27,138,122,0.25)' }}>
               <div className="flex items-center gap-1 mb-0.5">
-                <span>🤖</span>
-                <span className="font-bold text-[#1B8A7A] text-[9px]">Max AI Assessment</span>
+                <Brain className="h-3 w-3 text-[#1B8A7A]" />
+                <span className="font-bold text-[#1B8A7A] text-[9px]">AutoHeal™ Assessment</span>
               </div>
               <div className="text-white/50 text-[9px]">{charger.maxNote}</div>
             </div>
 
             {/* Actions */}
-            <div className="mt-auto flex gap-1.5">
+            <div className="mt-1.5 flex gap-1.5">
               <button onClick={() => { onClose(); navigate('/service-desk/tickets'); }} className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : '#1B8A7A' }}>
                 Open Ticket
               </button>
