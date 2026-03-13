@@ -27,6 +27,34 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
   const [maxMsgIdx, setMaxMsgIdx] = useState(0);
   const [zoom, setZoom] = useState(100);
   const [envPopover, setEnvPopover] = useState<number | null>(null);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    setZoom(z => Math.max(50, Math.min(200, z + (e.deltaY > 0 ? -10 : 10))));
+  }, []);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    setDragging(true);
+    dragStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [pan]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging || !dragStart.current) return;
+    const dx = e.clientX - dragStart.current.x;
+    const dy = e.clientY - dragStart.current.y;
+    setPan({ x: dragStart.current.panX + dx, y: dragStart.current.panY + dy });
+  }, [dragging]);
+
+  const handlePointerUp = useCallback(() => {
+    setDragging(false);
+    dragStart.current = null;
+  }, []);
 
   useEffect(() => {
     const iv = setInterval(() => setMaxMsgIdx(i => (i + 1) % MAX_MESSAGES.length), 4000);
