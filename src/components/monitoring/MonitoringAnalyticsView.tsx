@@ -1,6 +1,7 @@
 import { CHARGERS, CHARGER_IDS, SORTED_BY_CVS, STATUS_COLORS, type ChargerData } from "./monitoringData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts";
+import { Brain } from "lucide-react";
 
 interface Props {
   onSelectCharger: (id: string) => void;
