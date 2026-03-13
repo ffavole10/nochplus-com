@@ -162,7 +162,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
               <div>
                 <div className="text-white font-bold text-sm">{chargerId}</div>
                 <div className="text-white/50 text-[11px]">Fontainebleau Las Vegas · Stall {shortId}</div>
-                <span className="inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-white" style={{ background: color }}>
+                <span className="inline-flex items-center gap-1.5 mt-1 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold text-white" style={{ background: color }}>
                   {charger.status === 'critical' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
                   {statusLabel}
                 </span>
