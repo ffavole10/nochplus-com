@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, SVGOverlay, CircleMarker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { createRoot } from "react-dom/client";
 import { CHARGERS, ROW_A, ROW_B, STATUS_COLORS, SORTED_BY_CVS, ENV_BADGES, ERROR_FEED, ML_PATTERNS, MAX_MESSAGES } from "./monitoringData";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
