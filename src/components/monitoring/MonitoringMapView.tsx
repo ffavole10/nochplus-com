@@ -91,9 +91,9 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
       >
         <svg
           width="100%" height="100%"
-          viewBox={`0 0 ${1000 * (100 / zoom)} ${500 * (100 / zoom)}`}
+          viewBox={`${500 - 500 * (100 / zoom) - pan.x * (100 / zoom) / 100} ${250 - 250 * (100 / zoom) - pan.y * (100 / zoom) / 100} ${1000 * (100 / zoom)} ${500 * (100 / zoom)}`}
           preserveAspectRatio="xMidYMid meet"
-          className="w-full h-full"
+          className="w-full h-full select-none"
         >
           {/* Background */}
           <rect width="2000" height="1000" fill="#F1F5F4" />
