@@ -145,18 +145,18 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
   return (
     <Dialog open={!!chargerId} onOpenChange={() => onClose()}>
-      <DialogContent className="hide-default-close max-w-[1100px] w-[95vw] h-[85vh] max-h-[700px] p-0 gap-0 overflow-hidden border border-white/10 rounded-xl shadow-2xl" style={{ background: '#1a1a1c', backdropFilter: 'blur(24px)' }}>
+      <DialogContent className="hide-default-close max-w-[1100px] w-[95vw] h-[85vh] max-h-[700px] p-0 gap-0 overflow-hidden border border-white/10 rounded-xl shadow-2xl" style={{ background: 'rgba(28, 28, 30, 0.65)', backdropFilter: 'blur(24px)' }}>
         <DialogTitle className="sr-only">Charger {chargerId} Details</DialogTitle>
 
         <div className="flex flex-col md:flex-row h-full">
           {/* LEFT — Schematic */}
-          <div className="flex-1 relative overflow-hidden flex items-center justify-center min-w-0" style={{ background: '#1a1a1c' }}>
-            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="object-contain" style={{ maxHeight: '60%', maxWidth: '85%' }} />
+          <div className="flex-1 relative overflow-hidden flex items-center justify-center min-w-0" style={{ background: 'transparent' }}>
+            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="object-contain h-full w-full" style={{ transform: 'scale(0.88)' }} />
             {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
           </div>
 
           {/* RIGHT — Info Panel */}
-          <div className="w-full md:w-[280px] border-l border-white/10 p-2.5 flex flex-col gap-1.5 overflow-y-auto">
+          <div className="w-full md:w-[320px] border-l border-white/10 px-2.5 pt-2.5 pb-1.5 flex flex-col h-full">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
@@ -173,7 +173,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
             </div>
 
             {/* CVS Arc + Sparkline */}
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-3">
               <CvsArc cvs={charger.cvs} status={charger.status} size={64} />
               <div className="flex flex-col items-center">
                 <div className="text-[9px] text-white/40 mb-0.5 font-medium">7-Day CVS</div>
@@ -182,7 +182,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-1 text-[10px]">
+            <div className="grid grid-cols-2 gap-1 text-[10px] mt-1.5">
               <div className="rounded-md border border-white/10 p-1">
                 <div className="text-white/40 text-[9px]">Session Rate</div>
                 <div className="font-bold text-white">{charger.sessions}</div>
@@ -203,7 +203,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
             {/* Error Box */}
             {charger.error && (
-              <div className="rounded-md border-l-4 p-1.5 text-[10px]" style={{ borderColor: color, background: `${color}15` }}>
+              <div className="rounded-md border-l-4 p-1.5 text-[10px] mt-1" style={{ borderColor: color, background: `${color}15` }}>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: color }} />
                   <span className="font-mono font-bold" style={{ color }}>{charger.error}</span>
@@ -213,7 +213,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
             )}
 
             {/* Component Status */}
-            <div>
+            <div className="mt-1">
               <div className="text-[9px] text-white/40 font-medium mb-0.5">Component Status</div>
               <div className="space-y-0.5">
                 {COMPONENT_LIST.map(comp => {
@@ -232,7 +232,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
             </div>
 
             {/* Max AI Assessment */}
-            <div className="rounded-md p-1.5 text-[10px]" style={{ background: 'rgba(27,138,122,0.12)', border: '1px solid rgba(27,138,122,0.25)' }}>
+            <div className="rounded-md p-1.5 text-[10px] mt-1" style={{ background: 'rgba(27,138,122,0.12)', border: '1px solid rgba(27,138,122,0.25)' }}>
               <div className="flex items-center gap-1 mb-0.5">
                 <span>🤖</span>
                 <span className="font-bold text-[#1B8A7A] text-[9px]">Max AI Assessment</span>
@@ -241,7 +241,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-1.5 pt-1">
+            <div className="mt-auto flex gap-1.5">
               <button onClick={() => { onClose(); navigate('/service-desk/tickets'); }} className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : '#1B8A7A' }}>
                 Open Ticket
               </button>
