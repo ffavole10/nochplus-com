@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { CHARGERS, ROW_A, ROW_B, STATUS_COLORS, SORTED_BY_CVS, KPI_CHIPS, ENV_BADGES, ERROR_FEED, ML_PATTERNS, MAX_MESSAGES, type ChargerData } from "./monitoringData";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,6 +27,34 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
   const [maxMsgIdx, setMaxMsgIdx] = useState(0);
   const [zoom, setZoom] = useState(100);
   const [envPopover, setEnvPopover] = useState<number | null>(null);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    setZoom(z => Math.max(50, Math.min(200, z + (e.deltaY > 0 ? -10 : 10))));
+  }, []);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    setDragging(true);
+    dragStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [pan]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging || !dragStart.current) return;
+    const dx = e.clientX - dragStart.current.x;
+    const dy = e.clientY - dragStart.current.y;
+    setPan({ x: dragStart.current.panX + dx, y: dragStart.current.panY + dy });
+  }, [dragging]);
+
+  const handlePointerUp = useCallback(() => {
+    setDragging(false);
+    dragStart.current = null;
+  }, []);
 
   useEffect(() => {
     const iv = setInterval(() => setMaxMsgIdx(i => (i + 1) % MAX_MESSAGES.length), 4000);
@@ -51,12 +79,21 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
   return (
     <div className="relative w-full" style={{ height: 'calc(100vh - 280px)', minHeight: 480 }}>
       {/* SVG Map */}
-      <div className="absolute inset-0 overflow-hidden rounded-lg border border-border bg-[#F1F5F4]">
+      <div
+        ref={containerRef}
+        className={cn("absolute inset-0 overflow-hidden rounded-lg border border-border bg-[#F1F5F4]", dragging ? "cursor-grabbing" : "cursor-grab")}
+        onWheel={handleWheel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        style={{ touchAction: 'none' }}
+      >
         <svg
           width="100%" height="100%"
-          viewBox={`0 0 ${1000 * (100 / zoom)} ${500 * (100 / zoom)}`}
+          viewBox={`${500 - 500 * (100 / zoom) - pan.x * (100 / zoom) / 100} ${250 - 250 * (100 / zoom) - pan.y * (100 / zoom) / 100} ${1000 * (100 / zoom)} ${500 * (100 / zoom)}`}
           preserveAspectRatio="xMidYMid meet"
-          className="w-full h-full"
+          className="w-full h-full select-none"
         >
           {/* Background */}
           <rect width="2000" height="1000" fill="#F1F5F4" />
@@ -302,7 +339,7 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
         <button onClick={() => setZoom(z => Math.min(200, z + 20))} className="w-7 h-7 rounded bg-white/90 border border-border text-sm font-bold shadow-sm hover:bg-muted">+</button>
         <span className="text-[9px] text-muted-foreground bg-white/80 px-1.5 rounded">{zoom}%</span>
         <button onClick={() => setZoom(z => Math.max(50, z - 20))} className="w-7 h-7 rounded bg-white/90 border border-border text-sm font-bold shadow-sm hover:bg-muted">−</button>
-        <button onClick={() => setZoom(100)} className="w-7 h-7 rounded bg-white/90 border border-border text-[9px] font-medium shadow-sm hover:bg-muted mt-1">↺</button>
+        <button onClick={() => { setZoom(100); setPan({ x: 0, y: 0 }); }} className="w-7 h-7 rounded bg-white/90 border border-border text-[9px] font-medium shadow-sm hover:bg-muted mt-1">↺</button>
       </div>
     </div>
   );
