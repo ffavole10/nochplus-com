@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const FILTERS = ['All', 'Critical', 'Warning', 'Healthy', 'Offline', 'Env. Risks'] as const;
 
 export default function NochPlusMonitoring() {
-  usePageTitle("Fleet Monitoring");
+  usePageTitle("Mission Control");
   const [view, setView] = useState<'map' | 'analytics'>('map');
   const [filter, setFilter] = useState('All');
   const [selectedCharger, setSelectedCharger] = useState<string | null>(null);
