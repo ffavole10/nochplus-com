@@ -129,6 +129,7 @@ function HealthyOverlay() {
 }
 
 export function ChargerSchematicModal({ chargerId, onClose }: Props) {
+  const navigate = useNavigate();
   const [_tab] = useState('Isometric Cutaway');
 
   if (!chargerId) return null;
