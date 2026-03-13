@@ -189,7 +189,7 @@ export function SWIAttachment({ ticket, swiMatches, isMatching, error, onMatch, 
         {!isMatching && (
           <button onClick={() => onMatch(ticket)}
             className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium flex items-center gap-1.5">
-            🤖 {swiMatches.length > 0 ? "AI Match Another" : "Find SWI"}
+            🧠 {swiMatches.length > 0 ? "AI Match Another" : "Find SWI"}
           </button>
         )}
         <button onClick={() => setSearchOpen(true)}

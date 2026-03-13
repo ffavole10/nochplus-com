@@ -460,7 +460,7 @@ export default function ServiceTickets() {
                         )}
                         {!isParent && ticket.swiConfidence && (
                           <Badge variant="outline" className="gap-1 text-xs bg-optimal/5 text-optimal border-optimal/20">
-                            🤖 SWI {ticket.swiConfidence}%
+                            🧠 SWI {ticket.swiConfidence}%
                           </Badge>
                         )}
                       </div>

@@ -1,13 +1,14 @@
 import { cn } from "@/lib/utils";
+import { Brain } from "lucide-react";
 
 export function MonitoringInterventionBar() {
   return (
     <div className="flex items-stretch gap-0 rounded-lg overflow-hidden border border-border text-xs">
-      {/* Max Status */}
+      {/* AutoHeal Status */}
       <div className="flex items-center gap-2 bg-[hsl(var(--foreground))] text-white px-4 py-2.5 min-w-[220px]">
-        <span className="text-lg">🤖</span>
+        <Brain className="h-5 w-5 text-[#1B8A7A]" />
         <div>
-          <div className="font-bold">Max™ AI</div>
+          <div className="font-bold">AutoHeal™</div>
           <div className="text-white/70">Resolve: 78.3% · 34 healed · 42s avg</div>
         </div>
       </div>
