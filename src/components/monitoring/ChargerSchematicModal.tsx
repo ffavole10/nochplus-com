@@ -150,14 +150,14 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
         <div className="flex flex-col md:flex-row h-full">
           {/* LEFT — Schematic */}
-          <div className="flex-1 relative overflow-hidden flex items-center justify-center min-w-0">
-            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="max-h-full max-w-full object-contain p-4" style={{ height: '80%', width: 'auto' }} />
+          <div className="flex-1 relative overflow-hidden flex items-center justify-center min-w-0" style={{ background: 'transparent' }}>
+            <img src="/assets/charger-schematic-iso.png" alt="Charger isometric cutaway" className="object-contain" style={{ maxHeight: '65%', maxWidth: '90%' }} />
             {charger.error ? <HeartbeatOverlay error={charger.error} /> : <HealthyOverlay />}
           </div>
 
           {/* RIGHT — Info Panel */}
-          <div className="w-full md:w-[280px] border-l border-white/10 p-3 flex flex-col gap-2">
-            {/* Header — left aligned */}
+          <div className="w-full md:w-[280px] border-l border-white/10 p-2.5 flex flex-col gap-1.5 overflow-y-auto">
+            {/* Header */}
             <div className="flex items-start justify-between">
               <div>
                 <div className="text-white font-bold text-sm">{chargerId}</div>
@@ -172,30 +172,30 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
               </button>
             </div>
 
-            {/* CVS Arc + Sparkline side by side */}
-            <div className="flex items-center gap-2">
-              <CvsArc cvs={charger.cvs} status={charger.status} size={70} />
+            {/* CVS Arc + Sparkline */}
+            <div className="flex items-center gap-2 mt-1">
+              <CvsArc cvs={charger.cvs} status={charger.status} size={64} />
               <div className="flex flex-col items-center">
                 <div className="text-[9px] text-white/40 mb-0.5 font-medium">7-Day CVS</div>
-                <Sparkline data={charger.trend} color={color} width={90} height={24} />
+                <Sparkline data={charger.trend} color={color} width={85} height={22} />
               </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-1 text-[10px]">
-              <div className="rounded-md border border-white/10 p-1.5">
+              <div className="rounded-md border border-white/10 p-1">
                 <div className="text-white/40 text-[9px]">Session Rate</div>
                 <div className="font-bold text-white">{charger.sessions}</div>
               </div>
-              <div className="rounded-md border border-white/10 p-1.5">
+              <div className="rounded-md border border-white/10 p-1">
                 <div className="text-white/40 text-[9px]">Error Duration</div>
                 <div className="font-bold text-white">{charger.since}</div>
               </div>
-              <div className="rounded-md border border-white/10 p-1.5">
+              <div className="rounded-md border border-white/10 p-1">
                 <div className="text-white/40 text-[9px]">Thermal</div>
                 <div className="font-bold text-white">{charger.thermal}</div>
               </div>
-              <div className="rounded-md border border-white/10 p-1.5">
+              <div className="rounded-md border border-white/10 p-1">
                 <div className="text-white/40 text-[9px]">Failure ETA</div>
                 <div className="font-bold text-white">{charger.status === 'critical' ? '~8 days' : charger.status === 'warning' ? '~3 weeks' : '—'}</div>
               </div>
@@ -241,7 +241,7 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-1.5 mt-auto">
+            <div className="flex gap-1.5 pt-1">
               <button onClick={() => { onClose(); navigate('/service-desk/tickets'); }} className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : '#1B8A7A' }}>
                 Open Ticket
               </button>
