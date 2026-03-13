@@ -242,11 +242,11 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
 
             {/* Actions */}
             <div className="flex gap-1.5 mt-auto">
-              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : '#1B8A7A' }}>
+              <button onClick={() => { onClose(); navigate('/service-desk/tickets'); }} className="flex-1 text-[10px] font-medium py-1.5 rounded-md text-white transition-colors" style={{ background: charger.status === 'critical' ? '#D93025' : '#1B8A7A' }}>
                 Open Ticket
               </button>
-              <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
-                Estimate
+              <button onClick={() => { onClose(); navigate('/service-desk/tickets'); }} className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
+                Service Ticket
               </button>
               <button className="flex-1 text-[10px] font-medium py-1.5 rounded-md border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
                 History
