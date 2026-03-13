@@ -1,6 +1,7 @@
 import { CHARGERS, CHARGER_IDS, SORTED_BY_CVS, STATUS_COLORS, type ChargerData } from "./monitoringData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts";
+import { Brain } from "lucide-react";
 
 interface Props {
   onSelectCharger: (id: string) => void;
@@ -219,9 +220,9 @@ export function MonitoringAnalyticsView({ onSelectCharger }: Props) {
         </Card>
       </div>
 
-      {/* Max Performance */}
+      {/* AutoHeal Performance */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">🤖 Max AI Performance</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><Brain className="h-4 w-4" /> AutoHeal™ Performance</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {MAX_KPIS.map(kpi => (

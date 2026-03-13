@@ -304,7 +304,7 @@ export function TicketReviewModal({ ticket, open, onClose, onApprove, onReject }
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {error ? <XCircle className="h-5 w-5 text-critical" /> : <Brain className="h-5 w-5 text-primary animate-pulse" />}
-              {error ? "Assessment Failed" : "🤖 Running AutoHeal Assessment..."}
+              {error ? "Assessment Failed" : "Running AutoHeal™ Assessment..."}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">

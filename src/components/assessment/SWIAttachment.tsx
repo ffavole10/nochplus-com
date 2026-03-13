@@ -68,7 +68,7 @@ function SWICard({ match, onRemove, ticketId }: { match: EnrichedSWIMatch; onRem
               )}
               {!match.manual_override && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span>🤖</span><span>AI matched</span>
+                  <span>🧠</span><span>AI matched</span>
                 </div>
               )}
             </div>
@@ -136,7 +136,7 @@ function SWICard({ match, onRemove, ticketId }: { match: EnrichedSWIMatch; onRem
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Matched: {new Date(match.timestamp || Date.now()).toLocaleString()}</span>
               {match.model_used && (
-                <span className="font-mono">{match.model_used === "manual" ? "✋ Manual" : match.model_used.includes("claude") ? "🤖 Claude" : "AI"}</span>
+                <span className="font-mono">{match.model_used === "manual" ? "✋ Manual" : match.model_used.includes("claude") ? "🧠 Claude" : "AI"}</span>
               )}
             </div>
           </div>
@@ -189,7 +189,7 @@ export function SWIAttachment({ ticket, swiMatches, isMatching, error, onMatch, 
         {!isMatching && (
           <button onClick={() => onMatch(ticket)}
             className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium flex items-center gap-1.5">
-            🤖 {swiMatches.length > 0 ? "AI Match Another" : "Find SWI"}
+            🧠 {swiMatches.length > 0 ? "AI Match Another" : "Find SWI"}
           </button>
         )}
         <button onClick={() => setSearchOpen(true)}

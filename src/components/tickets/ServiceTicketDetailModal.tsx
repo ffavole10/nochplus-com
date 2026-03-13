@@ -344,7 +344,7 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
                             </span>
                           )}
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            🤖 AI matched
+                            🧠 AI matched
                           </span>
                         </div>
                         {ticket.swiMatchData.required_parts.length > 0 && (
