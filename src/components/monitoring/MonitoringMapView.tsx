@@ -1,39 +1,13 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { CHARGERS, ROW_A, ROW_B, STATUS_COLORS, SORTED_BY_CVS, ENV_BADGES, ERROR_FEED, ML_PATTERNS, MAX_MESSAGES } from "./monitoringData";
+import { useState, useEffect } from "react";
+import { CHARGERS, SORTED_BY_CVS, STATUS_COLORS, ERROR_FEED, ML_PATTERNS, MAX_MESSAGES } from "./monitoringData";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { FleetMap } from "./FleetMap";
 
 interface Props {
   filter: string;
   onSelectCharger: (id: string) => void;
 }
-
-// SVG internal coordinates for charger icons
-const CHARGER_POS: Record<string, { x: number; y: number }> = {};
-ROW_A.forEach((id, i) => { CHARGER_POS[id] = { x: 260 + i * 100, y: 195 }; });
-ROW_B.forEach((id, i) => { CHARGER_POS[id] = { x: 260 + i * 100, y: 335 }; });
-const JUNCTION = { x: 510, y: 265 };
-
-// Map constants
-const CENTER: [number, number] = [36.1215, -115.1739];
-const SVG_BOUNDS: L.LatLngBoundsExpression = [[36.1200, -115.1760], [36.1230, -115.1718]];
-const ZOOM_THRESHOLD = 13;
-const TILE_URL = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-
-// Sites for far-zoom markers
-const SITES = [
-  {
-    name: "Fontainebleau Las Vegas",
-    position: CENTER,
-    chargers: 12,
-    cvs: 78,
-    critical: 1,
-    hasCritical: true,
-  },
-];
 
 function severityColor(s: string) {
   if (s === 'CRIT') return '#D93025';
@@ -41,173 +15,25 @@ function severityColor(s: string) {
   return '#1B8A7A';
 }
 
-/** Tracks zoom level and notifies parent */
-function ZoomWatcher({ onZoomChange }: { onZoomChange: (z: number) => void }) {
-  const map = useMapEvents({
-    zoomend: () => onZoomChange(map.getZoom()),
-    load: () => onZoomChange(map.getZoom()),
-  });
-  return null;
-}
-
-/** Native Leaflet SVG overlay using L.svgOverlay */
-function NativeSVGOverlay({ filter, onSelectCharger }: { filter: string; onSelectCharger: (id: string) => void }) {
-  const map = useMap();
-  const overlayRef = useRef<L.SVGOverlay | null>(null);
-
-  const filteredIds = useMemo(() => {
-    const all = Object.keys(CHARGERS);
-    if (filter === 'All') return all;
-    return all.filter(id => {
-      const c = CHARGERS[id];
-      if (filter === 'Critical') return c.status === 'critical';
-      if (filter === 'Warning') return c.status === 'warning';
-      if (filter === 'Healthy') return c.status === 'healthy';
-      if (filter === 'Offline') return c.status === 'offline';
-      return true;
-    });
-  }, [filter]);
-
-  useEffect(() => {
-    if (overlayRef.current) {
-      map.removeLayer(overlayRef.current);
-    }
-
-    const isDimmed = (id: string) => filter !== 'All' && filter !== 'Env. Risks' && !filteredIds.includes(id);
-
-    const svgNS = "http://www.w3.org/2000/svg";
-    const svgEl = document.createElementNS(svgNS, "svg");
-    svgEl.setAttribute("viewBox", "0 0 1000 500");
-    svgEl.setAttribute("xmlns", svgNS);
-
-    let c = `<rect width="1000" height="500" fill="#F1F5F4" fill-opacity="0.85"/>`;
-    c += `<rect x="880" y="0" width="60" height="500" fill="#d4d8d7" rx="4"/>`;
-    c += `<text x="910" y="490" fill="#9ca3af" font-size="8" text-anchor="middle" transform="rotate(-90, 910, 490)">Las Vegas Blvd</text>`;
-    c += `<line x1="910" y1="0" x2="910" y2="500" stroke="#c0c4c3" stroke-width="1" stroke-dasharray="12,8"/>`;
-    c += `<rect x="100" y="30" width="750" height="430" rx="8" fill="#e8eeed" stroke="#c5cccb" stroke-width="1.5"/>`;
-    c += `<text x="475" y="55" fill="#6b7280" font-size="11" font-weight="600" text-anchor="middle">FONTAINEBLEAU LAS VEGAS — EV CHARGING LOT</text>`;
-    ROW_A.forEach((_, i) => { c += `<rect x="${230 + i * 100}" y="165" width="60" height="60" fill="none" stroke="#d1d5db" stroke-width="0.5" rx="2"/>`; });
-    ROW_B.forEach((_, i) => { c += `<rect x="${230 + i * 100}" y="305" width="60" height="60" fill="none" stroke="#d1d5db" stroke-width="0.5" rx="2"/>`; });
-    c += `<text x="210" y="200" fill="#9ca3af" font-size="10" font-weight="600" text-anchor="end">ROW A</text>`;
-    c += `<text x="210" y="340" fill="#9ca3af" font-size="10" font-weight="600" text-anchor="end">ROW B</text>`;
-    c += `<rect x="${JUNCTION.x - 20}" y="${JUNCTION.y - 15}" width="40" height="30" rx="4" fill="#374151" stroke="#4b5563" stroke-width="1"/>`;
-    c += `<text x="${JUNCTION.x}" y="${JUNCTION.y + 3}" fill="#9ca3af" font-size="6" text-anchor="middle">JUNCTION</text>`;
-
-    Object.entries(CHARGER_POS).forEach(([id, pos]) => {
-      const ch = CHARGERS[id];
-      const col = STATUS_COLORS[ch.status];
-      const op = isDimmed(id) ? 0.2 : 1;
-      c += `<line x1="${pos.x}" y1="${pos.y}" x2="${JUNCTION.x}" y2="${JUNCTION.y}" stroke="#9ca3af" stroke-width="1" opacity="0.3"/>`;
-      if (ch.status !== 'offline') {
-        c += `<line x1="${pos.x}" y1="${pos.y}" x2="${JUNCTION.x}" y2="${JUNCTION.y}" stroke="${col}" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.6"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="${ch.status === 'critical' ? '3s' : '1.2s'}" repeatCount="indefinite"/></line>`;
-      }
-      c += `<g data-charger-id="${id}" opacity="${op}" style="cursor:pointer">`;
-      if (ch.status === 'critical') {
-        c += `<circle cx="${pos.x}" cy="${pos.y}" r="28" fill="${col}15" stroke="${col}" stroke-width="1"><animate attributeName="r" values="24;32;24" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.4;0.1;0.4" dur="1.5s" repeatCount="indefinite"/></circle>`;
-      }
-      if (ch.status === 'warning') {
-        c += `<circle cx="${pos.x}" cy="${pos.y}" r="26" fill="none" stroke="${col}" stroke-width="0.8" opacity="0.3"><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>`;
-      }
-      c += `<rect x="${pos.x - 18}" y="${pos.y - 18}" width="36" height="36" rx="6" fill="${col}15" stroke="${col}" stroke-width="1.5"/>`;
-      c += `<path d="M${pos.x - 4},${pos.y - 8} L${pos.x + 2},${pos.y - 1} L${pos.x - 2},${pos.y - 1} L${pos.x + 4},${pos.y + 8}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
-      c += `<text x="${pos.x}" y="${pos.y + 28}" fill="${col}" font-size="9" font-weight="700" text-anchor="middle">${ch.cvs}</text>`;
-      c += `<text x="${pos.x}" y="${pos.y + 38}" fill="#6b7280" font-size="7" text-anchor="middle">${id.replace('NAS-', '')}</text>`;
-      if (ch.status === 'critical' || ch.status === 'warning') {
-        c += `<circle cx="${pos.x + 14}" cy="${pos.y - 14}" r="4" fill="${col}" stroke="white" stroke-width="1.5">${ch.status === 'critical' ? '<animate attributeName="r" values="4;5;4" dur="1s" repeatCount="indefinite"/>' : ''}</circle>`;
-      }
-      c += `</g>`;
-    });
-
-    ENV_BADGES.forEach((b) => {
-      c += `<g><rect x="${b.x - 55}" y="${b.y - 10}" width="110" height="22" rx="11" fill="rgba(255,255,255,.9)" stroke="#d1d5db" stroke-width="0.5"/>`;
-      c += `<text x="${b.x}" y="${b.y + 5}" fill="#374151" font-size="8" text-anchor="middle">${b.emoji} ${b.type} · ${b.risk}</text></g>`;
-    });
-
-    svgEl.innerHTML = c;
-
-    svgEl.addEventListener('click', (e) => {
-      const target = (e.target as Element).closest('[data-charger-id]');
-      if (target) {
-        const chargerId = target.getAttribute('data-charger-id');
-        if (chargerId) onSelectCharger(chargerId);
-      }
-    });
-
-    const bounds = L.latLngBounds([36.1200, -115.1760], [36.1230, -115.1718]);
-    const overlay = L.svgOverlay(svgEl, bounds);
-    overlay.addTo(map);
-    overlayRef.current = overlay;
-
-    return () => {
-      if (overlayRef.current) {
-        map.removeLayer(overlayRef.current);
-      }
-    };
-  }, [map, filter, filteredIds, onSelectCharger]);
-
-  return null;
-}
-
 export function MonitoringMapView({ filter, onSelectCharger }: Props) {
   const [maxMsgIdx, setMaxMsgIdx] = useState(0);
-  const [currentZoom, setCurrentZoom] = useState(15);
 
   useEffect(() => {
     const iv = setInterval(() => setMaxMsgIdx(i => (i + 1) % MAX_MESSAGES.length), 4000);
     return () => clearInterval(iv);
   }, []);
 
-  const showSVG = currentZoom >= ZOOM_THRESHOLD;
-
   return (
     <div className="relative w-full" style={{ height: 'calc(100vh - 280px)', minHeight: 480 }}>
-      {/* Leaflet Map */}
+      {/* Fleet Map */}
       <div className="absolute inset-0 rounded-lg border border-border overflow-hidden">
-        <MapContainer
-          center={CENTER}
-          zoom={15}
-          minZoom={4}
-          maxZoom={19}
-          zoomControl={false}
-          attributionControl={false}
-          style={{ width: '100%', height: '100%' }}
-        >
-          <TileLayer url={TILE_URL} />
-          <ZoomWatcher onZoomChange={setCurrentZoom} />
-
-          {/* Close zoom: SVG site overlay */}
-          {showSVG && (
-            <NativeSVGOverlay filter={filter} onSelectCharger={onSelectCharger} />
-          )}
-
-          {/* Far zoom: site markers */}
-          {!showSVG && SITES.map((site) => (
-            <CircleMarker
-              key={site.name}
-              center={site.position}
-              radius={12}
-              pathOptions={{
-                color: site.hasCritical ? '#D93025' : '#1B8A7A',
-                fillColor: site.hasCritical ? '#D93025' : '#1B8A7A',
-                fillOpacity: 0.7,
-                weight: 2,
-              }}
-            >
-              <Popup>
-                <div className="text-xs font-medium">
-                  <div className="font-bold text-sm">{site.name}</div>
-                  <div className="mt-1">{site.chargers} chargers · Fleet CVS {site.cvs} · {site.critical} Critical</div>
-                </div>
-              </Popup>
-            </CircleMarker>
-          ))}
-        </MapContainer>
+        <FleetMap filter={filter} onSelectCharger={onSelectCharger} />
       </div>
 
       {/* LEFT OVERLAYS */}
       <div className="absolute left-3 top-3 flex flex-col gap-2 w-[200px] z-[1000]">
         {/* Location Stats */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg border border-border p-3 text-xs shadow-sm">
+        <div className="bg-card/90 backdrop-blur-sm rounded-lg border border-border p-3 text-xs shadow-sm">
           <div className="font-bold text-foreground text-sm">Fontainebleau</div>
           <div className="text-muted-foreground">3600 Las Vegas Blvd S</div>
           <div className="flex gap-3 mt-1.5 text-[10px]">
@@ -217,10 +43,10 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
         </div>
 
         {/* Predictive Threat Ring */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg border border-border p-3 text-xs shadow-sm flex flex-col items-center">
+        <div className="bg-card/90 backdrop-blur-sm rounded-lg border border-border p-3 text-xs shadow-sm flex flex-col items-center">
           <div className="text-[10px] text-muted-foreground font-medium mb-1">Predictive Threat Index</div>
           <svg width="80" height="80" viewBox="0 0 80 80">
-            <circle cx="40" cy="40" r="30" fill="none" stroke="#e5e7eb" strokeWidth="6" strokeDasharray="141.4 47.1" strokeDashoffset="-23.6" strokeLinecap="round" />
+            <circle cx="40" cy="40" r="30" fill="none" stroke="hsl(var(--border))" strokeWidth="6" strokeDasharray="141.4 47.1" strokeDashoffset="-23.6" strokeLinecap="round" />
             <circle cx="40" cy="40" r="30" fill="none" stroke="#E8760A" strokeWidth="6"
               strokeDasharray={`${141.4 * 0.42} ${188.5 - 141.4 * 0.42}`} strokeDashoffset="-23.6" strokeLinecap="round">
               <animateTransform attributeName="transform" type="rotate" from="0 40 40" to="360 40 40" dur="60s" repeatCount="indefinite" />
@@ -230,7 +56,7 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
         </div>
 
         {/* Health Matrix */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg border border-border p-2 text-xs shadow-sm">
+        <div className="bg-card/90 backdrop-blur-sm rounded-lg border border-border p-2 text-xs shadow-sm">
           <div className="text-[10px] text-muted-foreground font-medium mb-1 px-1">Health Matrix</div>
           <ScrollArea className="h-[200px]">
             <div className="space-y-0.5">
@@ -253,7 +79,7 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
         </div>
 
         {/* Cascade Watch */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg border border-border p-3 text-xs shadow-sm">
+        <div className="bg-card/90 backdrop-blur-sm rounded-lg border border-border p-3 text-xs shadow-sm">
           <div className="text-[10px] text-muted-foreground font-medium mb-1">Cascade Watch</div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#D93025] animate-pulse" />
@@ -271,7 +97,7 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
       {/* RIGHT OVERLAYS */}
       <div className="absolute right-3 top-3 flex flex-col gap-2 w-[220px] z-[1000]">
         {/* Live Error Feed */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg border border-border p-2 text-xs shadow-sm">
+        <div className="bg-card/90 backdrop-blur-sm rounded-lg border border-border p-2 text-xs shadow-sm">
           <div className="text-[10px] text-muted-foreground font-medium mb-1 px-1">Live Error Feed</div>
           <ScrollArea className="h-[180px]">
             <div className="space-y-1">
@@ -290,7 +116,7 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
         </div>
 
         {/* Pattern Intelligence */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg border border-border p-3 text-xs shadow-sm">
+        <div className="bg-card/90 backdrop-blur-sm rounded-lg border border-border p-3 text-xs shadow-sm">
           <div className="text-[10px] text-muted-foreground font-medium mb-1.5">Pattern Intelligence</div>
           <div className="space-y-1.5">
             {ML_PATTERNS.map((p, i) => (
@@ -305,7 +131,7 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
 
       {/* AI Pulse Ribbon */}
       <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-[1000]">
-        <div className="flex items-center gap-2 bg-[hsl(var(--foreground))]/90 backdrop-blur-sm text-white rounded-full px-4 py-2 shadow-lg min-w-[400px]">
+        <div className="flex items-center gap-2 bg-foreground/90 backdrop-blur-sm text-background rounded-full px-4 py-2 shadow-lg min-w-[400px]">
           <svg width="24" height="16" viewBox="0 0 24 16">
             {[3, 7, 11, 15, 19].map((x, i) => (
               <rect key={i} x={x} width="2" rx="1" fill="#1B8A7A">
