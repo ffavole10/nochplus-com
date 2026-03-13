@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, SVGOverlay, CircleMarker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { CHARGERS, ROW_A, ROW_B, STATUS_COLORS, SORTED_BY_CVS, ENV_BADGES, ERROR_FEED, ML_PATTERNS, MAX_MESSAGES } from "./monitoringData";
@@ -50,10 +50,10 @@ function ZoomWatcher({ onZoomChange }: { onZoomChange: (z: number) => void }) {
   return null;
 }
 
-/** The full charger-grid SVG rendered inside the Leaflet SVGOverlay */
-function SiteOverlaySVG({ filter, onSelectCharger }: { filter: string; onSelectCharger: (id: string) => void }) {
-  const [hovered, setHovered] = useState<string | null>(null);
-  const [envPopover, setEnvPopover] = useState<number | null>(null);
+/** Native Leaflet SVG overlay using L.svgOverlay */
+function NativeSVGOverlay({ filter, onSelectCharger }: { filter: string; onSelectCharger: (id: string) => void }) {
+  const map = useMap();
+  const overlayRef = useRef<L.SVGOverlay | null>(null);
 
   const filteredIds = useMemo(() => {
     const all = Object.keys(CHARGERS);
@@ -68,126 +68,84 @@ function SiteOverlaySVG({ filter, onSelectCharger }: { filter: string; onSelectC
     });
   }, [filter]);
 
-  const dimmed = (id: string) => filter !== 'All' && filter !== 'Env. Risks' && !filteredIds.includes(id);
+  useEffect(() => {
+    if (overlayRef.current) {
+      map.removeLayer(overlayRef.current);
+    }
 
-  return (
-    <svg viewBox="0 0 1000 500" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Background */}
-      <rect width="1000" height="500" fill="#F1F5F4" fillOpacity="0.85" />
+    const isDimmed = (id: string) => filter !== 'All' && filter !== 'Env. Risks' && !filteredIds.includes(id);
 
-      {/* Las Vegas Blvd */}
-      <rect x="880" y="0" width="60" height="500" fill="#d4d8d7" rx="4" />
-      <text x="910" y="490" fill="#9ca3af" fontSize="8" textAnchor="middle" transform="rotate(-90, 910, 490)">Las Vegas Blvd</text>
-      <line x1="910" y1="0" x2="910" y2="500" stroke="#c0c4c3" strokeWidth="1" strokeDasharray="12,8" />
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svgEl = document.createElementNS(svgNS, "svg");
+    svgEl.setAttribute("viewBox", "0 0 1000 500");
+    svgEl.setAttribute("xmlns", svgNS);
 
-      {/* Hotel block */}
-      <rect x="100" y="30" width="750" height="430" rx="8" fill="#e8eeed" stroke="#c5cccb" strokeWidth="1.5" />
-      <text x="475" y="55" fill="#6b7280" fontSize="11" fontWeight="600" textAnchor="middle">FONTAINEBLEAU LAS VEGAS — EV CHARGING LOT</text>
+    let c = `<rect width="1000" height="500" fill="#F1F5F4" fill-opacity="0.85"/>`;
+    c += `<rect x="880" y="0" width="60" height="500" fill="#d4d8d7" rx="4"/>`;
+    c += `<text x="910" y="490" fill="#9ca3af" font-size="8" text-anchor="middle" transform="rotate(-90, 910, 490)">Las Vegas Blvd</text>`;
+    c += `<line x1="910" y1="0" x2="910" y2="500" stroke="#c0c4c3" stroke-width="1" stroke-dasharray="12,8"/>`;
+    c += `<rect x="100" y="30" width="750" height="430" rx="8" fill="#e8eeed" stroke="#c5cccb" stroke-width="1.5"/>`;
+    c += `<text x="475" y="55" fill="#6b7280" font-size="11" font-weight="600" text-anchor="middle">FONTAINEBLEAU LAS VEGAS — EV CHARGING LOT</text>`;
+    ROW_A.forEach((_, i) => { c += `<rect x="${230 + i * 100}" y="165" width="60" height="60" fill="none" stroke="#d1d5db" stroke-width="0.5" rx="2"/>`; });
+    ROW_B.forEach((_, i) => { c += `<rect x="${230 + i * 100}" y="305" width="60" height="60" fill="none" stroke="#d1d5db" stroke-width="0.5" rx="2"/>`; });
+    c += `<text x="210" y="200" fill="#9ca3af" font-size="10" font-weight="600" text-anchor="end">ROW A</text>`;
+    c += `<text x="210" y="340" fill="#9ca3af" font-size="10" font-weight="600" text-anchor="end">ROW B</text>`;
+    c += `<rect x="${JUNCTION.x - 20}" y="${JUNCTION.y - 15}" width="40" height="30" rx="4" fill="#374151" stroke="#4b5563" stroke-width="1"/>`;
+    c += `<text x="${JUNCTION.x}" y="${JUNCTION.y + 3}" fill="#9ca3af" font-size="6" text-anchor="middle">JUNCTION</text>`;
 
-      {/* Parking stall grid */}
-      {ROW_A.map((_, i) => (
-        <rect key={`sa${i}`} x={230 + i * 100} y="165" width="60" height="60" fill="none" stroke="#d1d5db" strokeWidth="0.5" rx="2" />
-      ))}
-      {ROW_B.map((_, i) => (
-        <rect key={`sb${i}`} x={230 + i * 100} y="305" width="60" height="60" fill="none" stroke="#d1d5db" strokeWidth="0.5" rx="2" />
-      ))}
+    Object.entries(CHARGER_POS).forEach(([id, pos]) => {
+      const ch = CHARGERS[id];
+      const col = STATUS_COLORS[ch.status];
+      const op = isDimmed(id) ? 0.2 : 1;
+      c += `<line x1="${pos.x}" y1="${pos.y}" x2="${JUNCTION.x}" y2="${JUNCTION.y}" stroke="#9ca3af" stroke-width="1" opacity="0.3"/>`;
+      if (ch.status !== 'offline') {
+        c += `<line x1="${pos.x}" y1="${pos.y}" x2="${JUNCTION.x}" y2="${JUNCTION.y}" stroke="${col}" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.6"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="${ch.status === 'critical' ? '3s' : '1.2s'}" repeatCount="indefinite"/></line>`;
+      }
+      c += `<g data-charger-id="${id}" opacity="${op}" style="cursor:pointer">`;
+      if (ch.status === 'critical') {
+        c += `<circle cx="${pos.x}" cy="${pos.y}" r="28" fill="${col}15" stroke="${col}" stroke-width="1"><animate attributeName="r" values="24;32;24" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.4;0.1;0.4" dur="1.5s" repeatCount="indefinite"/></circle>`;
+      }
+      if (ch.status === 'warning') {
+        c += `<circle cx="${pos.x}" cy="${pos.y}" r="26" fill="none" stroke="${col}" stroke-width="0.8" opacity="0.3"><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>`;
+      }
+      c += `<rect x="${pos.x - 18}" y="${pos.y - 18}" width="36" height="36" rx="6" fill="${col}15" stroke="${col}" stroke-width="1.5"/>`;
+      c += `<path d="M${pos.x - 4},${pos.y - 8} L${pos.x + 2},${pos.y - 1} L${pos.x - 2},${pos.y - 1} L${pos.x + 4},${pos.y + 8}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+      c += `<text x="${pos.x}" y="${pos.y + 28}" fill="${col}" font-size="9" font-weight="700" text-anchor="middle">${ch.cvs}</text>`;
+      c += `<text x="${pos.x}" y="${pos.y + 38}" fill="#6b7280" font-size="7" text-anchor="middle">${id.replace('NAS-', '')}</text>`;
+      if (ch.status === 'critical' || ch.status === 'warning') {
+        c += `<circle cx="${pos.x + 14}" cy="${pos.y - 14}" r="4" fill="${col}" stroke="white" stroke-width="1.5">${ch.status === 'critical' ? '<animate attributeName="r" values="4;5;4" dur="1s" repeatCount="indefinite"/>' : ''}</circle>`;
+      }
+      c += `</g>`;
+    });
 
-      {/* Row labels */}
-      <text x="210" y="200" fill="#9ca3af" fontSize="10" fontWeight="600" textAnchor="end">ROW A</text>
-      <text x="210" y="340" fill="#9ca3af" fontSize="10" fontWeight="600" textAnchor="end">ROW B</text>
+    ENV_BADGES.forEach((b) => {
+      c += `<g><rect x="${b.x - 55}" y="${b.y - 10}" width="110" height="22" rx="11" fill="rgba(255,255,255,.9)" stroke="#d1d5db" stroke-width="0.5"/>`;
+      c += `<text x="${b.x}" y="${b.y + 5}" fill="#374151" font-size="8" text-anchor="middle">${b.emoji} ${b.type} · ${b.risk}</text></g>`;
+    });
 
-      {/* Junction box */}
-      <rect x={JUNCTION.x - 20} y={JUNCTION.y - 15} width="40" height="30" rx="4" fill="#374151" stroke="#4b5563" strokeWidth="1" />
-      <text x={JUNCTION.x} y={JUNCTION.y + 3} fill="#9ca3af" fontSize="6" textAnchor="middle">JUNCTION</text>
+    svgEl.innerHTML = c;
 
-      {/* Power cables + session flow */}
-      {Object.entries(CHARGER_POS).map(([id, pos]) => {
-        const charger = CHARGERS[id];
-        const color = STATUS_COLORS[charger.status];
-        const isActive = charger.status !== 'offline';
-        return (
-          <g key={`cable-${id}`}>
-            <line x1={pos.x} y1={pos.y} x2={JUNCTION.x} y2={JUNCTION.y} stroke="#9ca3af" strokeWidth="1" opacity="0.3" />
-            {isActive && (
-              <line x1={pos.x} y1={pos.y} x2={JUNCTION.x} y2={JUNCTION.y}
-                stroke={color} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.6">
-                <animate attributeName="stroke-dashoffset" from="20" to="0" dur={charger.status === 'critical' ? '3s' : '1.2s'} repeatCount="indefinite" />
-              </line>
-            )}
-          </g>
-        );
-      })}
+    svgEl.addEventListener('click', (e) => {
+      const target = (e.target as Element).closest('[data-charger-id]');
+      if (target) {
+        const chargerId = target.getAttribute('data-charger-id');
+        if (chargerId) onSelectCharger(chargerId);
+      }
+    });
 
-      {/* Charger icons */}
-      {Object.entries(CHARGER_POS).map(([id, pos]) => {
-        const charger = CHARGERS[id];
-        const color = STATUS_COLORS[charger.status];
-        const isDimmed = dimmed(id);
-        const isHovered = hovered === id;
-        const shortId = id.replace('NAS-', '');
-        return (
-          <g key={id} opacity={isDimmed ? 0.2 : 1}
-            className="cursor-pointer"
-            onClick={() => onSelectCharger(id)}
-            onMouseEnter={() => setHovered(id)}
-            onMouseLeave={() => setHovered(null)}
-          >
-            {charger.status === 'critical' && (
-              <circle cx={pos.x} cy={pos.y} r="28" fill={`${color}15`} stroke={color} strokeWidth="1">
-                <animate attributeName="r" values="24;32;24" dur="1.5s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.4;0.1;0.4" dur="1.5s" repeatCount="indefinite" />
-              </circle>
-            )}
-            {charger.status === 'warning' && (
-              <circle cx={pos.x} cy={pos.y} r="26" fill="none" stroke={color} strokeWidth="0.8" opacity="0.3">
-                <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite" />
-              </circle>
-            )}
-            <rect x={pos.x - 18} y={pos.y - 18} width="36" height="36" rx="6"
-              fill={`${color}15`} stroke={color} strokeWidth={isHovered ? 2.5 : 1.5}
-              transform={isHovered ? `scale(1.15)` : ''} style={{ transformOrigin: `${pos.x}px ${pos.y}px`, transition: 'transform 0.15s' }}
-            />
-            <path d={`M${pos.x - 4},${pos.y - 8} L${pos.x + 2},${pos.y - 1} L${pos.x - 2},${pos.y - 1} L${pos.x + 4},${pos.y + 8}`}
-              fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <text x={pos.x} y={pos.y + 28} fill={color} fontSize="9" fontWeight="700" textAnchor="middle">{charger.cvs}</text>
-            <text x={pos.x} y={pos.y + 38} fill="#6b7280" fontSize="7" textAnchor="middle">{shortId}</text>
-            {(charger.status === 'critical' || charger.status === 'warning') && (
-              <circle cx={pos.x + 14} cy={pos.y - 14} r="4" fill={color} stroke="white" strokeWidth="1.5">
-                {charger.status === 'critical' && <animate attributeName="r" values="4;5;4" dur="1s" repeatCount="indefinite" />}
-              </circle>
-            )}
-            {isHovered && (
-              <g>
-                <rect x={pos.x - 65} y={pos.y - 55} width="130" height="30" rx="4" fill="rgba(0,0,0,.85)" />
-                <text x={pos.x} y={pos.y - 43} fill="white" fontSize="8" textAnchor="middle" fontWeight="600">
-                  {id} · CVS {charger.cvs}{charger.error ? ` · ${charger.error.substring(0, 18)}` : ''}
-                </text>
-              </g>
-            )}
-          </g>
-        );
-      })}
+    const bounds = L.latLngBounds([36.1200, -115.1760], [36.1230, -115.1718]);
+    const overlay = L.svgOverlay(svgEl, bounds);
+    overlay.addTo(map);
+    overlayRef.current = overlay;
 
-      {/* Environmental badges */}
-      {ENV_BADGES.map((b, i) => {
-        const isOpen = envPopover === i;
-        return (
-          <g key={i} className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setEnvPopover(isOpen ? null : i); }}>
-            <rect x={b.x - 55} y={b.y - 10} width="110" height="22" rx="11" fill="rgba(255,255,255,.9)" stroke="#d1d5db" strokeWidth="0.5" />
-            <text x={b.x} y={b.y + 5} fill="#374151" fontSize="8" textAnchor="middle">{b.emoji} {b.type} · {b.risk}</text>
-            {isOpen && (
-              <g>
-                <rect x={b.x - 80} y={b.y + 15} width="160" height="50" rx="6" fill="white" stroke="#d1d5db" strokeWidth="1" />
-                <text x={b.x} y={b.y + 32} fill="#374151" fontSize="9" fontWeight="600" textAnchor="middle">{b.type}</text>
-                <text x={b.x} y={b.y + 44} fill="#6b7280" fontSize="8" textAnchor="middle">{b.value}</text>
-                <text x={b.x} y={b.y + 56} fill="#E8760A" fontSize="8" fontWeight="600" textAnchor="middle">Risk: {b.risk}</text>
-              </g>
-            )}
-          </g>
-        );
-      })}
-    </svg>
-  );
+    return () => {
+      if (overlayRef.current) {
+        map.removeLayer(overlayRef.current);
+      }
+    };
+  }, [map, filter, filteredIds, onSelectCharger]);
+
+  return null;
 }
 
 export function MonitoringMapView({ filter, onSelectCharger }: Props) {
@@ -219,9 +177,7 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
 
           {/* Close zoom: SVG site overlay */}
           {showSVG && (
-            <SVGOverlay bounds={SVG_BOUNDS}>
-              <SiteOverlaySVG filter={filter} onSelectCharger={onSelectCharger} />
-            </SVGOverlay>
+            <NativeSVGOverlay filter={filter} onSelectCharger={onSelectCharger} />
           )}
 
           {/* Far zoom: site markers */}
