@@ -137,9 +137,10 @@ export function useCreateCampaign() {
 
   return useMutation({
     mutationFn: async (campaign: Omit<Campaign, "id" | "created_at" | "updated_at">) => {
+      const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase
         .from("campaigns")
-        .insert(campaign)
+        .insert({ ...campaign, user_id: session?.user?.id ?? null })
         .select()
         .single();
 
