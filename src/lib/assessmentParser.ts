@@ -426,6 +426,10 @@ export function chargerRecordToAssessment(r: {
   let city = r.city || "";
   let state = r.state || "";
   let zip = r.zip || "";
+
+  // Clean city field — it may contain full street+city (e.g. "1 Peter Yorke Way San Francisco")
+  city = extractCityFromAddress(city, derivedAddress, state);
+
   if (derivedAddress && (!city || !state)) {
     const parsed = parseAddressParts(derivedAddress);
     if (!city) city = parsed.city;
