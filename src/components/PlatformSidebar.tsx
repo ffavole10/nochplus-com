@@ -100,6 +100,8 @@ export function PlatformSidebar() {
   const { data: dbPartners = [] } = usePartners();
   const partners = useMemo(() => dbPartners.map((p) => ({ value: p.value, label: p.label })), [dbPartners]);
   const { data: dbCampaigns = [] } = useCampaigns();
+  const createCampaign = useCreateCampaign();
+  const createChargerRecords = useCreateChargerRecords();
   const filteredCampaigns = useMemo(() => {
     if (!selectedPartner) return [];
     return dbCampaigns.filter((c) => c.customer === selectedPartner);
