@@ -503,8 +503,57 @@ export function PlatformSidebar() {
       <NewCampaignModal
         open={newCampaignOpen}
         onOpenChange={setNewCampaignOpen}
-        onComplete={(data) => {
-          toast.success(`Campaign "${data.name}" created with ${data.chargers.length} chargers`);
+        onComplete={async (data) => {
+          try {
+            const chargers = data.chargers;
+            const optimalCount = chargers.filter(c => c.health === "Optimal").length;
+            const degradedCount = chargers.filter(c => c.health === "Degraded").length;
+            const criticalCount = chargers.filter(c => c.health === "Critical").length;
+            const healthScore = chargers.length > 0
+              ? Math.round(((optimalCount / chargers.length) * 50) + (((chargers.length - criticalCount) / chargers.length) * 30) + 20)
+              : 0;
+
+            const campaign = await createCampaign.mutateAsync({
+              name: data.name,
+              customer: data.customer,
+              status: "draft",
+              quarter: null,
+              year: null,
+              start_date: null,
+              end_date: null,
+              total_chargers: chargers.length,
+              total_serviced: 0,
+              optimal_count: optimalCount,
+              degraded_count: degradedCount,
+              critical_count: criticalCount,
+              health_score: healthScore,
+            });
+
+            if (chargers.length > 0) {
+              const records = chargers.map(c => ({
+                campaign_id: campaign.id,
+                station_id: c.stationId || c.serialNumber || `CHG-${Math.random().toString(36).slice(2, 8)}`,
+                station_name: c.stationId || null,
+                serial_number: c.serialNumber || null,
+                model: c.model || null,
+                address: c.address || null,
+                city: c.city || null,
+                state: c.state || null,
+                zip: c.zipCode || null,
+                status: c.health || null,
+                site_name: c.siteName || null,
+                max_power: c.maxPower || null,
+                start_date: c.inServiceDate || null,
+                service_required: c.serviceRequired ? 1 : 0,
+              }));
+              await createChargerRecords.mutateAsync(records);
+            }
+
+            toast.success(`Campaign "${data.name}" created with ${chargers.length} chargers`);
+          } catch (err) {
+            console.error("Failed to create campaign:", err);
+            toast.error("Failed to create campaign");
+          }
         }} />
 
     </Sidebar>);
