@@ -107,6 +107,45 @@ function parseAddressParts(address: string): { city: string; state: string; zip:
   return result;
 }
 
+/**
+ * Extract the actual city name from a field that may contain a full street address.
+ * e.g. "1 Peter Yorke Way San Francisco" → "San Francisco"
+ * e.g. "1050 77th Ave Oakland" → "Oakland"
+ * e.g. "11975 W Bluff Creek Dr Los Angeles" → "Los Angeles"
+ */
+function extractCityFromAddress(rawCity: string): string {
+  if (!rawCity) return "";
+  
+  // If the city doesn't start with a digit, it's probably already a clean city name
+  if (!/^\d/.test(rawCity.trim())) return rawCity;
+
+  // The city field contains "StreetNumber StreetName StreetSuffix CityName"
+  // Find the last street suffix and take everything after it as the city
+  const streetSuffixPattern = /\b(Street|St|Avenue|Ave|Boulevard|Blvd|Drive|Dr|Road|Rd|Way|Lane|Ln|Court|Ct|Place|Pl|Parkway|Pkwy|Circle|Cir|Terrace|Ter|Highway|Hwy|Loop|Square|Sq|Trail|Trl|Freeway|Fwy|Pike|Pass|Run|Path|Walk|Row|Aly|Alley)\b/gi;
+  
+  let lastSuffixEnd = -1;
+  let match: RegExpExecArray | null;
+  while ((match = streetSuffixPattern.exec(rawCity)) !== null) {
+    lastSuffixEnd = match.index + match[0].length;
+  }
+  
+  if (lastSuffixEnd > 0) {
+    const afterSuffix = rawCity.slice(lastSuffixEnd).trim();
+    if (afterSuffix.length > 1) return afterSuffix;
+  }
+
+  // Fallback: if no street suffix found, try taking the last 1-2 words
+  // that don't start with a digit (e.g. "1801 C St Sacramento" → "Sacramento")
+  const words = rawCity.trim().split(/\s+/);
+  // Try last 2 words, then last 1 word
+  for (let take = Math.min(3, words.length - 1); take >= 1; take--) {
+    const candidate = words.slice(words.length - take).join(" ");
+    if (!/^\d/.test(candidate) && candidate.length > 2) return candidate;
+  }
+
+  return rawCity;
+}
+
 // Column name mapping (flexible matching)
 const COLUMN_MAP: Record<string, string> = {
   "asset name": "assetName",
@@ -393,6 +432,10 @@ export function chargerRecordToAssessment(r: {
   let city = r.city || "";
   let state = r.state || "";
   let zip = r.zip || "";
+
+  // Clean city field — it may contain full street+city (e.g. "1 Peter Yorke Way San Francisco")
+  city = extractCityFromAddress(city);
+
   if (derivedAddress && (!city || !state)) {
     const parsed = parseAddressParts(derivedAddress);
     if (!city) city = parsed.city;
