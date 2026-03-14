@@ -115,26 +115,22 @@ function parseAddressParts(address: string): { city: string; state: string; zip:
  */
 function extractCityFromAddress(rawCity: string, fullAddress: string, state: string): string {
   if (!rawCity) return "";
+  
+  // If the city doesn't start with a digit, it's probably already a clean city name
+  if (!/^\d/.test(rawCity.trim())) return rawCity;
 
-  // If the address has comma-separated parts like "Street City, ST ZIP",
-  // extract just the city by parsing the address
-  if (fullAddress && fullAddress.includes(",")) {
-    const parsed = parseAddressParts(fullAddress);
-    if (parsed.city) return parsed.city;
-  }
-
-  // If the "city" field looks like it contains a street address
-  // (starts with a number or contains common street suffixes before the city name),
-  // try to extract the city from the end
-  if (/^\d/.test(rawCity.trim())) {
-    // Pattern: "123 Street Name CityName" — try to match known suffixes
-    const streetSuffixes = /\b(st|ave|blvd|dr|rd|way|ln|ct|pl|pkwy|cir|ter|hwy|loop|sq)\b/i;
-    const match = rawCity.match(streetSuffixes);
-    if (match && match.index !== undefined) {
-      // City name is everything after the last street suffix
-      const afterSuffix = rawCity.slice(match.index + match[0].length).trim();
-      if (afterSuffix.length > 1) return afterSuffix;
-    }
+  // The address format is typically "Street City, ST ZIP" (single comma).
+  // The city field often gets the "Street City" part.
+  // Strategy: try progressively shorter word suffixes of rawCity to find a known city.
+  const words = rawCity.trim().split(/\s+/);
+  
+  // Try from 1 word up to N-1 words from the end (the first word is usually a street number)
+  for (let take = 1; take < words.length; take++) {
+    const candidate = words.slice(words.length - take).join(" ");
+    // A city name shouldn't start with a digit
+    if (/^\d/.test(candidate)) continue;
+    // Accept multi-word candidates (>= 2 words) or single words that are > 3 chars
+    if (candidate.length > 3) return candidate;
   }
 
   return rawCity;
