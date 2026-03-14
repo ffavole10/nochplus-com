@@ -434,7 +434,7 @@ export function chargerRecordToAssessment(r: {
   let zip = r.zip || "";
 
   // Clean city field — it may contain full street+city (e.g. "1 Peter Yorke Way San Francisco")
-  city = extractCityFromAddress(city, derivedAddress, state);
+  city = extractCityFromAddress(city);
 
   if (derivedAddress && (!city || !state)) {
     const parsed = parseAddressParts(derivedAddress);
