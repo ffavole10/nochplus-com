@@ -48,7 +48,7 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
   const partnerCategories = useMemo(() => {
     const cats = ["CPOs", "OEMs", "CSMS"];
     return cats
-      .map((cat) => ({ label: cat, partners: dbPartners.filter((p) => p.category === cat) }))
+      .map((cat) => ({ label: cat, partners: dbPartners.filter((p) => p.category === cat).sort((a, b) => a.label.localeCompare(b.label)) }))
       .filter((g) => g.partners.length > 0);
   }, [dbPartners]);
 
