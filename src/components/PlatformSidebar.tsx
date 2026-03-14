@@ -540,7 +540,7 @@ export function PlatformSidebar() {
                 city: c.city || null,
                 state: c.state || null,
                 zip: c.zip || null,
-                status: c.status || null,
+                status: (c.status as "Optimal" | "Degraded" | "Critical") || null,
                 site_name: c.accountName || null,
                 max_power: null,
                 start_date: c.inServiceDate || null,
