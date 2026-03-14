@@ -110,27 +110,37 @@ function parseAddressParts(address: string): { city: string; state: string; zip:
 /**
  * Extract the actual city name from a field that may contain a full street address.
  * e.g. "1 Peter Yorke Way San Francisco" → "San Francisco"
- * Uses the full address string (e.g. "1 Peter Yorke Way San Francisco, CA 94109")
- * to determine the city portion.
+ * e.g. "1050 77th Ave Oakland" → "Oakland"
+ * e.g. "11975 W Bluff Creek Dr Los Angeles" → "Los Angeles"
  */
-function extractCityFromAddress(rawCity: string, fullAddress: string, state: string): string {
+function extractCityFromAddress(rawCity: string): string {
   if (!rawCity) return "";
   
   // If the city doesn't start with a digit, it's probably already a clean city name
   if (!/^\d/.test(rawCity.trim())) return rawCity;
 
-  // The address format is typically "Street City, ST ZIP" (single comma).
-  // The city field often gets the "Street City" part.
-  // Strategy: try progressively shorter word suffixes of rawCity to find a known city.
-  const words = rawCity.trim().split(/\s+/);
+  // The city field contains "StreetNumber StreetName StreetSuffix CityName"
+  // Find the last street suffix and take everything after it as the city
+  const streetSuffixPattern = /\b(Street|St|Avenue|Ave|Boulevard|Blvd|Drive|Dr|Road|Rd|Way|Lane|Ln|Court|Ct|Place|Pl|Parkway|Pkwy|Circle|Cir|Terrace|Ter|Highway|Hwy|Loop|Square|Sq|Trail|Trl|Freeway|Fwy|Pike|Pass|Run|Path|Walk|Row|Aly|Alley)\b/gi;
   
-  // Try from 1 word up to N-1 words from the end (the first word is usually a street number)
-  for (let take = 1; take < words.length; take++) {
+  let lastSuffixEnd = -1;
+  let match: RegExpExecArray | null;
+  while ((match = streetSuffixPattern.exec(rawCity)) !== null) {
+    lastSuffixEnd = match.index + match[0].length;
+  }
+  
+  if (lastSuffixEnd > 0) {
+    const afterSuffix = rawCity.slice(lastSuffixEnd).trim();
+    if (afterSuffix.length > 1) return afterSuffix;
+  }
+
+  // Fallback: if no street suffix found, try taking the last 1-2 words
+  // that don't start with a digit (e.g. "1801 C St Sacramento" → "Sacramento")
+  const words = rawCity.trim().split(/\s+/);
+  // Try last 2 words, then last 1 word
+  for (let take = Math.min(3, words.length - 1); take >= 1; take--) {
     const candidate = words.slice(words.length - take).join(" ");
-    // A city name shouldn't start with a digit
-    if (/^\d/.test(candidate)) continue;
-    // Accept multi-word candidates (>= 2 words) or single words that are > 3 chars
-    if (candidate.length > 3) return candidate;
+    if (!/^\d/.test(candidate) && candidate.length > 2) return candidate;
   }
 
   return rawCity;
