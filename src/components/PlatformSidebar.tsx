@@ -506,11 +506,11 @@ export function PlatformSidebar() {
         onComplete={async (data) => {
           try {
             const chargers = data.chargers;
-            const optimalCount = chargers.filter(c => c.health === "Optimal").length;
-            const degradedCount = chargers.filter(c => c.health === "Degraded").length;
-            const criticalCount = chargers.filter(c => c.health === "Critical").length;
+            const criticalCount = chargers.filter(c => c.priorityLevel === "Critical").length;
+            const highCount = chargers.filter(c => c.priorityLevel === "High").length;
+            const lowCount = chargers.filter(c => c.priorityLevel === "Low" || c.priorityLevel === "Medium").length;
             const healthScore = chargers.length > 0
-              ? Math.round(((optimalCount / chargers.length) * 50) + (((chargers.length - criticalCount) / chargers.length) * 30) + 20)
+              ? Math.round(((lowCount / chargers.length) * 50) + (((chargers.length - criticalCount) / chargers.length) * 30) + 20)
               : 0;
 
             const campaign = await createCampaign.mutateAsync({
@@ -523,8 +523,8 @@ export function PlatformSidebar() {
               end_date: null,
               total_chargers: chargers.length,
               total_serviced: 0,
-              optimal_count: optimalCount,
-              degraded_count: degradedCount,
+              optimal_count: lowCount,
+              degraded_count: highCount,
               critical_count: criticalCount,
               health_score: healthScore,
             });
@@ -532,19 +532,44 @@ export function PlatformSidebar() {
             if (chargers.length > 0) {
               const records = chargers.map(c => ({
                 campaign_id: campaign.id,
-                station_id: c.stationId || c.serialNumber || `CHG-${Math.random().toString(36).slice(2, 8)}`,
-                station_name: c.stationId || null,
-                serial_number: c.serialNumber || null,
-                model: c.model || null,
+                station_id: c.evseId || c.assetName || `CHG-${Math.random().toString(36).slice(2, 8)}`,
+                station_name: c.assetName || null,
+                serial_number: c.evseId || null,
+                model: null,
                 address: c.address || null,
                 city: c.city || null,
                 state: c.state || null,
-                zip: c.zipCode || null,
-                status: c.health || null,
-                site_name: c.siteName || null,
-                max_power: c.maxPower || null,
+                zip: c.zip || null,
+                status: c.status || null,
+                site_name: c.accountName || null,
+                max_power: null,
                 start_date: c.inServiceDate || null,
-                service_required: c.serviceRequired ? 1 : 0,
+                service_required: 0,
+                serviced_qty: 0,
+                service_date: null,
+                report_url: null,
+                summary: null,
+                power_cabinet_report_url: null,
+                power_cabinet_status: null,
+                power_cabinet_summary: null,
+                ccs_cable_issue: false,
+                chademo_cable_issue: false,
+                screen_damage: false,
+                cc_reader_issue: false,
+                rfid_reader_issue: false,
+                app_issue: false,
+                holster_issue: false,
+                other_issue: false,
+                power_supply_issue: false,
+                circuit_board_issue: false,
+                latitude: c.latitude || null,
+                longitude: c.longitude || null,
+                ticket_id: c.ticketId || null,
+                ticket_created_date: c.ticketCreatedDate || null,
+                ticket_solved_date: c.ticketSolvedDate || null,
+                ticket_group: c.ticketGroup || null,
+                ticket_subject: c.ticketSubject || null,
+                ticket_reporting_source: c.ticketReportingSource || null,
               }));
               await createChargerRecords.mutateAsync(records);
             }
