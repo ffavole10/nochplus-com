@@ -22,11 +22,6 @@ export default function NochPlusMonitoring() {
     return () => clearInterval(iv);
   }, []);
 
-  // Auto-open NAS-B04 on load
-  useEffect(() => {
-    const t = setTimeout(() => setSelectedCharger('NAS-B04'), 800);
-    return () => clearTimeout(t);
-  }, []);
 
   return (
     <div className="flex flex-col h-full">
