@@ -792,24 +792,31 @@ export default function SubmitAssessment() {
                   {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
                 </div>
 
-                {/* Site Selector */}
+                {/* Site Info */}
                 <div className="sm:col-span-2">
-                  <SiteSearchDropdown
-                    companyId={companyId}
-                    selectedSiteId={siteId}
-                    onSiteChange={(site) => {
-                      setSiteId(site.id);
-                      setSiteName(site.siteName);
-                      setSiteAddress(site.address);
-                      setSiteCity(site.city);
-                      setSiteState(site.state);
-                      setSiteZip(site.zip);
-                    }}
-                    usePublicEndpoint={true}
-                    error={errors.site}
-                    descriptor={locationDescriptor}
-                    onDescriptorChange={setLocationDescriptor}
+                  <Label>Site / Location Name *</Label>
+                  <Input
+                    value={siteName}
+                    onChange={e => { setSiteName(e.target.value); setSiteId(null); }}
+                    placeholder="Enter site or location name"
                   />
+                  {errors.site && <p className="text-xs text-destructive mt-1">{errors.site}</p>}
+                </div>
+                <div>
+                  <Label>Site Address</Label>
+                  <Input value={siteAddress} onChange={e => setSiteAddress(e.target.value)} placeholder="Street address" />
+                </div>
+                <div>
+                  <Label>City</Label>
+                  <Input value={siteCity} onChange={e => setSiteCity(e.target.value)} placeholder="City" />
+                </div>
+                <div>
+                  <Label>State</Label>
+                  <Input value={siteState} onChange={e => setSiteState(e.target.value)} placeholder="State" />
+                </div>
+                <div>
+                  <Label>Zip Code</Label>
+                  <Input value={siteZip} onChange={e => setSiteZip(e.target.value)} placeholder="Zip code" />
                 </div>
               </div>
 
