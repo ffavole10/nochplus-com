@@ -813,9 +813,14 @@ export default function SubmitAssessment() {
                 </div>
               </div>
 
-              <Button size="lg" className="w-full mt-6 gap-2" onClick={handleNextStep1}>
-                Next <ArrowRight className="h-5 w-5" />
-              </Button>
+              <div className="flex gap-3 mt-6">
+                <Button variant="outline" size="lg" className="flex-1" onClick={() => { setCurrentStep("step0"); window.scrollTo(0, 0); }}>
+                  Back
+                </Button>
+                <Button size="lg" className="flex-1 gap-2" onClick={handleNextStep1}>
+                  Next <ArrowRight className="h-5 w-5" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
