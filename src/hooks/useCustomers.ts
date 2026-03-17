@@ -80,6 +80,65 @@ export function useDeleteCustomer() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      // Get all locations for this customer
+      const { data: locations } = await supabase
+        .from("locations")
+        .select("id")
+        .eq("customer_id", id);
+      
+      const locationIds = (locations || []).map((l: any) => l.id);
+      
+      if (locationIds.length > 0) {
+        // Nullify foreign key references in noch_plus_submissions
+        await supabase
+          .from("noch_plus_submissions")
+          .update({ location_id: null } as any)
+          .in("location_id", locationIds);
+        
+        // Nullify foreign key references in service_tickets
+        await supabase
+          .from("service_tickets")
+          .update({ location_id: null } as any)
+          .in("location_id", locationIds);
+
+        // Nullify foreign key references in environmental_correlations
+        await supabase
+          .from("environmental_correlations")
+          .update({ location_id: null } as any)
+          .in("location_id", locationIds);
+
+        // Delete charger_locations
+        await supabase
+          .from("charger_locations")
+          .delete()
+          .in("location_id", locationIds);
+
+        // Delete locations
+        await supabase
+          .from("locations")
+          .delete()
+          .in("id", locationIds);
+      }
+
+      // Nullify company_id references in noch_plus_submissions
+      await supabase
+        .from("noch_plus_submissions")
+        .update({ company_id: null } as any)
+        .eq("company_id", id);
+
+      // Nullify company_id references in service_tickets
+      await supabase
+        .from("service_tickets")
+        .update({ company_id: null } as any)
+        .eq("company_id", id);
+
+      // Delete contacts
+      await supabase
+        .from("contacts")
+        .delete()
+        .eq("customer_id", id);
+
+      // Now delete the customer
       const { error } = await supabase
         .from("customers" as any)
         .delete()
