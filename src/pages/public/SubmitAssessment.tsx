@@ -20,7 +20,7 @@ import {
 import evChargerBg from "@/assets/ev-charger-bg.png";
 import medalBadge from "@/assets/medal-badge.png";
 import AnimatedLandingPage from "@/components/public/AnimatedLandingPage";
-import { CompanySearchDropdown } from "@/components/shared/CompanySearchDropdown";
+
 import { SiteSearchDropdown } from "@/components/shared/SiteSearchDropdown";
 
 const CHARGER_BRANDS = ["BTC", "ABB", "Delta", "Tritium", "Signet", "ChargePoint", "Other"];
