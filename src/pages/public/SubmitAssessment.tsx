@@ -802,8 +802,50 @@ export default function SubmitAssessment() {
                   />
                   {errors.site && <p className="text-xs text-destructive mt-1">{errors.site}</p>}
                 </div>
-                <div>
-                  <Label>Site Address</Label>
+                <div className="sm:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Site Address</Label>
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                      onClick={() => {
+                        if (!navigator.geolocation) {
+                          toast.error("Geolocation is not supported by your browser.");
+                          return;
+                        }
+                        toast.info("Getting your location...");
+                        navigator.geolocation.getCurrentPosition(
+                          async (position) => {
+                            try {
+                              const { latitude, longitude } = position.coords;
+                              const res = await fetch(
+                                `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+                                { headers: { "Accept-Language": "en" } }
+                              );
+                              const data = await res.json();
+                              const addr = data.address || {};
+                              const road = [addr.house_number, addr.road].filter(Boolean).join(" ");
+                              const stateAbbr = addr.state
+                                ? (addr["ISO3166-2-lvl4"]?.split("-")[1] || addr.state)
+                                : "";
+                              setSiteAddress(road);
+                              setSiteCity(addr.city || addr.town || addr.village || "");
+                              setSiteState(stateAbbr);
+                              setSiteZip(addr.postcode || "");
+                              toast.success("Address populated from your location.");
+                            } catch {
+                              toast.error("Could not resolve your address. Please enter it manually.");
+                            }
+                          },
+                          () => toast.error("Location access denied. Please enter the address manually."),
+                          { enableHighAccuracy: true, timeout: 10000 }
+                        );
+                      }}
+                    >
+                      <LocateFixed className="h-3.5 w-3.5" />
+                      Use current location
+                    </button>
+                  </div>
                   <Input value={siteAddress} onChange={e => setSiteAddress(e.target.value)} placeholder="Street address" />
                 </div>
                 <div>
