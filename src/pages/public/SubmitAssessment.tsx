@@ -20,7 +20,7 @@ import {
 import evChargerBg from "@/assets/ev-charger-bg.png";
 import medalBadge from "@/assets/medal-badge.png";
 import AnimatedLandingPage from "@/components/public/AnimatedLandingPage";
-import { CompanySearchDropdown } from "@/components/shared/CompanySearchDropdown";
+
 import { SiteSearchDropdown } from "@/components/shared/SiteSearchDropdown";
 
 const CHARGER_BRANDS = ["BTC", "ABB", "Delta", "Tritium", "Signet", "ChargePoint", "Other"];
@@ -773,13 +773,13 @@ export default function SubmitAssessment() {
                   {errors.fullName && <p className="text-xs text-destructive mt-1">{errors.fullName}</p>}
                 </div>
                 <div>
-                  <CompanySearchDropdown
+                  <Label>Company / Property *</Label>
+                  <Input
                     value={companyName}
-                    companyId={companyId}
-                    onChange={(name, id) => { setCompanyName(name); setCompanyId(id); }}
-                    usePublicEndpoint={true}
-                    error={errors.companyName}
+                    onChange={e => { setCompanyName(e.target.value); setCompanyId(null); }}
+                    placeholder="Enter your company or property name"
                   />
+                  {errors.companyName && <p className="text-xs text-destructive mt-1">{errors.companyName}</p>}
                 </div>
                 <div>
                   <Label>Email *</Label>
