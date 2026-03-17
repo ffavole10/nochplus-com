@@ -21,7 +21,7 @@ import evChargerBg from "@/assets/ev-charger-bg.png";
 import medalBadge from "@/assets/medal-badge.png";
 import AnimatedLandingPage from "@/components/public/AnimatedLandingPage";
 
-import { SiteSearchDropdown } from "@/components/shared/SiteSearchDropdown";
+
 
 const CHARGER_BRANDS = ["BTC", "ABB", "Delta", "Tritium", "Signet", "ChargePoint", "Other"];
 const CHARGER_TYPES = ["AC | Level 2", "DC | Level 3"];
