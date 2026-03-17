@@ -628,7 +628,7 @@ export default function Customers() {
 
       {/* Delete Customer Confirmation */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
-        <AlertDialogContent>
+        <AlertDialogContent className="z-[2200]">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Customer</AlertDialogTitle>
             <AlertDialogDescription>
