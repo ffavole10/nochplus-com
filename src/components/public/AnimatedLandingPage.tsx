@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Monitor, ArrowLeft } from "lucide-react";
+import { Monitor } from "lucide-react";
 import heroPerson from "@/assets/hero-person.png";
 import nochLogoWhite from "@/assets/noch-logo-white.png";
 
