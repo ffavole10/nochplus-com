@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Monitor } from "lucide-react";
+import { Monitor, ArrowLeft } from "lucide-react";
 import heroPerson from "@/assets/hero-person.png";
 import nochLogoWhite from "@/assets/noch-logo-white.png";
 
@@ -47,12 +47,21 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
 
 
       {/* Logo */}
-      <div className={`relative z-10 transition-all duration-700 ${stage >= 1 ? "opacity-100" : "opacity-0"}`}>
+      <div className={`relative z-10 flex items-center justify-between px-4 sm:px-6 pt-2 sm:pt-4 transition-all duration-700 ${stage >= 1 ? "opacity-100" : "opacity-0"}`}>
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 text-white/50 hover:text-white/80 transition-colors text-sm"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Back</span>
+        </button>
         <img
           src={nochLogoWhite}
           alt="Noch Power"
-          className="h-7 sm:h-6 mx-auto sm:mx-0 sm:absolute sm:top-4 sm:left-6 mt-2 sm:mt-0 brightness-0 invert"
+          className="h-7 sm:h-6 brightness-0 invert"
         />
+        <div className="w-12" /> {/* Spacer for centering logo */}
       </div>
 
       {/* Main content */}
