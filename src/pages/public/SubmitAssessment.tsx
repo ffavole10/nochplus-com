@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   CheckCircle2, Clock, Zap, Camera,
-  Plus, Trash2, Loader2, ArrowRight, X, LocateFixed,
+  Plus, Trash2, Loader2, ArrowRight, ArrowLeft, X, LocateFixed,
   Users, Monitor, BadgePercent, Package, Wrench, CreditCard, Shield,
   Hash, ImagePlus, Search
 } from "lucide-react";
@@ -531,6 +531,20 @@ export default function SubmitAssessment() {
   const FormHeader = () => (
     <header className="border-b border-border/50 bg-gradient-to-r from-[hsl(170,40%,55%)] to-[hsl(175,35%,60%)]">
       <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+        <button
+          onClick={() => {
+            if (currentStep === "step0") {
+              setCurrentStep("landing");
+            } else {
+              navigate(-1);
+            }
+          }}
+          className="flex items-center gap-1 text-white/70 hover:text-white transition-colors text-sm"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Back</span>
+        </button>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
             <Zap className="h-4 w-4 text-white" />
