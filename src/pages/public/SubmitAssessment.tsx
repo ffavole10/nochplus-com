@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   CheckCircle2, Clock, Zap, Camera,
-  Plus, Trash2, Loader2, ArrowRight, X, LocateFixed,
+  Plus, Trash2, Loader2, ArrowRight, ArrowLeft, X, LocateFixed,
   Users, Monitor, BadgePercent, Package, Wrench, CreditCard, Shield,
   Hash, ImagePlus, Search
 } from "lucide-react";
