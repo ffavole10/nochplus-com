@@ -96,8 +96,8 @@ export function PlatformSidebar() {
   const [managerOpen, setManagerOpen] = useState(false);
 
   // Partners & campaigns
-  const { data: dbPartners = [] } = usePartners();
-  const partners = useMemo(() => dbPartners.map((p) => ({ value: p.value, label: p.label })), [dbPartners]);
+  const { data: dbCustomers = [] } = useCustomers();
+  const partners = useMemo(() => dbCustomers.map((c) => ({ value: c.company, label: c.company })), [dbCustomers]);
   const { data: dbCampaigns = [] } = useCampaigns();
 
   const handlePartnerChange = (value: string) => {
