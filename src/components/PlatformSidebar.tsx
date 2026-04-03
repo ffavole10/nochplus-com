@@ -9,7 +9,7 @@ import {
   Brain, Sliders, BarChart3 } from
 "lucide-react";
 import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
-import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
+import { toast } from "sonner";
 import { toast } from "sonner";
 import { usePartners } from "@/hooks/usePartners";
 import { useCampaigns, useCreateCampaign, useCreateChargerRecords } from "@/hooks/useCampaigns";
