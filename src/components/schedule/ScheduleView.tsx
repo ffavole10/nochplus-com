@@ -12,6 +12,7 @@ import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
 import { CUSTOMER_LABELS } from "@/data/sampleCampaigns";
+import { CampaignPlan, PlanCharger } from "@/hooks/useCampaignPlan";
 
 interface ScheduleViewProps {
   chargers: AssessmentCharger[];
@@ -28,6 +29,12 @@ interface ScheduleViewProps {
   onExport: () => void;
   onClear: () => void;
   onImport: (chargers: AssessmentCharger[]) => void;
+  // Plan props
+  activePlan?: CampaignPlan | null;
+  planChargers?: PlanCharger[];
+  onConfigChange?: (config: CampaignConfig) => void;
+  initialConfig?: CampaignConfig;
+  onRemoveChargerFromPlan?: (chargerId: string) => void;
 }
 
 export function ScheduleView({
@@ -45,15 +52,27 @@ export function ScheduleView({
   onExport,
   onClear,
   onImport,
+  activePlan,
+  planChargers,
+  onConfigChange,
+  initialConfig,
+  onRemoveChargerFromPlan,
 }: ScheduleViewProps) {
   const [config, setConfig] = useState<CampaignConfig>(() => {
-    return { ...DEFAULT_CONFIG, name: campaignName || "" };
+    return initialConfig || { ...DEFAULT_CONFIG, name: campaignName || "" };
   });
   const [previewCampaign, setPreviewCampaign] = useState<Campaign | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Sync config when initialConfig changes (plan loaded/switched)
+  useEffect(() => {
+    if (initialConfig) {
+      setConfig(initialConfig);
+    }
+  }, [initialConfig]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -130,7 +149,7 @@ export function ScheduleView({
   const displayCampaign = activeCampaign || autoPreview;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)]">
+    <div className="flex flex-col h-[calc(100vh-56px-41px)]">
       {/* Main layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Config panel - only when no active campaign */}
@@ -138,7 +157,10 @@ export function ScheduleView({
           <CampaignConfigPanel
             chargers={chargers}
             config={config}
-            onChange={setConfig}
+            onChange={(newConfig) => {
+              setConfig(newConfig);
+              onConfigChange?.(newConfig);
+            }}
           />
         )}
 

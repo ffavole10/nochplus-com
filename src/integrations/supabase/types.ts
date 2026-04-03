@@ -312,6 +312,386 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_plan_chargers: {
+        Row: {
+          charger_id: string
+          created_at: string
+          estimated_hours: number
+          id: string
+          notes: string | null
+          plan_id: string
+          priority: string
+          sequence_order: number | null
+          status: string
+          technician_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          charger_id: string
+          created_at?: string
+          estimated_hours?: number
+          id?: string
+          notes?: string | null
+          plan_id: string
+          priority?: string
+          sequence_order?: number | null
+          status?: string
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          charger_id?: string
+          created_at?: string
+          estimated_hours?: number
+          id?: string
+          notes?: string | null
+          plan_id?: string
+          priority?: string
+          sequence_order?: number | null
+          status?: string
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_plan_chargers_charger_id_fkey"
+            columns: ["charger_id"]
+            isOneToOne: false
+            referencedRelation: "charger_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_plan_chargers_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_plan_chargers_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_plan_schedule: {
+        Row: {
+          created_at: string
+          day_number: number
+          day_type: string
+          id: string
+          notes: string | null
+          overnight_city: string | null
+          plan_id: string
+          schedule_date: string
+          sites: Json
+          technician_id: string
+          total_drive_miles: number
+          total_travel_hours: number
+          total_work_hours: number
+          travel_segments: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_number?: number
+          day_type?: string
+          id?: string
+          notes?: string | null
+          overnight_city?: string | null
+          plan_id: string
+          schedule_date: string
+          sites?: Json
+          technician_id: string
+          total_drive_miles?: number
+          total_travel_hours?: number
+          total_work_hours?: number
+          travel_segments?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          day_type?: string
+          id?: string
+          notes?: string | null
+          overnight_city?: string | null
+          plan_id?: string
+          schedule_date?: string
+          sites?: Json
+          technician_id?: string
+          total_drive_miles?: number
+          total_travel_hours?: number
+          total_work_hours?: number
+          travel_segments?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_plan_schedule_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_plan_schedule_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_plan_technicians: {
+        Row: {
+          assigned_regions: Json | null
+          created_at: string
+          home_base_city: string
+          home_base_lat: number | null
+          home_base_lng: number | null
+          id: string
+          plan_id: string
+          technician_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_regions?: Json | null
+          created_at?: string
+          home_base_city?: string
+          home_base_lat?: number | null
+          home_base_lng?: number | null
+          id?: string
+          plan_id: string
+          technician_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_regions?: Json | null
+          created_at?: string
+          home_base_city?: string
+          home_base_lat?: number | null
+          home_base_lng?: number | null
+          id?: string
+          plan_id?: string
+          technician_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_plan_technicians_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_plan_technicians_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_plans: {
+        Row: {
+          break_hrs: number
+          campaign_id: string
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          deadline: string | null
+          end_date: string | null
+          hrs_per_charger: number
+          hrs_per_day: number
+          id: string
+          name: string
+          notes: string | null
+          start_date: string | null
+          status: string
+          travel_time_min: number
+          updated_at: string
+          working_days: Json
+        }
+        Insert: {
+          break_hrs?: number
+          campaign_id: string
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          deadline?: string | null
+          end_date?: string | null
+          hrs_per_charger?: number
+          hrs_per_day?: number
+          id?: string
+          name: string
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          travel_time_min?: number
+          updated_at?: string
+          working_days?: Json
+        }
+        Update: {
+          break_hrs?: number
+          campaign_id?: string
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          deadline?: string | null
+          end_date?: string | null
+          hrs_per_charger?: number
+          hrs_per_day?: number
+          id?: string
+          name?: string
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          travel_time_min?: number
+          updated_at?: string
+          working_days?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_plans_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_plans_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_quote_line_items: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string
+          id: string
+          quantity: number
+          quote_id: string
+          sort_order: number
+          technician_id: string | null
+          unit_rate: number
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string
+          description?: string
+          id?: string
+          quantity?: number
+          quote_id: string
+          sort_order?: number
+          technician_id?: string | null
+          unit_rate?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          quantity?: number
+          quote_id?: string
+          sort_order?: number
+          technician_id?: string | null
+          unit_rate?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_quote_line_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_quote_line_items_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_quotes: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          id: string
+          notes: string | null
+          plan_id: string
+          quote_number: string | null
+          rate_card_id: string | null
+          status: string
+          total_amount: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          plan_id: string
+          quote_number?: string | null
+          rate_card_id?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          plan_id?: string
+          quote_number?: string | null
+          rate_card_id?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_quotes_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_quotes_rate_card_id_fkey"
+            columns: ["rate_card_id"]
+            isOneToOne: false
+            referencedRelation: "rate_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string

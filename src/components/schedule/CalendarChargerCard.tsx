@@ -3,15 +3,17 @@ import { AssessmentCharger } from "@/types/assessment";
 import { getPriorityColor } from "@/lib/assessmentParser";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Zap, Plug, Battery, Play, CheckCircle, Circle } from "lucide-react";
+import { Zap, Plug, Battery, Play, CheckCircle, Circle, X, GripVertical } from "lucide-react";
 
 interface CalendarChargerCardProps {
   item: ScheduleItem;
   charger: AssessmentCharger | undefined;
   isActive?: boolean;
   compact?: boolean;
+  sequenceNumber?: number | null;
   onMarkStatus?: (chargerId: string, status: ScheduleItemStatus) => void;
   onSelectCharger?: (charger: AssessmentCharger) => void;
+  onRemove?: (chargerId: string) => void;
 }
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -32,8 +34,10 @@ export function CalendarChargerCard({
   charger,
   isActive,
   compact,
+  sequenceNumber,
   onMarkStatus,
   onSelectCharger,
+  onRemove,
 }: CalendarChargerCardProps) {
   if (!charger) return null;
 
@@ -48,6 +52,9 @@ export function CalendarChargerCard({
         onClick={() => onSelectCharger?.(charger)}
         title={`${charger.assetName} - ${charger.city}, ${charger.state}`}
       >
+        {sequenceNumber != null && (
+          <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-primary text-primary-foreground text-[8px] font-bold mr-0.5">{sequenceNumber}</span>
+        )}
         <span className="font-medium">{TYPE_ICONS[charger.assetRecordType]}</span>{" "}
         <span>{charger.assetName.split("-").pop()}</span>
       </div>
@@ -56,11 +63,31 @@ export function CalendarChargerCard({
 
   return (
     <div
-      className={`p-2 rounded-lg border cursor-pointer hover:shadow-sm transition-all text-xs ${statusCfg.bg}`}
+      className={`p-2 rounded-lg border cursor-pointer hover:shadow-sm transition-all text-xs group relative ${statusCfg.bg}`}
       style={{ borderLeft: `3px solid ${priorityColor}` }}
       onClick={() => onSelectCharger?.(charger)}
     >
+      {/* Remove button */}
+      {onRemove && (
+        <button
+          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-critical/10"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(item.chargerId);
+          }}
+          title="Remove from plan"
+        >
+          <X className="h-3 w-3 text-critical" />
+        </button>
+      )}
       <div className="flex items-start gap-1.5">
+        {/* Drag handle placeholder */}
+        <div className="opacity-0 group-hover:opacity-40 transition-opacity cursor-grab mt-0.5">
+          <GripVertical className="h-3 w-3 text-muted-foreground" />
+        </div>
+        {sequenceNumber != null && (
+          <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold shrink-0 mt-0.5">{sequenceNumber}</span>
+        )}
         {statusCfg.icon}
         <div className="flex-1 min-w-0">
           <p className="font-medium truncate">{charger.assetName}</p>
