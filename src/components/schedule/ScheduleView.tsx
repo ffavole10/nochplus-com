@@ -237,8 +237,6 @@ export function ScheduleView({
           <CampaignCalendar
             campaign={displayCampaign}
             chargers={activeCampaign ? chargers : filteredChargers}
-            scheduleDays={scheduleDays}
-            planTechnicians={planTechnicians}
             onMarkStatus={activeCampaign ? (chargerId, status) => {
               onUpdateStatus(activeCampaign.id, chargerId, status);
               if (status === "completed") onUpdateChargerPhase(chargerId, "Completed");
