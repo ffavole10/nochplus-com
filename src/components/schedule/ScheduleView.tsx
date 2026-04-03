@@ -4,15 +4,18 @@ import { AssessmentCharger } from "@/types/assessment";
 import { createCampaign, filterChargers } from "@/lib/scheduleGenerator";
 import { CampaignConfigPanel } from "@/components/schedule/CampaignConfigPanel";
 import { CampaignCalendar } from "@/components/schedule/CampaignCalendar";
+import { ScheduleSummaryPanel } from "@/components/schedule/ScheduleSummaryPanel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2, Upload, Loader2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2, Upload, Loader2, Route } from "lucide-react";
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
 import { CUSTOMER_LABELS } from "@/data/sampleCampaigns";
-import { CampaignPlan, PlanCharger } from "@/hooks/useCampaignPlan";
+import { CampaignPlan, PlanCharger, PlanTechnician } from "@/hooks/useCampaignPlan";
+import { GeneratedScheduleDay, TechScheduleSummary } from "@/lib/routeOptimizer";
 
 interface ScheduleViewProps {
   chargers: AssessmentCharger[];
@@ -35,6 +38,13 @@ interface ScheduleViewProps {
   onConfigChange?: (config: CampaignConfig) => void;
   initialConfig?: CampaignConfig;
   onRemoveChargerFromPlan?: (chargerId: string) => void;
+  // Schedule generation props
+  scheduleDays?: GeneratedScheduleDay[];
+  scheduleSummaries?: TechScheduleSummary[];
+  scheduleWarnings?: string[];
+  generating?: boolean;
+  onGenerateSchedule?: () => void;
+  planTechnicians?: PlanTechnician[];
 }
 
 export function ScheduleView({
@@ -57,6 +67,12 @@ export function ScheduleView({
   onConfigChange,
   initialConfig,
   onRemoveChargerFromPlan,
+  scheduleDays = [],
+  scheduleSummaries = [],
+  scheduleWarnings = [],
+  generating = false,
+  onGenerateSchedule,
+  planTechnicians = [],
 }: ScheduleViewProps) {
   const [config, setConfig] = useState<CampaignConfig>(() => {
     return initialConfig || { ...DEFAULT_CONFIG, name: campaignName || "" };
@@ -66,6 +82,7 @@ export function ScheduleView({
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
 
   // Sync config when initialConfig changes (plan loaded/switched)
   useEffect(() => {
@@ -73,6 +90,9 @@ export function ScheduleView({
       setConfig(initialConfig);
     }
   }, [initialConfig]);
+
+  const canGenerate = !!activePlan && planTechnicians.length > 0 && (planChargers?.length || 0) > 0;
+  const hasSchedule = scheduleDays.length > 0;
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
