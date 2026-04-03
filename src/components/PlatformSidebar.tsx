@@ -8,6 +8,7 @@ import {
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned,
   Brain, Sliders, BarChart3 } from
 "lucide-react";
+import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
 import { usePartners } from "@/hooks/usePartners";
