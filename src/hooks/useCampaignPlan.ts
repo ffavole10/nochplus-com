@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import type { Json } from "@/integrations/supabase/types";
+import { generateOptimizedSchedule, GeneratedScheduleDay, ScheduleResult, TechScheduleSummary } from "@/lib/routeOptimizer";
+import { AssessmentCharger } from "@/types/assessment";
 
 export type PlanStatus = "draft" | "scheduled" | "quoted" | "active" | "completed" | "cancelled";
 
@@ -72,9 +74,13 @@ export function useCampaignPlan(campaignId: string | null) {
   const [activePlan, setActivePlan] = useState<CampaignPlan | null>(null);
   const [technicians, setTechnicians] = useState<PlanTechnician[]>([]);
   const [planChargers, setPlanChargers] = useState<PlanCharger[]>([]);
+  const [scheduleDays, setScheduleDays] = useState<GeneratedScheduleDay[]>([]);
+  const [scheduleSummaries, setScheduleSummaries] = useState<TechScheduleSummary[]>([]);
+  const [scheduleWarnings, setScheduleWarnings] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load all plans for this campaign
@@ -95,19 +101,44 @@ export function useCampaignPlan(campaignId: string | null) {
 
   // Load plan children when active plan changes
   const loadPlanDetails = useCallback(async (planId: string) => {
-    const [techRes, chargerRes] = await Promise.all([
+    const [techRes, chargerRes, scheduleRes] = await Promise.all([
       supabase.from("campaign_plan_technicians").select("*").eq("plan_id", planId),
       supabase.from("campaign_plan_chargers").select("*").eq("plan_id", planId).order("sequence_order", { ascending: true }),
+      supabase.from("campaign_plan_schedule").select("*").eq("plan_id", planId).order("schedule_date", { ascending: true }),
     ]);
     setTechnicians((techRes.data || []).map(t => ({
       ...t,
       assigned_regions: parseRegions(t.assigned_regions),
     })));
     setPlanChargers(chargerRes.data || []);
+    
+    // Parse schedule days from DB
+    const dbDays: GeneratedScheduleDay[] = (scheduleRes.data || []).map((row: any) => ({
+      technician_id: row.technician_id,
+      schedule_date: row.schedule_date,
+      day_number: row.day_number,
+      day_type: row.day_type,
+      sites: Array.isArray(row.sites) ? row.sites : [],
+      travel_segments: Array.isArray(row.travel_segments) ? row.travel_segments : [],
+      overnight_city: row.overnight_city || "",
+      total_work_hours: row.total_work_hours,
+      total_travel_hours: row.total_travel_hours,
+      total_drive_miles: row.total_drive_miles,
+      notes: row.notes || "",
+    }));
+    setScheduleDays(dbDays);
   }, []);
 
   const selectPlan = useCallback(async (planId: string | null) => {
-    if (!planId) { setActivePlan(null); setTechnicians([]); setPlanChargers([]); return; }
+    if (!planId) {
+      setActivePlan(null);
+      setTechnicians([]);
+      setPlanChargers([]);
+      setScheduleDays([]);
+      setScheduleSummaries([]);
+      setScheduleWarnings([]);
+      return;
+    }
     const plan = plans.find(p => p.id === planId);
     if (plan) {
       setActivePlan(plan);
@@ -141,6 +172,9 @@ export function useCampaignPlan(campaignId: string | null) {
     setActivePlan(newPlan);
     setTechnicians([]);
     setPlanChargers([]);
+    setScheduleDays([]);
+    setScheduleSummaries([]);
+    setScheduleWarnings([]);
     toast.success(`Plan "${name}" created`);
     return newPlan;
   }, [campaignId, session]);
@@ -151,7 +185,6 @@ export function useCampaignPlan(campaignId: string | null) {
     setSaved(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     
-    // Update local state immediately
     const updated = { ...activePlan, ...updates };
     setActivePlan(updated);
     setPlans(prev => prev.map(p => p.id === updated.id ? updated : p));
@@ -236,6 +269,110 @@ export function useCampaignPlan(campaignId: string | null) {
     setPlanChargers(prev => prev.filter(c => c.charger_id !== chargerId));
   }, [activePlan]);
 
+  // ─── Schedule Generation ──────────────────────────────────────────────────
+
+  const generateSchedule = useCallback(async (chargerLookup: Map<string, AssessmentCharger>) => {
+    if (!activePlan) return null;
+    setGenerating(true);
+
+    try {
+      // Run optimization
+      const result = generateOptimizedSchedule(activePlan, technicians, planChargers, chargerLookup);
+      
+      // Delete existing schedule for this plan
+      await supabase.from("campaign_plan_schedule").delete().eq("plan_id", activePlan.id);
+
+      // Write new schedule rows
+      if (result.days.length > 0) {
+        const rows = result.days.map(d => ({
+          plan_id: activePlan.id,
+          technician_id: d.technician_id,
+          schedule_date: d.schedule_date,
+          day_number: d.day_number,
+          day_type: d.day_type,
+          sites: d.sites as unknown as Json,
+          travel_segments: d.travel_segments as unknown as Json,
+          overnight_city: d.overnight_city || null,
+          total_work_hours: d.total_work_hours,
+          total_travel_hours: d.total_travel_hours,
+          total_drive_miles: d.total_drive_miles,
+          notes: d.notes || null,
+        }));
+
+        const { error } = await supabase.from("campaign_plan_schedule").insert(rows);
+        if (error) {
+          console.error("Failed to save schedule:", error);
+          toast.error("Failed to save schedule to database");
+        }
+      }
+
+      // Update plan status to 'scheduled'
+      if (activePlan.status === "draft") {
+        await savePlanConfig({ status: "scheduled" });
+      }
+
+      // Update sequence_order on plan chargers
+      let seq = 1;
+      for (const day of result.days) {
+        for (const site of day.sites) {
+          await supabase
+            .from("campaign_plan_chargers")
+            .update({ sequence_order: seq++, technician_id: day.technician_id })
+            .eq("plan_id", activePlan.id)
+            .eq("charger_id", site.charger_id);
+        }
+      }
+
+      setScheduleDays(result.days);
+      setScheduleSummaries(result.summaries);
+      setScheduleWarnings(result.warnings);
+
+      if (result.warnings.length > 0) {
+        toast.warning(`Schedule generated with ${result.warnings.length} warning(s)`);
+      } else {
+        toast.success(`Schedule generated: ${result.days.length} days, ${result.summaries.reduce((s, t) => s + t.total_chargers, 0)} chargers`);
+      }
+
+      return result;
+    } catch (err) {
+      console.error("Schedule generation failed:", err);
+      toast.error("Schedule generation failed");
+      return null;
+    } finally {
+      setGenerating(false);
+    }
+  }, [activePlan, technicians, planChargers, savePlanConfig]);
+
+  // Update a single schedule day (for manual adjustments)
+  const updateScheduleDay = useCallback(async (dateStr: string, techId: string, updates: Partial<GeneratedScheduleDay>) => {
+    if (!activePlan) return;
+    
+    // Update local state
+    setScheduleDays(prev => prev.map(d => 
+      d.schedule_date === dateStr && d.technician_id === techId
+        ? { ...d, ...updates }
+        : d
+    ));
+
+    // Persist to DB
+    const dbUpdates: Record<string, any> = {};
+    if (updates.sites !== undefined) dbUpdates.sites = updates.sites as unknown as Json;
+    if (updates.travel_segments !== undefined) dbUpdates.travel_segments = updates.travel_segments as unknown as Json;
+    if (updates.day_type !== undefined) dbUpdates.day_type = updates.day_type;
+    if (updates.overnight_city !== undefined) dbUpdates.overnight_city = updates.overnight_city;
+    if (updates.total_work_hours !== undefined) dbUpdates.total_work_hours = updates.total_work_hours;
+    if (updates.total_travel_hours !== undefined) dbUpdates.total_travel_hours = updates.total_travel_hours;
+    if (updates.total_drive_miles !== undefined) dbUpdates.total_drive_miles = updates.total_drive_miles;
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+
+    await supabase
+      .from("campaign_plan_schedule")
+      .update(dbUpdates)
+      .eq("plan_id", activePlan.id)
+      .eq("schedule_date", dateStr)
+      .eq("technician_id", techId);
+  }, [activePlan]);
+
   // Soft delete plan
   const deletePlan = useCallback(async (planId: string) => {
     await supabase.from("campaign_plans").update({ status: "cancelled" }).eq("id", planId);
@@ -244,6 +381,9 @@ export function useCampaignPlan(campaignId: string | null) {
       setActivePlan(null);
       setTechnicians([]);
       setPlanChargers([]);
+      setScheduleDays([]);
+      setScheduleSummaries([]);
+      setScheduleWarnings([]);
     }
     toast.success("Plan cancelled");
   }, [activePlan]);
@@ -253,9 +393,13 @@ export function useCampaignPlan(campaignId: string | null) {
     activePlan,
     technicians,
     planChargers,
+    scheduleDays,
+    scheduleSummaries,
+    scheduleWarnings,
     loading,
     saving,
     saved,
+    generating,
     selectPlan,
     createPlan,
     savePlanConfig,
@@ -263,6 +407,8 @@ export function useCampaignPlan(campaignId: string | null) {
     removeTechnician,
     addChargers,
     removeCharger,
+    generateSchedule,
+    updateScheduleDay,
     deletePlan,
     reload: loadPlans,
   };
