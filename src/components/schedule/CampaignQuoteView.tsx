@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
 import { SavedCampaignQuote, QuoteLineItem, updateQuoteStatus, loadCampaignQuote } from "@/services/campaignQuoteEngine";
-import { PlanTechnician } from "@/hooks/useCampaignPlan";
+import { CampaignPlan, PlanTechnician } from "@/hooks/useCampaignPlan";
+import { GeneratedScheduleDay } from "@/lib/routeOptimizer";
+import { assembleProposalData, generateProposalPdf, uploadProposalToStorage } from "@/services/campaignProposalPdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
-import { ChevronDown, DollarSign, FileText, Send, CheckCircle2, XCircle, AlertTriangle, Edit } from "lucide-react";
+import { ChevronDown, DollarSign, FileText, Send, CheckCircle2, XCircle, AlertTriangle, Edit, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CampaignQuoteViewProps {
   planId: string;
+  plan?: CampaignPlan | null;
   planStatus: string;
   techs: PlanTechnician[];
+  scheduleDays?: GeneratedScheduleDay[];
   scheduleChanged?: boolean;
   onStatusChanged?: () => void;
 }
