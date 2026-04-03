@@ -78,6 +78,7 @@ export function ScheduleView({
   generating = false,
   onGenerateSchedule,
   planTechnicians = [],
+  onPlanStatusChange,
 }: ScheduleViewProps) {
   const [config, setConfig] = useState<CampaignConfig>(() => {
     return initialConfig || { ...DEFAULT_CONFIG, name: campaignName || "" };
@@ -88,6 +89,10 @@ export function ScheduleView({
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [generatingQuote, setGeneratingQuote] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("calendar");
+  const [quoteVersion, setQuoteVersion] = useState(0);
 
   // Sync config when initialConfig changes (plan loaded/switched)
   useEffect(() => {
