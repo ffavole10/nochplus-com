@@ -5,6 +5,8 @@ export interface Campaign {
   id: string;
   name: string;
   customer: string;
+  customer_id?: string | null;
+  customer_company?: string;
   status: string | null;
   quarter: string | null;
   year: number | null;
