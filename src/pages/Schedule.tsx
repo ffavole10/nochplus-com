@@ -14,7 +14,6 @@ import { CampaignConfig, DEFAULT_CONFIG } from "@/types/campaign";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 
-// Convert plan working_days (["mon","tue",...]) to numeric days (1,2,...)
 const DAY_MAP: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
 const DAY_REVERSE: Record<number, string> = { 0: "sun", 1: "mon", 2: "tue", 3: "wed", 4: "thu", 5: "fri", 6: "sat" };
 
@@ -28,7 +27,7 @@ function planToConfig(plan: CampaignPlan, campaignName: string): CampaignConfig 
     hoursPerCharger: plan.hrs_per_charger,
     workingHoursPerDay: plan.hrs_per_day,
     breakTime: plan.break_hrs,
-    travelBuffer: plan.travel_time_min / 60, // convert min to hours
+    travelBuffer: plan.travel_time_min / 60,
   };
 }
 
@@ -58,6 +57,13 @@ const Schedule = () => {
 
   const chargers = selectedCampaignId ? dbChargers : localChargers;
 
+  // Build charger lookup map
+  const chargerLookup = useMemo(() => {
+    const m = new Map<string, AssessmentCharger>();
+    chargers.forEach(c => m.set(c.id, c));
+    return m;
+  }, [chargers]);
+
   const {
     campaigns,
     activeCampaign,
@@ -67,15 +73,18 @@ const Schedule = () => {
     updateChargerStatus,
   } = useCampaignManager(session);
 
-  // Campaign Plan hook
   const {
     plans,
     activePlan,
     technicians: planTechnicians,
     planChargers,
+    scheduleDays,
+    scheduleSummaries,
+    scheduleWarnings,
     loading: plansLoading,
     saving,
     saved,
+    generating,
     selectPlan,
     createPlan,
     savePlanConfig,
@@ -83,6 +92,8 @@ const Schedule = () => {
     removeTechnician,
     addChargers,
     removeCharger,
+    generateSchedule,
+    updateScheduleDay,
     deletePlan,
   } = useCampaignPlan(selectedCampaignId || null);
 
@@ -110,24 +121,19 @@ const Schedule = () => {
     }
   }, [activePlan, searchParams, setSearchParams]);
 
-  // Build config from active plan or use defaults
   const initialConfig = useMemo(() => {
     if (activePlan) return planToConfig(activePlan, selectedCampaignName || "");
     return { ...DEFAULT_CONFIG, name: selectedCampaignName || "" };
   }, [activePlan, selectedCampaignName]);
 
-  // Inject plan technicians into config
   const configWithTechs = useMemo(() => {
     if (!activePlan) return initialConfig;
-    // Plan technician names need to be resolved — for now use home_base_city as label
-    // The CampaignConfigPanel handles tech assignment via its own dropdown
     return {
       ...initialConfig,
       technicians: planTechnicians.map(t => t.home_base_city || t.technician_id),
     };
   }, [initialConfig, activePlan, planTechnicians]);
 
-  // Handle config changes — auto-save to plan
   const handleConfigChange = useCallback((newConfig: CampaignConfig) => {
     if (activePlan) {
       const updates = configToPlanUpdates(newConfig, activePlan);
@@ -143,6 +149,10 @@ const Schedule = () => {
     await selectPlan(planId);
   }, [selectPlan]);
 
+  const handleGenerateSchedule = useCallback(async () => {
+    await generateSchedule(chargerLookup);
+  }, [generateSchedule, chargerLookup]);
+
   const handleExport = useCallback(() => {
     const blob = new Blob([JSON.stringify(chargers, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -155,7 +165,6 @@ const Schedule = () => {
 
   return (
     <div className="flex-1 flex flex-col">
-      {/* Plan Selector Bar */}
       <PlanSelectorBar
         plans={plans}
         activePlan={activePlan}
@@ -183,12 +192,17 @@ const Schedule = () => {
         onExport={handleExport}
         onClear={clearData}
         onImport={importChargers}
-        // Plan props
         activePlan={activePlan}
         planChargers={planChargers}
         onConfigChange={handleConfigChange}
         initialConfig={activePlan ? configWithTechs : undefined}
         onRemoveChargerFromPlan={removeCharger}
+        scheduleDays={scheduleDays}
+        scheduleSummaries={scheduleSummaries}
+        scheduleWarnings={scheduleWarnings}
+        generating={generating}
+        onGenerateSchedule={handleGenerateSchedule}
+        planTechnicians={planTechnicians}
       />
     </div>
   );
