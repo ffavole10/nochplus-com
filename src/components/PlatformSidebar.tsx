@@ -297,7 +297,7 @@ export function PlatformSidebar() {
               </SidebarMenuItem>
             </SidebarMenu>
 
-            {/* Partner → Campaign Selectors */}
+            {/* Customer filter */}
             <div className="space-y-1.5 px-2">
               <Select value={selectedPartner} onValueChange={handlePartnerChange}>
                 <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-xs h-8">
@@ -311,30 +311,16 @@ export function PlatformSidebar() {
                 )}
                 </SelectContent>
               </Select>
-
-              <Select value={selectedCampaignId} onValueChange={handleCampaignChange} disabled={!selectedPartner}>
-                <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-xs h-8">
-                  <SelectValue placeholder={selectedPartner ? "Select Campaign" : "Select partner first"} />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-                  {filteredCampaigns.map((c) =>
-                <SelectItem key={c.id} value={c.id} className="cursor-pointer max-w-[220px]">
-                      <span className="truncate block">{c.name}</span>
-                    </SelectItem>
-                )}
-                  {filteredCampaigns.length > 0 && (
-                    <>
-                      <div className="border-t border-border my-1" />
-                      <SelectItem value="__view_all__" className="cursor-pointer text-xs text-muted-foreground">
-                        View All Campaigns
-                      </SelectItem>
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
             </div>
 
-            {selectedCampaignId && <CampaignStagePipeline />}
+            {selectedCampaignId && (
+              <>
+                <div className="px-3">
+                  <span className="text-[11px] text-sidebar-foreground/50 truncate block">{selectedCampaignName}</span>
+                </div>
+                <CampaignStagePipeline />
+              </>
+            )}
           </div>
         }
 
