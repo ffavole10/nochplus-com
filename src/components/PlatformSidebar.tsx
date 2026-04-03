@@ -10,7 +10,6 @@ import {
 "lucide-react";
 import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
 import { toast } from "sonner";
-import { toast } from "sonner";
 import { usePartners } from "@/hooks/usePartners";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { Button } from "@/components/ui/button";
