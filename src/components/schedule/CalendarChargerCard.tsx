@@ -3,15 +3,17 @@ import { AssessmentCharger } from "@/types/assessment";
 import { getPriorityColor } from "@/lib/assessmentParser";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Zap, Plug, Battery, Play, CheckCircle, Circle } from "lucide-react";
+import { Zap, Plug, Battery, Play, CheckCircle, Circle, X, GripVertical } from "lucide-react";
 
 interface CalendarChargerCardProps {
   item: ScheduleItem;
   charger: AssessmentCharger | undefined;
   isActive?: boolean;
   compact?: boolean;
+  sequenceNumber?: number | null;
   onMarkStatus?: (chargerId: string, status: ScheduleItemStatus) => void;
   onSelectCharger?: (charger: AssessmentCharger) => void;
+  onRemove?: (chargerId: string) => void;
 }
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
