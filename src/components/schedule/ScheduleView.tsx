@@ -149,7 +149,7 @@ export function ScheduleView({
   const displayCampaign = activeCampaign || autoPreview;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)]">
+    <div className="flex flex-col h-[calc(100vh-56px-41px)]">
       {/* Main layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Config panel - only when no active campaign */}
@@ -157,7 +157,10 @@ export function ScheduleView({
           <CampaignConfigPanel
             chargers={chargers}
             config={config}
-            onChange={setConfig}
+            onChange={(newConfig) => {
+              setConfig(newConfig);
+              onConfigChange?.(newConfig);
+            }}
           />
         )}
 
