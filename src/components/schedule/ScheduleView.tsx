@@ -5,17 +5,21 @@ import { createCampaign, filterChargers } from "@/lib/scheduleGenerator";
 import { CampaignConfigPanel } from "@/components/schedule/CampaignConfigPanel";
 import { CampaignCalendar } from "@/components/schedule/CampaignCalendar";
 import { ScheduleSummaryPanel } from "@/components/schedule/ScheduleSummaryPanel";
+import { CampaignQuoteView } from "@/components/schedule/CampaignQuoteView";
+import { GenerateQuoteModal } from "@/components/schedule/GenerateQuoteModal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2, Upload, Loader2, Route } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2, Upload, Loader2, Route, DollarSign } from "lucide-react";
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
 import { CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import { CampaignPlan, PlanCharger, PlanTechnician } from "@/hooks/useCampaignPlan";
 import { GeneratedScheduleDay, TechScheduleSummary } from "@/lib/routeOptimizer";
+import { generateCampaignQuote, loadRatesFromRateCard, DEFAULT_CAMPAIGN_RATES } from "@/services/campaignQuoteEngine";
 
 interface ScheduleViewProps {
   chargers: AssessmentCharger[];
@@ -45,6 +49,7 @@ interface ScheduleViewProps {
   generating?: boolean;
   onGenerateSchedule?: () => void;
   planTechnicians?: PlanTechnician[];
+  onPlanStatusChange?: () => void;
 }
 
 export function ScheduleView({
