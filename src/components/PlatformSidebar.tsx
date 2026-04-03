@@ -305,11 +305,7 @@ export function PlatformSidebar() {
               </button>
             </div>
 
-            <SidebarMenu className="px-1">
-              {campaignPages.map((item) =>
-            <NavItem key={item.title} item={item} />
-            )}
-            </SidebarMenu>
+            <CampaignStagePipeline />
           </div>
         }
 
