@@ -334,8 +334,10 @@ export function ScheduleView({
                 <CampaignQuoteView
                   key={quoteVersion}
                   planId={activePlan.id}
+                  plan={activePlan}
                   planStatus={activePlan.status}
                   techs={planTechnicians}
+                  scheduleDays={scheduleDays}
                   onStatusChanged={onPlanStatusChange}
                 />
               </TabsContent>
