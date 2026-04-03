@@ -441,6 +441,14 @@ export function ScheduleView({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Generate Quote Modal */}
+      <GenerateQuoteModal
+        open={quoteModalOpen}
+        onOpenChange={setQuoteModalOpen}
+        onGenerate={handleGenerateQuote}
+        generating={generatingQuote}
+      />
     </div>
   );
 }
