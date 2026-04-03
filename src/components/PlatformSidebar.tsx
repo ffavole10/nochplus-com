@@ -6,7 +6,7 @@ import {
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned,
-  Brain, Sliders, BarChart3, List } from
+  Brain, Sliders, BarChart3, List, Plus, LayoutGrid } from
 "lucide-react";
 import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
 import { toast } from "sonner";
@@ -18,6 +18,8 @@ import { NavLink } from "@/components/NavLink";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
   SidebarContent,
@@ -47,7 +49,6 @@ const STATUS_LEVELS: {value: StatusLevel;label: string;colorClass: string;}[] = 
 { value: "Medium", label: "Medium", colorClass: "bg-medium" },
 { value: "Low", label: "Low", colorClass: "bg-low" }];
 
-
 const CHARGER_TYPES = ["AC | Level 2", "DC | Level 3"];
 const SWI_OPTIONS = ["With SWI", "Without SWI"];
 const ACCOUNT_MANAGERS = [
@@ -57,14 +58,31 @@ const ACCOUNT_MANAGERS = [
 
 const US_STATES = ["AZ", "CA", "FL", "GA", "IL", "NY", "TX", "VA", "WA"];
 
+const CAMPAIGN_STATUS_COLORS: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground",
+  active: "bg-primary/10 text-primary",
+  completed: "bg-emerald-500/10 text-emerald-600",
+  on_hold: "bg-amber-500/10 text-amber-600",
+  cancelled: "bg-destructive/10 text-destructive",
+};
+
 function getActiveSection(pathname: string): SectionKey {
   if (pathname.startsWith("/campaigns")) return "campaigns";
   if (pathname.startsWith("/service-desk")) return "service-desk";
   if (pathname.startsWith("/noch-plus")) return "noch-plus";
   if (pathname.startsWith("/autoheal")) return "autoheal";
-  // Legacy root routes map to campaigns
   if (["/dashboard", "/dataset", "/tickets", "/issues", "/schedule", "/field-reports"].includes(pathname)) return "campaigns";
   return null;
+}
+
+function getFirstActiveStage(stageStatus: Record<string, string> | null): string {
+  if (!stageStatus) return "upload";
+  const stages = ["upload", "scan", "deploy", "price", "launch"];
+  const inProgress = stages.find(s => stageStatus[s] === "in_progress");
+  if (inProgress) return inProgress;
+  const firstNotStarted = stages.find(s => stageStatus[s] === "not_started");
+  if (firstNotStarted) return firstNotStarted;
+  return "launch";
 }
 
 export function PlatformSidebar() {
@@ -79,15 +97,10 @@ export function PlatformSidebar() {
     setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer
   } = useCampaignContext();
 
-  const [selectedPartner, setSelectedPartner] = useState<string>(selectedCustomer || "");
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string>(contextCampaignId || "");
-
-  // Section accordion – only one open at a time
   const [expandedSection, setExpandedSection] = useState<SectionKey>(
     getActiveSection(location.pathname) || "campaigns"
   );
 
-  // Filter section collapsible
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(true);
   const [stateOpen, setStateOpen] = useState(false);
@@ -95,18 +108,51 @@ export function PlatformSidebar() {
   const [swiOpen, setSwiOpen] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
 
-  // Partners & campaigns
+  // Data
   const { data: dbCustomers = [] } = useCustomers();
-  const partners = useMemo(() => dbCustomers.map((c) => ({ value: c.company, label: c.company })), [dbCustomers]);
+  const customers = useMemo(() => dbCustomers.map((c) => ({ value: c.company, label: c.company })), [dbCustomers]);
   const { data: dbCampaigns = [] } = useCampaigns();
 
-  const handlePartnerChange = (value: string) => {
-    setSelectedPartner(value);
-    setSelectedCustomer(value);
-    setSelectedCampaignId("");
+  // Campaigns filtered by selected customer
+  const filteredCampaigns = useMemo(() => {
+    if (!selectedCustomer || selectedCustomer === "__all__") return dbCampaigns;
+    return dbCampaigns.filter(c =>
+      (c as any).customer_company === selectedCustomer || c.customer === selectedCustomer
+    );
+  }, [dbCampaigns, selectedCustomer]);
+
+  const sortedCampaigns = useMemo(() =>
+    [...filteredCampaigns].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
+    [filteredCampaigns]
+  );
+
+  const handleCustomerChange = (value: string) => {
+    setSelectedCustomer(value === "__all__" ? "" : value);
+    // Reset campaign selection when customer changes
     setContextCampaignId("");
     setSelectedCampaignName("");
-    navigate("/campaigns");
+  };
+
+  const handleCampaignChange = (value: string) => {
+    if (value === "__new__") {
+      // Navigate to Campaign HQ and trigger new campaign modal
+      navigate("/campaigns?new=1");
+      return;
+    }
+    if (value === "__none__") {
+      setContextCampaignId("");
+      setSelectedCampaignName("");
+      return;
+    }
+    const campaign = dbCampaigns.find(c => c.id === value);
+    if (campaign) {
+      setContextCampaignId(campaign.id);
+      setSelectedCampaignName(campaign.name);
+      setSelectedCustomer((campaign as any).customer_company || campaign.customer || "");
+      const ss = campaign.stage_status as Record<string, string> | null;
+      const stage = getFirstActiveStage(ss);
+      navigate(`/campaigns/${campaign.id}/${stage}`);
+    }
   };
 
   const sectionFirstPage: Record<NonNullable<SectionKey>, string> = {
@@ -125,14 +171,9 @@ export function PlatformSidebar() {
     }
   };
 
-  // Campaign stage pipeline replaces old nav items
-
-
-  // Ticket count matching KPI "Total Tickets" = non-parent tickets
+  // Ticket & estimate counts
   const allTickets = useServiceTicketsStore((s) => s.tickets);
   const totalTicketCount = useMemo(() => allTickets.filter(t => !t.isParent).length, [allTickets]);
-
-  // Estimate count matching Estimates page KPI "Total"
   const { data: allEstimates = [] } = useEstimates(null);
   const estimateCount = allEstimates.length;
 
@@ -144,7 +185,6 @@ export function PlatformSidebar() {
   { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen },
   { title: "Parts Inventory", url: "/autoheal/parts", icon: Package },
   { title: "Parts Catalog", url: "/autoheal/parts-catalog", icon: BookOpen }];
-
 
   const nochPlusPages = [
   { title: "Mission Control", url: "/noch-plus/monitoring", icon: BarChart3 },
@@ -160,15 +200,10 @@ export function PlatformSidebar() {
   { title: "Configuration", url: "/autoheal/configuration", icon: Sliders },
   { title: "Performance", url: "/autoheal/performance", icon: BarChart3 }];
 
-
   const SectionHeader = ({
     label,
     icon: Icon,
     section
-
-
-
-
   }: {label: React.ReactNode;icon: React.ElementType;section: SectionKey;}) => {
     const isOpen = expandedSection === section;
     return (
@@ -181,7 +216,6 @@ export function PlatformSidebar() {
           "bg-primary text-primary-foreground border-primary shadow-sm" :
           "bg-sidebar-accent/30 text-sidebar-foreground/80 border-sidebar-border/40 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
         )}>
-
         <div className="flex items-center gap-2.5">
           <Icon className={cn("h-4 w-4", isOpen && "text-primary-foreground")} />
           <span>{label}</span>
@@ -193,13 +227,10 @@ export function PlatformSidebar() {
           {isOpen ? "−" : "+"}
         </span>
       </button>);
-
   };
 
   const NavItem = ({
     item
-
-
   }: {item: {title: string;url: string;icon: React.ElementType;badge?: number;};}) =>
   <SidebarMenuItem>
       <SidebarMenuButton asChild>
@@ -208,7 +239,6 @@ export function PlatformSidebar() {
         end={item.url === "/dashboard"}
         className="hover:bg-sidebar-accent/50 flex items-center justify-between"
         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
-
           <div className="flex items-center gap-2">
             <item.icon className="h-4 w-4" />
             <span>{item.title}</span>
@@ -222,7 +252,6 @@ export function PlatformSidebar() {
       </SidebarMenuButton>
     </SidebarMenuItem>;
 
-
   if (isCollapsed) {
     return (
       <Sidebar side="left" collapsible="none" className="border-r border-border/50 relative h-screen sticky top-0 w-14">
@@ -230,7 +259,6 @@ export function PlatformSidebar() {
           <Crosshair className="h-5 w-5 text-sidebar-foreground/70" />
         </SidebarContent>
       </Sidebar>);
-
   }
 
   return (
@@ -246,7 +274,7 @@ export function PlatformSidebar() {
         <SectionHeader label="CAMPAIGNS" icon={Crosshair} section="campaigns" />
         {expandedSection === "campaigns" &&
         <div className="space-y-2 pl-1">
-            {/* All Campaigns nav link */}
+            {/* Campaign HQ link */}
             <SidebarMenu className="px-1">
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
@@ -255,44 +283,73 @@ export function PlatformSidebar() {
                     end
                     className="hover:bg-sidebar-accent/50 flex items-center gap-2"
                     activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setSelectedCampaignId("");
-                      setContextCampaignId("");
-                      setSelectedCampaignName("");
-                      navigate("/campaigns");
-                    }}
                   >
-                    <List className="h-4 w-4" />
-                    <span>All Campaigns</span>
+                    <LayoutGrid className="h-4 w-4" />
+                    <span>Campaign HQ</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
 
-            {/* Customer filter */}
+            {/* Customer dropdown */}
             <div className="space-y-1.5 px-2">
-              <Select value={selectedPartner} onValueChange={handlePartnerChange}>
+              <Select
+                value={selectedCustomer || "__all__"}
+                onValueChange={handleCustomerChange}
+              >
                 <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-xs h-8">
-                  <SelectValue placeholder="Select Partner" />
+                  <SelectValue placeholder="All Customers" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-                  {partners.map((p) =>
-                <SelectItem key={p.value} value={p.value} className="cursor-pointer">
-                      {p.label}
+                  <SelectItem value="__all__" className="cursor-pointer text-xs text-muted-foreground">
+                    All Customers
+                  </SelectItem>
+                  {customers.map((c) =>
+                    <SelectItem key={c.value} value={c.value} className="cursor-pointer text-xs">
+                      {c.label}
                     </SelectItem>
-                )}
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
-            {selectedCampaignId && (
-              <>
-                <div className="px-3">
-                  <span className="text-[11px] text-sidebar-foreground/50 truncate block">{selectedCampaignName}</span>
-                </div>
-                <CampaignStagePipeline />
-              </>
+            {/* Campaign dropdown */}
+            <div className="space-y-1.5 px-2">
+              <Select
+                value={contextCampaignId || "__none__"}
+                onValueChange={handleCampaignChange}
+              >
+                <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-xs h-8">
+                  <SelectValue placeholder="Select campaign..." />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+                  <SelectItem value="__none__" className="cursor-pointer text-xs text-muted-foreground">
+                    Select campaign...
+                  </SelectItem>
+                  {sortedCampaigns.map((c) => (
+                    <SelectItem key={c.id} value={c.id} className="cursor-pointer text-xs">
+                      <div className="flex items-center gap-2">
+                        <span>{c.name}</span>
+                        <Badge variant="outline" className={`text-[8px] px-1 py-0 capitalize ${CAMPAIGN_STATUS_COLORS[c.status || "draft"]}`}>
+                          {(c.status || "draft").replace("_", " ")}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                  <Separator className="my-1" />
+                  <SelectItem value="__new__" className="cursor-pointer text-xs">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Plus className="h-3 w-3" />
+                      <span>New Campaign</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Stage pipeline – only when campaign selected */}
+            {contextCampaignId && (
+              <CampaignStagePipeline />
             )}
           </div>
         }
@@ -358,18 +415,11 @@ export function PlatformSidebar() {
                   size="sm"
                   onClick={clearFilters}
                   className="h-6 px-2 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground w-full justify-start">
-
                     Clear All
                   </Button>
                 }
 
-                {/* Status */}
-                <FilterGroup
-                  label="Status"
-                  icon={AlertTriangle}
-                  open={statusOpen}
-                  onOpenChange={setStatusOpen}>
-
+                <FilterGroup label="Status" icon={AlertTriangle} open={statusOpen} onOpenChange={setStatusOpen}>
                   {STATUS_LEVELS.map((s) =>
                   <div key={s.value} className="flex items-center gap-2">
                       <Checkbox
@@ -377,7 +427,6 @@ export function PlatformSidebar() {
                       checked={filters.status.includes(s.value)}
                       onCheckedChange={() => toggleArrayFilter("status", s.value)}
                       className={`border-${s.value.toLowerCase()} data-[state=checked]:bg-${s.value.toLowerCase()}`} />
-
                       <Label htmlFor={`status-${s.value}`} className="flex items-center gap-2 text-sm cursor-pointer">
                         <span className={`w-2 h-2 rounded-full ${s.colorClass}`} />
                         {s.label}
@@ -386,7 +435,6 @@ export function PlatformSidebar() {
                   )}
                 </FilterGroup>
 
-                {/* State */}
                 <FilterGroup label="State" icon={MapPin} open={stateOpen} onOpenChange={setStateOpen}>
                   <div className="max-h-36 overflow-y-auto custom-scrollbar space-y-2">
                     {US_STATES.map((st) =>
@@ -395,14 +443,12 @@ export function PlatformSidebar() {
                         id={`state-${st}`}
                         checked={filters.states.includes(st)}
                         onCheckedChange={() => toggleArrayFilter("states", st)} />
-
                         <Label htmlFor={`state-${st}`} className="text-sm cursor-pointer">{st}</Label>
                       </div>
                     )}
                   </div>
                 </FilterGroup>
 
-                {/* Charger Type */}
                 <FilterGroup label="Charger Type" icon={Zap} open={typeOpen} onOpenChange={setTypeOpen}>
                   {CHARGER_TYPES.map((type) =>
                   <div key={type} className="flex items-center gap-2">
@@ -410,13 +456,11 @@ export function PlatformSidebar() {
                       id={`type-${type}`}
                       checked={filters.chargerTypes.includes(type)}
                       onCheckedChange={() => toggleArrayFilter("chargerTypes", type)} />
-
                       <Label htmlFor={`type-${type}`} className="text-sm cursor-pointer">{type}</Label>
                     </div>
                   )}
                 </FilterGroup>
 
-                {/* SWI Status */}
                 <FilterGroup label="SWI Status" icon={FileCheck} open={swiOpen} onOpenChange={setSwiOpen}>
                   {SWI_OPTIONS.map((opt) =>
                   <div key={opt} className="flex items-center gap-2">
@@ -424,13 +468,11 @@ export function PlatformSidebar() {
                       id={`swi-${opt}`}
                       checked={filters.swiStatus.includes(opt)}
                       onCheckedChange={() => toggleArrayFilter("swiStatus", opt)} />
-
                       <Label htmlFor={`swi-${opt}`} className="text-sm cursor-pointer">{opt}</Label>
                     </div>
                   )}
                 </FilterGroup>
 
-                {/* Account Manager */}
                 <FilterGroup label="Account Manager" icon={UserCog} open={managerOpen} onOpenChange={setManagerOpen}>
                   {ACCOUNT_MANAGERS.map((mgr) =>
                   <div key={mgr.value} className="flex items-center gap-2">
@@ -438,7 +480,6 @@ export function PlatformSidebar() {
                       id={`mgr-${mgr.value}`}
                       checked={filters.accountManagers.includes(mgr.value)}
                       onCheckedChange={() => toggleArrayFilter("accountManagers", mgr.value)} />
-
                       <Label htmlFor={`mgr-${mgr.value}`} className="text-sm cursor-pointer">{mgr.label}</Label>
                     </div>
                   )}
@@ -458,7 +499,6 @@ export function PlatformSidebar() {
                 to="/settings"
                 className="hover:bg-sidebar-accent/50"
                 activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
-
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </NavLink>
@@ -470,7 +510,6 @@ export function PlatformSidebar() {
               <a
                 href="/"
                 className="flex items-center gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-
                 <Home className="mr-2 h-4 w-4" />
                 <span>Home</span>
               </a>
@@ -478,9 +517,7 @@ export function PlatformSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-
     </Sidebar>);
-
 }
 
 /* ─── Reusable Filter Group ─── */
@@ -490,12 +527,6 @@ function FilterGroup({
   open,
   onOpenChange,
   children
-
-
-
-
-
-
 }: {label: string;icon: React.ElementType;open: boolean;onOpenChange: (o: boolean) => void;children: React.ReactNode;}) {
   return (
     <Collapsible open={open} onOpenChange={onOpenChange}>
@@ -512,5 +543,4 @@ function FilterGroup({
         <div className="px-2 py-2 space-y-2">{children}</div>
       </CollapsibleContent>
     </Collapsible>);
-
 }
