@@ -59,6 +59,30 @@ export function CampaignQuoteView({ planId, plan, planStatus, techs, scheduleDay
     toast.success(`Quote marked as ${status}`);
   };
 
+  const handleExportPdf = async () => {
+    if (!quote || !plan) return;
+    setExporting(true);
+    try {
+      const proposalData = await assembleProposalData(plan, techs, scheduleDays, quote);
+      const doc = await generateProposalPdf(proposalData);
+      
+      // Download
+      const safeName = (plan.name || "proposal").replace(/[^a-zA-Z0-9_-]/g, "_");
+      doc.save(`${safeName}_Proposal.pdf`);
+
+      // Upload to storage
+      const pdfBlob = doc.output("blob");
+      await uploadProposalToStorage(pdfBlob, plan.name || "proposal", 1);
+      
+      toast.success("Proposal PDF generated and saved");
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      toast.error("Failed to generate proposal PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-6 text-center text-sm text-muted-foreground">Loading quote...</div>;
   }
