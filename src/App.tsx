@@ -38,6 +38,13 @@ import Locations from "./pages/placeholders/Locations";
 import Parts from "./pages/placeholders/Parts";
 import PartsCatalog from "./pages/PartsCatalog";
 
+// Campaign stage pages
+import CampaignUpload from "./pages/campaigns/CampaignUpload";
+import CampaignScan from "./pages/campaigns/CampaignScan";
+import CampaignDeploy from "./pages/campaigns/CampaignDeploy";
+import CampaignPrice from "./pages/campaigns/CampaignPrice";
+import CampaignLaunch from "./pages/campaigns/CampaignLaunch";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -57,7 +64,14 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
-            {/* Campaigns section */}
+            {/* Campaign stage routes */}
+            <Route path="/campaigns/:campaignId/upload" element={<CampaignUpload />} />
+            <Route path="/campaigns/:campaignId/scan" element={<CampaignScan />} />
+            <Route path="/campaigns/:campaignId/deploy" element={<CampaignDeploy />} />
+            <Route path="/campaigns/:campaignId/price" element={<CampaignPrice />} />
+            <Route path="/campaigns/:campaignId/launch" element={<CampaignLaunch />} />
+
+            {/* Legacy campaign routes — redirect to stage equivalents or keep for backward compat */}
             <Route path="/dashboard" element={<Index />} />
             <Route path="/dataset" element={<Dataset />} />
             <Route path="/issues" element={<IssuesQueue />} />

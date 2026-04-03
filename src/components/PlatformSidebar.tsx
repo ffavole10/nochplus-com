@@ -8,6 +8,7 @@ import {
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned,
   Brain, Sliders, BarChart3 } from
 "lucide-react";
+import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
 import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
 import { usePartners } from "@/hooks/usePartners";
@@ -146,13 +147,7 @@ export function PlatformSidebar() {
     }
   };
 
-  // Campaign nav items - use existing routes for backward compat
-  const campaignPages = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Dataset", url: "/dataset", icon: Database },
-  { title: "Flagged", url: "/issues", icon: SearchIcon },
-  { title: "Schedule", url: "/schedule", icon: CalendarDays },
-  { title: "Field Reports", url: "/field-reports", icon: FolderOpen }];
+  // Campaign stage pipeline replaces old nav items
 
 
   // Ticket count matching KPI "Total Tickets" = non-parent tickets
@@ -310,11 +305,7 @@ export function PlatformSidebar() {
               </button>
             </div>
 
-            <SidebarMenu className="px-1">
-              {campaignPages.map((item) =>
-            <NavItem key={item.title} item={item} />
-            )}
-            </SidebarMenu>
+            <CampaignStagePipeline />
           </div>
         }
 

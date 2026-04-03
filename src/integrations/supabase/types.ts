@@ -312,6 +312,151 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_chargers: {
+        Row: {
+          campaign_id: string
+          charger_id: string
+          created_at: string
+          estimated_hours: number | null
+          id: string
+          in_scope: boolean
+          priority: string
+          scan_notes: string | null
+          sequence_order: number | null
+          status: string
+          technician_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          charger_id: string
+          created_at?: string
+          estimated_hours?: number | null
+          id?: string
+          in_scope?: boolean
+          priority?: string
+          scan_notes?: string | null
+          sequence_order?: number | null
+          status?: string
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          charger_id?: string
+          created_at?: string
+          estimated_hours?: number | null
+          id?: string
+          in_scope?: boolean
+          priority?: string
+          scan_notes?: string | null
+          sequence_order?: number | null
+          status?: string
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_chargers_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_chargers_charger_id_fkey"
+            columns: ["charger_id"]
+            isOneToOne: false
+            referencedRelation: "charger_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_chargers_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_cost_assumptions: {
+        Row: {
+          airfare_buffer_pct: number
+          base_labor_rate: number
+          campaign_id: string
+          created_at: string
+          custom_overrides: Json | null
+          ev_rental_daily: number
+          hotel_nightly_rate: number
+          hotel_tax_pct: number
+          id: string
+          luggage_per_flight: number
+          meal_per_diem: number
+          overtime_daily_threshold: number
+          overtime_rate: number
+          overtime_weekly_threshold: number
+          portal_to_portal_rate: number
+          rate_card_id: string | null
+          rate_source: string
+          updated_at: string
+        }
+        Insert: {
+          airfare_buffer_pct?: number
+          base_labor_rate?: number
+          campaign_id: string
+          created_at?: string
+          custom_overrides?: Json | null
+          ev_rental_daily?: number
+          hotel_nightly_rate?: number
+          hotel_tax_pct?: number
+          id?: string
+          luggage_per_flight?: number
+          meal_per_diem?: number
+          overtime_daily_threshold?: number
+          overtime_rate?: number
+          overtime_weekly_threshold?: number
+          portal_to_portal_rate?: number
+          rate_card_id?: string | null
+          rate_source?: string
+          updated_at?: string
+        }
+        Update: {
+          airfare_buffer_pct?: number
+          base_labor_rate?: number
+          campaign_id?: string
+          created_at?: string
+          custom_overrides?: Json | null
+          ev_rental_daily?: number
+          hotel_nightly_rate?: number
+          hotel_tax_pct?: number
+          id?: string
+          luggage_per_flight?: number
+          meal_per_diem?: number
+          overtime_daily_threshold?: number
+          overtime_rate?: number
+          overtime_weekly_threshold?: number
+          portal_to_portal_rate?: number
+          rate_card_id?: string | null
+          rate_source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_cost_assumptions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_cost_assumptions_rate_card_id_fkey"
+            columns: ["rate_card_id"]
+            isOneToOne: false
+            referencedRelation: "rate_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_plan_chargers: {
         Row: {
           charger_id: string
@@ -630,9 +775,11 @@ export type Database = {
       }
       campaign_quotes: {
         Row: {
+          campaign_id: string | null
           created_at: string
           customer_id: string | null
           id: string
+          is_manually_adjusted: boolean
           notes: string | null
           plan_id: string
           quote_number: string | null
@@ -641,11 +788,14 @@ export type Database = {
           total_amount: number
           updated_at: string
           valid_until: string | null
+          version: number
         }
         Insert: {
+          campaign_id?: string | null
           created_at?: string
           customer_id?: string | null
           id?: string
+          is_manually_adjusted?: boolean
           notes?: string | null
           plan_id: string
           quote_number?: string | null
@@ -654,11 +804,14 @@ export type Database = {
           total_amount?: number
           updated_at?: string
           valid_until?: string | null
+          version?: number
         }
         Update: {
+          campaign_id?: string | null
           created_at?: string
           customer_id?: string | null
           id?: string
+          is_manually_adjusted?: boolean
           notes?: string | null
           plan_id?: string
           quote_number?: string | null
@@ -667,8 +820,16 @@ export type Database = {
           total_amount?: number
           updated_at?: string
           valid_until?: string | null
+          version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "campaign_quotes_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "campaign_quotes_customer_id_fkey"
             columns: ["customer_id"]
@@ -692,65 +853,209 @@ export type Database = {
           },
         ]
       }
+      campaign_schedule: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          day_number: number
+          day_type: string
+          id: string
+          notes: string | null
+          overnight_city: string | null
+          schedule_date: string
+          sites: Json
+          technician_id: string
+          total_drive_miles: number
+          total_travel_hours: number
+          total_work_hours: number
+          travel_segments: Json
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          day_number?: number
+          day_type?: string
+          id?: string
+          notes?: string | null
+          overnight_city?: string | null
+          schedule_date: string
+          sites?: Json
+          technician_id: string
+          total_drive_miles?: number
+          total_travel_hours?: number
+          total_work_hours?: number
+          travel_segments?: Json
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          day_number?: number
+          day_type?: string
+          id?: string
+          notes?: string | null
+          overnight_city?: string | null
+          schedule_date?: string
+          sites?: Json
+          technician_id?: string
+          total_drive_miles?: number
+          total_travel_hours?: number
+          total_work_hours?: number
+          travel_segments?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_schedule_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_schedule_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_technicians: {
+        Row: {
+          assigned_regions: Json | null
+          campaign_id: string
+          created_at: string
+          home_base_airport: string | null
+          home_base_city: string
+          home_base_lat: number | null
+          home_base_lng: number | null
+          id: string
+          technician_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_regions?: Json | null
+          campaign_id: string
+          created_at?: string
+          home_base_airport?: string | null
+          home_base_city?: string
+          home_base_lat?: number | null
+          home_base_lng?: number | null
+          id?: string
+          technician_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_regions?: Json | null
+          campaign_id?: string
+          created_at?: string
+          home_base_airport?: string | null
+          home_base_city?: string
+          home_base_lat?: number | null
+          home_base_lng?: number | null
+          id?: string
+          technician_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_technicians_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_technicians_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
+          break_hrs: number
           created_at: string
           critical_count: number | null
           customer: string
           data: Json | null
+          deadline: string | null
           degraded_count: number | null
           end_date: string | null
           health_score: number | null
+          hrs_per_charger: number
+          hrs_per_day: number
           id: string
           name: string
           optimal_count: number | null
           quarter: string | null
+          stage_status: Json
           start_date: string | null
           status: string | null
           total_chargers: number | null
           total_serviced: number | null
+          travel_time_min: number
           updated_at: string
           user_id: string | null
+          working_days: Json
           year: number | null
         }
         Insert: {
+          break_hrs?: number
           created_at?: string
           critical_count?: number | null
           customer: string
           data?: Json | null
+          deadline?: string | null
           degraded_count?: number | null
           end_date?: string | null
           health_score?: number | null
+          hrs_per_charger?: number
+          hrs_per_day?: number
           id?: string
           name: string
           optimal_count?: number | null
           quarter?: string | null
+          stage_status?: Json
           start_date?: string | null
           status?: string | null
           total_chargers?: number | null
           total_serviced?: number | null
+          travel_time_min?: number
           updated_at?: string
           user_id?: string | null
+          working_days?: Json
           year?: number | null
         }
         Update: {
+          break_hrs?: number
           created_at?: string
           critical_count?: number | null
           customer?: string
           data?: Json | null
+          deadline?: string | null
           degraded_count?: number | null
           end_date?: string | null
           health_score?: number | null
+          hrs_per_charger?: number
+          hrs_per_day?: number
           id?: string
           name?: string
           optimal_count?: number | null
           quarter?: string | null
+          stage_status?: Json
           start_date?: string | null
           status?: string | null
           total_chargers?: number | null
           total_serviced?: number | null
+          travel_time_min?: number
           updated_at?: string
           user_id?: string | null
+          working_days?: Json
           year?: number | null
         }
         Relationships: []
