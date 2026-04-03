@@ -111,16 +111,10 @@ export function PlatformSidebar() {
   const handlePartnerChange = (value: string) => {
     setSelectedPartner(value);
     setSelectedCustomer(value);
-    const partnerCampaigns = dbCampaigns.filter((c) => c.customer === value);
-    if (partnerCampaigns.length === 1) {
-      setSelectedCampaignId(partnerCampaigns[0].id);
-      setContextCampaignId(partnerCampaigns[0].id);
-      setSelectedCampaignName(partnerCampaigns[0].name);
-    } else {
-      setSelectedCampaignId("");
-      setContextCampaignId("");
-      setSelectedCampaignName("");
-    }
+    setSelectedCampaignId("");
+    setContextCampaignId("");
+    setSelectedCampaignName("");
+    navigate("/campaigns");
   };
 
   const handleCampaignChange = (value: string) => {
