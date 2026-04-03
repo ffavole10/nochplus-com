@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
 import { SavedCampaignQuote, QuoteLineItem, updateQuoteStatus, loadCampaignQuote } from "@/services/campaignQuoteEngine";
-import { PlanTechnician } from "@/hooks/useCampaignPlan";
+import { CampaignPlan, PlanTechnician } from "@/hooks/useCampaignPlan";
+import { GeneratedScheduleDay } from "@/lib/routeOptimizer";
+import { assembleProposalData, generateProposalPdf, uploadProposalToStorage } from "@/services/campaignProposalPdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
-import { ChevronDown, DollarSign, FileText, Send, CheckCircle2, XCircle, AlertTriangle, Edit } from "lucide-react";
+import { ChevronDown, DollarSign, FileText, Send, CheckCircle2, XCircle, AlertTriangle, Edit, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CampaignQuoteViewProps {
   planId: string;
+  plan?: CampaignPlan | null;
   planStatus: string;
   techs: PlanTechnician[];
+  scheduleDays?: GeneratedScheduleDay[];
   scheduleChanged?: boolean;
   onStatusChanged?: () => void;
 }
@@ -38,9 +42,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   misc_supplies: "Misc Supplies",
 };
 
-export function CampaignQuoteView({ planId, planStatus, techs, scheduleChanged, onStatusChanged }: CampaignQuoteViewProps) {
+export function CampaignQuoteView({ planId, plan, planStatus, techs, scheduleDays = [], scheduleChanged, onStatusChanged }: CampaignQuoteViewProps) {
   const [quote, setQuote] = useState<SavedCampaignQuote | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadCampaignQuote(planId).then(q => { setQuote(q); setLoading(false); });
@@ -52,6 +57,30 @@ export function CampaignQuoteView({ planId, planStatus, techs, scheduleChanged, 
     setQuote(prev => prev ? { ...prev, status } : null);
     onStatusChanged?.();
     toast.success(`Quote marked as ${status}`);
+  };
+
+  const handleExportPdf = async () => {
+    if (!quote || !plan) return;
+    setExporting(true);
+    try {
+      const proposalData = await assembleProposalData(plan, techs, scheduleDays, quote);
+      const doc = await generateProposalPdf(proposalData);
+      
+      // Download
+      const safeName = (plan.name || "proposal").replace(/[^a-zA-Z0-9_-]/g, "_");
+      doc.save(`${safeName}_Proposal.pdf`);
+
+      // Upload to storage
+      const pdfBlob = doc.output("blob");
+      await uploadProposalToStorage(pdfBlob, plan.name || "proposal", 1);
+      
+      toast.success("Proposal PDF generated and saved");
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      toast.error("Failed to generate proposal PDF");
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (loading) {
@@ -189,6 +218,13 @@ export function CampaignQuoteView({ planId, planStatus, techs, scheduleChanged, 
       {/* Actions */}
       <Separator />
       <div className="flex flex-wrap gap-2">
+        <Button size="sm" onClick={handleExportPdf} disabled={exporting}>
+          {exporting ? (
+            <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Generating...</>
+          ) : (
+            <><Download className="h-3.5 w-3.5 mr-1" /> Export PDF</>
+          )}
+        </Button>
         {quote.status === "draft" && (
           <Button size="sm" variant="outline" onClick={() => handleStatusUpdate("sent")}>
             <Send className="h-3.5 w-3.5 mr-1" /> Mark as Sent
