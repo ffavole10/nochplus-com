@@ -273,6 +273,30 @@ export function PlatformSidebar() {
         <SectionHeader label="CAMPAIGNS" icon={Crosshair} section="campaigns" />
         {expandedSection === "campaigns" &&
         <div className="space-y-2 pl-1">
+            {/* All Campaigns nav link */}
+            <SidebarMenu className="px-1">
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/campaigns"
+                    end
+                    className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSelectedCampaignId("");
+                      setContextCampaignId("");
+                      setSelectedCampaignName("");
+                      navigate("/campaigns");
+                    }}
+                  >
+                    <List className="h-4 w-4" />
+                    <span>All Campaigns</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+
             {/* Partner → Campaign Selectors */}
             <div className="space-y-1.5 px-2">
               <Select value={selectedPartner} onValueChange={handlePartnerChange}>

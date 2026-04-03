@@ -34,12 +34,37 @@ const PAGE_TITLES: Record<string, string> = {
   "/noch-plus/members": "Members",
   "/noch-plus/chargers": "Chargers",
   "/noch-plus/monitoring": "Mission Control",
+  "/campaigns": "Campaigns",
 };
+
+const CAMPAIGN_STAGE_TITLES: Record<string, string> = {
+  upload: "Upload",
+  scan: "Scan",
+  deploy: "Deploy",
+  price: "Price",
+  launch: "Launch",
+};
+
+function getCampaignPageTitle(pathname: string, campaignName: string, customerName: string): string | null {
+  // Campaign list view
+  if (pathname === "/campaigns") {
+    return customerName ? `Campaigns | ${customerName}` : "Campaigns";
+  }
+  // Campaign stage view: /campaigns/:id/:stage
+  const stageMatch = pathname.match(/^\/campaigns\/[^/]+\/(\w+)$/);
+  if (stageMatch) {
+    const stageName = CAMPAIGN_STAGE_TITLES[stageMatch[1]];
+    if (stageName) {
+      return campaignName ? `${stageName} | ${campaignName}` : stageName;
+    }
+  }
+  return null;
+}
 
 export function PlatformHeader() {
   const { session } = useAuth();
   const location = useLocation();
-  const { selectedCampaignName, setSelectedCampaignName } = useCampaignContext();
+  const { selectedCampaignName, setSelectedCampaignName, selectedCustomer } = useCampaignContext();
   const { filters, updateFilter } = useFilters();
   const { state, toggleSidebar } = useSidebar();
   const sidebarCollapsed = state === "collapsed";
@@ -49,9 +74,10 @@ export function PlatformHeader() {
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const pageTitle = PAGE_TITLES[location.pathname] || "Dashboard";
+  const campaignTitle = getCampaignPageTitle(location.pathname, selectedCampaignName, selectedCustomer);
+  const pageTitle = campaignTitle || PAGE_TITLES[location.pathname] || "Dashboard";
   const isSettingsPage = location.pathname === "/settings";
-  const isCampaignPage = ["/dashboard", "/dataset", "/tickets", "/schedule", "/campaigns/reports"].includes(location.pathname);
+  const isCampaignPage = false; // Campaign name now shown in pageTitle directly
 
   useEffect(() => {
     if (!session?.user?.id) return;
