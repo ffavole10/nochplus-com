@@ -99,10 +99,6 @@ export function PlatformSidebar() {
   const { data: dbPartners = [] } = usePartners();
   const partners = useMemo(() => dbPartners.map((p) => ({ value: p.value, label: p.label })), [dbPartners]);
   const { data: dbCampaigns = [] } = useCampaigns();
-  const filteredCampaigns = useMemo(() => {
-    if (!selectedPartner) return [];
-    return dbCampaigns.filter((c) => c.customer === selectedPartner);
-  }, [selectedPartner, dbCampaigns]);
 
   const handlePartnerChange = (value: string) => {
     setSelectedPartner(value);
@@ -111,29 +107,6 @@ export function PlatformSidebar() {
     setContextCampaignId("");
     setSelectedCampaignName("");
     navigate("/campaigns");
-  };
-
-  const handleCampaignChange = (value: string) => {
-    if (value === "__view_all__") {
-      setSelectedCampaignId("");
-      setContextCampaignId("");
-      setSelectedCampaignName("");
-      navigate("/campaigns");
-      return;
-    }
-    setSelectedCampaignId(value);
-    setContextCampaignId(value);
-    const campaign = dbCampaigns.find((c) => c.id === value);
-    setSelectedCampaignName(campaign?.name || "");
-    setSelectedCustomer(campaign?.customer || "");
-    if (campaign) {
-      const ss = (campaign.stage_status as Record<string, string>) || {};
-      const stages = ["upload", "scan", "deploy", "price", "launch"];
-      const inProgress = stages.find(s => ss[s] === "in_progress");
-      const firstNotStarted = stages.find(s => ss[s] === "not_started");
-      const target = inProgress || firstNotStarted || "launch";
-      navigate(`/campaigns/${campaign.id}/${target}`);
-    }
   };
 
   const sectionFirstPage: Record<NonNullable<SectionKey>, string> = {
