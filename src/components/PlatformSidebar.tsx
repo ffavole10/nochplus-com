@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Database, Search as SearchIcon, CalendarDays, Settings, Plus,
+  LayoutDashboard, Database, Search as SearchIcon, CalendarDays, Settings,
   AlertTriangle, ChevronDown, ChevronRight,
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
@@ -9,10 +9,9 @@ import {
   Brain, Sliders, BarChart3 } from
 "lucide-react";
 import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
-import { NewCampaignModal } from "@/components/campaigns/NewCampaignModal";
 import { toast } from "sonner";
 import { usePartners } from "@/hooks/usePartners";
-import { useCampaigns, useCreateCampaign, useCreateChargerRecords } from "@/hooks/useCampaigns";
+import { useCampaigns } from "@/hooks/useCampaigns";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NavLink } from "@/components/NavLink";
@@ -80,7 +79,6 @@ export function PlatformSidebar() {
     setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer
   } = useCampaignContext();
 
-  const [newCampaignOpen, setNewCampaignOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string>(selectedCustomer || "");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>(contextCampaignId || "");
 
@@ -101,8 +99,6 @@ export function PlatformSidebar() {
   const { data: dbPartners = [] } = usePartners();
   const partners = useMemo(() => dbPartners.map((p) => ({ value: p.value, label: p.label })), [dbPartners]);
   const { data: dbCampaigns = [] } = useCampaigns();
-  const createCampaign = useCreateCampaign();
-  const createChargerRecords = useCreateChargerRecords();
   const filteredCampaigns = useMemo(() => {
     if (!selectedPartner) return [];
     return dbCampaigns.filter((c) => c.customer === selectedPartner);
@@ -111,28 +107,37 @@ export function PlatformSidebar() {
   const handlePartnerChange = (value: string) => {
     setSelectedPartner(value);
     setSelectedCustomer(value);
-    const partnerCampaigns = dbCampaigns.filter((c) => c.customer === value);
-    if (partnerCampaigns.length === 1) {
-      setSelectedCampaignId(partnerCampaigns[0].id);
-      setContextCampaignId(partnerCampaigns[0].id);
-      setSelectedCampaignName(partnerCampaigns[0].name);
-    } else {
-      setSelectedCampaignId("");
-      setContextCampaignId("");
-      setSelectedCampaignName("");
-    }
+    setSelectedCampaignId("");
+    setContextCampaignId("");
+    setSelectedCampaignName("");
+    navigate("/campaigns");
   };
 
   const handleCampaignChange = (value: string) => {
+    if (value === "__view_all__") {
+      setSelectedCampaignId("");
+      setContextCampaignId("");
+      setSelectedCampaignName("");
+      navigate("/campaigns");
+      return;
+    }
     setSelectedCampaignId(value);
     setContextCampaignId(value);
     const campaign = dbCampaigns.find((c) => c.id === value);
     setSelectedCampaignName(campaign?.name || "");
     setSelectedCustomer(campaign?.customer || "");
+    if (campaign) {
+      const ss = (campaign.stage_status as Record<string, string>) || {};
+      const stages = ["upload", "scan", "deploy", "price", "launch"];
+      const inProgress = stages.find(s => ss[s] === "in_progress");
+      const firstNotStarted = stages.find(s => ss[s] === "not_started");
+      const target = inProgress || firstNotStarted || "launch";
+      navigate(`/campaigns/${campaign.id}/${target}`);
+    }
   };
 
   const sectionFirstPage: Record<NonNullable<SectionKey>, string> = {
-    "campaigns": "/dashboard",
+    "campaigns": "/campaigns",
     "service-desk": "/service-desk/tickets",
     "noch-plus": "/noch-plus/dashboard",
     "autoheal": "/autoheal/ai-agent",
@@ -293,19 +298,19 @@ export function PlatformSidebar() {
                       <span className="truncate block">{c.name}</span>
                     </SelectItem>
                 )}
+                  {filteredCampaigns.length > 0 && (
+                    <>
+                      <div className="border-t border-border my-1" />
+                      <SelectItem value="__view_all__" className="cursor-pointer text-xs text-muted-foreground">
+                        View All Campaigns
+                      </SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
-
-              <button
-              onClick={() => setNewCampaignOpen(true)}
-              className="flex items-center gap-1.5 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors">
-
-                <Plus className="h-3 w-3" />
-                New Campaign
-              </button>
             </div>
 
-            <CampaignStagePipeline />
+            {selectedCampaignId && <CampaignStagePipeline />}
           </div>
         }
 
@@ -490,87 +495,6 @@ export function PlatformSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-
-      <NewCampaignModal
-        open={newCampaignOpen}
-        onOpenChange={setNewCampaignOpen}
-        onComplete={async (data) => {
-          try {
-            const chargers = data.chargers;
-            const criticalCount = chargers.filter(c => c.priorityLevel === "Critical").length;
-            const highCount = chargers.filter(c => c.priorityLevel === "High").length;
-            const lowCount = chargers.filter(c => c.priorityLevel === "Low" || c.priorityLevel === "Medium").length;
-            const healthScore = chargers.length > 0
-              ? Math.round(((lowCount / chargers.length) * 50) + (((chargers.length - criticalCount) / chargers.length) * 30) + 20)
-              : 0;
-
-            const campaign = await createCampaign.mutateAsync({
-              name: data.name,
-              customer: data.customer,
-              status: "draft",
-              quarter: null,
-              year: null,
-              start_date: null,
-              end_date: null,
-              total_chargers: chargers.length,
-              total_serviced: 0,
-              optimal_count: lowCount,
-              degraded_count: highCount,
-              critical_count: criticalCount,
-              health_score: healthScore,
-            });
-
-            if (chargers.length > 0) {
-              const records = chargers.map(c => ({
-                campaign_id: campaign.id,
-                station_id: c.evseId || c.assetName || `CHG-${Math.random().toString(36).slice(2, 8)}`,
-                station_name: c.assetName || null,
-                serial_number: c.evseId || null,
-                model: null,
-                address: c.address || null,
-                city: c.city || null,
-                state: c.state || null,
-                zip: c.zip || null,
-                status: (c.status as "Optimal" | "Degraded" | "Critical") || null,
-                site_name: c.accountName || null,
-                max_power: null,
-                start_date: c.inServiceDate || null,
-                service_required: 0,
-                serviced_qty: 0,
-                service_date: null,
-                report_url: null,
-                summary: null,
-                power_cabinet_report_url: null,
-                power_cabinet_status: null,
-                power_cabinet_summary: null,
-                ccs_cable_issue: false,
-                chademo_cable_issue: false,
-                screen_damage: false,
-                cc_reader_issue: false,
-                rfid_reader_issue: false,
-                app_issue: false,
-                holster_issue: false,
-                other_issue: false,
-                power_supply_issue: false,
-                circuit_board_issue: false,
-                latitude: c.latitude || null,
-                longitude: c.longitude || null,
-                ticket_id: c.ticketId || null,
-                ticket_created_date: c.ticketCreatedDate || null,
-                ticket_solved_date: c.ticketSolvedDate || null,
-                ticket_group: c.ticketGroup || null,
-                ticket_subject: c.ticketSubject || null,
-                ticket_reporting_source: c.ticketReportingSource || null,
-              }));
-              await createChargerRecords.mutateAsync(records);
-            }
-
-            toast.success(`Campaign "${data.name}" created with ${chargers.length} chargers`);
-          } catch (err) {
-            console.error("Failed to create campaign:", err);
-            toast.error("Failed to create campaign");
-          }
-        }} />
 
     </Sidebar>);
 
