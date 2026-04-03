@@ -10,7 +10,7 @@ import {
 "lucide-react";
 import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
 import { toast } from "sonner";
-import { usePartners } from "@/hooks/usePartners";
+import { useCustomers } from "@/hooks/useCustomers";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -96,8 +96,8 @@ export function PlatformSidebar() {
   const [managerOpen, setManagerOpen] = useState(false);
 
   // Partners & campaigns
-  const { data: dbPartners = [] } = usePartners();
-  const partners = useMemo(() => dbPartners.map((p) => ({ value: p.value, label: p.label })), [dbPartners]);
+  const { data: dbCustomers = [] } = useCustomers();
+  const partners = useMemo(() => dbCustomers.map((c) => ({ value: c.company, label: c.company })), [dbCustomers]);
   const { data: dbCampaigns = [] } = useCampaigns();
 
   const handlePartnerChange = (value: string) => {

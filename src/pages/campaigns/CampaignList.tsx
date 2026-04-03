@@ -47,7 +47,7 @@ export default function CampaignList() {
 
   const filtered = useMemo(() => {
     if (!selectedCustomer) return campaigns;
-    return campaigns.filter(c => c.customer === selectedCustomer);
+    return campaigns.filter(c => c.customer_company === selectedCustomer || c.customer === selectedCustomer);
   }, [campaigns, selectedCustomer]);
 
   const sorted = useMemo(() =>
@@ -58,7 +58,7 @@ export default function CampaignList() {
   const handleSelectCampaign = (campaign: typeof campaigns[0]) => {
     setSelectedCampaignId(campaign.id);
     setSelectedCampaignName(campaign.name);
-    setSelectedCustomer(campaign.customer);
+    setSelectedCustomer(campaign.customer_company || campaign.customer);
     const ss = campaign.stage_status as Record<string, string> | null;
     const stage = getFirstActiveStage(ss);
     navigate(`/campaigns/${campaign.id}/${stage}`);

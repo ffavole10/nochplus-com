@@ -470,6 +470,7 @@ export type Database = {
           severity: string
           site_name: string | null
           status: string
+          technician_id: string | null
           updated_at: string
         }
         Insert: {
@@ -484,6 +485,7 @@ export type Database = {
           severity?: string
           site_name?: string | null
           status?: string
+          technician_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -498,9 +500,18 @@ export type Database = {
           severity?: string
           site_name?: string | null
           status?: string
+          technician_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaign_escalations_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaign_field_reports: {
         Row: {
@@ -1089,6 +1100,7 @@ export type Database = {
           created_at: string
           critical_count: number | null
           customer: string
+          customer_id: string | null
           data: Json | null
           deadline: string | null
           degraded_count: number | null
@@ -1116,6 +1128,7 @@ export type Database = {
           created_at?: string
           critical_count?: number | null
           customer: string
+          customer_id?: string | null
           data?: Json | null
           deadline?: string | null
           degraded_count?: number | null
@@ -1143,6 +1156,7 @@ export type Database = {
           created_at?: string
           critical_count?: number | null
           customer?: string
+          customer_id?: string | null
           data?: Json | null
           deadline?: string | null
           degraded_count?: number | null
@@ -1165,7 +1179,15 @@ export type Database = {
           working_days?: Json
           year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       charger_health_scores: {
         Row: {
@@ -1478,6 +1500,7 @@ export type Database = {
       customer_rate_overrides: {
         Row: {
           created_at: string
+          customer_id: string | null
           customer_name: string
           id: string
           notes: string | null
@@ -1487,6 +1510,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          customer_id?: string | null
           customer_name: string
           id?: string
           notes?: string | null
@@ -1496,6 +1520,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          customer_id?: string | null
           customer_name?: string
           id?: string
           notes?: string | null
@@ -1504,6 +1529,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "customer_rate_overrides_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "customer_rate_overrides_rate_card_id_fkey"
             columns: ["rate_card_id"]
@@ -1516,6 +1548,7 @@ export type Database = {
       customer_rate_sheets: {
         Row: {
           created_at: string
+          customer_id: string | null
           customer_name: string
           description: string | null
           effective_date: string | null
@@ -1527,6 +1560,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          customer_id?: string | null
           customer_name: string
           description?: string | null
           effective_date?: string | null
@@ -1538,6 +1572,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          customer_id?: string | null
           customer_name?: string
           description?: string | null
           effective_date?: string | null
@@ -1547,7 +1582,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customer_rate_sheets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customers: {
         Row: {
@@ -1715,6 +1758,7 @@ export type Database = {
           created_at: string
           customer_address: string | null
           customer_email: string | null
+          customer_id: string | null
           customer_name: string | null
           estimate_number: string | null
           id: string
@@ -1742,6 +1786,7 @@ export type Database = {
           created_at?: string
           customer_address?: string | null
           customer_email?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           estimate_number?: string | null
           id?: string
@@ -1769,6 +1814,7 @@ export type Database = {
           created_at?: string
           customer_address?: string | null
           customer_email?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           estimate_number?: string | null
           id?: string
@@ -1802,6 +1848,13 @@ export type Database = {
             columns: ["charger_record_id"]
             isOneToOne: false
             referencedRelation: "charger_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estimates_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]
@@ -2636,6 +2689,7 @@ export type Database = {
         Row: {
           created_at: string
           customer: string
+          customer_id: string | null
           id: string
           name: string
           updated_at: string
@@ -2643,6 +2697,7 @@ export type Database = {
         Insert: {
           created_at?: string
           customer: string
+          customer_id?: string | null
           id?: string
           name: string
           updated_at?: string
@@ -2650,11 +2705,20 @@ export type Database = {
         Update: {
           created_at?: string
           customer?: string
+          customer_id?: string | null
           id?: string
           name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rate_sheets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       regulatory_changes: {
         Row: {
@@ -2892,6 +2956,7 @@ export type Database = {
           status: string
           street_address: string | null
           submission_id: string | null
+          technician_id: string | null
           ticket_id: string
           updated_at: string
           zip_code: string | null
@@ -2919,6 +2984,7 @@ export type Database = {
           status?: string
           street_address?: string | null
           submission_id?: string | null
+          technician_id?: string | null
           ticket_id: string
           updated_at?: string
           zip_code?: string | null
@@ -2946,6 +3012,7 @@ export type Database = {
           status?: string
           street_address?: string | null
           submission_id?: string | null
+          technician_id?: string | null
           ticket_id?: string
           updated_at?: string
           zip_code?: string | null
@@ -2972,6 +3039,13 @@ export type Database = {
             referencedRelation: "service_tickets"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "service_tickets_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
         ]
       }
       stock_movements: {
@@ -2987,6 +3061,7 @@ export type Database = {
           quantity: number
           reason: string
           technician: string | null
+          technician_id: string | null
           ticket_id: string | null
         }
         Insert: {
@@ -3001,6 +3076,7 @@ export type Database = {
           quantity?: number
           reason?: string
           technician?: string | null
+          technician_id?: string | null
           ticket_id?: string | null
         }
         Update: {
@@ -3015,6 +3091,7 @@ export type Database = {
           quantity?: number
           reason?: string
           technician?: string | null
+          technician_id?: string | null
           ticket_id?: string | null
         }
         Relationships: [
@@ -3023,6 +3100,13 @@ export type Database = {
             columns: ["part_id"]
             isOneToOne: false
             referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
             referencedColumns: ["id"]
           },
         ]
