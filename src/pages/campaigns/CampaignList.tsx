@@ -1,14 +1,16 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useCampaignContext } from "@/contexts/CampaignContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useCustomers } from "@/hooks/useCustomers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Rocket } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Rocket, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,19 +38,44 @@ function getFirstActiveStage(stageStatus: Record<string, string> | null): string
 export default function CampaignList() {
   const { selectedCustomer, setSelectedCampaignId, setSelectedCampaignName, setSelectedCustomer } = useCampaignContext();
   const { data: campaigns = [] } = useCampaigns();
+  const { data: dbCustomers = [] } = useCustomers();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [newOpen, setNewOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [newCustomer, setNewCustomer] = useState("");
   const [creating, setCreating] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  usePageTitle(selectedCustomer ? `Campaigns | ${selectedCustomer}` : "Campaigns");
+  // Open modal if ?new=1 query param (from sidebar "+ New Campaign")
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setNewOpen(true);
+      setNewCustomer(selectedCustomer || "");
+      searchParams.delete("new");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams]);
+
+  usePageTitle(selectedCustomer ? `Campaign HQ | ${selectedCustomer}` : "Campaign HQ");
 
   const filtered = useMemo(() => {
-    if (!selectedCustomer) return campaigns;
-    return campaigns.filter(c => c.customer_company === selectedCustomer || c.customer === selectedCustomer);
-  }, [campaigns, selectedCustomer]);
+    let result = campaigns;
+    if (selectedCustomer) {
+      result = result.filter(c => (c as any).customer_company === selectedCustomer || c.customer === selectedCustomer);
+    }
+    if (statusFilter !== "all") {
+      result = result.filter(c => (c.status || "draft") === statusFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(c => c.name.toLowerCase().includes(q));
+    }
+    return result;
+  }, [campaigns, selectedCustomer, statusFilter, searchQuery]);
 
   const sorted = useMemo(() =>
     [...filtered].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
@@ -58,29 +85,42 @@ export default function CampaignList() {
   const handleSelectCampaign = (campaign: typeof campaigns[0]) => {
     setSelectedCampaignId(campaign.id);
     setSelectedCampaignName(campaign.name);
-    setSelectedCustomer(campaign.customer_company || campaign.customer);
+    setSelectedCustomer((campaign as any).customer_company || campaign.customer);
     const ss = campaign.stage_status as Record<string, string> | null;
     const stage = getFirstActiveStage(ss);
     navigate(`/campaigns/${campaign.id}/${stage}`);
   };
 
+  const openNewModal = () => {
+    setNewCustomer(selectedCustomer || "");
+    setNewOpen(true);
+  };
+
   const handleCreate = async () => {
     if (!name.trim()) return;
+    const customerValue = newCustomer || "Unassigned";
     setCreating(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const { data, error } = await supabase.from("campaigns").insert({
+      const insertPayload: any = {
         name: name.trim(),
-        customer: selectedCustomer || "Unassigned",
+        customer: customerValue,
         status: "draft",
         user_id: session?.user?.id ?? null,
-      }).select().single();
+      };
+      // Try to set customer_id FK
+      const matchedCustomer = dbCustomers.find(c => c.company === customerValue);
+      if (matchedCustomer) {
+        insertPayload.customer_id = matchedCustomer.id;
+      }
+      const { data, error } = await supabase.from("campaigns").insert(insertPayload).select().single();
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       toast.success(`Campaign "${name}" created`);
       setNewOpen(false);
       setName("");
       setDescription("");
+      setNewCustomer("");
       setSelectedCampaignId(data.id);
       setSelectedCampaignName(data.name);
       setSelectedCustomer(data.customer);
@@ -119,21 +159,47 @@ export default function CampaignList() {
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">
-          Campaigns {selectedCustomer && <span className="text-muted-foreground font-normal">| {selectedCustomer}</span>}
+          Campaign HQ {selectedCustomer && <span className="text-muted-foreground font-normal">| {selectedCustomer}</span>}
         </h1>
-        <Button onClick={() => setNewOpen(true)} size="sm">
+        <Button onClick={openNewModal} size="sm">
           <Plus className="h-4 w-4 mr-1" /> New Campaign
         </Button>
+      </div>
+
+      {/* Filters bar */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Search campaigns..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-8 h-8 text-xs"
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          {["all", "draft", "active", "completed"].map(s => (
+            <Button
+              key={s}
+              variant={statusFilter === s ? "default" : "ghost"}
+              size="sm"
+              className="h-7 text-xs capitalize"
+              onClick={() => setStatusFilter(s)}
+            >
+              {s === "all" ? "All" : s}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {sorted.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Rocket className="h-12 w-12 text-muted-foreground/30 mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-1">
-            No campaigns yet{selectedCustomer ? ` for ${selectedCustomer}` : ""}
+            No campaigns{selectedCustomer ? ` for ${selectedCustomer}` : ""}{statusFilter !== "all" ? ` with status "${statusFilter}"` : ""}
           </h3>
           <p className="text-sm text-muted-foreground mb-4">Create your first campaign to get started.</p>
-          <Button onClick={() => setNewOpen(true)} size="sm">
+          <Button onClick={openNewModal} size="sm">
             <Plus className="h-4 w-4 mr-1" /> New Campaign
           </Button>
         </div>
@@ -143,6 +209,7 @@ export default function CampaignList() {
             <thead className="bg-muted/50 border-b border-border">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Campaign Name</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Customer</th>
                 <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Status</th>
                 <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Progress</th>
                 <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Chargers</th>
@@ -158,6 +225,7 @@ export default function CampaignList() {
                   className="border-b border-border last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{(c as any).customer_company || c.customer}</td>
                   <td className="px-4 py-3">
                     <Badge variant="outline" className={`text-[10px] capitalize ${STATUS_COLORS[c.status || "draft"]}`}>
                       {(c.status || "draft").replace("_", " ")}
@@ -192,6 +260,20 @@ export default function CampaignList() {
                 onKeyDown={e => e.key === "Enter" && handleCreate()}
                 autoFocus
               />
+            </div>
+            <div>
+              <Label className="text-xs">Customer</Label>
+              <Select value={newCustomer || "__none__"} onValueChange={v => setNewCustomer(v === "__none__" ? "" : v)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select customer..." />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-[200]">
+                  <SelectItem value="__none__" className="text-xs text-muted-foreground">No customer</SelectItem>
+                  {dbCustomers.map(c => (
+                    <SelectItem key={c.id} value={c.company} className="text-xs">{c.company}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label className="text-xs">Description (optional)</Label>
