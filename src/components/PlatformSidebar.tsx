@@ -146,13 +146,7 @@ export function PlatformSidebar() {
     }
   };
 
-  // Campaign nav items - use existing routes for backward compat
-  const campaignPages = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Dataset", url: "/dataset", icon: Database },
-  { title: "Flagged", url: "/issues", icon: SearchIcon },
-  { title: "Schedule", url: "/schedule", icon: CalendarDays },
-  { title: "Field Reports", url: "/field-reports", icon: FolderOpen }];
+  // Campaign stage pipeline replaces old nav items
 
 
   // Ticket count matching KPI "Total Tickets" = non-parent tickets
