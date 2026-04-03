@@ -272,35 +272,99 @@ export function ScheduleView({
                   />
                 </>
               )}
+
+              {/* Generate Quote Button */}
+              {canQuote && (
+                <>
+                  <Separator />
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setQuoteModalOpen(true)}
+                  >
+                    <DollarSign className="h-4 w-4 mr-2" /> Generate Quote
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}
 
-        {/* Calendar */}
-        {displayCampaign ? (
-          <CampaignCalendar
-            campaign={displayCampaign}
-            chargers={activeCampaign ? chargers : filteredChargers}
-            onMarkStatus={activeCampaign ? (chargerId, status) => {
-              onUpdateStatus(activeCampaign.id, chargerId, status);
-              if (status === "completed") onUpdateChargerPhase(chargerId, "Completed");
-              else if (status === "in_progress") onUpdateChargerPhase(chargerId, "In Progress");
-            } : undefined}
-            onSelectCharger={onSelectCharger}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center max-w-sm">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <CalendarDays className="h-8 w-8 text-primary" />
+        {/* Main Content — Calendar + Quote Tabs */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {activePlan && hasSchedule ? (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+              <div className="border-b border-border px-4">
+                <TabsList className="h-9 bg-transparent">
+                  <TabsTrigger value="calendar" className="text-xs data-[state=active]:bg-muted">
+                    <CalendarDays className="h-3.5 w-3.5 mr-1" /> Calendar
+                  </TabsTrigger>
+                  <TabsTrigger value="quote" className="text-xs data-[state=active]:bg-muted">
+                    <DollarSign className="h-3.5 w-3.5 mr-1" /> Quote
+                  </TabsTrigger>
+                </TabsList>
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Create a Campaign</h3>
-              <p className="text-sm text-muted-foreground">
-                Configure your campaign settings on the left panel. The calendar will populate automatically as chargers match your filters.
-              </p>
+              <TabsContent value="calendar" className="flex-1 overflow-hidden mt-0">
+                {displayCampaign ? (
+                  <CampaignCalendar
+                    campaign={displayCampaign}
+                    chargers={activeCampaign ? chargers : filteredChargers}
+                    onMarkStatus={activeCampaign ? (chargerId, status) => {
+                      onUpdateStatus(activeCampaign.id, chargerId, status);
+                      if (status === "completed") onUpdateChargerPhase(chargerId, "Completed");
+                      else if (status === "in_progress") onUpdateChargerPhase(chargerId, "In Progress");
+                    } : undefined}
+                    onSelectCharger={onSelectCharger}
+                  />
+                ) : (
+                  <div className="flex-1 flex items-center justify-center h-full">
+                    <div className="text-center max-w-sm">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                        <CalendarDays className="h-8 w-8 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Generate a Schedule</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Assign technicians and chargers, then generate the optimized schedule.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="quote" className="flex-1 overflow-hidden mt-0">
+                <CampaignQuoteView
+                  key={quoteVersion}
+                  planId={activePlan.id}
+                  planStatus={activePlan.status}
+                  techs={planTechnicians}
+                  onStatusChanged={onPlanStatusChange}
+                />
+              </TabsContent>
+            </Tabs>
+          ) : displayCampaign ? (
+            <CampaignCalendar
+              campaign={displayCampaign}
+              chargers={activeCampaign ? chargers : filteredChargers}
+              onMarkStatus={activeCampaign ? (chargerId, status) => {
+                onUpdateStatus(activeCampaign.id, chargerId, status);
+                if (status === "completed") onUpdateChargerPhase(chargerId, "Completed");
+                else if (status === "in_progress") onUpdateChargerPhase(chargerId, "In Progress");
+              } : undefined}
+              onSelectCharger={onSelectCharger}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center max-w-sm">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <CalendarDays className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Create a Campaign</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure your campaign settings on the left panel. The calendar will populate automatically as chargers match your filters.
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Re-generate Confirmation Dialog */}
