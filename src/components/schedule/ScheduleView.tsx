@@ -5,17 +5,21 @@ import { createCampaign, filterChargers } from "@/lib/scheduleGenerator";
 import { CampaignConfigPanel } from "@/components/schedule/CampaignConfigPanel";
 import { CampaignCalendar } from "@/components/schedule/CampaignCalendar";
 import { ScheduleSummaryPanel } from "@/components/schedule/ScheduleSummaryPanel";
+import { CampaignQuoteView } from "@/components/schedule/CampaignQuoteView";
+import { GenerateQuoteModal } from "@/components/schedule/GenerateQuoteModal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2, Upload, Loader2, Route } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2, Upload, Loader2, Route, DollarSign } from "lucide-react";
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
 import { CUSTOMER_LABELS } from "@/data/sampleCampaigns";
 import { CampaignPlan, PlanCharger, PlanTechnician } from "@/hooks/useCampaignPlan";
 import { GeneratedScheduleDay, TechScheduleSummary } from "@/lib/routeOptimizer";
+import { generateCampaignQuote, loadRatesFromRateCard, DEFAULT_CAMPAIGN_RATES } from "@/services/campaignQuoteEngine";
 
 interface ScheduleViewProps {
   chargers: AssessmentCharger[];
@@ -45,6 +49,7 @@ interface ScheduleViewProps {
   generating?: boolean;
   onGenerateSchedule?: () => void;
   planTechnicians?: PlanTechnician[];
+  onPlanStatusChange?: () => void;
 }
 
 export function ScheduleView({
@@ -73,6 +78,7 @@ export function ScheduleView({
   generating = false,
   onGenerateSchedule,
   planTechnicians = [],
+  onPlanStatusChange,
 }: ScheduleViewProps) {
   const [config, setConfig] = useState<CampaignConfig>(() => {
     return initialConfig || { ...DEFAULT_CONFIG, name: campaignName || "" };
@@ -83,6 +89,10 @@ export function ScheduleView({
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [generatingQuote, setGeneratingQuote] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("calendar");
+  const [quoteVersion, setQuoteVersion] = useState(0);
 
   // Sync config when initialConfig changes (plan loaded/switched)
   useEffect(() => {
@@ -93,6 +103,40 @@ export function ScheduleView({
 
   const canGenerate = !!activePlan && planTechnicians.length > 0 && (planChargers?.length || 0) > 0;
   const hasSchedule = scheduleDays.length > 0;
+  const canQuote = !!activePlan && (activePlan.status === "scheduled" || activePlan.status === "quoted") && hasSchedule;
+
+  const handleGenerateQuote = useCallback(async (rateCardId: string | null, validUntil: string) => {
+    if (!activePlan) return;
+    setGeneratingQuote(true);
+    try {
+      const rates = rateCardId
+        ? await loadRatesFromRateCard(rateCardId)
+        : { ...DEFAULT_CAMPAIGN_RATES };
+
+      await generateCampaignQuote(
+        activePlan.id,
+        activePlan.name,
+        scheduleDays,
+        planTechnicians,
+        rates,
+        activePlan.hrs_per_day,
+        activePlan.customer_id,
+        rateCardId,
+        validUntil,
+      );
+      
+      setQuoteModalOpen(false);
+      setQuoteVersion(v => v + 1);
+      setActiveTab("quote");
+      onPlanStatusChange?.();
+      toast.success("Quote generated successfully");
+    } catch (err) {
+      console.error("Quote generation failed:", err);
+      toast.error("Failed to generate quote");
+    } finally {
+      setGeneratingQuote(false);
+    }
+  }, [activePlan, scheduleDays, planTechnicians, onPlanStatusChange]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -228,35 +272,99 @@ export function ScheduleView({
                   />
                 </>
               )}
+
+              {/* Generate Quote Button */}
+              {canQuote && (
+                <>
+                  <Separator />
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setQuoteModalOpen(true)}
+                  >
+                    <DollarSign className="h-4 w-4 mr-2" /> Generate Quote
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}
 
-        {/* Calendar */}
-        {displayCampaign ? (
-          <CampaignCalendar
-            campaign={displayCampaign}
-            chargers={activeCampaign ? chargers : filteredChargers}
-            onMarkStatus={activeCampaign ? (chargerId, status) => {
-              onUpdateStatus(activeCampaign.id, chargerId, status);
-              if (status === "completed") onUpdateChargerPhase(chargerId, "Completed");
-              else if (status === "in_progress") onUpdateChargerPhase(chargerId, "In Progress");
-            } : undefined}
-            onSelectCharger={onSelectCharger}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center max-w-sm">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <CalendarDays className="h-8 w-8 text-primary" />
+        {/* Main Content — Calendar + Quote Tabs */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {activePlan && hasSchedule ? (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+              <div className="border-b border-border px-4">
+                <TabsList className="h-9 bg-transparent">
+                  <TabsTrigger value="calendar" className="text-xs data-[state=active]:bg-muted">
+                    <CalendarDays className="h-3.5 w-3.5 mr-1" /> Calendar
+                  </TabsTrigger>
+                  <TabsTrigger value="quote" className="text-xs data-[state=active]:bg-muted">
+                    <DollarSign className="h-3.5 w-3.5 mr-1" /> Quote
+                  </TabsTrigger>
+                </TabsList>
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Create a Campaign</h3>
-              <p className="text-sm text-muted-foreground">
-                Configure your campaign settings on the left panel. The calendar will populate automatically as chargers match your filters.
-              </p>
+              <TabsContent value="calendar" className="flex-1 overflow-hidden mt-0">
+                {displayCampaign ? (
+                  <CampaignCalendar
+                    campaign={displayCampaign}
+                    chargers={activeCampaign ? chargers : filteredChargers}
+                    onMarkStatus={activeCampaign ? (chargerId, status) => {
+                      onUpdateStatus(activeCampaign.id, chargerId, status);
+                      if (status === "completed") onUpdateChargerPhase(chargerId, "Completed");
+                      else if (status === "in_progress") onUpdateChargerPhase(chargerId, "In Progress");
+                    } : undefined}
+                    onSelectCharger={onSelectCharger}
+                  />
+                ) : (
+                  <div className="flex-1 flex items-center justify-center h-full">
+                    <div className="text-center max-w-sm">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                        <CalendarDays className="h-8 w-8 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Generate a Schedule</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Assign technicians and chargers, then generate the optimized schedule.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="quote" className="flex-1 overflow-hidden mt-0">
+                <CampaignQuoteView
+                  key={quoteVersion}
+                  planId={activePlan.id}
+                  planStatus={activePlan.status}
+                  techs={planTechnicians}
+                  onStatusChanged={onPlanStatusChange}
+                />
+              </TabsContent>
+            </Tabs>
+          ) : displayCampaign ? (
+            <CampaignCalendar
+              campaign={displayCampaign}
+              chargers={activeCampaign ? chargers : filteredChargers}
+              onMarkStatus={activeCampaign ? (chargerId, status) => {
+                onUpdateStatus(activeCampaign.id, chargerId, status);
+                if (status === "completed") onUpdateChargerPhase(chargerId, "Completed");
+                else if (status === "in_progress") onUpdateChargerPhase(chargerId, "In Progress");
+              } : undefined}
+              onSelectCharger={onSelectCharger}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center max-w-sm">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <CalendarDays className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Create a Campaign</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure your campaign settings on the left panel. The calendar will populate automatically as chargers match your filters.
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Re-generate Confirmation Dialog */}
@@ -333,6 +441,14 @@ export function ScheduleView({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Generate Quote Modal */}
+      <GenerateQuoteModal
+        open={quoteModalOpen}
+        onOpenChange={setQuoteModalOpen}
+        onGenerate={handleGenerateQuote}
+        generating={generatingQuote}
+      />
     </div>
   );
 }
