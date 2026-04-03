@@ -12,6 +12,7 @@ import { Rocket, Save, CalendarDays, AlertTriangle, FolderOpen, Download, Trash2
 import { parseAssessmentExcel } from "@/lib/assessmentParser";
 import { toast } from "sonner";
 import { CUSTOMER_LABELS } from "@/data/sampleCampaigns";
+import { CampaignPlan, PlanCharger } from "@/hooks/useCampaignPlan";
 
 interface ScheduleViewProps {
   chargers: AssessmentCharger[];
@@ -28,6 +29,12 @@ interface ScheduleViewProps {
   onExport: () => void;
   onClear: () => void;
   onImport: (chargers: AssessmentCharger[]) => void;
+  // Plan props
+  activePlan?: CampaignPlan | null;
+  planChargers?: PlanCharger[];
+  onConfigChange?: (config: CampaignConfig) => void;
+  initialConfig?: CampaignConfig;
+  onRemoveChargerFromPlan?: (chargerId: string) => void;
 }
 
 export function ScheduleView({
