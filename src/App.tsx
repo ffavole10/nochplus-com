@@ -65,7 +65,8 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
-            {/* Campaign stage routes */}
+            {/* Campaign list and stage routes */}
+            <Route path="/campaigns" element={<CampaignList />} />
             <Route path="/campaigns/:campaignId/upload" element={<CampaignUpload />} />
             <Route path="/campaigns/:campaignId/scan" element={<CampaignScan />} />
             <Route path="/campaigns/:campaignId/deploy" element={<CampaignDeploy />} />

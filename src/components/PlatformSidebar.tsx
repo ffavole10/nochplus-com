@@ -308,19 +308,19 @@ export function PlatformSidebar() {
                       <span className="truncate block">{c.name}</span>
                     </SelectItem>
                 )}
+                  {filteredCampaigns.length > 0 && (
+                    <>
+                      <div className="border-t border-border my-1" />
+                      <SelectItem value="__view_all__" className="cursor-pointer text-xs text-muted-foreground">
+                        View All Campaigns
+                      </SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
-
-              <button
-              onClick={() => setNewCampaignOpen(true)}
-              className="flex items-center gap-1.5 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors">
-
-                <Plus className="h-3 w-3" />
-                New Campaign
-              </button>
             </div>
 
-            <CampaignStagePipeline />
+            {selectedCampaignId && <CampaignStagePipeline />}
           </div>
         }
 
