@@ -79,11 +79,14 @@ export function useCampaigns() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("campaigns")
-        .select("*")
+        .select("*, customers:customer_id(company)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Campaign[];
+      return (data || []).map((c: any) => ({
+        ...c,
+        customer_company: c.customers?.company || c.customer,
+      })) as Campaign[];
     },
   });
 }
