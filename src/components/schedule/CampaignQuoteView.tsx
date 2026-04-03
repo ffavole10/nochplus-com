@@ -218,6 +218,13 @@ export function CampaignQuoteView({ planId, plan, planStatus, techs, scheduleDay
       {/* Actions */}
       <Separator />
       <div className="flex flex-wrap gap-2">
+        <Button size="sm" onClick={handleExportPdf} disabled={exporting}>
+          {exporting ? (
+            <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Generating...</>
+          ) : (
+            <><Download className="h-3.5 w-3.5 mr-1" /> Export PDF</>
+          )}
+        </Button>
         {quote.status === "draft" && (
           <Button size="sm" variant="outline" onClick={() => handleStatusUpdate("sent")}>
             <Send className="h-3.5 w-3.5 mr-1" /> Mark as Sent
