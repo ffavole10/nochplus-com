@@ -47,7 +47,7 @@ export default function CampaignList() {
 
   const filtered = useMemo(() => {
     if (!selectedCustomer) return campaigns;
-    return campaigns.filter(c => c.customer === selectedCustomer);
+    return campaigns.filter(c => c.customer_company === selectedCustomer || c.customer === selectedCustomer);
   }, [campaigns, selectedCustomer]);
 
   const sorted = useMemo(() =>
