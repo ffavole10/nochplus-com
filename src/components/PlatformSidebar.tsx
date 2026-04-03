@@ -12,7 +12,7 @@ import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipel
 import { toast } from "sonner";
 import { toast } from "sonner";
 import { usePartners } from "@/hooks/usePartners";
-import { useCampaigns, useCreateCampaign, useCreateChargerRecords } from "@/hooks/useCampaigns";
+import { useCampaigns } from "@/hooks/useCampaigns";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NavLink } from "@/components/NavLink";
