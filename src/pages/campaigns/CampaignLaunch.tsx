@@ -1,16 +1,186 @@
+import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Rocket } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCampaignContext } from "@/contexts/CampaignContext";
+import { useCampaign, useUpdateCampaign } from "@/hooks/useCampaigns";
+import { useCampaignChargers } from "@/hooks/useCampaignChargers";
+import { useFieldReports, useCreateFieldReport, useEscalations, useCreateEscalation, useUpdateEscalation } from "@/hooks/useCampaignLaunch";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { LaunchStatusBar } from "@/components/launch/LaunchStatusBar";
+import { LaunchOverviewTab } from "@/components/launch/LaunchOverviewTab";
+import { LaunchFieldReportsTab } from "@/components/launch/LaunchFieldReportsTab";
+import { LaunchEscalationsTab } from "@/components/launch/LaunchEscalationsTab";
+import { toast } from "sonner";
+
+const TECH_COLORS = ["#3b82f6", "#22c55e", "#f97316", "#a855f7", "#ef4444", "#06b6d4", "#ec4899", "#eab308"];
 
 export default function CampaignLaunch() {
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-4">
-      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-        <Rocket className="h-8 w-8 text-primary" />
+  const { selectedCampaignId } = useCampaignContext();
+  const campaignId = selectedCampaignId || null;
+  const { data: campaign } = useCampaign(campaignId);
+  const updateCampaign = useUpdateCampaign();
+  const { data: chargers = [] } = useCampaignChargers(campaignId);
+  const { data: reports = [] } = useFieldReports(campaignId);
+  const { data: escalations = [] } = useEscalations(campaignId);
+  const createReport = useCreateFieldReport();
+  const createEscalation = useCreateEscalation();
+  const updateEscalation = useUpdateEscalation();
+
+  // Fetch schedule days
+  const { data: scheduleDays = [] } = useQuery({
+    queryKey: ["campaign_schedule_launch", campaignId],
+    queryFn: async () => {
+      if (!campaignId) return [];
+      const { data, error } = await supabase
+        .from("campaign_schedule")
+        .select("*")
+        .eq("campaign_id", campaignId)
+        .order("schedule_date");
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!campaignId,
+  });
+
+  // Fetch campaign technicians
+  const { data: campaignTechs = [] } = useQuery({
+    queryKey: ["campaign_technicians_launch", campaignId],
+    queryFn: async () => {
+      if (!campaignId) return [];
+      const { data, error } = await supabase
+        .from("campaign_technicians")
+        .select("*, technicians(name)")
+        .eq("campaign_id", campaignId);
+      if (error) throw error;
+      return (data ?? []).map((ct: any, i: number) => ({
+        technician_id: ct.technician_id,
+        name: ct.technicians?.name || `Tech ${i + 1}`,
+        color: TECH_COLORS[i % TECH_COLORS.length],
+        home_base_city: ct.home_base_city || "",
+      }));
+    },
+    enabled: !!campaignId,
+  });
+
+  // Fetch quotes to check if one exists
+  const { data: quotes = [] } = useQuery({
+    queryKey: ["campaign_quotes_launch", campaignId],
+    queryFn: async () => {
+      if (!campaignId) return [];
+      const { data, error } = await supabase
+        .from("campaign_quotes")
+        .select("id, status")
+        .eq("campaign_id", campaignId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!campaignId,
+  });
+
+  const stageStatus = campaign?.stage_status as Record<string, string> | null;
+  const launchStatus = stageStatus?.launch || "not_started";
+
+  // Determine campaign status
+  const campaignStatus = useMemo(() => {
+    if (campaign?.status === "completed") return "completed";
+    if (campaign?.status === "on-hold") return "on-hold";
+    if (campaign?.status === "active" || launchStatus === "in_progress") return "active";
+    return "pre-launch";
+  }, [campaign?.status, launchStatus]);
+
+  const inScope = chargers.filter(c => c.in_scope);
+  const completedCount = inScope.filter(c => c.status === "completed" || c.status === "skipped").length;
+
+  // Calculate day progress
+  const startDate = campaign?.start_date || null;
+  const deadline = campaign?.deadline || null;
+  const currentDay = startDate
+    ? Math.max(1, Math.ceil((Date.now() - new Date(startDate).getTime()) / 86400000))
+    : 0;
+  const totalDays = startDate && deadline
+    ? Math.ceil((new Date(deadline).getTime() - new Date(startDate).getTime()) / 86400000)
+    : 0;
+
+  async function handleActivate() {
+    if (!campaignId) return;
+    const newStageStatus = { ...((campaign?.stage_status as any) || {}), launch: "in_progress" };
+    await updateCampaign.mutateAsync({
+      id: campaignId,
+      status: "active",
+      stage_status: newStageStatus,
+    });
+    toast.success("Campaign activated!");
+  }
+
+  if (!campaignId) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-4">
+        <Rocket className="h-8 w-8 text-muted-foreground" />
+        <p className="text-muted-foreground">Select a campaign to view the launch dashboard.</p>
       </div>
-      <h1 className="text-2xl font-bold">Launch</h1>
-      <p className="text-muted-foreground max-w-md">
-        Activate the campaign and track field progress. View real-time completion status, field reports, and technician check-ins.
-      </p>
-      <p className="text-sm text-muted-foreground/60">Accept a quote to launch the campaign.</p>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col gap-4 p-4 overflow-auto">
+      <div className="flex items-center gap-2 text-lg font-semibold">
+        <Rocket className="h-5 w-5 text-primary" />
+        Launch
+        {campaign && <span className="text-muted-foreground font-normal">| {campaign.name}</span>}
+      </div>
+
+      <LaunchStatusBar
+        campaignStatus={campaignStatus}
+        completedCount={completedCount}
+        totalCount={inScope.length}
+        startDate={startDate}
+        deadline={deadline}
+        currentDay={currentDay}
+        totalDays={totalDays}
+        onActivate={handleActivate}
+        hasQuote={quotes.length > 0}
+      />
+
+      <Tabs defaultValue="overview" className="flex-1">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="reports">
+            Field Reports {reports.length > 0 && `(${reports.length})`}
+          </TabsTrigger>
+          <TabsTrigger value="escalations">
+            Escalations {escalations.filter(e => e.status !== "resolved").length > 0 && `(${escalations.filter(e => e.status !== "resolved").length})`}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-4">
+          <LaunchOverviewTab
+            chargers={chargers}
+            scheduleDays={scheduleDays}
+            techs={campaignTechs}
+            campaignStatus={campaignStatus}
+          />
+        </TabsContent>
+
+        <TabsContent value="reports" className="mt-4">
+          <LaunchFieldReportsTab
+            reports={reports}
+            techs={campaignTechs}
+            campaignId={campaignId}
+            onAddReport={(r) => createReport.mutate(r)}
+          />
+        </TabsContent>
+
+        <TabsContent value="escalations" className="mt-4">
+          <LaunchEscalationsTab
+            escalations={escalations}
+            campaignId={campaignId}
+            onCreateEscalation={(e) => createEscalation.mutate(e)}
+            onUpdateEscalation={(p) => updateEscalation.mutate(p)}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
