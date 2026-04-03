@@ -99,7 +99,7 @@ export default function CampaignPrice() {
           id: p.id,
           campaign_id: p.campaign_id,
           name: p.name,
-          status: p.status,
+          status: p.status as CampaignPlan["status"],
           start_date: p.start_date,
           end_date: p.end_date,
           deadline: p.deadline,

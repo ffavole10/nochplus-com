@@ -155,7 +155,7 @@ export function LiveQuotePanel({
       const safeName = (plan.name || "proposal").replace(/[^a-zA-Z0-9_-]/g, "_");
       doc.save(`${safeName}_Proposal.pdf`);
       const pdfBlob = doc.output("blob");
-      await uploadProposalToStorage(pdfBlob, plan.name || "proposal", existingQuote.version || 1);
+      await uploadProposalToStorage(pdfBlob, plan.name || "proposal", 1);
       toast.success("Proposal PDF generated");
     } catch (err) {
       console.error("PDF export failed:", err);
