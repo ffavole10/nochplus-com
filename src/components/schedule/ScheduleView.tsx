@@ -52,15 +52,27 @@ export function ScheduleView({
   onExport,
   onClear,
   onImport,
+  activePlan,
+  planChargers,
+  onConfigChange,
+  initialConfig,
+  onRemoveChargerFromPlan,
 }: ScheduleViewProps) {
   const [config, setConfig] = useState<CampaignConfig>(() => {
-    return { ...DEFAULT_CONFIG, name: campaignName || "" };
+    return initialConfig || { ...DEFAULT_CONFIG, name: campaignName || "" };
   });
   const [previewCampaign, setPreviewCampaign] = useState<Campaign | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Sync config when initialConfig changes (plan loaded/switched)
+  useEffect(() => {
+    if (initialConfig) {
+      setConfig(initialConfig);
+    }
+  }, [initialConfig]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
