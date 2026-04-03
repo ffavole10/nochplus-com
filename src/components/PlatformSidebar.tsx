@@ -6,7 +6,7 @@ import {
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned,
-  Brain, Sliders, BarChart3 } from
+  Brain, Sliders, BarChart3, List } from
 "lucide-react";
 import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
 import { toast } from "sonner";
