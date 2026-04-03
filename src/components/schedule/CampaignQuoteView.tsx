@@ -42,9 +42,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   misc_supplies: "Misc Supplies",
 };
 
-export function CampaignQuoteView({ planId, planStatus, techs, scheduleChanged, onStatusChanged }: CampaignQuoteViewProps) {
+export function CampaignQuoteView({ planId, plan, planStatus, techs, scheduleDays = [], scheduleChanged, onStatusChanged }: CampaignQuoteViewProps) {
   const [quote, setQuote] = useState<SavedCampaignQuote | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadCampaignQuote(planId).then(q => { setQuote(q); setLoading(false); });
