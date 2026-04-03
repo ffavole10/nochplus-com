@@ -457,6 +457,113 @@ export type Database = {
           },
         ]
       }
+      campaign_escalations: {
+        Row: {
+          assigned_to: string | null
+          campaign_id: string
+          charger_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          issue_type: string
+          resolution_notes: string | null
+          severity: string
+          site_name: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          campaign_id: string
+          charger_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          issue_type?: string
+          resolution_notes?: string | null
+          severity?: string
+          site_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          campaign_id?: string
+          charger_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          issue_type?: string
+          resolution_notes?: string | null
+          severity?: string
+          site_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      campaign_field_reports: {
+        Row: {
+          arrival_time: string | null
+          campaign_id: string
+          charger_ids: string[] | null
+          created_at: string
+          departure_time: string | null
+          hours_logged: number | null
+          id: string
+          is_unscheduled: boolean | null
+          notes: string | null
+          photo_urls: string[] | null
+          site_name: string
+          status: string
+          technician_id: string | null
+          updated_at: string
+          work_performed: string | null
+        }
+        Insert: {
+          arrival_time?: string | null
+          campaign_id: string
+          charger_ids?: string[] | null
+          created_at?: string
+          departure_time?: string | null
+          hours_logged?: number | null
+          id?: string
+          is_unscheduled?: boolean | null
+          notes?: string | null
+          photo_urls?: string[] | null
+          site_name?: string
+          status?: string
+          technician_id?: string | null
+          updated_at?: string
+          work_performed?: string | null
+        }
+        Update: {
+          arrival_time?: string | null
+          campaign_id?: string
+          charger_ids?: string[] | null
+          created_at?: string
+          departure_time?: string | null
+          hours_logged?: number | null
+          id?: string
+          is_unscheduled?: boolean | null
+          notes?: string | null
+          photo_urls?: string[] | null
+          site_name?: string
+          status?: string
+          technician_id?: string | null
+          updated_at?: string
+          work_performed?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_field_reports_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_plan_chargers: {
         Row: {
           charger_id: string
