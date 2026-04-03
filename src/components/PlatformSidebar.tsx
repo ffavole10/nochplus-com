@@ -80,7 +80,6 @@ export function PlatformSidebar() {
     setSelectedCampaignName, setSelectedCampaignId: setContextCampaignId, setSelectedCustomer
   } = useCampaignContext();
 
-  const [newCampaignOpen, setNewCampaignOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string>(selectedCustomer || "");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>(contextCampaignId || "");
 
