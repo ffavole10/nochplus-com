@@ -44,6 +44,7 @@ import CampaignScan from "./pages/campaigns/CampaignScan";
 import CampaignDeploy from "./pages/campaigns/CampaignDeploy";
 import CampaignPrice from "./pages/campaigns/CampaignPrice";
 import CampaignLaunch from "./pages/campaigns/CampaignLaunch";
+import CampaignList from "./pages/campaigns/CampaignList";
 
 const queryClient = new QueryClient({
   defaultOptions: {
