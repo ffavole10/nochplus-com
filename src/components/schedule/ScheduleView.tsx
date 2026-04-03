@@ -174,14 +174,62 @@ export function ScheduleView({
       <div className="flex-1 flex overflow-hidden">
         {/* Config panel - only when no active campaign */}
         {!activeCampaign && (
-          <CampaignConfigPanel
-            chargers={chargers}
-            config={config}
-            onChange={(newConfig) => {
-              setConfig(newConfig);
-              onConfigChange?.(newConfig);
-            }}
-          />
+          <div className="w-full lg:w-[360px] border-r border-border flex flex-col bg-card">
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <CampaignConfigPanel
+                chargers={chargers}
+                config={config}
+                onChange={(newConfig) => {
+                  setConfig(newConfig);
+                  onConfigChange?.(newConfig);
+                }}
+              />
+            </div>
+
+            {/* Generate Schedule Button + Summary */}
+            <div className="p-3 border-t border-border space-y-3">
+              {/* Generate / Re-generate button */}
+              {activePlan && onGenerateSchedule && (
+                <Button
+                  className="w-full"
+                  disabled={!canGenerate || generating}
+                  onClick={() => {
+                    if (hasSchedule) {
+                      setRegenConfirmOpen(true);
+                    } else {
+                      onGenerateSchedule();
+                    }
+                  }}
+                >
+                  {generating ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Optimizing routes...</>
+                  ) : (
+                    <><Route className="h-4 w-4 mr-2" /> {hasSchedule ? "Re-generate Schedule" : "Generate Schedule"}</>
+                  )}
+                </Button>
+              )}
+
+              {!canGenerate && activePlan && (
+                <p className="text-[10px] text-muted-foreground text-center">
+                  {planTechnicians.length === 0 ? "Assign technicians first" : (planChargers?.length || 0) === 0 ? "Add chargers to the plan" : ""}
+                </p>
+              )}
+
+              {/* Schedule Summary */}
+              {scheduleSummaries.length > 0 && (
+                <>
+                  <Separator />
+                  <ScheduleSummaryPanel
+                    summaries={scheduleSummaries}
+                    warnings={scheduleWarnings}
+                    startDate={scheduleDays[0]?.schedule_date || ""}
+                    endDate={scheduleDays[scheduleDays.length - 1]?.schedule_date || ""}
+                    totalDays={scheduleDays.length}
+                  />
+                </>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Calendar */}
@@ -189,6 +237,8 @@ export function ScheduleView({
           <CampaignCalendar
             campaign={displayCampaign}
             chargers={activeCampaign ? chargers : filteredChargers}
+            scheduleDays={scheduleDays}
+            planTechnicians={planTechnicians}
             onMarkStatus={activeCampaign ? (chargerId, status) => {
               onUpdateStatus(activeCampaign.id, chargerId, status);
               if (status === "completed") onUpdateChargerPhase(chargerId, "Completed");
@@ -210,6 +260,25 @@ export function ScheduleView({
           </div>
         )}
       </div>
+
+      {/* Re-generate Confirmation Dialog */}
+      <Dialog open={regenConfirmOpen} onOpenChange={setRegenConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Route className="h-5 w-5 text-primary" />
+              Re-generate Schedule?
+            </DialogTitle>
+            <DialogDescription>This will recalculate the schedule for all days. Continue?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRegenConfirmOpen(false)}>Cancel</Button>
+            <Button onClick={() => { setRegenConfirmOpen(false); onGenerateSchedule?.(); }}>
+              Re-generate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Validation Error Dialog */}
       <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
