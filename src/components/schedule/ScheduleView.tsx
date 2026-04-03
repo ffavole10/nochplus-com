@@ -103,6 +103,40 @@ export function ScheduleView({
 
   const canGenerate = !!activePlan && planTechnicians.length > 0 && (planChargers?.length || 0) > 0;
   const hasSchedule = scheduleDays.length > 0;
+  const canQuote = !!activePlan && (activePlan.status === "scheduled" || activePlan.status === "quoted") && hasSchedule;
+
+  const handleGenerateQuote = useCallback(async (rateCardId: string | null, validUntil: string) => {
+    if (!activePlan) return;
+    setGeneratingQuote(true);
+    try {
+      const rates = rateCardId
+        ? await loadRatesFromRateCard(rateCardId)
+        : { ...DEFAULT_CAMPAIGN_RATES };
+
+      await generateCampaignQuote(
+        activePlan.id,
+        activePlan.name,
+        scheduleDays,
+        planTechnicians,
+        rates,
+        activePlan.hrs_per_day,
+        activePlan.customer_id,
+        rateCardId,
+        validUntil,
+      );
+      
+      setQuoteModalOpen(false);
+      setQuoteVersion(v => v + 1);
+      setActiveTab("quote");
+      onPlanStatusChange?.();
+      toast.success("Quote generated successfully");
+    } catch (err) {
+      console.error("Quote generation failed:", err);
+      toast.error("Failed to generate quote");
+    } finally {
+      setGeneratingQuote(false);
+    }
+  }, [activePlan, scheduleDays, planTechnicians, onPlanStatusChange]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
