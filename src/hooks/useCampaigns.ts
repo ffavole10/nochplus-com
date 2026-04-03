@@ -18,6 +18,13 @@ export interface Campaign {
   health_score: number;
   created_at: string;
   updated_at: string;
+  stage_status?: Record<string, string> | null;
+  deadline?: string | null;
+  working_days?: string[] | null;
+  hrs_per_charger?: number;
+  hrs_per_day?: number;
+  break_hrs?: number;
+  travel_time_min?: number;
 }
 
 export interface ChargerRecord {
