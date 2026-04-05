@@ -117,8 +117,8 @@ export default function CampaignLaunch() {
   if (!campaignId) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-4">
-        <Rocket className="h-8 w-8 text-muted-foreground" />
-        <p className="text-muted-foreground">Select a campaign to view the launch dashboard.</p>
+        <FileText className="h-8 w-8 text-muted-foreground" />
+        <p className="text-muted-foreground">Select a campaign to view reports.</p>
       </div>
     );
   }
