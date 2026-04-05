@@ -106,6 +106,7 @@ export function PlatformSidebar() {
   const [typeOpen, setTypeOpen] = useState(false);
   const [swiOpen, setSwiOpen] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
+  const [newPartnerOpen, setNewPartnerOpen] = useState(false);
 
   // Data
   const { data: dbCustomers = [] } = useCustomers();
