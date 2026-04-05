@@ -276,41 +276,37 @@ export function PlatformSidebar() {
         <SectionHeader label="CAMPAIGNS" icon={Crosshair} section="campaigns" />
         {expandedSection === "campaigns" &&
         <div className="space-y-2 pl-1">
-            {/* Campaign HQ link */}
-            <SidebarMenu className="px-1">
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink
-                    to="/campaigns"
-                    end
-                    className="hover:bg-sidebar-accent/50 flex items-center gap-2"
-                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                    <span>Campaign HQ</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-
-            {/* Customer dropdown */}
+            {/* Customer/Partner dropdown */}
             <div className="space-y-1.5 px-2">
               <Select
                 value={selectedCustomer || "__all__"}
-                onValueChange={handleCustomerChange}
+                onValueChange={(v) => {
+                  if (v === "__new_partner__") {
+                    setNewPartnerOpen(true);
+                    return;
+                  }
+                  handleCustomerChange(v);
+                }}
               >
                 <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-xs h-8">
-                  <SelectValue placeholder="All Customers" />
+                  <SelectValue placeholder="All Partners" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
                   <SelectItem value="__all__" className="cursor-pointer text-xs text-muted-foreground">
-                    All Customers
+                    All Partners
                   </SelectItem>
                   {customers.map((c) =>
                     <SelectItem key={c.value} value={c.value} className="cursor-pointer text-xs">
                       {c.label}
                     </SelectItem>
                   )}
+                  <Separator className="my-1" />
+                  <SelectItem value="__new_partner__" className="cursor-pointer text-xs">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Plus className="h-3 w-3" />
+                      <span>New Partner</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -349,25 +345,38 @@ export function PlatformSidebar() {
               </Select>
             </div>
 
-            {/* Campaign tabs – only when campaign selected */}
-            {contextCampaignId && (
-              <SidebarMenu className="px-1 mt-1">
-                {CAMPAIGN_TABS.map((tab) => (
+            {/* Campaign tabs – always visible */}
+            <SidebarMenu className="px-1 mt-1">
+              {CAMPAIGN_TABS.map((tab) => {
+                const hasCampaign = !!contextCampaignId;
+                const tabUrl = hasCampaign
+                  ? `/campaigns/${contextCampaignId}/${tab.url}`
+                  : `/campaigns?tab=${tab.url}`;
+                return (
                   <SidebarMenuItem key={tab.url}>
                     <SidebarMenuButton asChild>
                       <NavLink
-                        to={`/campaigns/${contextCampaignId}/${tab.url}`}
-                        className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                        to={tabUrl}
+                        className={cn(
+                          "hover:bg-sidebar-accent/50 flex items-center gap-2",
+                          !hasCampaign && "opacity-50 pointer-events-auto"
+                        )}
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        onClick={(e: React.MouseEvent) => {
+                          if (!hasCampaign) {
+                            e.preventDefault();
+                            navigate(`/campaigns?tab=${tab.url}`);
+                          }
+                        }}
                       >
                         <tab.icon className="h-4 w-4" />
                         <span>{tab.title}</span>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            )}
+                );
+              })}
+            </SidebarMenu>
           </div>
         }
 
