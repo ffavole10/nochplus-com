@@ -259,11 +259,20 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
 
             <div className="space-y-2">
               <Label>Partner</Label>
-              <Select value={customer} onValueChange={setCustomer}>
+              <Select
+                value={customer}
+                onValueChange={(v) => {
+                  if (v === "__new_partner__") {
+                    setNewPartnerOpen(true);
+                    return;
+                  }
+                  setCustomer(v);
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select partner" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[2000]">
                   {partnerCategories.map((cat) => (
                     <SelectGroup key={cat.label}>
                       <SelectLabel className="text-xs font-semibold text-muted-foreground">{cat.label}</SelectLabel>
@@ -272,11 +281,26 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
                       ))}
                     </SelectGroup>
                   ))}
+                  <Separator className="my-1" />
+                  <SelectItem value="__new_partner__">
+                    <div className="flex items-center gap-1.5 text-primary">
+                      <Plus className="h-3 w-3" />
+                      <span>New Partner</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         )}
+
+        <NewPartnerModal
+          open={newPartnerOpen}
+          onOpenChange={setNewPartnerOpen}
+          onCreated={(partner) => {
+            setCustomer(partner.company);
+          }}
+        />
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-2">
