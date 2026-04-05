@@ -123,24 +123,17 @@ export default function CampaignList() {
     }
   };
 
-  const renderStageDots = (stageStatus: Record<string, string> | null) => {
-    const stages = ["upload", "scan", "deploy", "price", "launch"];
-    const ss = stageStatus || {};
+  const renderProgress = (campaign: typeof campaigns[0]) => {
+    const total = campaign.total_chargers || 0;
+    const serviced = campaign.total_serviced || 0;
+    if (total === 0) return <span className="text-muted-foreground">—</span>;
+    const pct = Math.round((serviced / total) * 100);
     return (
-      <div className="flex items-center gap-1">
-        {stages.map(s => {
-          const status = ss[s] || "not_started";
-          return (
-            <div
-              key={s}
-              className={`w-2 h-2 rounded-full ${
-                status === "complete" ? "bg-primary" :
-                status === "in_progress" ? "bg-primary/50" :
-                "bg-muted-foreground/20"
-              }`}
-            />
-          );
-        })}
+      <div className="flex items-center gap-2">
+        <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
+        </div>
+        <span className="text-xs text-muted-foreground">{pct}%</span>
       </div>
     );
   };
