@@ -73,7 +73,7 @@ export function NewPartnerModal({ open, onOpenChange, onCreated }: NewPartnerMod
 
   return (
     <Dialog open={open} onOpenChange={resetAndClose}>
-      <DialogContent className="sm:max-w-[400px] z-[250]">
+      <DialogContent className="sm:max-w-[400px] z-[2500]">
         <DialogHeader>
           <DialogTitle>New Partner</DialogTitle>
         </DialogHeader>
