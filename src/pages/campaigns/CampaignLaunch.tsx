@@ -126,6 +126,11 @@ export default function CampaignLaunch() {
 
   return (
     <div className="flex-1 flex flex-col gap-4 p-4 overflow-auto">
+      <CampaignSubtitle
+        customerName={campaign?.customer || ""}
+        campaignName={campaign?.name || ""}
+        status={campaign?.status}
+      />
       <LaunchStatusBar
         campaignStatus={campaignStatus}
         completedCount={completedCount}
