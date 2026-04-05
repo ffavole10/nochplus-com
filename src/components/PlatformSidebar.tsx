@@ -5,7 +5,7 @@ import {
   AlertTriangle, ChevronDown, ChevronRight,
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
-  Filter, Crosshair, Home, Bot, BookOpen, MapPinned,
+  Filter, Crosshair, Home, Bot, BookOpen, MapPinned, Building2, Handshake,
   Brain, Sliders, BarChart3, List, Plus, LayoutGrid } from
 "lucide-react";
 import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
