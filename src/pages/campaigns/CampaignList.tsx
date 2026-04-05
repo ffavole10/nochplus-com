@@ -114,7 +114,7 @@ export default function CampaignList() {
       setSelectedCampaignId(data.id);
       setSelectedCampaignName(data.name);
       setSelectedCustomer(data.customer);
-      navigate(`/campaigns/${data.id}/upload`);
+      navigate(`/campaigns/${data.id}/overview`);
     } catch (err) {
       console.error(err);
       toast.error("Failed to create campaign");
