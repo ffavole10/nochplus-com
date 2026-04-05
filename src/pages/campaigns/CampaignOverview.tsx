@@ -19,7 +19,7 @@ export default function CampaignOverview() {
   const { data: chargers = [] } = useCampaignChargers(id);
   const navigate = useNavigate();
 
-  usePageTitle(campaign ? `Overview | ${campaign.name}` : "Overview");
+  usePageTitle("Overview");
 
   const stats = useMemo(() => {
     const total = chargers.length;

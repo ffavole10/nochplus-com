@@ -12,7 +12,7 @@ export default function CampaignCost() {
   const id = campaignId || selectedCampaignId || null;
   const { data: campaign } = useCampaign(id);
 
-  usePageTitle(campaign ? `Cost | ${campaign.name}` : "Cost");
+  usePageTitle("Cost");
 
   if (!campaign) {
     return (

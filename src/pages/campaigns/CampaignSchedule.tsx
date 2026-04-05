@@ -12,7 +12,7 @@ export default function CampaignSchedule() {
   const id = campaignId || selectedCampaignId || null;
   const { data: campaign } = useCampaign(id);
 
-  usePageTitle(campaign ? `Schedule | ${campaign.name}` : "Schedule");
+  usePageTitle("Schedule");
 
   if (!campaign) {
     return (
