@@ -347,9 +347,24 @@ export function PlatformSidebar() {
               </Select>
             </div>
 
-            {/* Stage pipeline – only when campaign selected */}
+            {/* Campaign tabs – only when campaign selected */}
             {contextCampaignId && (
-              <CampaignStagePipeline />
+              <SidebarMenu className="px-1 mt-1">
+                {CAMPAIGN_TABS.map((tab) => (
+                  <SidebarMenuItem key={tab.url}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={`/campaigns/${contextCampaignId}/${tab.url}`}
+                        className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      >
+                        <tab.icon className="h-4 w-4" />
+                        <span>{tab.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
             )}
           </div>
         }
