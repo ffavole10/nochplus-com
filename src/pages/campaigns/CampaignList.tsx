@@ -25,15 +25,7 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-destructive/10 text-destructive border-destructive/30",
 };
 
-function getFirstActiveStage(stageStatus: Record<string, string> | null): string {
-  if (!stageStatus) return "upload";
-  const stages = ["upload", "scan", "deploy", "price", "launch"];
-  const inProgress = stages.find(s => stageStatus[s] === "in_progress");
-  if (inProgress) return inProgress;
-  const firstNotStarted = stages.find(s => stageStatus[s] === "not_started");
-  if (firstNotStarted) return firstNotStarted;
-  return "launch";
-}
+// No longer needed — stages removed
 
 export default function CampaignList() {
   const { selectedCustomer, setSelectedCampaignId, setSelectedCampaignName, setSelectedCustomer } = useCampaignContext();
