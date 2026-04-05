@@ -39,6 +39,7 @@ import { useCampaignContext } from "@/contexts/CampaignContext";
 import { cn } from "@/lib/utils";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useEstimates } from "@/hooks/useEstimates";
+import { NewPartnerModal } from "@/components/campaigns/NewPartnerModal";
 
 type SectionKey = "campaigns" | "service-desk" | "noch-plus" | "partners" | "autoheal" | null;
 
