@@ -55,12 +55,12 @@ function getCampaignPageTitle(pathname: string, campaignName: string, customerNa
   if (pathname === "/campaigns") {
     return customerName ? `Campaigns | ${customerName}` : "Campaigns";
   }
-  // Campaign stage view: /campaigns/:id/:stage
-  const stageMatch = pathname.match(/^\/campaigns\/[^/]+\/(\w+)$/);
-  if (stageMatch) {
-    const stageName = CAMPAIGN_STAGE_TITLES[stageMatch[1]];
-    if (stageName) {
-      return campaignName ? `${stageName} | ${campaignName}` : stageName;
+  // Campaign tab view: /campaigns/:id/:tab
+  const tabMatch = pathname.match(/^\/campaigns\/[^/]+\/(\w+)$/);
+  if (tabMatch) {
+    const tabName = CAMPAIGN_TAB_TITLES[tabMatch[1]];
+    if (tabName) {
+      return campaignName ? `${tabName} | ${campaignName}` : tabName;
     }
   }
   return null;
