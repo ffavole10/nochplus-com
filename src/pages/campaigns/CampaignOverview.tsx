@@ -4,11 +4,11 @@ import { useCampaign } from "@/hooks/useCampaigns";
 import { useCampaignChargers } from "@/hooks/useCampaignChargers";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Upload, Activity, AlertTriangle, CheckCircle, Clock, MapPin } from "lucide-react";
 import { format } from "date-fns";
+import { CampaignSubtitle } from "@/components/campaigns/CampaignSubtitle";
 
 export default function CampaignOverview() {
   const { campaignId } = useParams();
