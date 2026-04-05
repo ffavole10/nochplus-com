@@ -75,15 +75,13 @@ function getActiveSection(pathname: string): SectionKey {
   return null;
 }
 
-function getFirstActiveStage(stageStatus: Record<string, string> | null): string {
-  if (!stageStatus) return "upload";
-  const stages = ["upload", "scan", "deploy", "price", "launch"];
-  const inProgress = stages.find(s => stageStatus[s] === "in_progress");
-  if (inProgress) return inProgress;
-  const firstNotStarted = stages.find(s => stageStatus[s] === "not_started");
-  if (firstNotStarted) return firstNotStarted;
-  return "launch";
-}
+const CAMPAIGN_TABS = [
+  { title: "Overview", url: "overview", icon: Eye },
+  { title: "Chargers", url: "chargers", icon: HardDrive },
+  { title: "Schedule", url: "schedule", icon: CalendarDays },
+  { title: "Cost", url: "cost", icon: DollarSign },
+  { title: "Reports", url: "reports", icon: FileText },
+];
 
 export function PlatformSidebar() {
   const { state } = useSidebar();
