@@ -555,6 +555,15 @@ export function PlatformSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
+      <NewPartnerModal
+        open={newPartnerOpen}
+        onOpenChange={setNewPartnerOpen}
+        onCreated={(partner) => {
+          setSelectedCustomer(partner.company);
+          setNewPartnerOpen(false);
+        }}
+      />
     </Sidebar>);
 }
 
