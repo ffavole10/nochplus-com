@@ -77,7 +77,7 @@ export function PlatformHeader() {
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const campaignTitle = getCampaignPageTitle(location.pathname, selectedCampaignName, selectedCustomer);
+  const campaignTitle = getCampaignPageTitle(location.pathname);
   const pageTitle = campaignTitle || PAGE_TITLES[location.pathname] || "";
   const isSettingsPage = location.pathname === "/settings";
   const isCampaignPage = false; // Campaign name now shown in pageTitle directly
