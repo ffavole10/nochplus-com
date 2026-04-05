@@ -4,6 +4,7 @@ import { useCampaign } from "@/hooks/useCampaigns";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays } from "lucide-react";
+import { CampaignSubtitle } from "@/components/campaigns/CampaignSubtitle";
 
 export default function CampaignSchedule() {
   const { campaignId } = useParams();
