@@ -47,10 +47,7 @@ export default function CampaignOverview() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">
-          Overview <span className="text-muted-foreground font-normal">| {campaign.name}</span>
-        </h1>
+      <div className="flex items-center justify-end">
         <Badge variant="outline" className="capitalize text-xs">
           {(campaign.status || "draft").replace("_", " ")}
         </Badge>

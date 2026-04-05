@@ -23,10 +23,6 @@ export default function CampaignCost() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <h1 className="text-xl font-bold text-foreground">
-        Cost <span className="text-muted-foreground font-normal">| {campaign.name}</span>
-      </h1>
-
       <Card>
         <CardContent className="p-8 text-center">
           <DollarSign className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
