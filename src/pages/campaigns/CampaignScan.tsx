@@ -204,6 +204,15 @@ export default function CampaignScan() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {campaign && (
+        <div className="px-4 pt-4">
+          <CampaignSubtitle
+            customerName={campaign.customer}
+            campaignName={campaign.name}
+            status={campaign.status}
+          />
+        </div>
+      )}
       {/* Metrics strip */}
       <ScanMetrics metrics={metrics} />
 
