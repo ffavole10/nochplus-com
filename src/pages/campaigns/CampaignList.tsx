@@ -215,7 +215,7 @@ export default function CampaignList() {
                     </Badge>
                   </td>
                   <td className="px-4 py-3">
-                    {renderStageDots(c.stage_status as Record<string, string> | null)}
+                    {renderProgress(c)}
                   </td>
                   <td className="px-4 py-3 text-right text-muted-foreground">{c.total_chargers || 0}</td>
                   <td className="px-4 py-3 text-muted-foreground">{format(new Date(c.created_at), "MMM d, yyyy")}</td>
