@@ -37,12 +37,17 @@ const PAGE_TITLES: Record<string, string> = {
   "/campaigns": "Campaigns",
 };
 
-const CAMPAIGN_STAGE_TITLES: Record<string, string> = {
+const CAMPAIGN_TAB_TITLES: Record<string, string> = {
+  overview: "Overview",
+  chargers: "Chargers",
+  schedule: "Schedule",
+  cost: "Cost",
+  reports: "Reports",
   upload: "Upload",
-  scan: "Scan",
-  deploy: "Deploy",
-  price: "Price",
-  launch: "Launch",
+  scan: "Chargers",
+  deploy: "Schedule",
+  price: "Cost",
+  launch: "Reports",
 };
 
 function getCampaignPageTitle(pathname: string, campaignName: string, customerName: string): string | null {
@@ -50,12 +55,12 @@ function getCampaignPageTitle(pathname: string, campaignName: string, customerNa
   if (pathname === "/campaigns") {
     return customerName ? `Campaigns | ${customerName}` : "Campaigns";
   }
-  // Campaign stage view: /campaigns/:id/:stage
-  const stageMatch = pathname.match(/^\/campaigns\/[^/]+\/(\w+)$/);
-  if (stageMatch) {
-    const stageName = CAMPAIGN_STAGE_TITLES[stageMatch[1]];
-    if (stageName) {
-      return campaignName ? `${stageName} | ${campaignName}` : stageName;
+  // Campaign tab view: /campaigns/:id/:tab
+  const tabMatch = pathname.match(/^\/campaigns\/[^/]+\/(\w+)$/);
+  if (tabMatch) {
+    const tabName = CAMPAIGN_TAB_TITLES[tabMatch[1]];
+    if (tabName) {
+      return campaignName ? `${tabName} | ${campaignName}` : tabName;
     }
   }
   return null;
@@ -75,7 +80,7 @@ export function PlatformHeader() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const campaignTitle = getCampaignPageTitle(location.pathname, selectedCampaignName, selectedCustomer);
-  const pageTitle = campaignTitle || PAGE_TITLES[location.pathname] || "Dashboard";
+  const pageTitle = campaignTitle || PAGE_TITLES[location.pathname] || "";
   const isSettingsPage = location.pathname === "/settings";
   const isCampaignPage = false; // Campaign name now shown in pageTitle directly
 
