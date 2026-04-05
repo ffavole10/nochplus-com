@@ -37,6 +37,8 @@ import SWILibrary from "./pages/SWILibrary";
 import Locations from "./pages/placeholders/Locations";
 import Parts from "./pages/placeholders/Parts";
 import PartsCatalog from "./pages/PartsCatalog";
+import Partners from "./pages/Partners";
+import PartnerProfile from "./pages/PartnerProfile";
 
 // Campaign stage pages
 import CampaignUpload from "./pages/campaigns/CampaignUpload";

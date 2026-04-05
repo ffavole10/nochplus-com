@@ -383,6 +383,18 @@ export function PlatformSidebar() {
           </div>
         }
 
+        {/* ─── PARTNERS SECTION ─── */}
+        <SectionHeader label="PARTNERS" icon={Handshake} section="partners" />
+        {expandedSection === "partners" &&
+        <div className="pl-1">
+            <SidebarMenu className="px-1">
+              {partnersPages.map((item) =>
+            <NavItem key={item.title} item={item} />
+            )}
+            </SidebarMenu>
+          </div>
+        }
+
         {/* ─── AUTOHEAL SECTION ─── */}
         <SectionHeader label={<span>AUTOHEAL<sup className="text-[8px] align-super ml-0.5">TM</sup></span>} icon={Zap} section="autoheal" />
         {expandedSection === "autoheal" &&
