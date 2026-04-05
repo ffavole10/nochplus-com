@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Upload, Activity, AlertTriangle, CheckCircle, Clock, MapPin } from "lucide-react";
 import { format } from "date-fns";
+import { CampaignSubtitle } from "@/components/campaigns/CampaignSubtitle";
 
 export default function CampaignOverview() {
   const { campaignId } = useParams();
@@ -18,7 +19,7 @@ export default function CampaignOverview() {
   const { data: chargers = [] } = useCampaignChargers(id);
   const navigate = useNavigate();
 
-  usePageTitle(campaign ? `Overview | ${campaign.name}` : "Overview");
+  usePageTitle("Overview");
 
   const stats = useMemo(() => {
     const total = chargers.length;
@@ -47,15 +48,14 @@ export default function CampaignOverview() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center justify-end">
-        <Badge variant="outline" className="capitalize text-xs">
-          {(campaign.status || "draft").replace("_", " ")}
-        </Badge>
-      </div>
+      <CampaignSubtitle
+        customerName={campaign.customer}
+        campaignName={campaign.name}
+        status={campaign.status}
+      />
 
       {/* Metadata strip */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-        <span>Partner: <strong className="text-foreground">{campaign.customer}</strong></span>
         {campaign.start_date && <span>Start: {format(new Date(campaign.start_date), "MMM d, yyyy")}</span>}
         {campaign.deadline && <span>Deadline: {format(new Date(campaign.deadline), "MMM d, yyyy")}</span>}
         <span>Chargers: <strong className="text-foreground">{stats.total}</strong></span>

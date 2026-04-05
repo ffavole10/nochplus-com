@@ -4,6 +4,7 @@ import { useCampaign } from "@/hooks/useCampaigns";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays } from "lucide-react";
+import { CampaignSubtitle } from "@/components/campaigns/CampaignSubtitle";
 
 export default function CampaignSchedule() {
   const { campaignId } = useParams();
@@ -11,7 +12,7 @@ export default function CampaignSchedule() {
   const id = campaignId || selectedCampaignId || null;
   const { data: campaign } = useCampaign(id);
 
-  usePageTitle(campaign ? `Schedule | ${campaign.name}` : "Schedule");
+  usePageTitle("Schedule");
 
   if (!campaign) {
     return (
@@ -23,6 +24,11 @@ export default function CampaignSchedule() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
+      <CampaignSubtitle
+        customerName={campaign.customer}
+        campaignName={campaign.name}
+        status={campaign.status}
+      />
       <Card>
         <CardContent className="p-8 text-center">
           <CalendarDays className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />

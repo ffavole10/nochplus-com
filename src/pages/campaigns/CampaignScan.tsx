@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Search, Zap, AlertTriangle, ArrowRight, Check } from "lucide-react";
+import { CampaignSubtitle } from "@/components/campaigns/CampaignSubtitle";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useCampaign, useUpdateCampaign } from "@/hooks/useCampaigns";
 import { useCampaignChargers, useUpdateCampaignCharger, useBulkUpdateCampaignChargers, type CampaignChargerRow } from "@/hooks/useCampaignChargers";
@@ -203,6 +204,15 @@ export default function CampaignScan() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {campaign && (
+        <div className="px-4 pt-4">
+          <CampaignSubtitle
+            customerName={campaign.customer}
+            campaignName={campaign.name}
+            status={campaign.status}
+          />
+        </div>
+      )}
       {/* Metrics strip */}
       <ScanMetrics metrics={metrics} />
 

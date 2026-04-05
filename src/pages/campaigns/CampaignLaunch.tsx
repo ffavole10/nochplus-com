@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FileText } from "lucide-react";
+import { CampaignSubtitle } from "@/components/campaigns/CampaignSubtitle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useCampaign, useUpdateCampaign } from "@/hooks/useCampaigns";
@@ -125,6 +126,11 @@ export default function CampaignLaunch() {
 
   return (
     <div className="flex-1 flex flex-col gap-4 p-4 overflow-auto">
+      <CampaignSubtitle
+        customerName={campaign?.customer || ""}
+        campaignName={campaign?.name || ""}
+        status={campaign?.status}
+      />
       <LaunchStatusBar
         campaignStatus={campaignStatus}
         completedCount={completedCount}
