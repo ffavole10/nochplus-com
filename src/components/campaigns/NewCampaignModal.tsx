@@ -45,6 +45,7 @@ export function NewCampaignModal({ open, onOpenChange, onComplete }: NewCampaign
   const [campaignName, setCampaignName] = useState("");
   const [campaignType, setCampaignType] = useState<CampaignType>("preventive_maintenance");
   const [customer, setCustomer] = useState("");
+  const [newPartnerOpen, setNewPartnerOpen] = useState(false);
 
   const { data: dbPartners = [] } = usePartners();
   const partnerCategories = useMemo(() => {
