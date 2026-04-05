@@ -29,6 +29,7 @@ export default function CampaignSchedule() {
         campaignName={campaign.name}
         status={campaign.status}
       />
+      <Card>
         <CardContent className="p-8 text-center">
           <CalendarDays className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-1">Schedule — Coming Soon</h3>
