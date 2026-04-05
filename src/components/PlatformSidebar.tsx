@@ -41,7 +41,7 @@ import { cn } from "@/lib/utils";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useEstimates } from "@/hooks/useEstimates";
 
-type SectionKey = "campaigns" | "service-desk" | "noch-plus" | "autoheal" | null;
+type SectionKey = "campaigns" | "service-desk" | "noch-plus" | "partners" | "autoheal" | null;
 
 const STATUS_LEVELS: {value: StatusLevel;label: string;colorClass: string;}[] = [
 { value: "Critical", label: "Critical", colorClass: "bg-critical" },
