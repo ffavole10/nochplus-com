@@ -160,6 +160,7 @@ export function PlatformSidebar() {
     "campaigns": "/campaigns",
     "service-desk": "/service-desk/tickets",
     "noch-plus": "/noch-plus/dashboard",
+    "partners": "/partners",
     "autoheal": "/autoheal/ai-agent",
   };
 

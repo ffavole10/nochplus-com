@@ -20,6 +20,7 @@ export type Customer = {
   industry: string | null;
   description: string | null;
   headquarters_address: string | null;
+  categories: string[];
   created_at: string;
   updated_at: string;
 };
