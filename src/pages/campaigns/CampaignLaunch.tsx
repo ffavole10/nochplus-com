@@ -126,8 +126,7 @@ export default function CampaignLaunch() {
   return (
     <div className="flex-1 flex flex-col gap-4 p-4 overflow-auto">
       <div className="flex items-center gap-2 text-lg font-semibold">
-        <Rocket className="h-5 w-5 text-primary" />
-        Launch
+        Reports
         {campaign && <span className="text-muted-foreground font-normal">| {campaign.name}</span>}
       </div>
 
