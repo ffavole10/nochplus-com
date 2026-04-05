@@ -7,14 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   Upload, FileSpreadsheet, Loader2, CheckCircle, ChevronLeft, ChevronRight,
-  Wrench, AlertTriangle, RefreshCw, Rocket,
+  Wrench, AlertTriangle, RefreshCw, Rocket, Plus,
 } from "lucide-react";
 import { parseAssessmentExcel, getAssessmentStats } from "@/lib/assessmentParser";
 import { AssessmentCharger } from "@/types/assessment";
 import { CampaignType, CAMPAIGN_TYPE_CONFIG } from "@/types/campaign";
 import { usePartners } from "@/hooks/usePartners";
+import { NewPartnerModal } from "@/components/campaigns/NewPartnerModal";
 import { toast } from "sonner";
 
 interface NewCampaignModalProps {
