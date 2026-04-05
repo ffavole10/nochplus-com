@@ -179,6 +179,38 @@ export default function CampaignLaunch() {
             onUpdateEscalation={(p) => updateEscalation.mutate(p)}
           />
         </TabsContent>
+
+        <TabsContent value="completions" className="mt-4">
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-foreground">Completed Chargers</h3>
+            {inScope.filter(c => c.status === "completed").length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                No chargers completed yet.
+              </div>
+            ) : (
+              <div className="border border-border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-2 font-medium text-muted-foreground">Charger ID</th>
+                      <th className="text-left px-4 py-2 font-medium text-muted-foreground">Site</th>
+                      <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inScope.filter(c => c.status === "completed").map((c: any) => (
+                      <tr key={c.id} className="border-b border-border last:border-0">
+                        <td className="px-4 py-2 text-foreground">{c.charger_records?.station_id || c.charger_id}</td>
+                        <td className="px-4 py-2 text-muted-foreground">{c.charger_records?.site_name || "—"}</td>
+                        <td className="px-4 py-2"><span className="text-xs text-primary font-medium">Completed</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
