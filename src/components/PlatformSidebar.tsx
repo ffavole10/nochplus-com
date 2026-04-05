@@ -196,6 +196,9 @@ export function PlatformSidebar() {
   { title: "Members", url: "/noch-plus/members", icon: Users },
   { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
 
+  const partnersPages = [
+  { title: "All Partners", url: "/partners", icon: Building2 }];
+
   const autohealPages = [
   { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
   { title: "Deep Learning", url: "/autoheal/deep-learning", icon: Brain },
