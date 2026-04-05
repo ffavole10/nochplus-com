@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Rocket } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useCampaign, useUpdateCampaign } from "@/hooks/useCampaigns";
