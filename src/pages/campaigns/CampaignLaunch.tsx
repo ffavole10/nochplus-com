@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Rocket } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useCampaign, useUpdateCampaign } from "@/hooks/useCampaigns";
@@ -117,8 +117,8 @@ export default function CampaignLaunch() {
   if (!campaignId) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-4">
-        <Rocket className="h-8 w-8 text-muted-foreground" />
-        <p className="text-muted-foreground">Select a campaign to view the launch dashboard.</p>
+        <FileText className="h-8 w-8 text-muted-foreground" />
+        <p className="text-muted-foreground">Select a campaign to view reports.</p>
       </div>
     );
   }
@@ -126,8 +126,7 @@ export default function CampaignLaunch() {
   return (
     <div className="flex-1 flex flex-col gap-4 p-4 overflow-auto">
       <div className="flex items-center gap-2 text-lg font-semibold">
-        <Rocket className="h-5 w-5 text-primary" />
-        Launch
+        Reports
         {campaign && <span className="text-muted-foreground font-normal">| {campaign.name}</span>}
       </div>
 
@@ -143,23 +142,23 @@ export default function CampaignLaunch() {
         hasQuote={quotes.length > 0}
       />
 
-      <Tabs defaultValue="overview" className="flex-1">
+      <Tabs defaultValue="reports" className="flex-1">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="reports">
             Field Reports {reports.length > 0 && `(${reports.length})`}
           </TabsTrigger>
           <TabsTrigger value="escalations">
             Escalations {escalations.filter(e => e.status !== "resolved").length > 0 && `(${escalations.filter(e => e.status !== "resolved").length})`}
           </TabsTrigger>
+          <TabsTrigger value="completions">Completions</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-4">
-          <LaunchOverviewTab
-            chargers={chargers}
-            scheduleDays={scheduleDays}
+        <TabsContent value="reports" className="mt-4">
+          <LaunchFieldReportsTab
+            reports={reports}
             techs={campaignTechs}
-            campaignStatus={campaignStatus}
+            campaignId={campaignId}
+            onAddReport={(r) => createReport.mutate(r)}
           />
         </TabsContent>
 
@@ -179,6 +178,38 @@ export default function CampaignLaunch() {
             onCreateEscalation={(e) => createEscalation.mutate(e)}
             onUpdateEscalation={(p) => updateEscalation.mutate(p)}
           />
+        </TabsContent>
+
+        <TabsContent value="completions" className="mt-4">
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-foreground">Completed Chargers</h3>
+            {inScope.filter(c => c.status === "completed").length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                No chargers completed yet.
+              </div>
+            ) : (
+              <div className="border border-border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-2 font-medium text-muted-foreground">Charger ID</th>
+                      <th className="text-left px-4 py-2 font-medium text-muted-foreground">Site</th>
+                      <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inScope.filter(c => c.status === "completed").map((c: any) => (
+                      <tr key={c.id} className="border-b border-border last:border-0">
+                        <td className="px-4 py-2 text-foreground">{c.charger_records?.station_id || c.charger_id}</td>
+                        <td className="px-4 py-2 text-muted-foreground">{c.charger_records?.site_name || "—"}</td>
+                        <td className="px-4 py-2"><span className="text-xs text-primary font-medium">Completed</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

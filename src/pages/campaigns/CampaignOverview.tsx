@@ -66,11 +66,11 @@ export default function CampaignOverview() {
 
       {stats.total === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-border rounded-lg">
-          <Upload className="h-12 w-12 text-muted-foreground/30 mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-1">No chargers in this campaign yet</h3>
-          <p className="text-sm text-muted-foreground mb-4">Upload a dataset to populate charger records.</p>
+          <MapPin className="h-12 w-12 text-muted-foreground/30 mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-1">Campaign created</h3>
+          <p className="text-sm text-muted-foreground mb-4">Go to the Chargers tab to upload your dataset and get started.</p>
           <Button onClick={() => navigate(`/campaigns/${id}/chargers`)} size="sm">
-            <Upload className="h-4 w-4 mr-1" /> Upload Dataset
+            Go to Chargers
           </Button>
         </div>
       ) : (
