@@ -6,9 +6,8 @@ import {
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned, Building2, Handshake,
-  Brain, Sliders, BarChart3, List, Plus, LayoutGrid } from
+  Brain, Sliders, BarChart3, List, Plus, LayoutGrid, Eye, FileText } from
 "lucide-react";
-import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
 import { toast } from "sonner";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useCampaigns } from "@/hooks/useCampaigns";
@@ -76,15 +75,13 @@ function getActiveSection(pathname: string): SectionKey {
   return null;
 }
 
-function getFirstActiveStage(stageStatus: Record<string, string> | null): string {
-  if (!stageStatus) return "upload";
-  const stages = ["upload", "scan", "deploy", "price", "launch"];
-  const inProgress = stages.find(s => stageStatus[s] === "in_progress");
-  if (inProgress) return inProgress;
-  const firstNotStarted = stages.find(s => stageStatus[s] === "not_started");
-  if (firstNotStarted) return firstNotStarted;
-  return "launch";
-}
+const CAMPAIGN_TABS = [
+  { title: "Overview", url: "overview", icon: Eye },
+  { title: "Chargers", url: "chargers", icon: HardDrive },
+  { title: "Schedule", url: "schedule", icon: CalendarDays },
+  { title: "Cost", url: "cost", icon: DollarSign },
+  { title: "Reports", url: "reports", icon: FileText },
+];
 
 export function PlatformSidebar() {
   const { state } = useSidebar();
@@ -150,9 +147,7 @@ export function PlatformSidebar() {
       setContextCampaignId(campaign.id);
       setSelectedCampaignName(campaign.name);
       setSelectedCustomer((campaign as any).customer_company || campaign.customer || "");
-      const ss = campaign.stage_status as Record<string, string> | null;
-      const stage = getFirstActiveStage(ss);
-      navigate(`/campaigns/${campaign.id}/${stage}`);
+      navigate(`/campaigns/${campaign.id}/overview`);
     }
   };
 
@@ -352,9 +347,24 @@ export function PlatformSidebar() {
               </Select>
             </div>
 
-            {/* Stage pipeline – only when campaign selected */}
+            {/* Campaign tabs – only when campaign selected */}
             {contextCampaignId && (
-              <CampaignStagePipeline />
+              <SidebarMenu className="px-1 mt-1">
+                {CAMPAIGN_TABS.map((tab) => (
+                  <SidebarMenuItem key={tab.url}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={`/campaigns/${contextCampaignId}/${tab.url}`}
+                        className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      >
+                        <tab.icon className="h-4 w-4" />
+                        <span>{tab.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
             )}
           </div>
         }

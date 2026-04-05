@@ -40,13 +40,13 @@ import PartsCatalog from "./pages/PartsCatalog";
 import Partners from "./pages/Partners";
 import PartnerProfile from "./pages/PartnerProfile";
 
-// Campaign stage pages
-import CampaignUpload from "./pages/campaigns/CampaignUpload";
-import CampaignScan from "./pages/campaigns/CampaignScan";
-import CampaignDeploy from "./pages/campaigns/CampaignDeploy";
-import CampaignPrice from "./pages/campaigns/CampaignPrice";
-import CampaignLaunch from "./pages/campaigns/CampaignLaunch";
+// Campaign pages — new tab structure
 import CampaignList from "./pages/campaigns/CampaignList";
+import CampaignOverview from "./pages/campaigns/CampaignOverview";
+import CampaignChargers from "./pages/campaigns/CampaignChargers";
+import CampaignSchedule from "./pages/campaigns/CampaignSchedule";
+import CampaignCost from "./pages/campaigns/CampaignCost";
+import CampaignReports from "./pages/campaigns/CampaignReports";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,15 +67,22 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
-            {/* Campaign list and stage routes */}
+            {/* Campaign HQ and tab routes */}
             <Route path="/campaigns" element={<CampaignList />} />
-            <Route path="/campaigns/:campaignId/upload" element={<CampaignUpload />} />
-            <Route path="/campaigns/:campaignId/scan" element={<CampaignScan />} />
-            <Route path="/campaigns/:campaignId/deploy" element={<CampaignDeploy />} />
-            <Route path="/campaigns/:campaignId/price" element={<CampaignPrice />} />
-            <Route path="/campaigns/:campaignId/launch" element={<CampaignLaunch />} />
+            <Route path="/campaigns/:campaignId/overview" element={<CampaignOverview />} />
+            <Route path="/campaigns/:campaignId/chargers" element={<CampaignChargers />} />
+            <Route path="/campaigns/:campaignId/schedule" element={<CampaignSchedule />} />
+            <Route path="/campaigns/:campaignId/cost" element={<CampaignCost />} />
+            <Route path="/campaigns/:campaignId/reports" element={<CampaignReports />} />
 
-            {/* Legacy campaign routes — redirect to stage equivalents or keep for backward compat */}
+            {/* Legacy stage redirects → new tabs */}
+            <Route path="/campaigns/:campaignId/upload" element={<Navigate to="../chargers" replace />} />
+            <Route path="/campaigns/:campaignId/scan" element={<Navigate to="../chargers" replace />} />
+            <Route path="/campaigns/:campaignId/deploy" element={<Navigate to="../schedule" replace />} />
+            <Route path="/campaigns/:campaignId/price" element={<Navigate to="../cost" replace />} />
+            <Route path="/campaigns/:campaignId/launch" element={<Navigate to="../reports" replace />} />
+
+            {/* Legacy campaign routes */}
             <Route path="/dashboard" element={<Index />} />
             <Route path="/dataset" element={<Dataset />} />
             <Route path="/issues" element={<IssuesQueue />} />
@@ -87,7 +94,6 @@ const App = () => (
             <Route path="/noch-plus/submissions" element={<Submissions />} />
             <Route path="/service-desk/estimates" element={<Estimates />} />
             <Route path="/service-desk/customers" element={<Customers />} />
-            
 
             {/* Noch+ section */}
             <Route path="/noch-plus/dashboard" element={<NochPlusDashboard />} />

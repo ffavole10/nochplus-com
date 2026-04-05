@@ -25,15 +25,7 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-destructive/10 text-destructive border-destructive/30",
 };
 
-function getFirstActiveStage(stageStatus: Record<string, string> | null): string {
-  if (!stageStatus) return "upload";
-  const stages = ["upload", "scan", "deploy", "price", "launch"];
-  const inProgress = stages.find(s => stageStatus[s] === "in_progress");
-  if (inProgress) return inProgress;
-  const firstNotStarted = stages.find(s => stageStatus[s] === "not_started");
-  if (firstNotStarted) return firstNotStarted;
-  return "launch";
-}
+// No longer needed — stages removed
 
 export default function CampaignList() {
   const { selectedCustomer, setSelectedCampaignId, setSelectedCampaignName, setSelectedCustomer } = useCampaignContext();
@@ -86,9 +78,7 @@ export default function CampaignList() {
     setSelectedCampaignId(campaign.id);
     setSelectedCampaignName(campaign.name);
     setSelectedCustomer((campaign as any).customer_company || campaign.customer);
-    const ss = campaign.stage_status as Record<string, string> | null;
-    const stage = getFirstActiveStage(ss);
-    navigate(`/campaigns/${campaign.id}/${stage}`);
+    navigate(`/campaigns/${campaign.id}/overview`);
   };
 
   const openNewModal = () => {
@@ -124,7 +114,7 @@ export default function CampaignList() {
       setSelectedCampaignId(data.id);
       setSelectedCampaignName(data.name);
       setSelectedCustomer(data.customer);
-      navigate(`/campaigns/${data.id}/upload`);
+      navigate(`/campaigns/${data.id}/overview`);
     } catch (err) {
       console.error(err);
       toast.error("Failed to create campaign");
@@ -133,24 +123,17 @@ export default function CampaignList() {
     }
   };
 
-  const renderStageDots = (stageStatus: Record<string, string> | null) => {
-    const stages = ["upload", "scan", "deploy", "price", "launch"];
-    const ss = stageStatus || {};
+  const renderProgress = (campaign: typeof campaigns[0]) => {
+    const total = campaign.total_chargers || 0;
+    const serviced = campaign.total_serviced || 0;
+    if (total === 0) return <span className="text-muted-foreground">—</span>;
+    const pct = Math.round((serviced / total) * 100);
     return (
-      <div className="flex items-center gap-1">
-        {stages.map(s => {
-          const status = ss[s] || "not_started";
-          return (
-            <div
-              key={s}
-              className={`w-2 h-2 rounded-full ${
-                status === "complete" ? "bg-primary" :
-                status === "in_progress" ? "bg-primary/50" :
-                "bg-muted-foreground/20"
-              }`}
-            />
-          );
-        })}
+      <div className="flex items-center gap-2">
+        <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
+        </div>
+        <span className="text-xs text-muted-foreground">{pct}%</span>
       </div>
     );
   };
@@ -232,7 +215,7 @@ export default function CampaignList() {
                     </Badge>
                   </td>
                   <td className="px-4 py-3">
-                    {renderStageDots(c.stage_status as Record<string, string> | null)}
+                    {renderProgress(c)}
                   </td>
                   <td className="px-4 py-3 text-right text-muted-foreground">{c.total_chargers || 0}</td>
                   <td className="px-4 py-3 text-muted-foreground">{format(new Date(c.created_at), "MMM d, yyyy")}</td>
