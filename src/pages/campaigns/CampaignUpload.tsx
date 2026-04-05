@@ -31,8 +31,9 @@ export default function CampaignUpload() {
   const [importing, setImporting] = useState(false);
   const [importComplete, setImportComplete] = useState(false);
   const [importedCount, setImportedCount] = useState(0);
+  const [replacing, setReplacing] = useState(false);
 
-  const hasExistingData = existingRecords.length > 0 && state.phase === 1;
+  const hasExistingData = existingRecords.length > 0 && state.phase === 1 && !replacing;
 
   const handleImport = useCallback(async () => {
     if (!campaignId) return;
@@ -173,7 +174,7 @@ export default function CampaignUpload() {
             This campaign has <strong>{existingRecords.length}</strong> chargers imported.
           </p>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setPhase(1)}>
+            <Button variant="outline" onClick={() => setReplacing(true)}>
               Replace Dataset
             </Button>
             <Button onClick={() => navigate(`/campaigns/${campaignId}/scan`)} className="gap-2">
