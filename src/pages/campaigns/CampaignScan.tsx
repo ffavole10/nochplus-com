@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Search, Zap, AlertTriangle, ArrowRight, Check } from "lucide-react";
+import { CampaignSubtitle } from "@/components/campaigns/CampaignSubtitle";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useCampaign, useUpdateCampaign } from "@/hooks/useCampaigns";
 import { useCampaignChargers, useUpdateCampaignCharger, useBulkUpdateCampaignChargers, type CampaignChargerRow } from "@/hooks/useCampaignChargers";
