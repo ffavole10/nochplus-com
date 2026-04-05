@@ -78,9 +78,7 @@ export default function CampaignList() {
     setSelectedCampaignId(campaign.id);
     setSelectedCampaignName(campaign.name);
     setSelectedCustomer((campaign as any).customer_company || campaign.customer);
-    const ss = campaign.stage_status as Record<string, string> | null;
-    const stage = getFirstActiveStage(ss);
-    navigate(`/campaigns/${campaign.id}/${stage}`);
+    navigate(`/campaigns/${campaign.id}/overview`);
   };
 
   const openNewModal = () => {
