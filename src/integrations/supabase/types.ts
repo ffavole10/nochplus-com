@@ -1595,6 +1595,7 @@ export type Database = {
       customers: {
         Row: {
           address: string
+          categories: Json
           company: string
           contact_name: string
           created_at: string
@@ -1616,6 +1617,7 @@ export type Database = {
         }
         Insert: {
           address?: string
+          categories?: Json
           company: string
           contact_name: string
           created_at?: string
@@ -1637,6 +1639,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          categories?: Json
           company?: string
           contact_name?: string
           created_at?: string

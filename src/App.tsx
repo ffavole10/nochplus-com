@@ -37,6 +37,8 @@ import SWILibrary from "./pages/SWILibrary";
 import Locations from "./pages/placeholders/Locations";
 import Parts from "./pages/placeholders/Parts";
 import PartsCatalog from "./pages/PartsCatalog";
+import Partners from "./pages/Partners";
+import PartnerProfile from "./pages/PartnerProfile";
 
 // Campaign stage pages
 import CampaignUpload from "./pages/campaigns/CampaignUpload";
@@ -93,6 +95,10 @@ const App = () => (
             <Route path="/noch-plus/chargers" element={<NochPlusChargers />} />
             <Route path="/noch-plus/assessments" element={<NochPlusAssessments />} />
             <Route path="/noch-plus/monitoring" element={<NochPlusMonitoring />} />
+
+            {/* Partners section */}
+            <Route path="/partners" element={<Partners />} />
+            <Route path="/partners/:partnerId" element={<PartnerProfile />} />
 
             {/* AutoHeal section */}
             <Route path="/autoheal/ai-agent" element={<AIAgent />} />
