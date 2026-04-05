@@ -50,18 +50,16 @@ const CAMPAIGN_TAB_TITLES: Record<string, string> = {
   launch: "Reports",
 };
 
-function getCampaignPageTitle(pathname: string, campaignName: string, customerName: string): string | null {
+function getCampaignPageTitle(pathname: string): string | null {
   // Campaign list view
   if (pathname === "/campaigns") {
-    return customerName ? `Campaigns | ${customerName}` : "Campaigns";
+    return "Campaigns";
   }
   // Campaign tab view: /campaigns/:id/:tab
   const tabMatch = pathname.match(/^\/campaigns\/[^/]+\/(\w+)$/);
   if (tabMatch) {
     const tabName = CAMPAIGN_TAB_TITLES[tabMatch[1]];
-    if (tabName) {
-      return campaignName ? `${tabName} | ${campaignName}` : tabName;
-    }
+    if (tabName) return tabName;
   }
   return null;
 }
