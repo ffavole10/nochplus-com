@@ -31,8 +31,9 @@ export default function CampaignUpload() {
   const [importing, setImporting] = useState(false);
   const [importComplete, setImportComplete] = useState(false);
   const [importedCount, setImportedCount] = useState(0);
+  const [replacing, setReplacing] = useState(false);
 
-  const hasExistingData = existingRecords.length > 0 && state.phase === 1;
+  const hasExistingData = existingRecords.length > 0 && state.phase === 1 && !replacing;
 
   const handleImport = useCallback(async () => {
     if (!campaignId) return;
