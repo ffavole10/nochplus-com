@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -10,12 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Rocket, Search } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Rocket, Search, Upload, FileSpreadsheet, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { parseAssessmentExcel } from "@/lib/assessmentParser";
+import { NewPartnerModal } from "@/components/campaigns/NewPartnerModal";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -24,8 +27,6 @@ const STATUS_COLORS: Record<string, string> = {
   on_hold: "bg-amber-500/10 text-amber-600 border-amber-500/30",
   cancelled: "bg-destructive/10 text-destructive border-destructive/30",
 };
-
-// No longer needed — stages removed
 
 export default function CampaignList() {
   const { selectedCustomer, setSelectedCampaignId, setSelectedCampaignName, setSelectedCustomer } = useCampaignContext();
@@ -41,8 +42,12 @@ export default function CampaignList() {
   const [creating, setCreating] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [newPartnerOpen, setNewPartnerOpen] = useState(false);
 
-  // Open modal if ?new=1 query param (from sidebar "+ New Campaign")
+  const tabParam = searchParams.get("tab");
+
   useEffect(() => {
     if (searchParams.get("new") === "1") {
       setNewOpen(true);
@@ -52,7 +57,7 @@ export default function CampaignList() {
     }
   }, [searchParams]);
 
-  usePageTitle(selectedCustomer ? `Campaign HQ | ${selectedCustomer}` : "Campaign HQ");
+  usePageTitle(selectedCustomer ? `Campaigns | ${selectedCustomer}` : "Campaigns");
 
   const filtered = useMemo(() => {
     let result = campaigns;
@@ -86,6 +91,11 @@ export default function CampaignList() {
     setNewOpen(true);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setFile(f);
+  };
+
   const handleCreate = async () => {
     if (!name.trim()) return;
     const customerValue = newCustomer || "Unassigned";
@@ -98,28 +108,62 @@ export default function CampaignList() {
         status: "draft",
         user_id: session?.user?.id ?? null,
       };
-      // Try to set customer_id FK
       const matchedCustomer = dbCustomers.find(c => c.company === customerValue);
-      if (matchedCustomer) {
-        insertPayload.customer_id = matchedCustomer.id;
-      }
+      if (matchedCustomer) insertPayload.customer_id = matchedCustomer.id;
+
       const { data, error } = await supabase.from("campaigns").insert(insertPayload).select().single();
       if (error) throw error;
+
+      const campaignId = data.id;
+
+      // If file uploaded, parse and import chargers
+      if (file) {
+        setImporting(true);
+        try {
+          const chargers = await parseAssessmentExcel(file);
+          if (chargers.length > 0) {
+            const chargerRecords = chargers.map((ch, i) => ({
+              campaign_id: campaignId,
+              station_id: ch.stationId || `IMPORT-${i}`,
+              site_name: ch.siteName || null,
+              city: ch.city || null,
+              state: ch.state || null,
+              address: ch.address || null,
+              model: ch.model || null,
+              status: ch.status || "Pending",
+              latitude: ch.latitude || null,
+              longitude: ch.longitude || null,
+            }));
+            const { error: chError } = await supabase
+              .from("charger_records")
+              .insert(chargerRecords as any);
+            if (chError) console.error("Charger import error:", chError);
+            else toast.success(`Imported ${chargers.length} chargers`);
+          }
+        } catch (parseErr) {
+          console.error("Parse error:", parseErr);
+          toast.error("Dataset uploaded but parsing had issues. You can re-upload from the Chargers tab.");
+        }
+        setImporting(false);
+      }
+
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       toast.success(`Campaign "${name}" created`);
       setNewOpen(false);
       setName("");
       setDescription("");
       setNewCustomer("");
-      setSelectedCampaignId(data.id);
+      setFile(null);
+      setSelectedCampaignId(campaignId);
       setSelectedCampaignName(data.name);
       setSelectedCustomer(data.customer);
-      navigate(`/campaigns/${data.id}/overview`);
+      navigate(`/campaigns/${campaignId}/overview`);
     } catch (err) {
       console.error(err);
       toast.error("Failed to create campaign");
     } finally {
       setCreating(false);
+      setImporting(false);
     }
   };
 
@@ -138,18 +182,34 @@ export default function CampaignList() {
     );
   };
 
+  // If a tab param is set but no campaign is selected, show empty state for that tab
+  if (tabParam) {
+    const tabName = tabParam.charAt(0).toUpperCase() + tabParam.slice(1);
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6">
+        <Rocket className="h-12 w-12 text-muted-foreground/30 mb-4" />
+        <h2 className="text-lg font-medium text-foreground mb-1">No campaign selected</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Choose a campaign from the dropdown above or create a new one to see {tabName} data.
+        </p>
+        <Button onClick={openNewModal} size="sm">
+          <Plus className="h-4 w-4 mr-1" /> New Campaign
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">
-          Campaign HQ {selectedCustomer && <span className="text-muted-foreground font-normal">| {selectedCustomer}</span>}
+          Campaigns {selectedCustomer && <span className="text-muted-foreground font-normal">| {selectedCustomer}</span>}
         </h1>
         <Button onClick={openNewModal} size="sm">
           <Plus className="h-4 w-4 mr-1" /> New Campaign
         </Button>
       </div>
 
-      {/* Filters bar */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -192,7 +252,7 @@ export default function CampaignList() {
             <thead className="bg-muted/50 border-b border-border">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Campaign Name</th>
-                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Customer</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Partner</th>
                 <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Status</th>
                 <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Progress</th>
                 <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Chargers</th>
@@ -214,9 +274,7 @@ export default function CampaignList() {
                       {(c.status || "draft").replace("_", " ")}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3">
-                    {renderProgress(c)}
-                  </td>
+                  <td className="px-4 py-3">{renderProgress(c)}</td>
                   <td className="px-4 py-3 text-right text-muted-foreground">{c.total_chargers || 0}</td>
                   <td className="px-4 py-3 text-muted-foreground">{format(new Date(c.created_at), "MMM d, yyyy")}</td>
                   <td className="px-4 py-3 text-muted-foreground">{format(new Date(c.updated_at), "MMM d, yyyy")}</td>
@@ -227,56 +285,103 @@ export default function CampaignList() {
         </div>
       )}
 
+      {/* Create Campaign Modal */}
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
             <DialogTitle>Create Campaign</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label className="text-xs">Campaign Name</Label>
+              <Label className="text-xs">Campaign Name *</Label>
               <Input
                 className="mt-1"
                 placeholder="e.g. Shell Q2 2026 California"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleCreate()}
+                onKeyDown={e => e.key === "Enter" && !creating && handleCreate()}
                 autoFocus
               />
             </div>
             <div>
-              <Label className="text-xs">Customer</Label>
-              <Select value={newCustomer || "__none__"} onValueChange={v => setNewCustomer(v === "__none__" ? "" : v)}>
+              <Label className="text-xs">Partner *</Label>
+              <Select
+                value={newCustomer || "__none__"}
+                onValueChange={v => {
+                  if (v === "__new_partner__") {
+                    setNewPartnerOpen(true);
+                    return;
+                  }
+                  setNewCustomer(v === "__none__" ? "" : v);
+                }}
+              >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select customer..." />
+                  <SelectValue placeholder="Select partner..." />
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-[200]">
-                  <SelectItem value="__none__" className="text-xs text-muted-foreground">No customer</SelectItem>
+                  <SelectItem value="__none__" className="text-xs text-muted-foreground">No partner</SelectItem>
                   {dbCustomers.map(c => (
                     <SelectItem key={c.id} value={c.company} className="text-xs">{c.company}</SelectItem>
                   ))}
+                  <Separator className="my-1" />
+                  <SelectItem value="__new_partner__" className="text-xs">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Plus className="h-3 w-3" />
+                      <span>New Partner</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Description (optional)</Label>
+              <Label className="text-xs">Description</Label>
               <Textarea
                 className="mt-1"
                 placeholder="Brief description of campaign scope..."
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                rows={3}
+                rows={2}
               />
+            </div>
+            <div>
+              <Label className="text-xs">Dataset File</Label>
+              <div className="mt-1">
+                {file ? (
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border border-border">
+                    <FileSpreadsheet className="h-4 w-4 text-primary" />
+                    <span className="text-xs text-foreground flex-1 truncate">{file.name}</span>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setFile(null)}>×</Button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 p-3 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+                    <Upload className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">CSV, XLSX, XLS, TSV — optional, can add later</span>
+                    <input type="file" accept=".csv,.xlsx,.xls,.tsv" onChange={handleFileChange} className="hidden" />
+                  </label>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setNewOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={!name.trim() || creating}>
-              {creating ? "Creating..." : "Create"}
+            <Button variant="outline" onClick={() => { setNewOpen(false); setFile(null); }}>Cancel</Button>
+            <Button onClick={handleCreate} disabled={!name.trim() || creating || importing}>
+              {importing ? (
+                <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Importing...</>
+              ) : creating ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Inline new partner modal */}
+      <NewPartnerModal
+        open={newPartnerOpen}
+        onOpenChange={setNewPartnerOpen}
+        onCreated={(partner) => {
+          setNewCustomer(partner.company);
+          setNewPartnerOpen(false);
+        }}
+      />
     </div>
   );
 }
