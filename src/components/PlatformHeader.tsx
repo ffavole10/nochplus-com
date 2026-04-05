@@ -37,12 +37,17 @@ const PAGE_TITLES: Record<string, string> = {
   "/campaigns": "Campaigns",
 };
 
-const CAMPAIGN_STAGE_TITLES: Record<string, string> = {
+const CAMPAIGN_TAB_TITLES: Record<string, string> = {
+  overview: "Overview",
+  chargers: "Chargers",
+  schedule: "Schedule",
+  cost: "Cost",
+  reports: "Reports",
   upload: "Upload",
-  scan: "Scan",
-  deploy: "Deploy",
-  price: "Price",
-  launch: "Launch",
+  scan: "Chargers",
+  deploy: "Schedule",
+  price: "Cost",
+  launch: "Reports",
 };
 
 function getCampaignPageTitle(pathname: string, campaignName: string, customerName: string): string | null {
