@@ -142,15 +142,15 @@ export default function CampaignLaunch() {
         hasQuote={quotes.length > 0}
       />
 
-      <Tabs defaultValue="overview" className="flex-1">
+      <Tabs defaultValue="reports" className="flex-1">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="reports">
             Field Reports {reports.length > 0 && `(${reports.length})`}
           </TabsTrigger>
           <TabsTrigger value="escalations">
             Escalations {escalations.filter(e => e.status !== "resolved").length > 0 && `(${escalations.filter(e => e.status !== "resolved").length})`}
           </TabsTrigger>
+          <TabsTrigger value="completions">Completions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
