@@ -133,7 +133,7 @@ export function PlatformHeader() {
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           )}
-          <h1 className="font-semibold whitespace-nowrap text-3xl text-muted-foreground">{pageTitle}</h1>
+          <h1 className="whitespace-nowrap text-3xl text-muted-foreground font-semibold">{pageTitle}</h1>
           {selectedCampaignName && isCampaignPage && !isSettingsPage && (
             <>
               <span className="text-lg text-muted-foreground font-light">|</span>
