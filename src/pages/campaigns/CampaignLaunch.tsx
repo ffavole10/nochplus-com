@@ -153,12 +153,12 @@ export default function CampaignLaunch() {
           <TabsTrigger value="completions">Completions</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-4">
-          <LaunchOverviewTab
-            chargers={chargers}
-            scheduleDays={scheduleDays}
+        <TabsContent value="reports" className="mt-4">
+          <LaunchFieldReportsTab
+            reports={reports}
             techs={campaignTechs}
-            campaignStatus={campaignStatus}
+            campaignId={campaignId}
+            onAddReport={(r) => createReport.mutate(r)}
           />
         </TabsContent>
 
