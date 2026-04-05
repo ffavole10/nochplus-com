@@ -124,12 +124,12 @@ export default function CampaignList() {
           if (chargers.length > 0) {
             const chargerRecords = chargers.map((ch, i) => ({
               campaign_id: campaignId,
-              station_id: ch.stationId || `IMPORT-${i}`,
-              site_name: ch.siteName || null,
+              station_id: ch.evseId || ch.assetName || `IMPORT-${i}`,
+              site_name: ch.accountName || null,
               city: ch.city || null,
               state: ch.state || null,
               address: ch.address || null,
-              model: ch.model || null,
+              model: null,
               status: ch.status || "Pending",
               latitude: ch.latitude || null,
               longitude: ch.longitude || null,
