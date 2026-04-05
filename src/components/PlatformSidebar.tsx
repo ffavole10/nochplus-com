@@ -6,9 +6,8 @@ import {
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned, Building2, Handshake,
-  Brain, Sliders, BarChart3, List, Plus, LayoutGrid } from
+  Brain, Sliders, BarChart3, List, Plus, LayoutGrid, Eye, FileText } from
 "lucide-react";
-import { CampaignStagePipeline } from "@/components/campaigns/CampaignStagePipeline";
 import { toast } from "sonner";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useCampaigns } from "@/hooks/useCampaigns";
