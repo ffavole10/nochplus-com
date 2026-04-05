@@ -318,14 +318,14 @@ export default function CampaignList() {
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select partner..." />
                 </SelectTrigger>
-                <SelectContent className="bg-popover z-[200]">
+                <SelectContent className="bg-popover z-[2300]">
                   <SelectItem value="__none__" className="text-xs text-muted-foreground">No partner</SelectItem>
                   {dbCustomers.map(c => (
                     <SelectItem key={c.id} value={c.company} className="text-xs">{c.company}</SelectItem>
                   ))}
                   <Separator className="my-1" />
                   <SelectItem value="__new_partner__" className="text-xs">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <div className="flex items-center gap-1.5 text-primary">
                       <Plus className="h-3 w-3" />
                       <span>New Partner</span>
                     </div>
