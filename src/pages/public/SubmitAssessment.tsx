@@ -395,7 +395,7 @@ export default function SubmitAssessment() {
             try {
               const formData = new FormData();
               formData.append("file", photo.file);
-              formData.append("submission_id", ticket.id);
+              formData.append("submission_id", ticketDbId);
               formData.append("charger_id", charger.id);
               const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-submission-photo`;
               const res = await fetch(uploadUrl, { method: "POST", body: formData });
@@ -407,7 +407,7 @@ export default function SubmitAssessment() {
           }
 
           await supabase.from("ticket_chargers").insert({
-            ticket_id: ticket.id,
+            ticket_id: ticketDbId,
             brand: charger.brand,
             charger_type: charger.chargerType,
             serial_number: charger.serialNumber || null,
