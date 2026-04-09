@@ -433,9 +433,11 @@ export default function SubmitAssessment() {
           }
         });
       } else {
-        const { data: submission, error: subError } = await supabase
+        const submissionDbId = crypto.randomUUID();
+        const { error: subError } = await supabase
           .from("noch_plus_submissions")
           .insert({
+            id: submissionDbId,
             submission_id: submissionId,
             submission_type: "assessment",
             company_id: resolvedCompanyId,
@@ -453,9 +455,7 @@ export default function SubmitAssessment() {
             customer_notes: customerNotes.trim() || null,
             noch_plus_member: nochPlus,
             location_id: resolvedSiteId,
-          } as any)
-          .select()
-          .single();
+          } as any);
 
         if (subError) throw subError;
 
