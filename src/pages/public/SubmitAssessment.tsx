@@ -364,9 +364,11 @@ export default function SubmitAssessment() {
       const resolvedSiteId = resolvedCompanyId ? await resolveSiteId(resolvedCompanyId) : null;
 
       if (submissionType === "repair") {
-        const { data: ticket, error: ticketError } = await supabase
+        const ticketDbId = crypto.randomUUID();
+        const { error: ticketError } = await supabase
           .from("service_tickets")
           .insert({
+            id: ticketDbId,
             ticket_id: submissionId,
             source: "customer_submission",
             status: "New",
@@ -383,9 +385,7 @@ export default function SubmitAssessment() {
             oem_ticket_number: oemTicketNumber.trim() || null,
             customer_notes: customerNotes.trim() || null,
             location_id: resolvedSiteId,
-          } as any)
-          .select()
-          .single();
+          } as any);
 
         if (ticketError) throw ticketError;
 
@@ -395,7 +395,7 @@ export default function SubmitAssessment() {
             try {
               const formData = new FormData();
               formData.append("file", photo.file);
-              formData.append("submission_id", ticket.id);
+              formData.append("submission_id", ticketDbId);
               formData.append("charger_id", charger.id);
               const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-submission-photo`;
               const res = await fetch(uploadUrl, { method: "POST", body: formData });
@@ -407,7 +407,7 @@ export default function SubmitAssessment() {
           }
 
           await supabase.from("ticket_chargers").insert({
-            ticket_id: ticket.id,
+            ticket_id: ticketDbId,
             brand: charger.brand,
             charger_type: charger.chargerType,
             serial_number: charger.serialNumber || null,
@@ -433,9 +433,11 @@ export default function SubmitAssessment() {
           }
         });
       } else {
-        const { data: submission, error: subError } = await supabase
+        const submissionDbId = crypto.randomUUID();
+        const { error: subError } = await supabase
           .from("noch_plus_submissions")
           .insert({
+            id: submissionDbId,
             submission_id: submissionId,
             submission_type: "assessment",
             company_id: resolvedCompanyId,
@@ -453,9 +455,7 @@ export default function SubmitAssessment() {
             customer_notes: customerNotes.trim() || null,
             noch_plus_member: nochPlus,
             location_id: resolvedSiteId,
-          } as any)
-          .select()
-          .single();
+          } as any);
 
         if (subError) throw subError;
 
@@ -465,7 +465,7 @@ export default function SubmitAssessment() {
             try {
               const formData = new FormData();
               formData.append("file", photo.file);
-              formData.append("submission_id", submission.id);
+              formData.append("submission_id", submissionDbId);
               formData.append("charger_id", charger.id);
               const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-submission-photo`;
               const res = await fetch(uploadUrl, { method: "POST", body: formData });
@@ -477,7 +477,7 @@ export default function SubmitAssessment() {
           }
 
           await supabase.from("assessment_chargers").insert({
-            submission_id: submission.id,
+            submission_id: submissionDbId,
             brand: charger.brand,
             charger_type: charger.chargerType,
             serial_number: charger.serialNumber || null,
