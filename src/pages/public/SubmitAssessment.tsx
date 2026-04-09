@@ -364,9 +364,11 @@ export default function SubmitAssessment() {
       const resolvedSiteId = resolvedCompanyId ? await resolveSiteId(resolvedCompanyId) : null;
 
       if (submissionType === "repair") {
-        const { data: ticket, error: ticketError } = await supabase
+        const ticketDbId = crypto.randomUUID();
+        const { error: ticketError } = await supabase
           .from("service_tickets")
           .insert({
+            id: ticketDbId,
             ticket_id: submissionId,
             source: "customer_submission",
             status: "New",
@@ -383,9 +385,7 @@ export default function SubmitAssessment() {
             oem_ticket_number: oemTicketNumber.trim() || null,
             customer_notes: customerNotes.trim() || null,
             location_id: resolvedSiteId,
-          } as any)
-          .select()
-          .single();
+          } as any);
 
         if (ticketError) throw ticketError;
 
