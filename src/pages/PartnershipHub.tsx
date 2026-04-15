@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wrench, Presentation, Share2, BookOpen } from "lucide-react";
+import { Wrench, Presentation, Share2, BookOpen, Layers } from "lucide-react";
 import { usePartnershipHub } from "@/hooks/usePartnershipHub";
 import { PlanBuilderTab } from "@/components/partnership-hub/PlanBuilderTab";
+import { PlanTiersTab } from "@/components/partnership-hub/PlanTiersTab";
 import { PresentTab } from "@/components/partnership-hub/PresentTab";
 import { ShareActivateTab } from "@/components/partnership-hub/ShareActivateTab";
 import { KnowledgeBaseTab } from "@/components/partnership-hub/KnowledgeBaseTab";
@@ -18,9 +19,12 @@ export default function PartnershipHub() {
   return (
     <div className="p-6 space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+        <TabsList className="grid grid-cols-5 w-full max-w-3xl">
           <TabsTrigger value="plan-builder" className="flex items-center gap-1.5 text-xs">
             <Wrench className="h-3.5 w-3.5" /> Plan Builder
+          </TabsTrigger>
+          <TabsTrigger value="plan-tiers" className="flex items-center gap-1.5 text-xs">
+            <Layers className="h-3.5 w-3.5" /> Plan Tiers
           </TabsTrigger>
           <TabsTrigger value="present" className="flex items-center gap-1.5 text-xs">
             <Presentation className="h-3.5 w-3.5" /> Present
@@ -46,6 +50,10 @@ export default function PartnershipHub() {
             summary={hub.summary}
             onNavigate={handleNavigate}
           />
+        </TabsContent>
+
+        <TabsContent value="plan-tiers" className="mt-6">
+          <PlanTiersTab />
         </TabsContent>
 
         <TabsContent value="present" className="mt-6">
