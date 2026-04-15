@@ -1912,6 +1912,222 @@ export type Database = {
           },
         ]
       }
+      noch_plus_knowledge_base: {
+        Row: {
+          answer: string
+          created_at: string
+          created_by: string
+          id: string
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          question?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      noch_plus_members: {
+        Row: {
+          company_name: string
+          contact_name: string
+          created_at: string
+          email: string
+          id: string
+          phone: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      noch_plus_partnership_plans: {
+        Row: {
+          activated_at: string | null
+          billing_cycle: string
+          company_name: string
+          contact_email: string
+          created_at: string
+          expires_at: string
+          id: string
+          member_id: string | null
+          plan_data: Json
+          plan_token: string
+          shared_at: string
+          status: string
+          total_annual: number
+          total_monthly: number
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          billing_cycle?: string
+          company_name?: string
+          contact_email?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          member_id?: string | null
+          plan_data?: Json
+          plan_token?: string
+          shared_at?: string
+          status?: string
+          total_annual?: number
+          total_monthly?: number
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          billing_cycle?: string
+          company_name?: string
+          contact_email?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          member_id?: string | null
+          plan_data?: Json
+          plan_token?: string
+          shared_at?: string
+          status?: string
+          total_annual?: number
+          total_monthly?: number
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "noch_plus_partnership_plans_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "noch_plus_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      noch_plus_sites: {
+        Row: {
+          created_at: string
+          dc_charger_count: number
+          id: string
+          l2_charger_count: number
+          member_id: string
+          monthly_cost: number
+          site_name: string
+          tier: string
+        }
+        Insert: {
+          created_at?: string
+          dc_charger_count?: number
+          id?: string
+          l2_charger_count?: number
+          member_id: string
+          monthly_cost?: number
+          site_name?: string
+          tier?: string
+        }
+        Update: {
+          created_at?: string
+          dc_charger_count?: number
+          id?: string
+          l2_charger_count?: number
+          member_id?: string
+          monthly_cost?: number
+          site_name?: string
+          tier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "noch_plus_sites_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "noch_plus_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      noch_plus_sla_credits: {
+        Row: {
+          actual_response_hours: number
+          applied_to_invoice: boolean
+          created_at: string
+          credit_amount: number
+          credit_percentage: number
+          id: string
+          member_id: string
+          service_call_id: string | null
+          sla_target_hours: number
+        }
+        Insert: {
+          actual_response_hours?: number
+          applied_to_invoice?: boolean
+          created_at?: string
+          credit_amount?: number
+          credit_percentage?: number
+          id?: string
+          member_id: string
+          service_call_id?: string | null
+          sla_target_hours?: number
+        }
+        Update: {
+          actual_response_hours?: number
+          applied_to_invoice?: boolean
+          created_at?: string
+          credit_amount?: number
+          credit_percentage?: number
+          id?: string
+          member_id?: string
+          service_call_id?: string | null
+          sla_target_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "noch_plus_sla_credits_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "noch_plus_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       noch_plus_submissions: {
         Row: {
           assessment_needs: string[] | null
