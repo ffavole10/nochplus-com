@@ -249,9 +249,14 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
           <img src={nochPlusIcon} alt="NOCH+" className="w-10 h-10 rounded-lg" />
           <span className="text-sm font-medium text-sidebar-foreground/70 uppercase tracking-wider">NOCH+ Membership Program</span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold mb-2">
-          Custom Reliability Plan for {partnerInfo.companyName || "Your Organization"}
-        </h2>
+        <div className="flex items-center gap-3 mb-2 flex-wrap">
+          <h2 className="text-2xl md:text-3xl font-bold">
+            Custom Reliability Plan for {partnerInfo.companyName || "Your Organization"}
+          </h2>
+          <Badge className={TIER_BADGE_CLASSES[summary.dominantTier] + " text-sm px-3 py-1"}>
+            {TIER_LABELS[summary.dominantTier]}
+          </Badge>
+        </div>
         <p className="text-sidebar-foreground/70 max-w-2xl">
           Fast response, priority dispatch, and discounted service, all for a flat monthly fee.
         </p>
@@ -289,27 +294,6 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
         </Card>
       </div>
 
-      {/* ─── Section 3: Site Breakdown ─── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Site Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {sites.map((site) => {
-            const monthly = calcSiteMonthlyCost(site.l2Count, site.dcCount, site.tier);
-            return (
-              <div key={site.id} className={`flex items-center justify-between p-3 rounded-lg border-l-4 bg-muted/30 ${TIER_BORDER_COLORS[site.tier]}`}>
-                <div className="flex items-center gap-3">
-                  <span className="font-medium">{site.name}</span>
-                  <span className="text-sm text-muted-foreground">{site.l2Count} L2 · {site.dcCount} DC</span>
-                  <Badge className={TIER_BADGE_CLASSES[site.tier]}>{TIER_LABELS[site.tier]}</Badge>
-                </div>
-                <span className="font-semibold">{fmt(monthly)}/mo</span>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
 
       {/* ─── Section 4: What's Included (Collapsible) ─── */}
       <Card>
