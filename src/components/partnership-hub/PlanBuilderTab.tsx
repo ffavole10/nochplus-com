@@ -241,10 +241,10 @@ export function PlanBuilderTab({
                 <Button className="w-full" onClick={() => onNavigate("present")}>
                   <Presentation className="h-4 w-4 mr-2" /> Open Presentation
                 </Button>
-                <Button variant="outline" className="w-full border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent" onClick={() => onNavigate("share")}>
+                <Button variant="outline" className="w-full border-sidebar-foreground/30 text-sidebar-foreground hover:bg-sidebar-foreground/10" onClick={() => onNavigate("share")}>
                   <Share2 className="h-4 w-4 mr-2" /> Share Plan with Partner
                 </Button>
-                <Button variant="outline" className="w-full border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent" onClick={() => onNavigate("share")}>
+                <Button variant="outline" className="w-full border-sidebar-foreground/30 text-sidebar-foreground hover:bg-sidebar-foreground/10" onClick={() => onNavigate("share")}>
                   <CreditCard className="h-4 w-4 mr-2" /> Activate Now
                 </Button>
               </div>
