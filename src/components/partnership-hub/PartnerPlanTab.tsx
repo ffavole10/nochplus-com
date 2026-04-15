@@ -253,8 +253,8 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
           <h2 className="text-2xl md:text-3xl font-bold">
             Custom Reliability Plan for {partnerInfo.companyName || "Your Organization"}
           </h2>
-          <Badge className={TIER_BADGE_CLASSES[summary.dominantTier] + " text-sm px-3 py-1"}>
-            {TIER_LABELS[summary.dominantTier]}
+          <Badge className={TIER_BADGE_CLASSES[highestTier] + " text-sm px-3 py-1"}>
+            {TIER_LABELS[highestTier]}
           </Badge>
         </div>
         <p className="text-sidebar-foreground/70 max-w-2xl">
