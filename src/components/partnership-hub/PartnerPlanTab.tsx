@@ -85,6 +85,7 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
 
   // Benefits collapse
   const [benefitsExpanded, setBenefitsExpanded] = useState(false);
+  const [qaExpanded, setQaExpanded] = useState(false);
 
   // Activation state
   const [mode, setMode] = useState<Mode>("share");
