@@ -1,14 +1,13 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import {
-  TierName, TIER_LABELS, TIER_BADGE_CLASSES, TIER_PRICING,
-  calcSiteMonthlyCost, FEATURE_MATRIX,
+  TierName, TIER_LABELS,
+  calcSiteMonthlyCost,
 } from "@/constants/nochPlusTiers";
 import type { PartnerInfo, SiteConfig, RoiInputs } from "@/hooks/usePartnershipHub";
 
@@ -35,7 +34,7 @@ export function PlanBuilderTab({
   partnerInfo, setPartnerInfo, sites, addSite, removeSite, updateSite,
   roiInputs, setRoiInputs, summary, onNavigate,
 }: PlanBuilderTabProps) {
-  const [showTierComparison, setShowTierComparison] = useState(false);
+  
 
   const fmt = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 });
 
@@ -149,39 +148,6 @@ export function PlanBuilderTab({
           </CardContent>
         </Card>
 
-        {/* Tier Comparison */}
-        <Button variant="outline" className="w-full" onClick={() => setShowTierComparison(!showTierComparison)}>
-          {showTierComparison ? <ChevronUp className="h-4 w-4 mr-2" /> : <ChevronDown className="h-4 w-4 mr-2" />}
-          {showTierComparison ? "Hide" : "Show"} Full Tier Comparison
-        </Button>
-        {showTierComparison && (
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="text-left p-3 font-medium">Feature</th>
-                      <th className="text-center p-3 font-medium">Essential</th>
-                      <th className="text-center p-3 font-medium text-primary">Priority</th>
-                      <th className="text-center p-3 font-medium text-amber-600">Elite</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {FEATURE_MATRIX.map((row, i) => (
-                      <tr key={i} className="border-b last:border-0">
-                        <td className="p-3 font-medium">{row.feature}</td>
-                        <td className="p-3 text-center text-muted-foreground">{row.essential}</td>
-                        <td className="p-3 text-center">{row.priority}</td>
-                        <td className="p-3 text-center">{row.elite}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* RIGHT COLUMN — Sticky Summary */}
