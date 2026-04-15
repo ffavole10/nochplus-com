@@ -34,6 +34,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/noch-plus/members": "Members",
   "/noch-plus/chargers": "Chargers",
   "/noch-plus/monitoring": "Mission Control",
+  "/noch-plus/partnership-hub": "Partnership Hub",
   "/campaigns": "Campaigns",
 };
 
