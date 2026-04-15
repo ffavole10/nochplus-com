@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FEATURE_MATRIX, TIER_PRICING, TierName } from "@/constants/nochPlusTiers";
-import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck } from "lucide-react";
+import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
 
 interface PlanTiersTabProps {
   onNavigate?: (tab: string) => void;
@@ -35,14 +35,6 @@ const TIER_HIGHLIGHTS: Record<TierName, string[]> = {
   ],
 };
 
-const BOOLEAN_FEATURES = new Set([
-  "Priority Dispatch Queue",
-  "Emergency Parts Priority",
-  "Direct Ticket Submission",
-  "After-Hours Emergency Line",
-  "Quarterly Business Review",
-]);
-
 const TRUST_SIGNALS = [
   { icon: Users, title: "22 W2 In-House Technicians", desc: "Our own certified team, not contractors" },
   { icon: Award, title: "EVITP Certified", desc: "Industry-standard EV infrastructure training" },
@@ -50,17 +42,13 @@ const TRUST_SIGNALS = [
   { icon: ShieldCheck, title: "SLA Credit-Back Guarantee", desc: "We credit your account if we miss our response window" },
 ];
 
-function isBooleanYes(val: string) {
-  const v = val.trim().toLowerCase();
-  return v === "yes" || v.startsWith("yes,") || v.startsWith("yes.");
-}
-
 function isBooleanNo(val: string) {
   return val.trim() === "—" || val.trim() === "-" || val.trim() === "";
 }
 
 export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
   const [toggle, setToggle] = useState<ChargerToggle>("ac");
+  const [expanded, setExpanded] = useState(false);
 
   const price = (tier: TierName) =>
     toggle === "ac" ? TIER_PRICING[tier].l2 : TIER_PRICING[tier].dc;
@@ -69,20 +57,19 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
     (r) => !r.feature.startsWith("L2 AC") && !r.feature.startsWith("L3 DCFC")
   );
 
-  const renderCell = (feature: string, value: string) => {
-    if (BOOLEAN_FEATURES.has(feature)) {
-      if (isBooleanYes(value)) {
-        return <Check className="h-4 w-4 text-primary mx-auto" />;
-      }
-      if (isBooleanNo(value)) {
-        return <Minus className="h-4 w-4 text-muted-foreground/40 mx-auto" />;
-      }
-    }
+  const renderFeatureValue = (value: string) => {
     if (isBooleanNo(value)) {
-      return <Minus className="h-4 w-4 text-muted-foreground/40 mx-auto" />;
+      return <Minus className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />;
     }
-    return <span>{value}</span>;
+    return (
+      <div className="flex items-start gap-1.5">
+        <Check className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+        <span>{value}</span>
+      </div>
+    );
   };
+
+  const tiers: TierName[] = ["essential", "priority", "elite"];
 
   return (
     <div className="space-y-8">
@@ -123,7 +110,7 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
       {/* Pricing Cards + Trust Signals */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
         {/* Three pricing cards */}
-        {(["essential", "priority", "elite"] as TierName[]).map((tier) => {
+        {tiers.map((tier) => {
           const isPriority = tier === "priority";
           return (
             <Card
@@ -156,7 +143,7 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
 
                 <Button
                   variant={isPriority ? "default" : "outline"}
-                  className={`mt-4 w-full ${isPriority ? "" : ""}`}
+                  className="mt-4 w-full"
                   onClick={() => onNavigate?.("plan-builder")}
                 >
                   Build a Plan
@@ -170,6 +157,28 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                     </li>
                   ))}
                 </ul>
+
+                {/* Expanded feature list */}
+                {expanded && (
+                  <div className="mt-4 pt-4 border-t border-border space-y-0">
+                    {featureRows.map((row, i) => {
+                      const value = row[tier];
+                      return (
+                        <div
+                          key={i}
+                          className={`flex items-start gap-2 text-xs py-2 px-1 rounded ${
+                            i % 2 === 1 ? "bg-muted/30" : ""
+                          }`}
+                        >
+                          <div className="w-full">
+                            <p className="text-[10px] text-muted-foreground/60 mb-0.5">{row.feature}</p>
+                            <div className="text-foreground">{renderFeatureValue(value)}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
@@ -192,43 +201,23 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {/* Full Comparison Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 font-medium w-[34%]">Feature</th>
-                  <th className="text-center p-3 font-medium w-[22%]">Essential</th>
-                  <th className="text-center p-3 font-medium w-[22%] bg-primary/5 border-x border-primary/20">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <Badge className="text-[10px] bg-primary text-primary-foreground px-2 py-0">
-                        <Crown className="h-3 w-3 mr-0.5" /> Recommended
-                      </Badge>
-                      <span className="text-primary">Priority</span>
-                    </div>
-                  </th>
-                  <th className="text-center p-3 font-medium w-[22%] text-amber-600">Elite</th>
-                </tr>
-              </thead>
-              <tbody>
-                {featureRows.map((row, i) => (
-                  <tr
-                    key={i}
-                    className={`border-b last:border-0 ${i % 2 === 0 ? "bg-background" : "bg-muted/30"}`}
-                  >
-                    <td className="p-3 font-medium">{row.feature}</td>
-                    <td className="p-3 text-center text-muted-foreground">{renderCell(row.feature, row.essential)}</td>
-                    <td className="p-3 text-center bg-primary/5 border-x border-primary/20">{renderCell(row.feature, row.priority)}</td>
-                    <td className="p-3 text-center">{renderCell(row.feature, row.elite)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Expand / Collapse toggle */}
+      <div className="flex justify-center">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {expanded ? (
+            <>
+              <ChevronUp className="h-4 w-4" /> Collapse Features
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-4 w-4" /> Expand All Features
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
