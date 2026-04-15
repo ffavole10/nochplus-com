@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { TierName, calcSiteMonthlyCost, LABOR_DISCOUNT } from "@/constants/nochPlusTiers";
 
 export interface SiteConfig {
@@ -24,6 +24,9 @@ export interface RoiInputs {
   downtimeCostPerDay: number;
 }
 
+const L2_DAILY_REVENUE = 15;
+const DC_DAILY_REVENUE = 85;
+
 // SLA target hours by tier
 const SLA_HOURS: Record<TierName, number> = {
   essential: 72,
@@ -39,6 +42,14 @@ const defaultSite = (): SiteConfig => ({
   tier: "priority",
 });
 
+function calcSmartDowntimeCost(totalL2: number, totalDC: number): number {
+  const total = totalL2 + totalDC;
+  if (total === 0) return 40;
+  if (totalDC === 0) return L2_DAILY_REVENUE;
+  if (totalL2 === 0) return DC_DAILY_REVENUE;
+  return Math.round((totalL2 * L2_DAILY_REVENUE + totalDC * DC_DAILY_REVENUE) / total);
+}
+
 export function usePartnershipHub() {
   const [partnerInfo, setPartnerInfo] = useState<PartnerInfo>({
     companyName: "",
@@ -49,13 +60,32 @@ export function usePartnershipHub() {
   });
 
   const [sites, setSites] = useState<SiteConfig[]>([defaultSite()]);
+  const downtimeManuallySet = useRef(false);
 
   const [roiInputs, setRoiInputs] = useState<RoiInputs>({
-    avgServiceCallCost: 600,
+    avgServiceCallCost: 750,
     avgResponseTime: 96,
     serviceCallsPerYear: 12,
     downtimeCostPerDay: 40,
   });
+
+  // Auto-update downtime cost when charger mix changes (unless manually overridden)
+  useEffect(() => {
+    if (downtimeManuallySet.current) return;
+    const totalL2 = sites.reduce((a, s) => a + s.l2Count, 0);
+    const totalDC = sites.reduce((a, s) => a + s.dcCount, 0);
+    const smart = calcSmartDowntimeCost(totalL2, totalDC);
+    setRoiInputs((prev) => (prev.downtimeCostPerDay === smart ? prev : { ...prev, downtimeCostPerDay: smart }));
+  }, [sites]);
+
+  const handleSetRoiInputs = useCallback((next: RoiInputs) => {
+    setRoiInputs((prev) => {
+      if (next.downtimeCostPerDay !== prev.downtimeCostPerDay) {
+        downtimeManuallySet.current = true;
+      }
+      return next;
+    });
+  }, []);
 
   const addSite = useCallback(() => {
     setSites((prev) => [
@@ -116,7 +146,6 @@ export function usePartnershipHub() {
 
     const netCost = annualTotal - estimatedSavings - downtimeSavings;
     const totalSavings = currentAnnualSpend + downtimeSavings * 1 - netCost;
-    // Simpler: totalSavings = estimatedSavings + downtimeSavings (portion from membership savings)
     const combinedSavings = estimatedSavings + downtimeSavings;
 
     // Recommended tier logic
@@ -166,7 +195,7 @@ export function usePartnershipHub() {
     removeSite,
     updateSite,
     roiInputs,
-    setRoiInputs,
+    setRoiInputs: handleSetRoiInputs,
     summary,
   };
 }
