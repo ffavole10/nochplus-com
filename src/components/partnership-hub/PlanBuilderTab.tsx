@@ -214,7 +214,7 @@ export function PlanBuilderTab({
                 <span className="text-sidebar-foreground/70">Annual Pre-Pay</span>
                 <div className="text-right">
                   <span className="font-medium">{fmt(summary.annualPrePay)}</span>
-                  <Badge className="ml-2 bg-emerald-500/20 text-emerald-400 text-[10px]">1 month free</Badge>
+                  <Badge className="ml-2 text-[10px] text-primary-foreground bg-sidebar-accent">1 month free</Badge>
                 </div>
               </div>
               <Separator className="bg-sidebar-border" />
