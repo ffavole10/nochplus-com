@@ -94,7 +94,7 @@ export function PresentTab({ partnerInfo, sites, summary }: PresentTabProps) {
       {/* Hero Banner */}
       <div className="rounded-xl bg-gradient-to-r from-sidebar to-sidebar/80 p-8 text-sidebar-foreground">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground text-sm">N+</div>
+          <img src={nochPlusIcon} alt="NOCH+" className="w-10 h-10 rounded-lg" />
           <span className="text-sm font-medium text-sidebar-foreground/70 uppercase tracking-wider">NOCH+ Membership Program</span>
         </div>
         <h2 className="text-2xl md:text-3xl font-bold mb-2">
