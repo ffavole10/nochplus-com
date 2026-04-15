@@ -53,7 +53,7 @@ export default function PartnershipHub() {
         </TabsContent>
 
         <TabsContent value="plan-tiers" className="mt-6">
-          <PlanTiersTab />
+          <PlanTiersTab onNavigate={handleNavigate} />
         </TabsContent>
 
         <TabsContent value="present" className="mt-6">
