@@ -85,6 +85,7 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
 
   // Benefits collapse
   const [benefitsExpanded, setBenefitsExpanded] = useState(false);
+  const [qaExpanded, setQaExpanded] = useState(false);
 
   // Activation state
   const [mode, setMode] = useState<Mode>("share");
@@ -346,54 +347,61 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
       {/* ─── Section 5: Q&A Assistant ─── */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" /> NOCH+ Q&A Assistant
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g. What happens if you guys are late?"
-              onKeyDown={(e) => e.key === "Enter" && searchKB(query)}
-            />
-            <Button onClick={() => searchKB(query)}>
-              <Search className="h-4 w-4 mr-1" /> Get Answer
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" /> NOCH+ Q&A Assistant
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => setQaExpanded(!qaExpanded)} className="text-xs gap-1.5">
+              {qaExpanded ? <><ChevronUp className="h-3.5 w-3.5" /> Hide Q&A</> : <><ChevronDown className="h-3.5 w-3.5" /> Show Q&A</>}
             </Button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_QUESTIONS.map((q) => (
-              <Button key={q} variant="outline" size="sm" className="text-xs" onClick={() => { setQuery(q); searchKB(q); }}>
-                {q}
+        </CardHeader>
+        {qaExpanded && (
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="e.g. What happens if you guys are late?"
+                onKeyDown={(e) => e.key === "Enter" && searchKB(query)}
+              />
+              <Button onClick={() => searchKB(query)}>
+                <Search className="h-4 w-4 mr-1" /> Get Answer
               </Button>
-            ))}
-          </div>
-          {matchedAnswer && (
-            <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-              <p className="text-sm font-semibold mb-1">Q: {matchedAnswer.question}</p>
-              <p className="text-sm text-muted-foreground">{matchedAnswer.answer}</p>
             </div>
-          )}
-          {!matchedAnswer && query && (
-            <p className="text-sm text-muted-foreground italic">
-              I don't have a specific answer for that in our Knowledge Base yet. You can add it in the Knowledge Base tab.
-            </p>
-          )}
-          {history.length > 1 && (
-            <>
-              <Separator />
-              <p className="text-xs font-medium text-muted-foreground">Previous Questions</p>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {history.slice(1).map((h, i) => (
-                  <button key={i} className="w-full text-left p-2 rounded hover:bg-muted/50 text-xs" onClick={() => setMatchedAnswer(h.a)}>
-                    {h.q}
-                  </button>
-                ))}
+            <div className="flex flex-wrap gap-2">
+              {QUICK_QUESTIONS.map((q) => (
+                <Button key={q} variant="outline" size="sm" className="text-xs" onClick={() => { setQuery(q); searchKB(q); }}>
+                  {q}
+                </Button>
+              ))}
+            </div>
+            {matchedAnswer && (
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-sm font-semibold mb-1">Q: {matchedAnswer.question}</p>
+                <p className="text-sm text-muted-foreground">{matchedAnswer.answer}</p>
               </div>
-            </>
-          )}
-        </CardContent>
+            )}
+            {!matchedAnswer && query && (
+              <p className="text-sm text-muted-foreground italic">
+                I don't have a specific answer for that in our Knowledge Base yet. You can add it in the Knowledge Base tab.
+              </p>
+            )}
+            {history.length > 1 && (
+              <>
+                <Separator />
+                <p className="text-xs font-medium text-muted-foreground">Previous Questions</p>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {history.slice(1).map((h, i) => (
+                    <button key={i} className="w-full text-left p-2 rounded hover:bg-muted/50 text-xs" onClick={() => setMatchedAnswer(h.a)}>
+                      {h.q}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </CardContent>
+        )}
       </Card>
 
       {/* ─── Section 6: Activation ─── */}
