@@ -170,6 +170,7 @@ export function PlanBuilderTab({
             <div className="space-y-1">
               <Label className="text-xs">Service Calls per Year</Label>
               <Input type="number" value={roiInputs.serviceCallsPerYear} onChange={(e) => setRoiInputs({ ...roiInputs, serviceCallsPerYear: parseInt(e.target.value) || 0 })} />
+              <p className="text-[10px] text-muted-foreground leading-tight">Est. 2 calls/yr per L2, 4 calls/yr per DCFC. Edit if known.</p>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Est. Daily Revenue Loss per Charger</Label>
