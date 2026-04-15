@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import nochPlusIcon from "@/assets/noch-plus-icon.png";
+import nochEssentialBadge from "@/assets/Noch_Essential_badge.png";
+import nochPriorityBadge from "@/assets/Noch_Priority_badge.png";
+import nochEliteBadge from "@/assets/Noch_Elite_badge.png";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -36,6 +39,12 @@ interface PartnerPlanTabProps {
 type Mode = "share" | "activate" | "trial";
 
 const TIER_RANK: Record<TierName, number> = { essential: 0, priority: 1, elite: 2 };
+
+const TIER_BADGE_IMAGES: Record<TierName, string> = {
+  essential: nochEssentialBadge,
+  priority: nochPriorityBadge,
+  elite: nochEliteBadge,
+};
 
 // Benefits with tier availability
 const BENEFITS: { icon: any; title: string; desc: string; minTier: TierName }[] = [
@@ -245,21 +254,35 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
 
       {/* ─── Section 1: Hero Banner ─── */}
       <div className="rounded-xl bg-gradient-to-r from-sidebar to-sidebar/80 p-8 text-sidebar-foreground">
-        <div className="flex items-center gap-3 mb-4">
-          <img src={nochPlusIcon} alt="NOCH+" className="w-10 h-10 rounded-lg" />
-          <span className="text-sm font-medium text-sidebar-foreground/70 uppercase tracking-wider">NOCH+ Membership Program</span>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          {/* Left content */}
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-4">
+              <img src={nochPlusIcon} alt="NOCH+" className="w-10 h-10 rounded-lg" />
+              <span className="text-sm font-medium text-sidebar-foreground/70 uppercase tracking-wider">NOCH+ Membership Program</span>
+            </div>
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <h2 className="text-2xl md:text-3xl font-bold">
+                Custom Reliability Plan for {partnerInfo.companyName || "Your Organization"}
+              </h2>
+              <Badge className={TIER_BADGE_CLASSES[highestTier] + " text-sm px-3 py-1"}>
+                {TIER_LABELS[highestTier]}
+              </Badge>
+            </div>
+            <p className="text-sidebar-foreground/70 max-w-2xl">
+              Fast response, priority dispatch, and discounted service, all for a flat monthly fee.
+            </p>
+          </div>
+          {/* Right badge image */}
+          <div className="flex justify-center md:justify-end shrink-0">
+            <img
+              src={TIER_BADGE_IMAGES[highestTier]}
+              alt={`${TIER_LABELS[highestTier]} tier badge`}
+              className="w-[80px] h-[80px] md:w-[130px] md:h-[130px] object-contain drop-shadow-[0_8px_24px_rgba(255,255,255,0.25)] rotate-[2deg]"
+              style={{ filter: "drop-shadow(0 0 20px rgba(255,255,255,0.15))" }}
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-3 mb-2 flex-wrap">
-          <h2 className="text-2xl md:text-3xl font-bold">
-            Custom Reliability Plan for {partnerInfo.companyName || "Your Organization"}
-          </h2>
-          <Badge className={TIER_BADGE_CLASSES[highestTier] + " text-sm px-3 py-1"}>
-            {TIER_LABELS[highestTier]}
-          </Badge>
-        </div>
-        <p className="text-sidebar-foreground/70 max-w-2xl">
-          Fast response, priority dispatch, and discounted service, all for a flat monthly fee.
-        </p>
       </div>
 
       {/* ─── Section 2: Stats Grid ─── */}
