@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, X, ChevronDown, ChevronUp, Presentation, Share2, CreditCard } from "lucide-react";
+import { Plus, X, ChevronDown, ChevronUp } from "lucide-react";
 import {
   TierName, TIER_LABELS, TIER_BADGE_CLASSES, TIER_PRICING,
   calcSiteMonthlyCost, FEATURE_MATRIX,
