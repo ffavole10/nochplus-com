@@ -1,11 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Share2, CreditCard, Gift, Mail, Check } from "lucide-react";
+import { Share2, CreditCard, Gift, Mail, Check, ShieldCheck, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   TierName, TIER_LABELS, TIER_BADGE_CLASSES,
@@ -13,6 +11,8 @@ import {
 } from "@/constants/nochPlusTiers";
 import type { PartnerInfo, SiteConfig } from "@/hooks/usePartnershipHub";
 import { usePartnershipPlans, useCreatePartnershipPlan, type PartnershipPlan } from "@/hooks/usePartnershipPlans";
+import { supabase } from "@/integrations/supabase/client";
+import { useSearchParams } from "react-router-dom";
 
 interface ShareActivateTabProps {
   partnerInfo: PartnerInfo;
@@ -36,11 +36,61 @@ const STATUS_COLORS: Record<string, string> = {
 export function ShareActivateTab({ partnerInfo, sites, summary }: ShareActivateTabProps) {
   const [mode, setMode] = useState<Mode>("share");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [checkoutResult, setCheckoutResult] = useState<"success" | "cancelled" | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: plans = [] } = usePartnershipPlans();
   const createPlan = useCreatePartnershipPlan();
 
   const fmt = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 });
   const displayAmount = billingCycle === "annual" ? summary.annualPrePay : summary.monthlyTotal;
+
+  // Handle Stripe checkout return
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    const sessionId = searchParams.get("session_id");
+
+    if (checkout === "success" && sessionId) {
+      setCheckoutResult("success");
+      setMode("activate");
+      // Verify payment and create membership
+      verifyPayment(sessionId);
+      // Clean URL params
+      searchParams.delete("checkout");
+      searchParams.delete("session_id");
+      setSearchParams(searchParams, { replace: true });
+    } else if (checkout === "cancelled") {
+      setCheckoutResult("cancelled");
+      setMode("activate");
+      toast.error("Payment was cancelled. You can try again when ready.");
+      searchParams.delete("checkout");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
+
+  const verifyPayment = async (sessionId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-noch-payment", {
+        body: { sessionId },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.alreadyExists) {
+        toast.info("This membership was already activated.");
+      } else {
+        toast.success(
+          data?.status === "trial"
+            ? "🎉 30-day free trial activated! Welcome to NOCH+."
+            : "🎉 Partnership activated! Welcome to NOCH+."
+        );
+      }
+    } catch (err: any) {
+      console.error("Verification error:", err);
+      toast.error("Payment succeeded but membership setup had an issue. Our team will follow up.");
+    }
+  };
 
   const handleShare = async () => {
     if (!partnerInfo.email) {
@@ -63,33 +113,99 @@ export function ShareActivateTab({ partnerInfo, sites, summary }: ShareActivateT
     }
   };
 
-  const handleActivate = () => {
-    toast.success("Payment processing will be available in Phase 2 with Stripe integration.");
-  };
-
-  const handleTrial = async () => {
-    if (!partnerInfo.email) {
-      toast.error("Please fill in the partner email.");
+  const startCheckout = async (isTrial: boolean) => {
+    if (!partnerInfo.companyName || !partnerInfo.email) {
+      toast.error("Please fill in company name and email in the Plan Builder tab.");
       return;
     }
+    if (summary.totalChargers === 0) {
+      toast.error("Please add at least one site with chargers in the Plan Builder tab.");
+      return;
+    }
+
+    setIsProcessing(true);
     try {
-      await createPlan.mutateAsync({
-        company_name: partnerInfo.companyName,
-        contact_email: partnerInfo.email,
-        plan_data: { sites, partnerInfo },
-        total_monthly: summary.monthlyTotal,
-        total_annual: summary.annualTotal,
-        billing_cycle: billingCycle,
-        status: "trial",
+      // Determine the dominant tier across sites
+      const dominantTier = sites.reduce(
+        (best, site) => {
+          const rank = { essential: 0, priority: 1, elite: 2 };
+          return rank[site.tier] > rank[best] ? site.tier : best;
+        },
+        "essential" as TierName
+      );
+
+      const { data, error } = await supabase.functions.invoke("create-noch-checkout", {
+        body: {
+          companyName: partnerInfo.companyName,
+          contactName: partnerInfo.contactName,
+          email: partnerInfo.email,
+          phone: partnerInfo.phone,
+          monthlyAmount: summary.monthlyTotal,
+          annualAmount: summary.annualPrePay,
+          billingCycle,
+          tier: dominantTier,
+          sites: sites.map(s => ({
+            name: s.name,
+            l2Count: s.l2Count,
+            dcCount: s.dcCount,
+            tier: s.tier,
+          })),
+          isTrial,
+        },
       });
-      toast.success("30-day free trial activated! Partner would receive welcome email in Phase 2.");
-    } catch {
-      toast.error("Failed to activate trial.");
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      const msg = err?.message || "Something went wrong";
+      if (msg.includes("card")) {
+        toast.error("There was an issue with payment processing. Please try again.");
+      } else {
+        toast.error(`Failed to start checkout: ${msg}`);
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Success/Cancel banner */}
+      {checkoutResult === "success" && (
+        <Card className="border-emerald-500 bg-emerald-500/5">
+          <CardContent className="p-4 flex items-center gap-3">
+            <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0" />
+            <div>
+              <p className="font-semibold text-emerald-700">Partnership Activated!</p>
+              <p className="text-sm text-muted-foreground">
+                Payment processed successfully. The membership is now active.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {checkoutResult === "cancelled" && (
+        <Card className="border-amber-500 bg-amber-500/5">
+          <CardContent className="p-4 flex items-center gap-3">
+            <XCircle className="h-6 w-6 text-amber-500 shrink-0" />
+            <div>
+              <p className="font-semibold text-amber-700">Checkout Cancelled</p>
+              <p className="text-sm text-muted-foreground">
+                No charge was made. You can try again when ready.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Mode Selector */}
       <div className="flex gap-2">
         <Button variant={mode === "share" ? "default" : "outline"} onClick={() => setMode("share")} className="flex-1">
@@ -180,32 +296,40 @@ export function ShareActivateTab({ partnerInfo, sites, summary }: ShareActivateT
 
       {mode === "activate" && (
         <Card>
-          <CardContent className="p-6 space-y-4">
-            <p className="text-sm text-muted-foreground text-center">
-              Payment processing via Stripe will be available in Phase 2. Card data will never touch NOCH servers.
-            </p>
-            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-              <div className="col-span-2 space-y-1.5">
-                <Label className="text-xs">Name on Card</Label>
-                <Input placeholder="Full name" disabled />
-              </div>
-              <div className="col-span-2 space-y-1.5">
-                <Label className="text-xs">Card Number</Label>
-                <Input placeholder="•••• •••• •••• ••••" disabled />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Expiry</Label>
-                <Input placeholder="MM/YY" disabled />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">CVC</Label>
-                <Input placeholder="•••" disabled />
-              </div>
+          <CardContent className="p-6 space-y-5">
+            <div className="text-center space-y-2">
+              <p className="text-lg font-semibold">
+                {billingCycle === "annual"
+                  ? `${fmt(summary.annualPrePay)}/year`
+                  : `${fmt(summary.monthlyTotal)}/month`}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                You'll be redirected to a secure Stripe Checkout page to enter payment details.
+              </p>
             </div>
+
             <div className="text-center">
-              <Button size="lg" onClick={handleActivate}>
-                <CreditCard className="h-4 w-4 mr-2" /> Process Payment & Activate Partnership
+              <Button
+                size="lg"
+                onClick={() => startCheckout(false)}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processing…
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4 mr-2" /> Process Payment & Activate Partnership
+                  </>
+                )}
               </Button>
+            </div>
+
+            {/* Stripe trust badge */}
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <span>Secured by Stripe — card data never touches NOCH servers</span>
             </div>
           </CardContent>
         </Card>
@@ -217,12 +341,30 @@ export function ShareActivateTab({ partnerInfo, sites, summary }: ShareActivateT
             <Gift className="h-8 w-8 mx-auto text-purple-500" />
             <p className="text-sm font-medium">30-Day Free Trial</p>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Full tier access for 30 days. No payment required upfront. Card on file is optional.
-              Auto-converts at day 30 if card is on file, or prompts for payment.
+              Full tier access for 30 days. Card on file is optional —
+              you'll be taken to Stripe Checkout where you can choose to add a card or skip.
+              Auto-converts at day 30 if card is on file.
             </p>
-            <Button size="lg" onClick={handleTrial} disabled={createPlan.isPending} className="bg-purple-600 hover:bg-purple-700">
-              <Gift className="h-4 w-4 mr-2" /> Activate 30-Day Free Trial
+            <Button
+              size="lg"
+              onClick={() => startCheckout(true)}
+              disabled={isProcessing}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processing…
+                </>
+              ) : (
+                <>
+                  <Gift className="h-4 w-4 mr-2" /> Start 30-Day Free Trial
+                </>
+              )}
             </Button>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <span>Secured by Stripe — no charge during trial</span>
+            </div>
           </CardContent>
         </Card>
       )}
