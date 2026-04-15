@@ -27,6 +27,9 @@ export interface RoiInputs {
 const L2_DAILY_REVENUE = 16;
 const DC_DAILY_REVENUE = 137;
 
+const L2_CALLS_PER_YEAR = 2;
+const DC_CALLS_PER_YEAR = 4;
+
 // SLA target hours by tier
 const SLA_HOURS: Record<TierName, number> = {
   essential: 72,
@@ -44,10 +47,14 @@ const defaultSite = (): SiteConfig => ({
 
 function calcSmartDowntimeCost(totalL2: number, totalDC: number): number {
   const total = totalL2 + totalDC;
-  if (total === 0) return 40;
+  if (total === 0) return 0;
   if (totalDC === 0) return L2_DAILY_REVENUE;
   if (totalL2 === 0) return DC_DAILY_REVENUE;
   return Math.round((totalL2 * L2_DAILY_REVENUE + totalDC * DC_DAILY_REVENUE) / total);
+}
+
+function calcSmartServiceCalls(totalL2: number, totalDC: number): number {
+  return totalL2 * L2_CALLS_PER_YEAR + totalDC * DC_CALLS_PER_YEAR;
 }
 
 export function usePartnershipHub() {
@@ -61,27 +68,41 @@ export function usePartnershipHub() {
 
   const [sites, setSites] = useState<SiteConfig[]>([defaultSite()]);
   const downtimeManuallySet = useRef(false);
+  const serviceCallsManuallySet = useRef(false);
 
   const [roiInputs, setRoiInputs] = useState<RoiInputs>({
     avgServiceCallCost: 750,
     avgResponseTime: 96,
-    serviceCallsPerYear: 12,
-    downtimeCostPerDay: 40,
+    serviceCallsPerYear: 0,
+    downtimeCostPerDay: 0,
   });
 
-  // Auto-update downtime cost when charger mix changes (unless manually overridden)
+  // Auto-update downtime cost and service calls when charger mix changes (unless manually overridden)
   useEffect(() => {
-    if (downtimeManuallySet.current) return;
     const totalL2 = sites.reduce((a, s) => a + s.l2Count, 0);
     const totalDC = sites.reduce((a, s) => a + s.dcCount, 0);
-    const smart = calcSmartDowntimeCost(totalL2, totalDC);
-    setRoiInputs((prev) => (prev.downtimeCostPerDay === smart ? prev : { ...prev, downtimeCostPerDay: smart }));
+
+    setRoiInputs((prev) => {
+      let next = prev;
+      if (!downtimeManuallySet.current) {
+        const smart = calcSmartDowntimeCost(totalL2, totalDC);
+        if (prev.downtimeCostPerDay !== smart) next = { ...next, downtimeCostPerDay: smart };
+      }
+      if (!serviceCallsManuallySet.current) {
+        const smartCalls = calcSmartServiceCalls(totalL2, totalDC);
+        if (prev.serviceCallsPerYear !== smartCalls) next = { ...next, serviceCallsPerYear: smartCalls };
+      }
+      return next;
+    });
   }, [sites]);
 
   const handleSetRoiInputs = useCallback((next: RoiInputs) => {
     setRoiInputs((prev) => {
       if (next.downtimeCostPerDay !== prev.downtimeCostPerDay) {
         downtimeManuallySet.current = true;
+      }
+      if (next.serviceCallsPerYear !== prev.serviceCallsPerYear) {
+        serviceCallsManuallySet.current = true;
       }
       return next;
     });
