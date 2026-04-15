@@ -107,6 +107,18 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
+      {/* Collapse button at top when expanded */}
+      {expanded && (
+        <div className="flex justify-center">
+          <button
+            onClick={() => setExpanded(false)}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronUp className="h-4 w-4" /> Collapse Features
+          </button>
+        </div>
+      )}
+
       {/* Pricing Cards + Trust Signals */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
         {/* Three pricing cards */}
