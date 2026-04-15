@@ -278,7 +278,7 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
             <img
               src={TIER_BADGE_IMAGES[highestTier]}
               alt={`${TIER_LABELS[highestTier]} tier badge`}
-              className="w-[80px] h-[80px] md:w-[130px] md:h-[130px] object-contain drop-shadow-[0_8px_24px_rgba(255,255,255,0.25)] rotate-[2deg]"
+              className="w-[80px] h-[80px] md:w-[130px] md:h-[130px] object-contain drop-shadow-[0_8px_24px_rgba(255,255,255,0.25)]"
               style={{ filter: "drop-shadow(0 0 20px rgba(255,255,255,0.15))" }}
             />
           </div>
