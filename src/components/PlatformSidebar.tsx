@@ -187,6 +187,7 @@ export function PlatformSidebar() {
 
   const nochPlusPages = [
   { title: "Mission Control", url: "/noch-plus/monitoring", icon: BarChart3 },
+  { title: "Partnership Hub", url: "/noch-plus/partnership-hub", icon: Handshake },
   { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard },
   { title: "Submissions", url: "/noch-plus/submissions", icon: FileCheck },
   { title: "Assessments", url: "/noch-plus/assessments", icon: FolderOpen },

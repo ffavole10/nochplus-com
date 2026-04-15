@@ -39,6 +39,7 @@ import Parts from "./pages/placeholders/Parts";
 import PartsCatalog from "./pages/PartsCatalog";
 import Partners from "./pages/Partners";
 import PartnerProfile from "./pages/PartnerProfile";
+import PartnershipHub from "./pages/PartnershipHub";
 
 // Campaign pages — new tab structure
 import CampaignList from "./pages/campaigns/CampaignList";
@@ -101,6 +102,7 @@ const App = () => (
             <Route path="/noch-plus/chargers" element={<NochPlusChargers />} />
             <Route path="/noch-plus/assessments" element={<NochPlusAssessments />} />
             <Route path="/noch-plus/monitoring" element={<NochPlusMonitoring />} />
+            <Route path="/noch-plus/partnership-hub" element={<PartnershipHub />} />
 
             {/* Partners section */}
             <Route path="/partners" element={<Partners />} />
