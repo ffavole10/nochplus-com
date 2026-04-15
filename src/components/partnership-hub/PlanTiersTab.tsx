@@ -197,7 +197,7 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         })}
 
         {/* Trust Signals */}
-        <div className="flex flex-col gap-4 justify-center">
+        <div className="flex flex-col gap-4 justify-start sticky top-6 self-start">
           <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Why NOCH+?</h3>
           {TRUST_SIGNALS.map((t, i) => (
             <div key={i} className="flex items-start gap-3">
