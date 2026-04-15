@@ -261,14 +261,9 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
               <img src={nochPlusIcon} alt="NOCH+" className="w-10 h-10 rounded-lg" />
               <span className="text-sm font-medium text-sidebar-foreground/70 uppercase tracking-wider">NOCH+ Membership Program</span>
             </div>
-            <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <h2 className="text-2xl md:text-3xl font-bold">
-                Custom Reliability Plan for {partnerInfo.companyName || "Your Organization"}
-              </h2>
-              <Badge className={TIER_BADGE_CLASSES[highestTier] + " text-sm px-3 py-1"}>
-                {TIER_LABELS[highestTier]}
-              </Badge>
-            </div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              Custom Reliability Plan for {partnerInfo.companyName || "Your Organization"}
+            </h2>
             <p className="text-sidebar-foreground/70 max-w-2xl">
               Fast response, priority dispatch, and discounted service, all for a flat monthly fee.
             </p>
