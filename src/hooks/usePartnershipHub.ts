@@ -24,8 +24,8 @@ export interface RoiInputs {
   downtimeCostPerDay: number;
 }
 
-const L2_DAILY_REVENUE = 15;
-const DC_DAILY_REVENUE = 85;
+const L2_DAILY_REVENUE = 16;
+const DC_DAILY_REVENUE = 137;
 
 // SLA target hours by tier
 const SLA_HOURS: Record<TierName, number> = {
