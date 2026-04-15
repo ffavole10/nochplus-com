@@ -1941,39 +1941,51 @@ export type Database = {
       }
       noch_plus_members: {
         Row: {
+          billing_cycle: string
           company_name: string
           contact_name: string
           created_at: string
           email: string
           id: string
+          monthly_amount: number
           phone: string
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          tier: string
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
+          billing_cycle?: string
           company_name: string
           contact_name?: string
           created_at?: string
           email?: string
           id?: string
+          monthly_amount?: number
           phone?: string
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          tier?: string
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
+          billing_cycle?: string
           company_name?: string
           contact_name?: string
           created_at?: string
           email?: string
           id?: string
+          monthly_amount?: number
           phone?: string
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          tier?: string
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: []
