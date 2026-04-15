@@ -252,7 +252,7 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
           Custom Reliability Plan for {partnerInfo.companyName || "Your Organization"}
         </h2>
         <p className="text-sidebar-foreground/70 max-w-2xl">
-          Guaranteed response times, priority dispatch, and discounted service for a flat monthly fee per charger.
+          Fast response, priority dispatch, and discounted service, all for a flat monthly fee.
         </p>
       </div>
 
