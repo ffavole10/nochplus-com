@@ -232,7 +232,7 @@ export function PlanBuilderTab({
                 <span className="font-medium">{fmt(summary.netCost)}</span>
               </div>
               {summary.totalSavings > 0 && (
-                <Badge className="w-full justify-center py-1.5 text-primary-foreground bg-sidebar-accent">
+                <Badge variant="outline" className="w-full justify-center py-1.5 text-primary-foreground bg-sidebar-accent border-transparent">
                   Total Savings: {fmt(summary.totalSavings)}/year
                 </Badge>
               )}
