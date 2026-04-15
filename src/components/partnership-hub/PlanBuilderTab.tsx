@@ -174,6 +174,7 @@ export function PlanBuilderTab({
             <div className="space-y-1">
               <Label className="text-xs">Est. Daily Revenue Loss per Charger</Label>
               <Input type="number" value={roiInputs.downtimeCostPerDay} onChange={(e) => setRoiInputs({ ...roiInputs, downtimeCostPerDay: parseFloat(e.target.value) || 0 })} />
+              <p className="text-[10px] text-muted-foreground leading-tight">Auto-estimated based on charger type. Edit to match actual revenue.</p>
             </div>
           </CardContent>
         </Card>
