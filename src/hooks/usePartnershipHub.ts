@@ -14,13 +14,22 @@ export interface PartnerInfo {
   contactName: string;
   email: string;
   phone: string;
+  currentProvider: string;
 }
 
 export interface RoiInputs {
   avgServiceCallCost: number;
   avgResponseTime: number;
   serviceCallsPerYear: number;
+  downtimeCostPerDay: number;
 }
+
+// SLA target hours by tier
+const SLA_HOURS: Record<TierName, number> = {
+  essential: 72,
+  priority: 48,
+  elite: 24,
+};
 
 const defaultSite = (): SiteConfig => ({
   id: crypto.randomUUID(),
@@ -36,6 +45,7 @@ export function usePartnershipHub() {
     contactName: "",
     email: "",
     phone: "",
+    currentProvider: "",
   });
 
   const [sites, setSites] = useState<SiteConfig[]>([defaultSite()]);
@@ -44,6 +54,7 @@ export function usePartnershipHub() {
     avgServiceCallCost: 600,
     avgResponseTime: 96,
     serviceCallsPerYear: 12,
+    downtimeCostPerDay: 40,
   });
 
   const addSite = useCallback(() => {
@@ -79,6 +90,13 @@ export function usePartnershipHub() {
     const annualTotal = monthlyTotal * 12;
     const annualPrePay = monthlyTotal * 11;
 
+    // Dominant tier (by charger count)
+    const tierCounts: Record<TierName, number> = { essential: 0, priority: 0, elite: 0 };
+    sites.forEach((s) => { tierCounts[s.tier] += s.l2Count + s.dcCount; });
+    const dominantTier: TierName = (Object.entries(tierCounts) as [TierName, number][])
+      .sort((a, b) => b[1] - a[1])[0][0];
+    const slaTargetHours = SLA_HOURS[dominantTier];
+
     // ROI calculations — blended labor discount across sites (weighted by charger count)
     const weightedDiscount =
       totalChargers > 0
@@ -91,8 +109,31 @@ export function usePartnershipHub() {
 
     const currentAnnualSpend = roiInputs.avgServiceCallCost * roiInputs.serviceCallsPerYear;
     const estimatedSavings = currentAnnualSpend * weightedDiscount;
-    const netCost = annualTotal - estimatedSavings;
-    const totalSavings = currentAnnualSpend - netCost;
+
+    // Downtime savings
+    const hoursSaved = Math.max(0, roiInputs.avgResponseTime - slaTargetHours);
+    const downtimeSavings = (hoursSaved / 24) * roiInputs.downtimeCostPerDay * roiInputs.serviceCallsPerYear;
+
+    const netCost = annualTotal - estimatedSavings - downtimeSavings;
+    const totalSavings = currentAnnualSpend + downtimeSavings * 1 - netCost;
+    // Simpler: totalSavings = estimatedSavings + downtimeSavings (portion from membership savings)
+    const combinedSavings = estimatedSavings + downtimeSavings;
+
+    // Recommended tier logic
+    const hasDC = totalDC > 0;
+    const allL2Small = totalDC === 0 && totalChargers < 10;
+    let recommendedTier: TierName = "priority";
+    let recommendedReason = "Best fit for mixed L2/DCFC deployments";
+    if (allL2Small && totalChargers > 0) {
+      recommendedTier = "essential";
+      recommendedReason = "Great starting point for smaller L2 sites";
+    } else if (hasDC && totalDC >= totalL2) {
+      recommendedTier = "elite";
+      recommendedReason = "Maximum protection for DCFC-heavy networks";
+    } else if (hasDC) {
+      recommendedTier = "priority";
+      recommendedReason = "Best fit for mixed L2/DCFC deployments";
+    }
 
     return {
       totalL2,
@@ -104,8 +145,15 @@ export function usePartnershipHub() {
       annualPrePay,
       currentAnnualSpend,
       estimatedSavings,
+      downtimeSavings,
+      combinedSavings,
       netCost,
       totalSavings,
+      dominantTier,
+      slaTargetHours,
+      hoursSaved,
+      recommendedTier,
+      recommendedReason,
     };
   }, [sites, roiInputs]);
 
