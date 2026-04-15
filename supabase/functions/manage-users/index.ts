@@ -79,7 +79,8 @@ serve(async (req) => {
         console.warn("Failed to generate setup link:", linkError.message);
       }
 
-      const setupUrl = linkData?.properties?.action_link;
+      const rawUrl = linkData?.properties?.action_link;
+      const setupUrl = rawUrl ? rawUrl.replace(/redirect_to=[^&]*/, 'redirect_to=' + encodeURIComponent('/reset-password')) : null;
 
       // Send invite email via Resend
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -197,7 +198,8 @@ serve(async (req) => {
 
       if (linkError) throw linkError;
 
-      const recoveryUrl = linkData?.properties?.action_link;
+      const rawRecoveryUrl = linkData?.properties?.action_link;
+      const recoveryUrl = rawRecoveryUrl ? rawRecoveryUrl.replace(/redirect_to=[^&]*/, 'redirect_to=' + encodeURIComponent('/reset-password')) : null;
       if (!recoveryUrl) {
         throw new Error("Failed to generate recovery link");
       }
