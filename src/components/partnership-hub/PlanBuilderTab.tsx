@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, X, ChevronDown, ChevronUp, Presentation, Share2, CreditCard } from "lucide-react";
+import { Plus, X, ChevronDown, ChevronUp } from "lucide-react";
 import {
   TierName, TIER_LABELS, TIER_BADGE_CLASSES, TIER_PRICING,
   calcSiteMonthlyCost, FEATURE_MATRIX,
@@ -236,18 +236,6 @@ export function PlanBuilderTab({
                   Total Savings: {fmt(summary.totalSavings)}/year
                 </Badge>
               )}
-              <Separator className="bg-sidebar-border" />
-              <div className="space-y-2">
-                <Button className="w-full" onClick={() => onNavigate("present")}>
-                  <Presentation className="h-4 w-4 mr-2" /> Open Presentation
-                </Button>
-                <Button className="w-full border border-sidebar-foreground/30 text-sidebar-foreground bg-primary" onClick={() => onNavigate("share")}>
-                  <Share2 className="h-4 w-4 mr-2" /> Share Plan with Partner
-                </Button>
-                <Button variant="outline" className="w-full border-sidebar-foreground/30 text-sidebar-foreground hover:bg-sidebar-foreground/10" onClick={() => onNavigate("share")}>
-                  <CreditCard className="h-4 w-4 mr-2" /> Activate Now
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
