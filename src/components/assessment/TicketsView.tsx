@@ -175,14 +175,28 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
 
   const ticketChargers = useMemo(() => {
     return chargers
-      .filter(c => c.ticketId || c.ticketCreatedDate)
+      .filter(c => {
+        // Include chargers with ticket data OR any charger that is not online
+        const hasTicketData = !!(c.ticketId || c.ticketCreatedDate);
+        const offline = !isOnline(c.status);
+        return hasTicketData || offline;
+      })
       .map(c => {
         const enriched = enrichLocation(c);
-        const priority = classifyTicketPriority(enriched);
-        const ageDays = enriched.ticketCreatedDate ? differenceInDays(new Date(), new Date(enriched.ticketCreatedDate)) : 0;
+        // Use ticket-based priority if ticket data exists, otherwise use charger's own priority level
+        const hasTicketData = !!(enriched.ticketId || enriched.ticketCreatedDate);
+        const priority = hasTicketData
+          ? classifyTicketPriority(enriched)
+          : priorityLevelToTicketPriority(enriched.priorityLevel);
+        // Derive age from ticket date if available, otherwise estimate from status code
+        const ageDays = enriched.ticketCreatedDate
+          ? differenceInDays(new Date(), new Date(enriched.ticketCreatedDate))
+          : estimateAgeDaysFromStatus(enriched.status);
         const slaStatus = getSlaStatus(priority, ageDays);
+        // Mark as open if it has an open ticket OR is offline
+        const effectivelyOpen = enriched.hasOpenTicket || !isOnline(enriched.status);
         return {
-          charger: enriched,
+          charger: { ...enriched, hasOpenTicket: effectivelyOpen },
           ticketPriority: priority,
           ageDays,
           slaStatus,
