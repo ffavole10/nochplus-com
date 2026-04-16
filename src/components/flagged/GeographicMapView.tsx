@@ -162,6 +162,23 @@ export function GeographicMapView({ tickets, activeLocationFilter, onFilterCity,
               ))}
             </ComposableMap>
 
+            {/* Hover tooltip */}
+            {hoveredCity && (
+              <div
+                className="absolute bg-card border border-border rounded-lg p-3 shadow-lg text-xs z-50 pointer-events-none"
+                style={{ top: 10, right: 10 }}
+              >
+                <p className="font-semibold">{hoveredCity.city}, {hoveredCity.state}</p>
+                <p className="text-muted-foreground mb-1">{hoveredCity.count} charger{hoveredCity.count !== 1 ? "s" : ""}</p>
+                {PRIORITY_KEYS.map(p => hoveredCity.breakdown[p] > 0 && (
+                  <div key={p} className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: PRIORITY_COLORS[p] }} />
+                    <span>{p.split("-")[1]}: {hoveredCity.breakdown[p]}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Legend */}
             <div className="absolute bottom-2 left-2 bg-card/90 border border-border rounded-lg px-3 py-2 flex gap-3 z-10">
               {PRIORITY_KEYS.map(p => (
