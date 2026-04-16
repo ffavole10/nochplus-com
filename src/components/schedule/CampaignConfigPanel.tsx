@@ -172,12 +172,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
   const priorityCounts = useMemo(() => {
     const counts: Record<SchedulePriority, number> = { "P1-Critical": 0, "P2-High": 0, "P3-Medium": 0, "P4-Low": 0, "Optimal": 0 };
     selected.forEach(c => {
-      const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
-      if (hasTicket) {
-        counts[classifyTicketPriority(c)]++;
-      } else {
-        counts["Optimal"]++;
-      }
+      counts[getSchedulePriority(c)]++;
     });
     return counts;
   }, [selected]);
