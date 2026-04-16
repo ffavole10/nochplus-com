@@ -17,6 +17,7 @@ import { AvatarUpload } from "@/components/AvatarUpload";
 import { CampaignManagement } from "@/components/settings/CampaignManagement";
 import { PartnerManagement } from "@/components/settings/PartnerManagement";
 import { DataManagement, DuplicateTicketCleanup } from "@/components/settings/DataManagement";
+import { AnalyticsTab } from "@/components/settings/AnalyticsTab";
 import { RateCardsTab } from "@/components/settings/RateCardsTab";
 import { QuoteRulesTab } from "@/components/settings/QuoteRulesTab";
 import { CustomerOverridesTab } from "@/components/settings/CustomerOverridesTab";
@@ -69,7 +70,7 @@ const ROLE_ICONS: Record<string, string> = {
 
 const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner"];
 
-type SettingsTab = "campaigns" | "data" | "partners" | "users" | "quoting";
+type SettingsTab = "campaigns" | "data" | "partners" | "users" | "quoting" | "analytics";
 
 const TABS: { value: SettingsTab; label: string }[] = [
   { value: "campaigns", label: "Campaigns" },
@@ -77,6 +78,7 @@ const TABS: { value: SettingsTab; label: string }[] = [
   { value: "partners", label: "Partners" },
   { value: "quoting", label: "Quoting & Rates" },
   { value: "users", label: "All Users" },
+  { value: "analytics", label: "Analytics" },
 ];
 
 function QuotingAndRatesSection() {
@@ -297,6 +299,7 @@ const Settings = () => {
         )}
         {activeTab === "partners" && <PartnerManagement />}
         {activeTab === "quoting" && <QuotingAndRatesSection />}
+        {activeTab === "analytics" && <AnalyticsTab />}
         {activeTab === "users" && (
           <>
             {/* Header */}

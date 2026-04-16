@@ -6,6 +6,12 @@ import { PlatformHeader } from "@/components/PlatformHeader";
 import { FilterProvider } from "@/contexts/FilterContext";
 import { CampaignProvider } from "@/contexts/CampaignContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { useActivityTracking } from "@/hooks/useActivityTracking";
+
+function ActivityTracker() {
+  useActivityTracking();
+  return null;
+}
 
 export default function MainPlatformLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -13,6 +19,7 @@ export default function MainPlatformLayout() {
   return (
     <FilterProvider>
       <CampaignProvider>
+        <ActivityTracker />
         <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <div className="min-h-screen flex w-full bg-background">
             <PlatformSidebar />
