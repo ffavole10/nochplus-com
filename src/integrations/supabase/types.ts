@@ -3703,6 +3703,45 @@ export type Database = {
           },
         ]
       }
+      user_activity_logs: {
+        Row: {
+          action_name: string | null
+          created_at: string
+          duration_seconds: number | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          page_path: string | null
+          page_title: string | null
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action_name?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          page_path?: string | null
+          page_title?: string | null
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action_name?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          page_path?: string | null
+          page_title?: string | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
