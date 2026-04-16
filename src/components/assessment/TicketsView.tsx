@@ -25,21 +25,7 @@ function estimateAgeDaysFromStatus(status: string): number {
   return 0;
 }
 
-/** Map a charger's priorityLevel to TicketPriority */
-function priorityLevelToTicketPriority(level: PriorityLevel): TicketPriority {
-  switch (level) {
-    case "Critical": return "P1-Critical";
-    case "High": return "P2-High";
-    case "Medium": return "P3-Medium";
-    case "Low": return "P4-Low";
-    default: return "P4-Low";
-  }
-}
-
-/** Check if a charger is online */
-function isOnline(status: string): boolean {
-  return status.startsWith("00") || status.toLowerCase().includes("online");
-}
+import { priorityLevelToTicketPriority, isChargerOnline } from "@/lib/ticketPriority";
 import { TicketsEmptyState } from "@/components/empty-states/TicketsEmptyState";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
