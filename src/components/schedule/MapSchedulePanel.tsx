@@ -173,7 +173,7 @@ export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allCha
                           <p className="text-[11px] font-medium text-foreground truncate">{c.assetName || c.evseId || c.id.slice(0, 8)}</p>
                           <p className="text-[10px] text-muted-foreground">{c.city}, {c.state}</p>
                         </div>
-                        <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>{priority}</Badge>
+                        <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>{PRIORITY_LABEL[priority]}</Badge>
                         <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                           {c.assetRecordType === "DC | Level 3" ? <Zap className="h-2.5 w-2.5" /> : <Plug className="h-2.5 w-2.5" />}
                         </span>
@@ -197,7 +197,7 @@ export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allCha
                     <p className="text-[11px] font-medium text-foreground truncate">{c.assetName || c.evseId || c.id.slice(0, 8)}</p>
                     <p className="text-[10px] text-muted-foreground">{c.city}, {c.state}</p>
                   </div>
-                  <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>{priority}</Badge>
+                  <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>{PRIORITY_LABEL[priority]}</Badge>
                   <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                     {c.assetRecordType === "DC | Level 3" ? <Zap className="h-2.5 w-2.5" /> : <Plug className="h-2.5 w-2.5" />}
                   </span>
