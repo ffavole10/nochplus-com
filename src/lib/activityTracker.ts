@@ -31,7 +31,7 @@ export async function trackEvent(params: {
     const userId = await getUserId();
     if (!userId) return;
 
-    await supabase.from("user_activity_logs").insert({
+    await supabase.from("user_activity_logs").insert([{
       user_id: userId,
       session_id: getSessionId(),
       event_type: params.event_type,
@@ -40,7 +40,7 @@ export async function trackEvent(params: {
       action_name: params.action_name ?? null,
       duration_seconds: params.duration_seconds ?? null,
       metadata: params.metadata ?? {},
-    });
+    }]);
   } catch {
     // Silent fail — analytics should never block the user
   }
