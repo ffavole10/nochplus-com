@@ -117,6 +117,7 @@ export function TrainingHistory() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
+    <>
     <div className="space-y-4">
       <div>
         <h2 className="text-lg font-bold text-foreground">Training History</h2>

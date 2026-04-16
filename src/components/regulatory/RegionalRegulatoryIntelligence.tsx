@@ -320,6 +320,7 @@ export function RegionalRegulatoryIntelligence() {
   const uniqueRegions = regions.filter(r => r.is_active);
 
   return (
+    <>
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
