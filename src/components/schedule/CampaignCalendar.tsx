@@ -155,7 +155,7 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
               </p>
             </div>
           </div>
-        ) : (
+        ) : isCapacityView ? (
           <CapacityDashboard
             chargers={chargers}
             campaign={campaign}
