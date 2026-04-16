@@ -4,9 +4,39 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, ExternalLink, PauseCircle, ShieldAlert } from "lucide-react";
-import { AssessmentCharger, TicketPriority } from "@/types/assessment";
+import { AssessmentCharger, TicketPriority, PriorityLevel } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
+
+/** Estimate offline days from the status code when no ticket date exists */
+function estimateAgeDaysFromStatus(status: string): number {
+  const s = status.toLowerCase();
+  if (s.includes("1–29") || s.includes("1-29")) return 15;
+  if (s.includes("30–89") || s.includes("30-89")) return 60;
+  if (s.includes("90 day") || s.includes("90–") || s.includes("90-")) return 135;
+  if (s.includes("6 month") && !s.includes("1+ year") && !s.includes("2+ year") && !s.includes("3+ year")) return 270;
+  if (s.includes("1+ year") && !s.includes("2+") && !s.includes("3+")) return 400;
+  if (s.includes("2+ year")) return 800;
+  if (s.includes("3+ year")) return 1100;
+  if (s.includes("no comms")) return 365;
+  return 0;
+}
+
+/** Map a charger's priorityLevel to TicketPriority */
+function priorityLevelToTicketPriority(level: PriorityLevel): TicketPriority {
+  switch (level) {
+    case "Critical": return "P1-Critical";
+    case "High": return "P2-High";
+    case "Medium": return "P3-Medium";
+    case "Low": return "P4-Low";
+    default: return "P4-Low";
+  }
+}
+
+/** Check if a charger is online */
+function isOnline(status: string): boolean {
+  return status.startsWith("00") || status.toLowerCase().includes("online");
+}
 import { TicketsEmptyState } from "@/components/empty-states/TicketsEmptyState";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
