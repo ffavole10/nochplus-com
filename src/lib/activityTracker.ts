@@ -39,7 +39,7 @@ export async function trackEvent(params: {
       page_title: params.page_title ?? null,
       action_name: params.action_name ?? null,
       duration_seconds: params.duration_seconds ?? null,
-      metadata: params.metadata ?? {},
+      metadata: (params.metadata ?? {}) as any,
     }]);
   } catch {
     // Silent fail — analytics should never block the user
