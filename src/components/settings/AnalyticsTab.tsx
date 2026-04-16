@@ -52,9 +52,9 @@ function formatDuration(seconds: number): string {
 function getStatusBadge(lastLogin: Date | null) {
   if (!lastLogin) return <Badge variant="outline" className="text-muted-foreground">No data</Badge>;
   const days = Math.floor((Date.now() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
-  if (days <= 7) return <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/20">Active</Badge>;
-  if (days <= 30) return <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/20">Inactive</Badge>;
-  return <Badge className="bg-red-500/15 text-red-600 border-red-500/20">Dormant</Badge>;
+  if (days <= 7) return <Badge className="bg-primary/15 text-primary border-primary/20">Active</Badge>;
+  if (days <= 30) return <Badge className="bg-accent text-accent-foreground border-accent/50">Inactive</Badge>;
+  return <Badge className="bg-destructive/15 text-destructive border-destructive/20">Dormant</Badge>;
 }
 
 function featureFromPath(path: string): string {
