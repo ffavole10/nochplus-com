@@ -3,7 +3,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FEATURE_MATRIX, TIER_PRICING, TierName } from "@/constants/nochPlusTiers";
-import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
+import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, ChevronDown, ChevronUp, Receipt } from "lucide-react";
+import invoiceEssential from "@/assets/noch-plus-invoice-essential.png";
+import invoicePriority from "@/assets/noch-plus-invoice-priority.png";
+import invoiceElite from "@/assets/noch-plus-invoice-elite.png";
+
+const INVOICE_IMAGES: Record<TierName, string> = {
+  essential: invoiceEssential,
+  priority: invoicePriority,
+  elite: invoiceElite,
+};
 
 interface PlanTiersTabProps {
   onNavigate?: (tab: string) => void;
@@ -49,6 +58,7 @@ function isBooleanNo(val: string) {
 export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
   const [toggle, setToggle] = useState<ChargerToggle>("ac");
   const [expanded, setExpanded] = useState(false);
+  const [showInvoices, setShowInvoices] = useState(false);
 
   const price = (tier: TierName) =>
     toggle === "ac" ? TIER_PRICING[tier].l2 : TIER_PRICING[tier].dc;
@@ -213,8 +223,8 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {/* Expand / Collapse toggle */}
-      <div className="flex justify-center">
+      {/* Toggle buttons row */}
+      <div className="flex flex-wrap justify-center items-center gap-6">
         <button
           onClick={() => setExpanded(!expanded)}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -229,7 +239,40 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
             </>
           )}
         </button>
+        <button
+          onClick={() => setShowInvoices(!showInvoices)}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Receipt className="h-4 w-4" />
+          {showInvoices ? "Hide Demo Invoices" : "Show Demo Invoices"}
+        </button>
       </div>
+
+      {/* Demo Invoices Section */}
+      {showInvoices && (
+        <div className="space-y-6 pt-4">
+          <div className="text-center">
+            <h3 className="text-xl font-bold tracking-tight">Same Service Call. Different Savings.</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              See how NOCH+ membership discounts apply to a real CCS cable replacement on a DC fast charger.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {(["essential", "priority", "elite"] as TierName[]).map((tier) => (
+              <div key={tier} className="flex flex-col items-center gap-2">
+                <div className="overflow-hidden rounded-lg border border-border shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-200 bg-background w-full">
+                  <img
+                    src={INVOICE_IMAGES[tier]}
+                    alt={`NOCH+ ${tier} demo invoice showing member savings`}
+                    className="w-full h-auto block"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
