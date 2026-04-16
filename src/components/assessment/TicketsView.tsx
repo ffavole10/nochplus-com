@@ -274,12 +274,14 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
   }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, typeFilter, amFilter, reviewFilter, accountManagers, reviewStatuses, agingFilter, locationFilter, locationFilterType, groupFilter]);
 
   const stats = useMemo(() => {
+    const totalChargers = chargers.length;
+    const onlineCount = chargers.filter(c => isOnline(c.status)).length;
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
     const breached = open.filter(t => t.slaStatus === "breached");
     return {
-      total: ticketChargers.length,
+      total: totalChargers,
       open: open.length,
-      solved: ticketChargers.length - open.length,
+      solved: onlineCount,
       p1: open.filter(t => t.ticketPriority === "P1-Critical").length,
       p2: open.filter(t => t.ticketPriority === "P2-High").length,
       p3: open.filter(t => t.ticketPriority === "P3-Medium").length,
@@ -287,7 +289,7 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
       slaBreached: breached.length,
       slaBreachedPct: open.length > 0 ? Math.round(breached.length / open.length * 100) : 0,
     };
-  }, [ticketChargers]);
+  }, [chargers, ticketChargers]);
 
   // Data for the new chart components (only open tickets)
   const openTickets = useMemo(() => ticketChargers.filter(t => t.charger.hasOpenTicket), [ticketChargers]);
