@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Check, X, Plus, Handshake } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { toast } from "sonner";
 import { usePartners, useCreatePartner, useUpdatePartner, useDeletePartner } from "@/hooks/usePartners";
 
@@ -52,8 +54,15 @@ export function PartnerManagement() {
     }
   };
 
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
+
   const handleDelete = async (id: string, label: string) => {
-    if (!confirm(`Delete partner "${label}"?`)) return;
+    const ok = await confirmDialog({
+      title: "Delete Partner?",
+      description: `This will permanently delete partner "${label}".`,
+      confirmLabel: "Delete Partner",
+    });
+    if (!ok) return;
     try {
       await deletePartner.mutateAsync(id);
       toast.success("Partner deleted");
@@ -201,6 +210,7 @@ export function PartnerManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog {...dialogProps} />
     </Card>
   );
 }

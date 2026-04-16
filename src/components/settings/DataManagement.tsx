@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -247,9 +249,16 @@ export function DataManagement() {
     }
   };
 
+  const { confirm: confirmDialog, dialogProps: deleteAllDialogProps } = useConfirmDialog();
+
   const handleDeleteAll = async () => {
     if (!selectedCampaignId || records.length === 0) return;
-    if (!confirm(`Delete all ${records.length} records for this campaign? This cannot be undone.`)) return;
+    const ok = await confirmDialog({
+      title: "Delete All Records?",
+      description: `This will permanently delete all ${records.length} records for this campaign. This action cannot be undone.`,
+      confirmLabel: "Delete All Records",
+    });
+    if (!ok) return;
 
     try {
       const { error } = await supabase
@@ -401,6 +410,7 @@ export function DataManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog {...deleteAllDialogProps} />
     </>
   );
 }

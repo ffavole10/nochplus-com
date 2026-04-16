@@ -1,5 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -127,8 +129,15 @@ const Locations = () => {
 
   const availableRegionNames = useMemo(() => regions.map(r => r.name), [regions]);
 
-  const handleDeleteTech = (t: Technician) => {
-    if (!confirm(`Delete ${t.first_name} ${t.last_name}?`)) return;
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
+
+  const handleDeleteTech = async (t: Technician) => {
+    const ok = await confirmDialog({
+      title: "Delete Technician?",
+      description: `Delete ${t.first_name} ${t.last_name}? This cannot be undone.`,
+      confirmLabel: "Delete Technician",
+    });
+    if (!ok) return;
     deleteTech.mutate(t.id);
   };
 
@@ -360,7 +369,14 @@ const Locations = () => {
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditRegion(r); setRegionFormOpen(true); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { if (confirm(`Delete region "${r.name}"?`)) deleteRegion.mutate(r.id); }}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={async () => {
+                          const ok = await confirmDialog({
+                            title: "Delete Region?",
+                            description: `Delete region "${r.name}"? This cannot be undone.`,
+                            confirmLabel: "Delete Region",
+                          });
+                          if (ok) deleteRegion.mutate(r.id);
+                        }}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -402,6 +418,7 @@ const Locations = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 };
@@ -528,6 +545,14 @@ function TechTable({ techs, onView, onEdit, onDelete }: { techs: Technician[]; o
         </tbody>
       </table>
     </div>
+  );
+}
+
+function LocationsPage() {
+  return (
+    <>
+      <Locations />
+    </>
   );
 }
 

@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback, useContext } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import {
   Dialog,
   DialogContent,
@@ -506,8 +508,16 @@ export function EstimateBuilder({
     }
   };
 
-  const handleSkipDispatch = () => {
-    if (!confirm("Are you sure? No estimate will be sent to the customer.")) return;
+  const { confirm: confirmDialog, dialogProps: skipDialogProps } = useConfirmDialog();
+
+  const handleSkipDispatch = async () => {
+    const ok = await confirmDialog({
+      title: "Skip Estimate?",
+      description: "Are you sure? No estimate will be sent to the customer.",
+      confirmLabel: "Skip & Dispatch",
+      variant: "default",
+    });
+    if (!ok) return;
     setShowDispatch(true);
   };
 
@@ -535,6 +545,7 @@ export function EstimateBuilder({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="max-w-5xl w-[90vw] max-h-[90vh] overflow-y-auto p-0"
@@ -854,5 +865,7 @@ export function EstimateBuilder({
         </div>
       </DialogContent>
     </Dialog>
+    <ConfirmDialog {...skipDialogProps} />
+    </>
   );
 }

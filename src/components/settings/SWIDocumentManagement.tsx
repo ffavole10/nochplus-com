@@ -1,5 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -51,9 +53,16 @@ export function SWIDocumentManagement() {
     setAddingOem(false);
   };
 
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
+
   const handleDeleteOem = async (oem: { id: string; name: string }) => {
     const oemEntries = entries.filter(e => e.oem_id === oem.id);
-    if (!confirm(`Delete OEM "${oem.name}"${oemEntries.length > 0 ? ` and its ${oemEntries.length} SWI entries` : ""}?`)) return;
+    const ok = await confirmDialog({
+      title: "Delete OEM?",
+      description: `Delete OEM "${oem.name}"${oemEntries.length > 0 ? ` and its ${oemEntries.length} SWI entries` : ""}? This cannot be undone.`,
+      confirmLabel: "Delete OEM",
+    });
+    if (!ok) return;
     await deleteOem(oem.id, oem.name);
   };
 
@@ -116,7 +125,12 @@ export function SWIDocumentManagement() {
   }, [handleUploadSWIs]);
 
   const handleDeleteSWI = async (entry: SWICatalogEntry) => {
-    if (!confirm(`Delete SWI "${entry.title}"?`)) return;
+    const ok = await confirmDialog({
+      title: "Delete SWI?",
+      description: `Delete SWI "${entry.title}"? This cannot be undone.`,
+      confirmLabel: "Delete SWI",
+    });
+    if (!ok) return;
     try {
       await deleteSWIDocument(entry.id);
       setUploadedIds(prev => { const next = new Set(prev); next.delete(entry.id); return next; });
@@ -387,6 +401,7 @@ export function SWIDocumentManagement() {
           filename={previewEntry.filename}
         />
       )}
+      <ConfirmDialog {...dialogProps} />
     </>
   );
 }

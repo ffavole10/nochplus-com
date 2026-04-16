@@ -3,6 +3,8 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, Info } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import aiAgentAvatar from "@/assets/ai-agent-avatar.png";
 import { toast } from "sonner";
 import { AgentCard, type AgentPrompt } from "@/components/ai-agent/AgentCard";
@@ -51,8 +53,15 @@ const AIAgent = () => {
     }
   };
 
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
+
   const handleDelete = async (agent: AgentPrompt) => {
-    if (!confirm(`Delete "${agent.name}"? This cannot be undone.`)) return;
+    const ok = await confirmDialog({
+      title: "Delete Agent?",
+      description: `Delete "${agent.name}"? This cannot be undone.`,
+      confirmLabel: "Delete Agent",
+    });
+    if (!ok) return;
     const { error } = await supabase.from("ai_agent_prompts").delete().eq("id", agent.id);
     if (error) {
       toast.error("Failed to delete agent");
@@ -194,8 +203,9 @@ const AIAgent = () => {
         onSave={handleSave}
         isNew={isNewPrompt} />
 
+      <ConfirmDialog {...dialogProps} />
+
     </div>);
 
 };
-
 export default AIAgent;

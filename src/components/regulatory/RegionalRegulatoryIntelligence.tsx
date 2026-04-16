@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -234,8 +236,15 @@ export function RegionalRegulatoryIntelligence() {
     }
   };
 
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
+
   const handleRemoveRegion = async (regionId: string) => {
-    if (!confirm("Remove this region and all its documents?")) return;
+    const ok = await confirmDialog({
+      title: "Remove Region?",
+      description: "Remove this region and all its documents? This cannot be undone.",
+      confirmLabel: "Remove Region",
+    });
+    if (!ok) return;
     await supabase.from("regulatory_regions").delete().eq("id", regionId);
     toast.success("Region removed");
     await loadData();
@@ -311,6 +320,7 @@ export function RegionalRegulatoryIntelligence() {
   const uniqueRegions = regions.filter(r => r.is_active);
 
   return (
+    <>
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
@@ -686,5 +696,7 @@ export function RegionalRegulatoryIntelligence() {
         </SheetContent>
       </Sheet>
     </div>
+    <ConfirmDialog {...dialogProps} />
+    </>
   );
 }

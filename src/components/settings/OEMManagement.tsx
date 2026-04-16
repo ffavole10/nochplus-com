@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -35,9 +37,16 @@ export function OEMManagement() {
     setAddingOem(false);
   };
 
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
+
   const handleDeleteOem = async (oem: SWIOem) => {
     const oemEntries = entries.filter(e => e.oem_id === oem.id);
-    if (!confirm(`Delete OEM "${oem.name}"${oemEntries.length > 0 ? ` and its ${oemEntries.length} SWI entries` : ""}? This cannot be undone.`)) return;
+    const ok = await confirmDialog({
+      title: "Delete OEM?",
+      description: `Delete OEM "${oem.name}"${oemEntries.length > 0 ? ` and its ${oemEntries.length} SWI entries` : ""}? This cannot be undone.`,
+      confirmLabel: "Delete OEM",
+    });
+    if (!ok) return;
     await deleteOem(oem.id, oem.name);
   };
 
@@ -261,6 +270,7 @@ export function OEMManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog {...dialogProps} />
     </>
   );
 }

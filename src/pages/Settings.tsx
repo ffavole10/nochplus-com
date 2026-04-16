@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Crown, Pencil, Users, UserPlus, Trash2, Send } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { CampaignManagement } from "@/components/settings/CampaignManagement";
@@ -225,12 +227,19 @@ const Settings = () => {
     }
   };
 
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
+
   const handleDeleteUser = async (userId: string, email: string) => {
     if (userId === session?.user.id) {
       toast.error("Cannot delete your own account");
       return;
     }
-    if (!confirm(`Delete user ${email}? This cannot be undone.`)) return;
+    const ok = await confirmDialog({
+      title: "Delete User?",
+      description: `This will permanently delete user "${email}". This action cannot be undone.`,
+      confirmLabel: "Delete User",
+    });
+    if (!ok) return;
     try {
       await callManageUsers({ action: "delete_user", user_id: userId });
       toast.success("User deleted");
@@ -524,6 +533,7 @@ const Settings = () => {
           </>
         )}
       </main>
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 };
