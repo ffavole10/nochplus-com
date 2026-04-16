@@ -76,12 +76,12 @@ function getActiveSection(pathname: string): SectionKey {
   return null;
 }
 
-const CAMPAIGN_TABS = [
-  { title: "Overview", url: "overview", icon: Eye },
-  { title: "Chargers", url: "chargers", icon: HardDrive },
-  { title: "Schedule", url: "schedule", icon: CalendarDays },
-  { title: "Cost", url: "cost", icon: DollarSign },
-  { title: "Reports", url: "reports", icon: FileText },
+const CAMPAIGN_PAGES = [
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Dataset", url: "/dataset", icon: Database },
+  { title: "Flagged", url: "/issues", icon: SearchIcon },
+  { title: "Schedule", url: "/schedule", icon: CalendarDays },
+  { title: "Field Reports", url: "/field-reports", icon: FileText },
 ];
 
 export function PlatformSidebar() {
@@ -149,7 +149,7 @@ export function PlatformSidebar() {
       setContextCampaignId(campaign.id);
       setSelectedCampaignName(campaign.name);
       setSelectedCustomer((campaign as any).customer_company || campaign.customer || "");
-      navigate(`/campaigns/${campaign.id}/overview`);
+      navigate("/dashboard");
     }
   };
 
@@ -346,37 +346,11 @@ export function PlatformSidebar() {
               </Select>
             </div>
 
-            {/* Campaign tabs – always visible */}
+            {/* Campaign nav pages */}
             <SidebarMenu className="px-1 mt-1">
-              {CAMPAIGN_TABS.map((tab) => {
-                const hasCampaign = !!contextCampaignId;
-                const tabUrl = hasCampaign
-                  ? `/campaigns/${contextCampaignId}/${tab.url}`
-                  : `/campaigns?tab=${tab.url}`;
-                return (
-                  <SidebarMenuItem key={tab.url}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={tabUrl}
-                        className={cn(
-                          "hover:bg-sidebar-accent/50 flex items-center gap-2",
-                          !hasCampaign && "opacity-50 pointer-events-auto"
-                        )}
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                        onClick={(e: React.MouseEvent) => {
-                          if (!hasCampaign) {
-                            e.preventDefault();
-                            navigate(`/campaigns?tab=${tab.url}`);
-                          }
-                        }}
-                      >
-                        <tab.icon className="h-4 w-4" />
-                        <span>{tab.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {CAMPAIGN_PAGES.map((page) => (
+                <NavItem key={page.url} item={page} />
+              ))}
             </SidebarMenu>
           </div>
         }
