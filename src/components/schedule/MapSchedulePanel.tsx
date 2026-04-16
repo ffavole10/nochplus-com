@@ -17,7 +17,7 @@ const PRIORITY_BADGE: Record<SchedulePriority, string> = {
   "P2-High": "bg-degraded/10 text-degraded border-degraded/30",
   "P3-Medium": "bg-yellow-500/10 text-yellow-600 border-yellow-500/30",
   "P4-Low": "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
-  "Optimal": "bg-teal-500/10 text-teal-600 border-teal-500/30",
+  "Optimal": "bg-blue-500/10 text-blue-600 border-blue-500/30",
 };
 
 const PRIORITY_LABEL: Record<SchedulePriority, string> = {
