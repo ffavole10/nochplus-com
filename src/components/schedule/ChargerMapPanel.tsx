@@ -4,16 +4,24 @@ import { geoAlbersUsa } from "d3-geo";
 import { AssessmentCharger } from "@/types/assessment";
 import { getCityCoords } from "@/lib/cityCoordinates";
 import { getRegion, REGION_COLORS, Region } from "@/lib/regionMapping";
-import { classifyTicketPriority } from "@/lib/ticketPriority";
+import { getChargerSchedulePriority, SchedulePriority } from "@/lib/ticketPriority";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
-const PRIORITY_DOT_COLORS: Record<string, string> = {
+const PRIORITY_DOT_COLORS: Record<SchedulePriority, string> = {
   "P1-Critical": "#ef4444",
-  "P2-High": "#f97316",
+  "P2-High": "#f59e0b",
   "P3-Medium": "#eab308",
   "P4-Low": "#22c55e",
-  "Optimal": "#22c55e",
+  "Optimal": "#25b3a5",
+};
+
+const PRIORITY_LABEL: Record<SchedulePriority, string> = {
+  "P1-Critical": "Critical",
+  "P2-High": "High",
+  "P3-Medium": "Medium",
+  "P4-Low": "Low",
+  "Optimal": "Optimal",
 };
 
 interface CityCluster {
@@ -72,13 +80,12 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster,
       }
       const cluster = map.get(key)!;
       cluster.chargers.push(c);
-      const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
-      const p = hasTicket ? classifyTicketPriority(c) : "Optimal";
+      const p = getChargerSchedulePriority(c);
       cluster.priorityBreakdown[p]++;
     });
     // Set dominant priority
     map.forEach(cluster => {
-      const order = ["P1-Critical", "P2-High", "P3-Medium", "P4-Low", "Optimal"];
+      const order: SchedulePriority[] = ["P1-Critical", "P2-High", "P3-Medium", "P4-Low", "Optimal"];
       cluster.dominantPriority = order.find(p => cluster.priorityBreakdown[p] > 0) || "Optimal";
     });
     return Array.from(map.values());
@@ -215,8 +222,8 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster,
               if (v === 0) return null;
               return (
                 <div key={k} className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PRIORITY_DOT_COLORS[k] }} />
-                  <span>{k}: {v}</span>
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PRIORITY_DOT_COLORS[k as SchedulePriority] }} />
+                  <span>{PRIORITY_LABEL[k as SchedulePriority] || k}: {v}</span>
                 </div>
               );
             })}

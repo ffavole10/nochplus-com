@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { AssessmentCharger } from "@/types/assessment";
 import { getRegion, REGION_COLORS, Region } from "@/lib/regionMapping";
 import { getCityCoords } from "@/lib/cityCoordinates";
-import { classifyTicketPriority } from "@/lib/ticketPriority";
+import { getChargerSchedulePriority, SchedulePriority } from "@/lib/ticketPriority";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -12,12 +12,20 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CalendarPlus, Plane, Clock, MapPin, Zap, Plug, AlertTriangle } from "lucide-react";
 import type { CityCluster } from "./ChargerMapPanel";
 
-const PRIORITY_BADGE: Record<string, string> = {
+const PRIORITY_BADGE: Record<SchedulePriority, string> = {
   "P1-Critical": "bg-critical/10 text-critical border-critical/30",
   "P2-High": "bg-degraded/10 text-degraded border-degraded/30",
   "P3-Medium": "bg-yellow-500/10 text-yellow-600 border-yellow-500/30",
-  "P4-Low": "bg-optimal/10 text-optimal border-optimal/30",
-  "Optimal": "bg-blue-500/10 text-blue-600 border-blue-500/30",
+  "P4-Low": "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
+  "Optimal": "bg-teal-500/10 text-teal-600 border-teal-500/30",
+};
+
+const PRIORITY_LABEL: Record<SchedulePriority, string> = {
+  "P1-Critical": "Critical",
+  "P2-High": "High",
+  "P3-Medium": "Medium",
+  "P4-Low": "Low",
+  "Optimal": "Optimal",
 };
 
 interface MapSchedulePanelProps {
@@ -31,10 +39,7 @@ export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allCha
   const [tripMode, setTripMode] = useState(false);
 
 
-  const getPriority = (c: AssessmentCharger) => {
-    const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
-    return hasTicket ? classifyTicketPriority(c) : "Optimal";
-  };
+  const getPriority = (c: AssessmentCharger): SchedulePriority => getChargerSchedulePriority(c);
 
   // Trip estimate for a group
   const tripEstimate = (count: number) => {
@@ -168,7 +173,7 @@ export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allCha
                           <p className="text-[11px] font-medium text-foreground truncate">{c.assetName || c.evseId || c.id.slice(0, 8)}</p>
                           <p className="text-[10px] text-muted-foreground">{c.city}, {c.state}</p>
                         </div>
-                        <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>{priority}</Badge>
+                        <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>{PRIORITY_LABEL[priority]}</Badge>
                         <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                           {c.assetRecordType === "DC | Level 3" ? <Zap className="h-2.5 w-2.5" /> : <Plug className="h-2.5 w-2.5" />}
                         </span>
@@ -192,7 +197,7 @@ export function MapSchedulePanel({ selectedCluster, visibleClusters = [], allCha
                     <p className="text-[11px] font-medium text-foreground truncate">{c.assetName || c.evseId || c.id.slice(0, 8)}</p>
                     <p className="text-[10px] text-muted-foreground">{c.city}, {c.state}</p>
                   </div>
-                  <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>{priority}</Badge>
+                  <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${PRIORITY_BADGE[priority]}`}>{PRIORITY_LABEL[priority]}</Badge>
                   <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                     {c.assetRecordType === "DC | Level 3" ? <Zap className="h-2.5 w-2.5" /> : <Plug className="h-2.5 w-2.5" />}
                   </span>
