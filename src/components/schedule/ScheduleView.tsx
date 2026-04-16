@@ -342,7 +342,7 @@ export function ScheduleView({
                 />
               </TabsContent>
             </Tabs>
-          ) : displayCampaign ? (
+          ) : chargers.length > 0 ? (
             <CampaignCalendar
               campaign={displayCampaign}
               chargers={activeCampaign ? chargers : filteredChargers}
