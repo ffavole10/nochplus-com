@@ -5,6 +5,7 @@ import { AssessmentCharger } from "@/types/assessment";
 import { getCityCoords } from "@/lib/cityCoordinates";
 import { getRegion, REGION_COLORS, Region } from "@/lib/regionMapping";
 import { getChargerSchedulePriority, SchedulePriority } from "@/lib/ticketPriority";
+import { normalizeUSCoords } from "@/lib/coordsValidator";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
