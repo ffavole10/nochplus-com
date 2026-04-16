@@ -12,12 +12,14 @@ import { classifyTicketPriority } from "@/lib/ticketPriority";
 /** Estimate offline days from the status code when no ticket date exists */
 function estimateAgeDaysFromStatus(status: string): number {
   const s = status.toLowerCase();
+  // Match actual DB values: "01 - Offline < 1 Day", "02 - Offline 1–29 Days", etc.
+  if (s.includes("< 1 day")) return 1;
   if (s.includes("1–29") || s.includes("1-29")) return 15;
-  if (s.includes("30–89") || s.includes("30-89")) return 60;
-  if (s.includes("90 day") || s.includes("90–") || s.includes("90-")) return 135;
-  if (s.includes("6 month") && !s.includes("1+ year") && !s.includes("2+ year") && !s.includes("3+ year")) return 270;
+  if (s.includes("1–3 month") || s.includes("1-3 month") || s.includes("30–89") || s.includes("30-89")) return 45;
+  if (s.includes("3–6 month") || s.includes("3-6 month") || s.includes("90 day") || s.includes("90–") || s.includes("90-")) return 135;
+  if ((s.includes("6 month") || s.includes("6–12") || s.includes("6-12")) && !s.includes("1+ year") && !s.includes("2+") && !s.includes("3+")) return 270;
   if (s.includes("1+ year") && !s.includes("2+") && !s.includes("3+")) return 400;
-  if (s.includes("2+ year")) return 800;
+  if (s.includes("2+ year") && !s.includes("3+")) return 800;
   if (s.includes("3+ year")) return 1100;
   if (s.includes("no comms")) return 365;
   return 0;

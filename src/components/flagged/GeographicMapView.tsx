@@ -42,6 +42,15 @@ function getHighestPriority(breakdown: Record<TicketPriority, number>): TicketPr
   return "P4-Low";
 }
 
+function getDominantPriority(breakdown: Record<TicketPriority, number>): TicketPriority {
+  let max = 0;
+  let dominant: TicketPriority = "P4-Low";
+  for (const p of PRIORITY_KEYS) {
+    if (breakdown[p] > max) { max = breakdown[p]; dominant = p; }
+  }
+  return dominant;
+}
+
 export function GeographicMapView({ tickets, activeLocationFilter, onFilterCity, onFilterState, onClear }: Props) {
   const [hoveredCity, setHoveredCity] = useState<CityCluster | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -78,7 +87,7 @@ export function GeographicMapView({ tickets, activeLocationFilter, onFilterCity,
     }
 
     const stateSummary = Array.from(stateMap.entries())
-      .map(([state, data]) => ({ state, ...data, highestPriority: getHighestPriority(data.breakdown) }))
+      .map(([state, data]) => ({ state, ...data, dominantPriority: getDominantPriority(data.breakdown) }))
       .sort((a, b) => b.count - a.count);
 
     return { clusters: Array.from(cityMap.values()), stateSummary };
@@ -160,15 +169,25 @@ export function GeographicMapView({ tickets, activeLocationFilter, onFilterCity,
                 style={{ top: 10, right: 10 }}
               >
                 <p className="font-semibold">{hoveredCity.city}, {hoveredCity.state}</p>
-                <p className="text-muted-foreground mb-1">{hoveredCity.count} ticket{hoveredCity.count !== 1 ? "s" : ""}</p>
+                <p className="text-muted-foreground mb-1">{hoveredCity.count} charger{hoveredCity.count !== 1 ? "s" : ""}</p>
                 {PRIORITY_KEYS.map(p => hoveredCity.breakdown[p] > 0 && (
                   <div key={p} className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: PRIORITY_COLORS[p] }} />
-                    <span>{p.split("-")[0]}: {hoveredCity.breakdown[p]}</span>
+                    <span>{p.split("-")[1]}: {hoveredCity.breakdown[p]}</span>
                   </div>
                 ))}
               </div>
             )}
+
+            {/* Legend */}
+            <div className="absolute bottom-2 left-2 bg-card/90 border border-border rounded-lg px-3 py-2 flex gap-3 z-10">
+              {PRIORITY_KEYS.map(p => (
+                <div key={p} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PRIORITY_COLORS[p] }} />
+                  {p.replace("-", " ")}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* State Sidebar */}
@@ -182,7 +201,7 @@ export function GeographicMapView({ tickets, activeLocationFilter, onFilterCity,
                 }`}
                 onClick={() => onFilterState(s.state)}
               >
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: PRIORITY_COLORS[s.highestPriority] }} />
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: PRIORITY_COLORS[s.dominantPriority] }} />
                 <span className="font-medium flex-1">{s.state}</span>
                 <Badge variant="outline" className="text-[10px] h-5 px-1.5">{s.count}</Badge>
               </button>
