@@ -40,7 +40,7 @@ const PRIORITY_LABELS: Record<PriorityLevel, string> = {
   Low: "P4 Low",
 };
 
-type SchedulePriority = "P1-Critical" | "P2-High" | "P3-Medium" | "P4-Low" | "Optimal";
+// SchedulePriority imported from @/lib/ticketPriority
 
 const SCHEDULE_PRIORITY_CONFIG: Record<SchedulePriority, { color: string; bg: string; dotColor: string }> = {
   "P1-Critical": { color: "text-critical", bg: "bg-critical/10 text-critical border-critical/30", dotColor: "hsl(var(--critical))" },
