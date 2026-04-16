@@ -167,7 +167,7 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
       .filter(c => {
         // Include chargers with ticket data OR any charger that is not online
         const hasTicketData = !!(c.ticketId || c.ticketCreatedDate);
-        const offline = !isOnline(c.status);
+        const offline = !isChargerOnline(c.status);
         return hasTicketData || offline;
       })
       .map(c => {
@@ -183,7 +183,7 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
           : estimateAgeDaysFromStatus(enriched.status);
         const slaStatus = getSlaStatus(priority, ageDays);
         // Mark as open if it has an open ticket OR is offline
-        const effectivelyOpen = enriched.hasOpenTicket || !isOnline(enriched.status);
+        const effectivelyOpen = enriched.hasOpenTicket || !isChargerOnline(enriched.status);
         return {
           charger: { ...enriched, hasOpenTicket: effectivelyOpen },
           ticketPriority: priority,
@@ -264,7 +264,7 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
 
   const stats = useMemo(() => {
     const totalChargers = chargers.length;
-    const onlineCount = chargers.filter(c => isOnline(c.status)).length;
+    const onlineCount = chargers.filter(c => isChargerOnline(c.status)).length;
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
     const breached = open.filter(t => t.slaStatus === "breached");
     return {
