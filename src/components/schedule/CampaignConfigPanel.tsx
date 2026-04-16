@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useTechnicians } from "@/hooks/useTechnicians";
 import { CampaignConfig, DEFAULT_CONFIG, SortMethod } from "@/types/campaign";
 import { PriorityLevel, ChargerType, AssessmentCharger } from "@/types/assessment";
-import { classifyTicketPriority } from "@/lib/ticketPriority";
+import { getChargerSchedulePriority, SchedulePriority } from "@/lib/ticketPriority";
 import { getRegion, ALL_REGIONS, REGION_COLORS, Region } from "@/lib/regionMapping";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,7 +40,7 @@ const PRIORITY_LABELS: Record<PriorityLevel, string> = {
   Low: "P4 Low",
 };
 
-type SchedulePriority = "P1-Critical" | "P2-High" | "P3-Medium" | "P4-Low" | "Optimal";
+// SchedulePriority imported from @/lib/ticketPriority
 
 const SCHEDULE_PRIORITY_CONFIG: Record<SchedulePriority, { color: string; bg: string; dotColor: string }> = {
   "P1-Critical": { color: "text-critical", bg: "bg-critical/10 text-critical border-critical/30", dotColor: "hsl(var(--critical))" },
@@ -135,12 +135,8 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
       .filter(t => !config.technicians.includes(`${t.first_name} ${t.last_name}`));
   }, [dbTechnicians, config.technicians]);
 
-  // Helper: classify a charger into SchedulePriority
-  const getSchedulePriority = (c: AssessmentCharger): SchedulePriority => {
-    const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
-    if (!hasTicket) return "Optimal";
-    return classifyTicketPriority(c);
-  };
+  // Use shared priority classification
+  const getSchedulePriority = (c: AssessmentCharger): SchedulePriority => getChargerSchedulePriority(c);
 
   // Computed metrics — custom filtering by type + priority + region
   const selected = useMemo(() => {
@@ -176,12 +172,7 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
   const priorityCounts = useMemo(() => {
     const counts: Record<SchedulePriority, number> = { "P1-Critical": 0, "P2-High": 0, "P3-Medium": 0, "P4-Low": 0, "Optimal": 0 };
     selected.forEach(c => {
-      const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
-      if (hasTicket) {
-        counts[classifyTicketPriority(c)]++;
-      } else {
-        counts["Optimal"]++;
-      }
+      counts[getSchedulePriority(c)]++;
     });
     return counts;
   }, [selected]);

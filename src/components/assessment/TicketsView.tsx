@@ -25,21 +25,7 @@ function estimateAgeDaysFromStatus(status: string): number {
   return 0;
 }
 
-/** Map a charger's priorityLevel to TicketPriority */
-function priorityLevelToTicketPriority(level: PriorityLevel): TicketPriority {
-  switch (level) {
-    case "Critical": return "P1-Critical";
-    case "High": return "P2-High";
-    case "Medium": return "P3-Medium";
-    case "Low": return "P4-Low";
-    default: return "P4-Low";
-  }
-}
-
-/** Check if a charger is online */
-function isOnline(status: string): boolean {
-  return status.startsWith("00") || status.toLowerCase().includes("online");
-}
+import { priorityLevelToTicketPriority, isChargerOnline } from "@/lib/ticketPriority";
 import { TicketsEmptyState } from "@/components/empty-states/TicketsEmptyState";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -181,7 +167,7 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
       .filter(c => {
         // Include chargers with ticket data OR any charger that is not online
         const hasTicketData = !!(c.ticketId || c.ticketCreatedDate);
-        const offline = !isOnline(c.status);
+        const offline = !isChargerOnline(c.status);
         return hasTicketData || offline;
       })
       .map(c => {
@@ -197,7 +183,7 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
           : estimateAgeDaysFromStatus(enriched.status);
         const slaStatus = getSlaStatus(priority, ageDays);
         // Mark as open if it has an open ticket OR is offline
-        const effectivelyOpen = enriched.hasOpenTicket || !isOnline(enriched.status);
+        const effectivelyOpen = enriched.hasOpenTicket || !isChargerOnline(enriched.status);
         return {
           charger: { ...enriched, hasOpenTicket: effectivelyOpen },
           ticketPriority: priority,
@@ -278,7 +264,7 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
 
   const stats = useMemo(() => {
     const totalChargers = chargers.length;
-    const onlineCount = chargers.filter(c => isOnline(c.status)).length;
+    const onlineCount = chargers.filter(c => isChargerOnline(c.status)).length;
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
     const breached = open.filter(t => t.slaStatus === "breached");
     return {
