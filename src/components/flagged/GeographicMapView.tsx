@@ -87,7 +87,7 @@ export function GeographicMapView({ tickets, activeLocationFilter, onFilterCity,
     }
 
     const stateSummary = Array.from(stateMap.entries())
-      .map(([state, data]) => ({ state, ...data, highestPriority: getHighestPriority(data.breakdown) }))
+      .map(([state, data]) => ({ state, ...data, dominantPriority: getDominantPriority(data.breakdown) }))
       .sort((a, b) => b.count - a.count);
 
     return { clusters: Array.from(cityMap.values()), stateSummary };
