@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useTechnicians } from "@/hooks/useTechnicians";
 import { CampaignConfig, DEFAULT_CONFIG, SortMethod } from "@/types/campaign";
 import { PriorityLevel, ChargerType, AssessmentCharger } from "@/types/assessment";
-import { classifyTicketPriority } from "@/lib/ticketPriority";
+import { getChargerSchedulePriority, SchedulePriority } from "@/lib/ticketPriority";
 import { getRegion, ALL_REGIONS, REGION_COLORS, Region } from "@/lib/regionMapping";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
