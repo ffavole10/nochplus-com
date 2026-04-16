@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, ExternalLink, PauseCircle, ShieldAlert } from "lucide-react";
 import { AssessmentCharger, TicketPriority, PriorityLevel } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
