@@ -8,12 +8,15 @@ import { Pencil, Trash2, Check, X, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns, useUpdateCampaign, useDeleteCampaign } from "@/hooks/useCampaigns";
 import { usePartners } from "@/hooks/usePartners";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 export function CampaignManagement() {
   const { data: campaigns = [], isLoading } = useCampaigns();
   const updateCampaign = useUpdateCampaign();
   const deleteCampaign = useDeleteCampaign();
   const { data: dbPartners = [] } = usePartners();
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
 
   const partnerCategories = useMemo(() => {
     const cats = ["CPOs", "OEMs", "CSMS"];
@@ -54,7 +57,12 @@ export function CampaignManagement() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete campaign "${name}"? This will also remove all associated charger records.`)) return;
+    const ok = await confirmDialog({
+      title: "Delete Campaign?",
+      description: `This will permanently delete "${name}" and remove all associated charger records. This action cannot be undone.`,
+      confirmLabel: "Delete Campaign",
+    });
+    if (!ok) return;
     try {
       await deleteCampaign.mutateAsync(id);
       toast.success("Campaign deleted");
@@ -154,6 +162,7 @@ export function CampaignManagement() {
           </Table>
         )}
       </CardContent>
+      <ConfirmDialog {...dialogProps} />
     </Card>
   );
 }
