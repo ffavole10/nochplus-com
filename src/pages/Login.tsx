@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import loginBg from "@/assets/login-background.webp";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { toast } from "sonner";
@@ -12,16 +14,30 @@ import { toast } from "sonner";
 const Login = () => {
   usePageTitle('Sign In');
   const navigate = useNavigate();
+  const { session, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+
+  // If already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (!authLoading && session) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [session, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Store remember-me preference before auth
+      try {
+        localStorage.setItem("nochplus-remember-me", rememberMe ? "true" : "false");
+      } catch {}
+
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
@@ -44,6 +60,18 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  // Show nothing while checking auth state to prevent flash
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  // If session exists, the useEffect above will redirect
+  if (session) return null;
 
   return (
     <div
@@ -97,7 +125,18 @@ const Login = () => {
           </div>
 
           {!isSignUp && (
-            <div className="text-right">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="remember-me"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  className="border-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <Label htmlFor="remember-me" className="text-xs text-foreground/60 cursor-pointer">
+                  Remember me
+                </Label>
+              </div>
               <button
                 type="button"
                 className="text-xs text-foreground/50 hover:text-foreground/80 transition-colors"

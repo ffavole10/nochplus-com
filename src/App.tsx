@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
@@ -60,11 +62,31 @@ const queryClient = new QueryClient({
   },
 });
 
+// Clear session on browser close if "Remember Me" was unchecked
+function SessionCleanup() {
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      try {
+        const remember = localStorage.getItem("nochplus-remember-me");
+        if (remember === "false") {
+          // Sign out will clear storage on next load; we remove the token now
+          const keys = Object.keys(localStorage).filter(k => k.startsWith("sb-"));
+          keys.forEach(k => localStorage.removeItem(k));
+        }
+      } catch {}
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <SessionCleanup />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
