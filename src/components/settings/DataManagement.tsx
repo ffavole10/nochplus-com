@@ -410,6 +410,7 @@ export function DataManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog {...deleteAllDialogProps} />
     </>
   );
 }
@@ -472,7 +473,6 @@ export function DuplicateTicketCleanup() {
           </DialogContent>
         </Dialog>
       </CardContent>
-      <ConfirmDialog {...deleteAllDialogProps} />
     </Card>
   );
 }
