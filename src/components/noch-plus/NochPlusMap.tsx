@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { normalizeUSCoords } from "@/lib/coordsValidator";
 
 interface MapSubscriber {
   id: string;
@@ -76,10 +77,12 @@ export function NochPlusMap({ subscribers }: NochPlusMapProps) {
 
     // Add subscriber markers
     subscribers.forEach((sub) => {
+      const coords = normalizeUSCoords(sub.lat, sub.lng);
+      if (!coords) return;
       const color = PLAN_COLORS[sub.plan] || PLAN_COLORS.Basic;
       const radius = Math.max(6, Math.min(14, sub.chargerCount / 8));
 
-      const marker = L.circleMarker([sub.lat, sub.lng], {
+      const marker = L.circleMarker(coords, {
         radius,
         fillColor: color,
         color: "#fff",
@@ -104,9 +107,11 @@ export function NochPlusMap({ subscribers }: NochPlusMapProps) {
     });
 
     // Fit bounds if markers exist
-    const active = subscribers.filter(s => s.lat && s.lng);
+    const active = subscribers
+      .map(s => ({ s, c: normalizeUSCoords(s.lat, s.lng) }))
+      .filter(x => x.c !== null);
     if (active.length > 0) {
-      const bounds = L.latLngBounds(active.map(s => [s.lat, s.lng]));
+      const bounds = L.latLngBounds(active.map(x => x.c as [number, number]));
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 6 });
     }
   }, [loaded, subscribers]);

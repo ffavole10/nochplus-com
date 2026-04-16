@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Route, Search, X, List, MapIcon, Download } from "lucide-react";
+import { normalizeUSCoords } from "@/lib/coordsValidator";
 import { toast } from "sonner";
 
 interface AssessmentMapProps {
@@ -131,7 +132,12 @@ export function AssessmentMap({ chargers, onSelectCharger, onGeocodeRequest, isG
 
     const cluster = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true });
 
-    const withCoords = filtered.filter(c => c.latitude && c.longitude);
+    const withCoords = filtered
+      .map(c => {
+        const n = normalizeUSCoords(c.latitude, c.longitude);
+        return n ? { ...c, latitude: n[0], longitude: n[1] } : null;
+      })
+      .filter((c): c is AssessmentCharger => c !== null);
 
     withCoords.forEach(charger => {
       const color = getPriorityColor(charger.priorityLevel);

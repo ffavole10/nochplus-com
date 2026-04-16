@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { MapPin, Layers } from "lucide-react";
 import type { Technician } from "@/hooks/useTechnicians";
 import { getLevelDisplay, getLevelColor, getStatusInfo } from "@/hooks/useTechnicians";
+import { normalizeUSCoords } from "@/lib/coordsValidator";
 
 interface Props {
   technicians: Technician[];
@@ -138,9 +139,11 @@ export function TechnicianMap({ technicians, onTechSelect }: Props) {
     const activeTechs = technicians.filter(t => t.active);
 
     activeTechs.forEach(tech => {
-      const coords = tech.home_base_lat && tech.home_base_lng
+      const rawCoords = tech.home_base_lat && tech.home_base_lng
         ? [tech.home_base_lat, tech.home_base_lng] as [number, number]
         : getCityCoords(tech.home_base_city, tech.home_base_state);
+      if (!rawCoords) return;
+      const coords = normalizeUSCoords(rawCoords[0], rawCoords[1]);
       if (!coords) return;
 
       const pinColor = tech.employee_type === "subcontractor"
