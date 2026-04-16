@@ -60,12 +60,14 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster,
     chargers.forEach(c => {
       const hasPreciseCoords = typeof c.latitude === "number" && typeof c.longitude === "number"
         && isFinite(c.latitude) && isFinite(c.longitude);
-      const coords: [number, number] | null = hasPreciseCoords
+      const rawCoords: [number, number] | null = hasPreciseCoords
         ? [c.latitude as number, c.longitude as number]
         : getCityCoords(c.city, c.state);
+      if (!rawCoords) return;
+      const coords = normalizeUSCoords(rawCoords[0], rawCoords[1]);
       if (!coords) return;
       const key = hasPreciseCoords
-        ? `${(c.latitude as number).toFixed(6)},${(c.longitude as number).toFixed(6)}`
+        ? `${coords[0].toFixed(6)},${coords[1].toFixed(6)}`
         : `${(c.city || "").toLowerCase()},${(c.state || "").toLowerCase()}`;
       if (!map.has(key)) {
         map.set(key, {
