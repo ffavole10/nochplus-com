@@ -86,6 +86,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <SessionCleanup />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
