@@ -545,6 +545,7 @@ export function EstimateBuilder({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="max-w-5xl w-[90vw] max-h-[90vh] overflow-y-auto p-0"

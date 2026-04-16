@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
@@ -94,8 +96,15 @@ export function TrainingHistory() {
     fetchRecords();
   }, [page]);
 
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
+
   const handleDelete = async (id: string, filename: string) => {
-    if (!confirm(`Delete "${filename}" from the training log? This does not remove learned patterns.`)) return;
+    const ok = await confirmDialog({
+      title: "Delete Training Record?",
+      description: `Delete "${filename}" from the training log? This does not remove learned patterns.`,
+      confirmLabel: "Delete Record",
+    });
+    if (!ok) return;
     const { error } = await supabase.from("deep_learning_uploads" as any).delete().eq("id", id);
     if (error) {
       toast.error("Failed to delete");
@@ -252,5 +261,7 @@ export function TrainingHistory() {
         </SheetContent>
       </Sheet>
     </div>
+    <ConfirmDialog {...dialogProps} />
+    </>
   );
 }
