@@ -19,6 +19,7 @@ export default function MainPlatformLayout() {
   return (
     <FilterProvider>
       <CampaignProvider>
+        <ActivityTracker />
         <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <div className="min-h-screen flex w-full bg-background">
             <PlatformSidebar />
