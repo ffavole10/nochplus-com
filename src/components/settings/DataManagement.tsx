@@ -472,6 +472,7 @@ export function DuplicateTicketCleanup() {
           </DialogContent>
         </Dialog>
       </CardContent>
+      <ConfirmDialog {...deleteAllDialogProps} />
     </Card>
   );
 }

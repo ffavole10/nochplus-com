@@ -418,6 +418,7 @@ const Locations = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 };
