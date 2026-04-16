@@ -9,7 +9,7 @@ import { MapSchedulePanel } from "./MapSchedulePanel";
 import { CapacityDashboard } from "./CapacityDashboard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Map as MapIcon, BarChart3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Map as MapIcon, BarChart3, FilterX } from "lucide-react";
 import { Region } from "@/lib/regionMapping";
 import {
   addDays,
@@ -143,7 +143,19 @@ export function CampaignCalendar({ campaign, chargers, onMarkStatus, onSelectCha
 
       {/* Content */}
       <div className="flex-1 overflow-auto">
-        {isCapacityView ? (
+        {chargers.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center h-full p-6">
+            <div className="text-center max-w-sm">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                <FilterX className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Chargers Match This Filter</h3>
+              <p className="text-sm text-muted-foreground">
+                No chargers found with the selected priority level. Try adjusting your filters.
+              </p>
+            </div>
+          </div>
+        ) : (
           <CapacityDashboard
             chargers={chargers}
             campaign={campaign}
