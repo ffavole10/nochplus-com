@@ -5,6 +5,7 @@ import { AssessmentCharger } from "@/types/assessment";
 import { getCityCoords } from "@/lib/cityCoordinates";
 import { getRegion, REGION_COLORS, Region } from "@/lib/regionMapping";
 import { getChargerSchedulePriority, SchedulePriority } from "@/lib/ticketPriority";
+import { normalizeUSCoords } from "@/lib/coordsValidator";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
@@ -59,12 +60,14 @@ export function ChargerMapPanel({ chargers, selectedClusterKey, onSelectCluster,
     chargers.forEach(c => {
       const hasPreciseCoords = typeof c.latitude === "number" && typeof c.longitude === "number"
         && isFinite(c.latitude) && isFinite(c.longitude);
-      const coords: [number, number] | null = hasPreciseCoords
+      const rawCoords: [number, number] | null = hasPreciseCoords
         ? [c.latitude as number, c.longitude as number]
         : getCityCoords(c.city, c.state);
+      if (!rawCoords) return;
+      const coords = normalizeUSCoords(rawCoords[0], rawCoords[1]);
       if (!coords) return;
       const key = hasPreciseCoords
-        ? `${(c.latitude as number).toFixed(6)},${(c.longitude as number).toFixed(6)}`
+        ? `${coords[0].toFixed(6)},${coords[1].toFixed(6)}`
         : `${(c.city || "").toLowerCase()},${(c.state || "").toLowerCase()}`;
       if (!map.has(key)) {
         map.set(key, {

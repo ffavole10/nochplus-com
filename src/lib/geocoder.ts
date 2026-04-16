@@ -1,6 +1,7 @@
 import { AssessmentCharger } from "@/types/assessment";
+import { normalizeUSCoords } from "./coordsValidator";
 
-const GEOCODE_CACHE_KEY = "geocode-cache";
+const GEOCODE_CACHE_KEY = "geocode-cache-v2";
 
 interface GeoCache {
   [key: string]: { lat: number; lng: number } | null;
@@ -36,7 +37,8 @@ async function geocodeAddress(query: string): Promise<{ lat: number; lng: number
     if (!res.ok) return null;
     const data = await res.json();
     if (data.length > 0) {
-      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      const normalized = normalizeUSCoords(data[0].lat, data[0].lon);
+      if (normalized) return { lat: normalized[0], lng: normalized[1] };
     }
     return null;
   } catch {
@@ -94,12 +96,17 @@ export async function geocodeChargers(
 
   // Apply coordinates to chargers
   return chargers.map(c => {
-    if (c.latitude && c.longitude) return c;
+    // Validate any pre-existing coords first; clear them if invalid so we can re-geocode/drop
+    if (c.latitude && c.longitude) {
+      const valid = normalizeUSCoords(c.latitude, c.longitude);
+      if (valid) return { ...c, latitude: valid[0], longitude: valid[1] };
+    }
     const key = locationKey(c.city, c.state, c.zip);
     const coords = cache[key];
     if (coords) {
-      return { ...c, latitude: coords.lat + jitter(), longitude: coords.lng + jitter() };
+      const valid = normalizeUSCoords(coords.lat + jitter(), coords.lng + jitter());
+      if (valid) return { ...c, latitude: valid[0], longitude: valid[1] };
     }
-    return c;
+    return { ...c, latitude: undefined as any, longitude: undefined as any };
   });
 }

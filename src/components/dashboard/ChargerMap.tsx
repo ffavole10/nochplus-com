@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { MapPin, AlertTriangle, Layers, Focus, X } from "lucide-react";
+import { normalizeUSCoords } from "@/lib/coordsValidator";
 
 interface ChargerMapProps {
   chargers: Charger[];
@@ -188,10 +189,12 @@ export function ChargerMap({
     });
 
     chargers.forEach((charger) => {
+      const coords = normalizeUSCoords(charger.lat, charger.lng);
+      if (!coords) return;
       const color = getColor(charger.status, showHeatmap);
       
       // Use CircleMarker for individual markers with status attached for cluster coloring
-      const marker = L.circleMarker([charger.lat, charger.lng], {
+      const marker = L.circleMarker(coords, {
         radius: 6,
         fillColor: color,
         color: color,

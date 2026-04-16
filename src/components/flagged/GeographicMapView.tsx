@@ -6,6 +6,7 @@ import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps
 import { TicketPriority } from "@/types/assessment";
 import { lookupCityCoords } from "./cityLookup";
 import { PRIORITY_COLORS, PRIORITY_KEYS } from "./slaConstants";
+import { normalizeUSCoords } from "@/lib/coordsValidator";
 import { X, MapPin } from "lucide-react";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
@@ -61,7 +62,11 @@ export function GeographicMapView({ tickets, activeLocationFilter, onFilterCity,
 
     for (const t of tickets) {
       if (!t.city || !t.state) continue;
-      const coords = lookupCityCoords(t.city, t.state);
+      const rawCoords = lookupCityCoords(t.city, t.state);
+      const coords = rawCoords ? (() => {
+        const n = normalizeUSCoords(rawCoords.lat, rawCoords.lng);
+        return n ? { lat: n[0], lng: n[1] } : null;
+      })() : null;
       const cityKey = `${t.city.toLowerCase()}|${t.state.toLowerCase()}`;
 
       if (coords) {
