@@ -3,10 +3,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Ticket, AlertTriangle, Clock, CheckCircle, MapPin, Wrench, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, ExternalLink, PauseCircle, ShieldAlert } from "lucide-react";
-import { AssessmentCharger, TicketPriority } from "@/types/assessment";
+import { AssessmentCharger, TicketPriority, PriorityLevel } from "@/types/assessment";
 import { differenceInDays } from "date-fns";
 import { classifyTicketPriority } from "@/lib/ticketPriority";
+
+/** Estimate offline days from the status code when no ticket date exists */
+function estimateAgeDaysFromStatus(status: string): number {
+  const s = status.toLowerCase();
+  if (s.includes("1–29") || s.includes("1-29")) return 15;
+  if (s.includes("30–89") || s.includes("30-89")) return 60;
+  if (s.includes("90 day") || s.includes("90–") || s.includes("90-")) return 135;
+  if (s.includes("6 month") && !s.includes("1+ year") && !s.includes("2+ year") && !s.includes("3+ year")) return 270;
+  if (s.includes("1+ year") && !s.includes("2+") && !s.includes("3+")) return 400;
+  if (s.includes("2+ year")) return 800;
+  if (s.includes("3+ year")) return 1100;
+  if (s.includes("no comms")) return 365;
+  return 0;
+}
+
+/** Map a charger's priorityLevel to TicketPriority */
+function priorityLevelToTicketPriority(level: PriorityLevel): TicketPriority {
+  switch (level) {
+    case "Critical": return "P1-Critical";
+    case "High": return "P2-High";
+    case "Medium": return "P3-Medium";
+    case "Low": return "P4-Low";
+    default: return "P4-Low";
+  }
+}
+
+/** Check if a charger is online */
+function isOnline(status: string): boolean {
+  return status.startsWith("00") || status.toLowerCase().includes("online");
+}
 import { TicketsEmptyState } from "@/components/empty-states/TicketsEmptyState";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -145,14 +176,28 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
 
   const ticketChargers = useMemo(() => {
     return chargers
-      .filter(c => c.ticketId || c.ticketCreatedDate)
+      .filter(c => {
+        // Include chargers with ticket data OR any charger that is not online
+        const hasTicketData = !!(c.ticketId || c.ticketCreatedDate);
+        const offline = !isOnline(c.status);
+        return hasTicketData || offline;
+      })
       .map(c => {
         const enriched = enrichLocation(c);
-        const priority = classifyTicketPriority(enriched);
-        const ageDays = enriched.ticketCreatedDate ? differenceInDays(new Date(), new Date(enriched.ticketCreatedDate)) : 0;
+        // Use ticket-based priority if ticket data exists, otherwise use charger's own priority level
+        const hasTicketData = !!(enriched.ticketId || enriched.ticketCreatedDate);
+        const priority = hasTicketData
+          ? classifyTicketPriority(enriched)
+          : priorityLevelToTicketPriority(enriched.priorityLevel);
+        // Derive age from ticket date if available, otherwise estimate from status code
+        const ageDays = enriched.ticketCreatedDate
+          ? differenceInDays(new Date(), new Date(enriched.ticketCreatedDate))
+          : estimateAgeDaysFromStatus(enriched.status);
         const slaStatus = getSlaStatus(priority, ageDays);
+        // Mark as open if it has an open ticket OR is offline
+        const effectivelyOpen = enriched.hasOpenTicket || !isOnline(enriched.status);
         return {
-          charger: enriched,
+          charger: { ...enriched, hasOpenTicket: effectivelyOpen },
           ticketPriority: priority,
           ageDays,
           slaStatus,
@@ -230,12 +275,14 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
   }, [ticketChargers, search, priorityFilter, statusFilter, stateFilter, typeFilter, amFilter, reviewFilter, accountManagers, reviewStatuses, agingFilter, locationFilter, locationFilterType, groupFilter]);
 
   const stats = useMemo(() => {
+    const totalChargers = chargers.length;
+    const onlineCount = chargers.filter(c => isOnline(c.status)).length;
     const open = ticketChargers.filter(t => t.charger.hasOpenTicket);
     const breached = open.filter(t => t.slaStatus === "breached");
     return {
-      total: ticketChargers.length,
+      total: totalChargers,
       open: open.length,
-      solved: ticketChargers.length - open.length,
+      solved: onlineCount,
       p1: open.filter(t => t.ticketPriority === "P1-Critical").length,
       p2: open.filter(t => t.ticketPriority === "P2-High").length,
       p3: open.filter(t => t.ticketPriority === "P3-Medium").length,
@@ -243,7 +290,7 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
       slaBreached: breached.length,
       slaBreachedPct: open.length > 0 ? Math.round(breached.length / open.length * 100) : 0,
     };
-  }, [ticketChargers]);
+  }, [chargers, ticketChargers]);
 
   // Data for the new chart components (only open tickets)
   const openTickets = useMemo(() => ticketChargers.filter(t => t.charger.hasOpenTicket), [ticketChargers]);
@@ -556,6 +603,60 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
             );
           })}
         </div>
+      )}
+
+      {/* Flagged Chargers Table */}
+      {openTickets.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-primary flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" /> Flagged Chargers ({openTickets.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="max-h-[500px] overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Charger ID</TableHead>
+                    <TableHead className="text-xs">Type</TableHead>
+                    <TableHead className="text-xs">Priority</TableHead>
+                    <TableHead className="text-xs">Status</TableHead>
+                    <TableHead className="text-xs">Address</TableHead>
+                    <TableHead className="text-xs text-right">Days Offline</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {openTickets.map(({ charger, ticketPriority, ageDays }) => {
+                    const config = PRIORITY_CONFIG[ticketPriority];
+                    return (
+                      <TableRow
+                        key={charger.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => onSelectCharger(charger)}
+                      >
+                        <TableCell className="text-xs font-medium">{charger.assetName}</TableCell>
+                        <TableCell className="text-xs">{charger.assetRecordType}</TableCell>
+                        <TableCell>
+                          <Badge className={`${config.bg} text-[10px]`}>{config.label}</Badge>
+                        </TableCell>
+                        <TableCell className="text-xs">{charger.status}</TableCell>
+                        <TableCell className="text-xs max-w-[200px] truncate">
+                          {[charger.city, charger.state].filter(Boolean).join(", ") || charger.address || "—"}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-medium">
+                          <span className={ageDays > 90 ? "text-critical" : ageDays > 30 ? "text-degraded" : "text-foreground"}>
+                            {ageDays}d
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Confirmation Dialog */}
