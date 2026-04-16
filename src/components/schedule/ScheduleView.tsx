@@ -218,8 +218,8 @@ export function ScheduleView({
       <div className="flex-1 flex overflow-hidden">
         {/* Config panel - only when no active campaign */}
         {!activeCampaign && (
-          <div className="w-full lg:w-[360px] border-r border-border flex flex-col bg-card">
-            <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="w-full lg:w-[360px] border-r border-border flex flex-col bg-card min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
               <CampaignConfigPanel
                 chargers={chargers}
                 config={config}
