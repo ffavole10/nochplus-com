@@ -149,7 +149,7 @@ export function PlatformSidebar() {
       setContextCampaignId(campaign.id);
       setSelectedCampaignName(campaign.name);
       setSelectedCustomer((campaign as any).customer_company || campaign.customer || "");
-      navigate(`/campaigns/${campaign.id}/overview`);
+      navigate("/dashboard");
     }
   };
 
