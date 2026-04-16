@@ -42,6 +42,15 @@ function getHighestPriority(breakdown: Record<TicketPriority, number>): TicketPr
   return "P4-Low";
 }
 
+function getDominantPriority(breakdown: Record<TicketPriority, number>): TicketPriority {
+  let max = 0;
+  let dominant: TicketPriority = "P4-Low";
+  for (const p of PRIORITY_KEYS) {
+    if (breakdown[p] > max) { max = breakdown[p]; dominant = p; }
+  }
+  return dominant;
+}
+
 export function GeographicMapView({ tickets, activeLocationFilter, onFilterCity, onFilterState, onClear }: Props) {
   const [hoveredCity, setHoveredCity] = useState<CityCluster | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
