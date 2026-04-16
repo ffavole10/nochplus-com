@@ -100,6 +100,7 @@ export function WebSearchSection() {
   const lastSearched = results.length > 0 ? results[0].searched_at : null;
 
   return (
+    <>
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-foreground">External Knowledge Sources</h2>
