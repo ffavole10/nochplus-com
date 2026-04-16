@@ -156,7 +156,7 @@ export function PlatformSidebar() {
   const sectionFirstPage: Record<NonNullable<SectionKey>, string> = {
     "campaigns": "/campaigns",
     "service-desk": "/service-desk/tickets",
-    "noch-plus": "/noch-plus/dashboard",
+    "noch-plus": "/noch-plus/monitoring",
     "partners": "/partners",
     "autoheal": "/autoheal/ai-agent",
   };
