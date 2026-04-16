@@ -13,7 +13,7 @@ const PRIORITY_DOT_COLORS: Record<SchedulePriority, string> = {
   "P2-High": "#f59e0b",
   "P3-Medium": "#eab308",
   "P4-Low": "#22c55e",
-  "Optimal": "#25b3a5",
+  "Optimal": "#3B82F6",
 };
 
 const PRIORITY_LABEL: Record<SchedulePriority, string> = {
