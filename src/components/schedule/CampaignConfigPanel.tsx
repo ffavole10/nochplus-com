@@ -135,12 +135,8 @@ export function CampaignConfigPanel({ chargers, config, onChange }: CampaignConf
       .filter(t => !config.technicians.includes(`${t.first_name} ${t.last_name}`));
   }, [dbTechnicians, config.technicians]);
 
-  // Helper: classify a charger into SchedulePriority
-  const getSchedulePriority = (c: AssessmentCharger): SchedulePriority => {
-    const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
-    if (!hasTicket) return "Optimal";
-    return classifyTicketPriority(c);
-  };
+  // Use shared priority classification
+  const getSchedulePriority = (c: AssessmentCharger): SchedulePriority => getChargerSchedulePriority(c);
 
   // Computed metrics — custom filtering by type + priority + region
   const selected = useMemo(() => {
