@@ -77,7 +77,7 @@ const TABS: { value: SettingsTab; label: string }[] = [
   { value: "data", label: "Data Management" },
   { value: "partners", label: "Partners" },
   { value: "quoting", label: "Quoting & Rates" },
-  { value: "users", label: "All Users" },
+  { value: "users", label: "Users" },
   { value: "analytics", label: "Analytics" },
 ];
 
