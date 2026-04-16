@@ -122,6 +122,8 @@ export default function CampaignList() {
         try {
           const chargers = await parseAssessmentExcel(file);
           if (chargers.length > 0) {
+            const BATCH = 100;
+            const allRecordIds: string[] = [];
             const chargerRecords = chargers.map((ch, i) => ({
               campaign_id: campaignId,
               station_id: ch.evseId || ch.assetName || `IMPORT-${i}`,
@@ -134,15 +136,39 @@ export default function CampaignList() {
               latitude: ch.latitude || null,
               longitude: ch.longitude || null,
             }));
-            const { error: chError } = await supabase
-              .from("charger_records")
-              .insert(chargerRecords as any);
-            if (chError) console.error("Charger import error:", chError);
-            else toast.success(`Imported ${chargers.length} chargers`);
+
+            // Insert charger_records in batches
+            for (let i = 0; i < chargerRecords.length; i += BATCH) {
+              const batch = chargerRecords.slice(i, i + BATCH);
+              const { data: inserted, error: chError } = await supabase
+                .from("charger_records")
+                .insert(batch as any)
+                .select("id");
+              if (chError) throw chError;
+              if (inserted) allRecordIds.push(...inserted.map(r => r.id));
+            }
+
+            // Create campaign_chargers linking records
+            for (let i = 0; i < allRecordIds.length; i += BATCH) {
+              const linkBatch = allRecordIds.slice(i, i + BATCH).map(id => ({
+                campaign_id: campaignId,
+                charger_id: id,
+                priority: "low",
+                in_scope: true,
+                status: "pending",
+              }));
+              const { error: linkError } = await supabase.from("campaign_chargers").insert(linkBatch);
+              if (linkError) throw linkError;
+            }
+
+            // Update campaign total_chargers
+            await supabase.from("campaigns").update({ total_chargers: allRecordIds.length }).eq("id", campaignId);
+
+            toast.success(`✓ ${allRecordIds.length} chargers imported successfully`);
           }
-        } catch (parseErr) {
-          console.error("Parse error:", parseErr);
-          toast.error("Dataset uploaded but parsing had issues. You can re-upload from the Chargers tab.");
+        } catch (parseErr: any) {
+          console.error("Parse/import error:", parseErr);
+          toast.error(parseErr?.message || "Dataset uploaded but import had issues. You can re-upload from the Chargers tab.");
         }
         setImporting(false);
       }
