@@ -605,6 +605,60 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
         </div>
       )}
 
+      {/* Flagged Chargers Table */}
+      {openTickets.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-primary flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" /> Flagged Chargers ({openTickets.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="max-h-[500px] overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Charger ID</TableHead>
+                    <TableHead className="text-xs">Type</TableHead>
+                    <TableHead className="text-xs">Priority</TableHead>
+                    <TableHead className="text-xs">Status</TableHead>
+                    <TableHead className="text-xs">Address</TableHead>
+                    <TableHead className="text-xs text-right">Days Offline</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {openTickets.map(({ charger, ticketPriority, ageDays }) => {
+                    const config = PRIORITY_CONFIG[ticketPriority];
+                    return (
+                      <TableRow
+                        key={charger.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => onSelectCharger(charger)}
+                      >
+                        <TableCell className="text-xs font-medium">{charger.assetName}</TableCell>
+                        <TableCell className="text-xs">{charger.assetRecordType}</TableCell>
+                        <TableCell>
+                          <Badge className={`${config.bg} text-[10px]`}>{config.label}</Badge>
+                        </TableCell>
+                        <TableCell className="text-xs">{charger.status}</TableCell>
+                        <TableCell className="text-xs max-w-[200px] truncate">
+                          {[charger.city, charger.state].filter(Boolean).join(", ") || charger.address || "—"}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-medium">
+                          <span className={ageDays > 90 ? "text-critical" : ageDays > 30 ? "text-degraded" : "text-foreground"}>
+                            {ageDays}d
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Confirmation Dialog */}
       <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
         <AlertDialogContent>
