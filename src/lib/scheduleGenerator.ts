@@ -1,6 +1,6 @@
 import { AssessmentCharger, PriorityLevel, ChargerType } from "@/types/assessment";
 import { CampaignConfig, ScheduleDay, ScheduleItem, Campaign, CampaignStatistics } from "@/types/campaign";
-import { classifyTicketPriority } from "@/lib/ticketPriority";
+import { classifyTicketPriority, getChargerSchedulePriority, SchedulePriority } from "@/lib/ticketPriority";
 import { getRegion } from "@/lib/regionMapping";
 
 function isWorkingDay(date: Date, config: CampaignConfig): boolean {
@@ -24,11 +24,12 @@ function getWeekNumber(date: Date, startDate: Date): number {
   return Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
 }
 
-const SCHEDULE_TO_PRIORITY: Record<string, PriorityLevel | null> = {
+const SCHEDULE_TO_PRIORITY: Record<SchedulePriority, PriorityLevel | null> = {
   "P1-Critical": "Critical",
   "P2-High": "High",
   "P3-Medium": "Medium",
   "P4-Low": "Low",
+  "Optimal": null,
 };
 
 export function filterChargers(chargers: AssessmentCharger[], config: CampaignConfig): AssessmentCharger[] {
@@ -39,12 +40,11 @@ export function filterChargers(chargers: AssessmentCharger[], config: CampaignCo
       const region = getRegion(c.city, c.state);
       if (!config.includeRegions.includes(region)) return false;
     }
-    const hasTicket = !!(c.ticketId || c.ticketCreatedDate);
-    if (!hasTicket) {
-      // Optimal charger — respect includeOptimal config
+    // Use unified schedule priority classification (matches Flagged page logic)
+    const sp = getChargerSchedulePriority(c);
+    if (sp === "Optimal") {
       return config.includeOptimal !== false;
     }
-    const sp = classifyTicketPriority(c);
     const pl = SCHEDULE_TO_PRIORITY[sp];
     if (pl && !config.includePriorities.includes(pl)) return false;
     return true;
