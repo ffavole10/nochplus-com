@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Globe, BookOpen, Building2, Search, Loader2, ExternalLink, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { format } from "date-fns";
 
 type KnowledgeSource = {
@@ -68,12 +70,19 @@ export function WebSearchSection() {
     }
   };
 
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
+
   const handleClearAll = async () => {
-    if (!confirm("Clear all saved knowledge sources?")) return;
+    const ok = await confirmDialog({
+      title: "Clear Knowledge Base?",
+      description: "This will remove all saved knowledge sources. This action cannot be undone.",
+      confirmLabel: "Clear All",
+    });
+    if (!ok) return;
     const { error } = await supabase
       .from("ai_knowledge_sources")
       .delete()
-      .neq("id", "00000000-0000-0000-0000-000000000000"); // delete all
+      .neq("id", "00000000-0000-0000-0000-000000000000");
     if (error) {
       toast.error("Failed to clear");
     } else {
@@ -210,5 +219,7 @@ export function WebSearchSection() {
         </CardContent>
       </Card>
     </div>
+    <ConfirmDialog {...dialogProps} />
+    </>
   );
 }
