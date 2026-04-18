@@ -337,18 +337,78 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {/* Toggle buttons row */}
-      <div className="flex flex-wrap justify-center items-center gap-6">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {expanded ? (
-            <><ChevronUp className="h-4 w-4" /> Collapse Features</>
-          ) : (
-            <><ChevronDown className="h-4 w-4" /> Expand All Features</>
-          )}
-        </button>
+      {/* Unified feature comparison table */}
+      {showFeatures && (
+        <div className="rounded-lg border border-border overflow-hidden bg-card">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="text-left font-semibold text-foreground px-4 py-3 min-w-[200px]">
+                    Feature
+                  </th>
+                  {ALL_TIERS.map((tier) => {
+                    const isPriority = tier === "priority";
+                    return (
+                      <th
+                        key={tier}
+                        className={`text-center font-semibold px-3 py-3 min-w-[120px] ${
+                          isPriority ? "bg-primary/10 text-primary" : "text-foreground"
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          {isPriority && <Crown className="h-3 w-3" />}
+                          {TIER_LABELS[tier]}
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {FEATURE_SECTIONS.map((section) => (
+                  <>
+                    <tr key={`section-${section.title}`} className="bg-muted/30 border-b border-border">
+                      <td
+                        colSpan={6}
+                        className="px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground"
+                      >
+                        {section.title}
+                      </td>
+                    </tr>
+                    {section.rows.map((row, rIdx) => (
+                      <tr
+                        key={`${section.title}-${row.name}`}
+                        className={`border-b border-border/50 ${
+                          rIdx % 2 === 1 ? "bg-muted/20" : ""
+                        }`}
+                      >
+                        <td className="px-4 py-2.5 text-foreground">{row.name}</td>
+                        {row.values.map((val, i) => {
+                          const isPriorityCol = TIER_ORDER[i] === "priority";
+                          return (
+                            <td
+                              key={i}
+                              className={`text-center px-3 py-2.5 align-middle ${
+                                isPriorityCol ? "bg-primary/5" : ""
+                              }`}
+                            >
+                              {renderCell(val)}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Demo invoices toggle */}
+      <div className="flex justify-center">
         <button
           onClick={() => setShowInvoices(!showInvoices)}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
