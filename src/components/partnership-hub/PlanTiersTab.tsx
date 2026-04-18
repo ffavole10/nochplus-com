@@ -215,7 +215,7 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
 
         {/* 5 pricing cards span 5 columns on xl */}
-        <div className="xl:col-span-5 xl:order-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="xl:col-span-5 xl:order-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
           {ALL_TIERS.map((tier) => {
             const isPriority = tier === "priority";
             const isStarter = tier === "starter";
