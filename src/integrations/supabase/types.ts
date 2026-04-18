@@ -1912,6 +1912,45 @@ export type Database = {
           },
         ]
       }
+      noch_plus_enterprise_inquiries: {
+        Row: {
+          company_name: string
+          created_at: string
+          email: string
+          estimated_charger_count: number | null
+          id: string
+          message: string | null
+          partner_name: string
+          phone: string | null
+          status: Database["public"]["Enums"]["enterprise_inquiry_status"]
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          email: string
+          estimated_charger_count?: number | null
+          id?: string
+          message?: string | null
+          partner_name: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["enterprise_inquiry_status"]
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          email?: string
+          estimated_charger_count?: number | null
+          id?: string
+          message?: string | null
+          partner_name?: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["enterprise_inquiry_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       noch_plus_knowledge_base: {
         Row: {
           answer: string
@@ -3786,6 +3825,7 @@ export type Database = {
         | "customer"
         | "manager"
         | "partner"
+      enterprise_inquiry_status: "new" | "contacted" | "qualified" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3921,6 +3961,7 @@ export const Constants = {
         "manager",
         "partner",
       ],
+      enterprise_inquiry_status: ["new", "contacted", "qualified", "closed"],
     },
   },
 } as const

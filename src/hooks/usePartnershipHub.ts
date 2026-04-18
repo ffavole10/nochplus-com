@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { TierName, calcSiteMonthlyCost, LABOR_DISCOUNT } from "@/constants/nochPlusTiers";
+import { TierName, CoreTierName, calcSiteMonthlyCost, LABOR_DISCOUNT } from "@/constants/nochPlusTiers";
 
 export interface SiteConfig {
   id: string;
@@ -30,11 +30,20 @@ const DC_DAILY_REVENUE = 137;
 const L2_CALLS_PER_YEAR = 2;
 const DC_CALLS_PER_YEAR = 4;
 
-// SLA target hours by tier
+// SLA target hours by tier (Starter = best effort/no guarantee, Enterprise = custom est.)
 const SLA_HOURS: Record<TierName, number> = {
+  starter: 96,
   essential: 72,
   priority: 48,
   elite: 24,
+  enterprise: 12,
+};
+
+// Map any tier to a "core" tier for dominant-tier display purposes
+const toCoreTier = (t: TierName): CoreTierName => {
+  if (t === "starter") return "essential";
+  if (t === "enterprise") return "elite";
+  return t;
 };
 
 const defaultSite = (): SiteConfig => ({
@@ -77,7 +86,6 @@ export function usePartnershipHub() {
     downtimeCostPerDay: 0,
   });
 
-  // Auto-update downtime cost and service calls when charger mix changes (unless manually overridden)
   useEffect(() => {
     const totalL2 = sites.reduce((a, s) => a + s.l2Count, 0);
     const totalDC = sites.reduce((a, s) => a + s.dcCount, 0);
@@ -134,6 +142,7 @@ export function usePartnershipHub() {
     const totalDC = sites.reduce((a, s) => a + s.dcCount, 0);
     const totalChargers = totalL2 + totalDC;
 
+    // Monthly total only counts paid tiers (Starter = $0, Enterprise = "Custom" excluded)
     const monthlyTotal = sites.reduce(
       (a, s) => a + calcSiteMonthlyCost(s.l2Count, s.dcCount, s.tier),
       0
@@ -141,14 +150,18 @@ export function usePartnershipHub() {
     const annualTotal = monthlyTotal * 12;
     const annualPrePay = monthlyTotal * 11;
 
-    // Dominant tier (by charger count)
-    const tierCounts: Record<TierName, number> = { essential: 0, priority: 0, elite: 0 };
+    // Has any enterprise sites?
+    const hasEnterprise = sites.some((s) => s.tier === "enterprise");
+    const allStarter = sites.length > 0 && sites.every((s) => s.tier === "starter");
+
+    // Dominant tier (by charger count) — across all 5 tiers
+    const tierCounts: Record<TierName, number> = { starter: 0, essential: 0, priority: 0, elite: 0, enterprise: 0 };
     sites.forEach((s) => { tierCounts[s.tier] += s.l2Count + s.dcCount; });
     const dominantTier: TierName = (Object.entries(tierCounts) as [TierName, number][])
       .sort((a, b) => b[1] - a[1])[0][0];
     const slaTargetHours = SLA_HOURS[dominantTier];
 
-    // ROI calculations — blended labor discount across sites (weighted by charger count)
+    // ROI calculations — blended labor discount
     const weightedDiscount =
       totalChargers > 0
         ? sites.reduce(
@@ -161,7 +174,6 @@ export function usePartnershipHub() {
     const currentAnnualSpend = roiInputs.avgServiceCallCost * roiInputs.serviceCallsPerYear;
     const estimatedSavings = currentAnnualSpend * weightedDiscount;
 
-    // Downtime savings
     const hoursSaved = Math.max(0, roiInputs.avgResponseTime - slaTargetHours);
     const downtimeSavings = (hoursSaved / 24) * roiInputs.downtimeCostPerDay * roiInputs.serviceCallsPerYear;
 
@@ -174,7 +186,10 @@ export function usePartnershipHub() {
     const allL2Small = totalDC === 0 && totalChargers < 10;
     let recommendedTier: TierName = "priority";
     let recommendedReason = "Best fit for mixed L2/DCFC deployments";
-    if (allL2Small && totalChargers > 0) {
+    if (totalChargers >= 200) {
+      recommendedTier = "enterprise";
+      recommendedReason = "Large-scale deployment — custom volume pricing recommended";
+    } else if (allL2Small && totalChargers > 0) {
       recommendedTier = "essential";
       recommendedReason = "Great starting point for smaller L2 sites";
     } else if (hasDC && totalDC >= totalL2) {
@@ -200,10 +215,13 @@ export function usePartnershipHub() {
       netCost,
       totalSavings,
       dominantTier,
+      dominantCoreTier: toCoreTier(dominantTier),
       slaTargetHours,
       hoursSaved,
       recommendedTier,
       recommendedReason,
+      hasEnterprise,
+      allStarter,
     };
   }, [sites, roiInputs]);
 

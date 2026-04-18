@@ -39,12 +39,21 @@ interface PartnerPlanTabProps {
 
 type Mode = "share" | "activate" | "trial";
 
-const TIER_RANK: Record<TierName, number> = { essential: 0, priority: 1, elite: 2 };
+const TIER_RANK: Record<TierName, number> = {
+  starter: -1,
+  essential: 0,
+  priority: 1,
+  elite: 2,
+  enterprise: 3,
+};
 
+// Starter and Enterprise reuse Essential/Elite badge visuals
 const TIER_BADGE_IMAGES: Record<TierName, string> = {
+  starter: nochEssentialBadge,
   essential: nochEssentialBadge,
   priority: nochPriorityBadge,
   elite: nochEliteBadge,
+  enterprise: nochEliteBadge,
 };
 
 // Benefits with tier availability
@@ -81,9 +90,11 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const UPGRADE_LABELS: Record<TierName, string> = {
+  starter: "",
   essential: "",
   priority: "Available on Priority & Elite",
   elite: "Available on Elite",
+  enterprise: "Available on Enterprise",
 };
 
 export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabProps) {
@@ -111,8 +122,11 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
   // Highest tier across all sites
   const highestTier: TierName = sites.reduce(
     (best, site) => (TIER_RANK[site.tier] > TIER_RANK[best] ? site.tier : best),
-    "essential" as TierName
+    "starter" as TierName
   );
+
+  const isStarterPlan = highestTier === "starter";
+  const isEnterprisePlan = highestTier === "enterprise";
 
   // Handle Stripe checkout return
   useEffect(() => {
@@ -201,7 +215,7 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
     try {
       const dominantTier = sites.reduce(
         (best, site) => (TIER_RANK[site.tier] > TIER_RANK[best] ? site.tier : best),
-        "essential" as TierName
+        "starter" as TierName
       );
       const { data, error } = await supabase.functions.invoke("create-noch-checkout", {
         body: {
