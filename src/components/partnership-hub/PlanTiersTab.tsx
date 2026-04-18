@@ -337,73 +337,59 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {/* Unified feature comparison table */}
+      {/* Unified feature comparison — uses SAME grid template as pricing cards above for perfect alignment */}
       {showFeatures && (
         <div className="rounded-lg border border-border overflow-hidden bg-card">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-muted/50 border-b border-border">
-                  <th className="text-left font-semibold text-foreground px-4 py-3 min-w-[200px]">
-                    Feature
-                  </th>
-                  {ALL_TIERS.map((tier) => {
-                    const isPriority = tier === "priority";
+          {/* Header row */}
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4 bg-muted/50 border-b border-border px-4 py-3">
+            <div className="text-left font-semibold text-foreground text-sm">Feature</div>
+            {ALL_TIERS.map((tier) => {
+              const isPriority = tier === "priority";
+              return (
+                <div
+                  key={tier}
+                  className={`text-center font-semibold text-sm flex items-center justify-center gap-1 ${
+                    isPriority ? "text-primary" : "text-foreground"
+                  }`}
+                >
+                  {isPriority && <Crown className="h-3 w-3" />}
+                  {TIER_LABELS[tier]}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Body */}
+          {FEATURE_SECTIONS.map((section) => (
+            <React.Fragment key={section.title}>
+              <div className="bg-muted/30 border-b border-border px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">
+                {section.title}
+              </div>
+              {section.rows.map((row, rIdx) => (
+                <div
+                  key={`${section.title}-${row.name}`}
+                  className={`grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4 border-b border-border/50 px-4 py-2.5 items-center ${
+                    rIdx % 2 === 1 ? "bg-muted/20" : ""
+                  }`}
+                >
+                  <div className="text-sm text-foreground">{row.name}</div>
+                  {row.values.map((val, i) => {
+                    const isPriorityCol = TIER_ORDER[i] === "priority";
                     return (
-                      <th
-                        key={tier}
-                        className={`text-center font-semibold px-3 py-3 min-w-[120px] ${
-                          isPriority ? "bg-primary/10 text-primary" : "text-foreground"
+                      <div
+                        key={i}
+                        className={`text-center text-sm flex items-center justify-center min-h-[1.5rem] ${
+                          isPriorityCol ? "bg-primary/5 -my-2.5 py-2.5" : ""
                         }`}
                       >
-                        <div className="flex items-center justify-center gap-1">
-                          {isPriority && <Crown className="h-3 w-3" />}
-                          {TIER_LABELS[tier]}
-                        </div>
-                      </th>
+                        {renderCell(val)}
+                      </div>
                     );
                   })}
-                </tr>
-              </thead>
-              <tbody>
-                {FEATURE_SECTIONS.map((section) => (
-                  <React.Fragment key={section.title}>
-                    <tr className="bg-muted/30 border-b border-border">
-                      <td
-                        colSpan={6}
-                        className="px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground"
-                      >
-                        {section.title}
-                      </td>
-                    </tr>
-                    {section.rows.map((row, rIdx) => (
-                      <tr
-                        key={`${section.title}-${row.name}`}
-                        className={`border-b border-border/50 ${
-                          rIdx % 2 === 1 ? "bg-muted/20" : ""
-                        }`}
-                      >
-                        <td className="px-4 py-2.5 text-foreground">{row.name}</td>
-                        {row.values.map((val, i) => {
-                          const isPriorityCol = TIER_ORDER[i] === "priority";
-                          return (
-                            <td
-                              key={i}
-                              className={`text-center px-3 py-2.5 align-middle ${
-                                isPriorityCol ? "bg-primary/5" : ""
-                              }`}
-                            >
-                              {renderCell(val)}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </div>
+              ))}
+            </React.Fragment>
+          ))}
         </div>
       )}
 
