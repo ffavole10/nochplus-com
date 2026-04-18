@@ -369,8 +369,8 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
               </thead>
               <tbody>
                 {FEATURE_SECTIONS.map((section) => (
-                  <>
-                    <tr key={`section-${section.title}`} className="bg-muted/30 border-b border-border">
+                  <React.Fragment key={section.title}>
+                    <tr className="bg-muted/30 border-b border-border">
                       <td
                         colSpan={6}
                         className="px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground"
