@@ -9,8 +9,6 @@ import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, Receipt, Sparkl
 import invoiceEssential from "@/assets/noch-plus-invoice-essential.png";
 import invoicePriority from "@/assets/noch-plus-invoice-priority.png";
 import invoiceElite from "@/assets/noch-plus-invoice-elite.png";
-import starterBadge from "@/assets/tier-starter-badge.png";
-import enterpriseBadge from "@/assets/tier-enterprise-badge.png";
 import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
 import { EnterpriseContactModal } from "./EnterpriseContactModal";
 
@@ -253,17 +251,9 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                 )}
 
                 <CardContent className="flex flex-col flex-1 p-5 pt-6">
-                  <div className="flex items-center gap-2">
-                    {isStarter && (
-                      <img src={starterBadge} alt="Starter tier badge" className="h-7 w-7 object-contain opacity-80" />
-                    )}
-                    {isEnterprise && (
-                      <img src={enterpriseBadge} alt="Enterprise tier badge" className="h-7 w-7 object-contain" />
-                    )}
-                    <p className={`text-sm font-semibold tracking-wide uppercase ${tierLabelClass}`}>
-                      {tier.charAt(0).toUpperCase() + tier.slice(1)}
-                    </p>
-                  </div>
+                  <p className={`text-sm font-semibold tracking-wide uppercase ${tierLabelClass}`}>
+                    {tier.charAt(0).toUpperCase() + tier.slice(1)}
+                  </p>
 
                   {/* Price block */}
                   {isStarter ? (
