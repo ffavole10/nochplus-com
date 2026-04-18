@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Plus, X, Zap, Target } from "lucide-react";
 import {
-  TierName, TIER_LABELS,
-  calcSiteMonthlyCost,
+  TierName, TIER_LABELS, ALL_TIERS,
+  calcSiteMonthlyCost, isCustomPricedTier, isFreeTier,
 } from "@/constants/nochPlusTiers";
 import type { PartnerInfo, SiteConfig, RoiInputs } from "@/hooks/usePartnershipHub";
 
@@ -32,7 +32,20 @@ interface PlanBuilderTabProps {
   onNavigate: (tab: string) => void;
 }
 
-const TIERS: TierName[] = ["essential", "priority", "elite"];
+const TIERS: TierName[] = ALL_TIERS;
+
+// Tier-specific styling for builder buttons
+const tierButtonClass = (tier: TierName, selected: boolean): string => {
+  if (selected) {
+    if (tier === "starter") return "bg-muted text-foreground border-border hover:bg-muted/80";
+    if (tier === "enterprise") return "bg-slate-900 text-amber-400 border-amber-500/40 hover:bg-slate-800";
+    if (tier === "elite") return "bg-amber-500 text-white hover:bg-amber-400 border-amber-500";
+    return ""; // default for essential/priority
+  }
+  if (tier === "starter") return "border-border text-muted-foreground";
+  if (tier === "enterprise") return "border-slate-700 text-slate-700 hover:bg-slate-50";
+  return "";
+};
 
 export function PlanBuilderTab({
   partnerInfo, setPartnerInfo, sites, addSite, removeSite, updateSite,
