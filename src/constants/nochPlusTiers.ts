@@ -1,83 +1,114 @@
 // NOCH+ Tier pricing and feature data — single source of truth
 
-export type TierName = "essential" | "priority" | "elite";
+export type TierName = "starter" | "essential" | "priority" | "elite" | "enterprise";
+
+// Paid core tiers (used in pricing math, ROI, dominant-tier calc)
+export type CoreTierName = "essential" | "priority" | "elite";
+export const CORE_TIERS: CoreTierName[] = ["essential", "priority", "elite"];
+export const ALL_TIERS: TierName[] = ["starter", "essential", "priority", "elite", "enterprise"];
 
 export const TIER_LABELS: Record<TierName, string> = {
+  starter: "Starter",
   essential: "Essential",
   priority: "Priority",
   elite: "Elite",
+  enterprise: "Enterprise",
 };
 
 export const TIER_COLORS: Record<TierName, string> = {
+  starter: "hsl(var(--muted-foreground))",
   essential: "hsl(var(--muted-foreground))",
   priority: "hsl(var(--primary))",
   elite: "hsl(45 93% 47%)",
+  enterprise: "hsl(220 13% 18%)",
 };
 
 export const TIER_BORDER_COLORS: Record<TierName, string> = {
+  starter: "border-muted",
   essential: "border-muted-foreground",
   priority: "border-primary",
   elite: "border-amber-500",
+  enterprise: "border-slate-800",
 };
 
 export const TIER_BG_COLORS: Record<TierName, string> = {
+  starter: "bg-muted/50",
   essential: "bg-muted",
   priority: "bg-primary/10",
   elite: "bg-amber-500/10",
+  enterprise: "bg-slate-900",
 };
 
 export const TIER_BADGE_CLASSES: Record<TierName, string> = {
+  starter: "bg-muted text-muted-foreground border border-border",
   essential: "bg-muted text-muted-foreground",
   priority: "bg-primary/10 text-primary",
   elite: "bg-amber-500/10 text-amber-700",
+  enterprise: "bg-slate-900 text-amber-400 border border-amber-500/30",
 };
 
-// Pricing per charger per month
-export const TIER_PRICING: Record<TierName, { l2: number; dc: number }> = {
+// Pricing per charger per month (Starter = free, Enterprise = custom/null)
+export const TIER_PRICING: Record<CoreTierName, { l2: number; dc: number }> = {
   essential: { l2: 10, dc: 25 },
   priority: { l2: 15, dc: 30 },
   elite: { l2: 20, dc: 35 },
 };
 
 export function calcSiteMonthlyCost(l2: number, dc: number, tier: TierName): number {
+  if (tier === "starter") return 0;
+  if (tier === "enterprise") return 0; // Custom — not calculated
   const p = TIER_PRICING[tier];
   return l2 * p.l2 + dc * p.dc;
 }
 
+export function isCustomPricedTier(tier: TierName): boolean {
+  return tier === "enterprise";
+}
+
+export function isFreeTier(tier: TierName): boolean {
+  return tier === "starter";
+}
+
 export interface FeatureRow {
   feature: string;
+  starter: string;
   essential: string;
   priority: string;
   elite: string;
+  enterprise: string;
 }
 
 export const FEATURE_MATRIX: FeatureRow[] = [
-  { feature: "Onsite Response SLA", essential: "72 hours", priority: "48 hours", elite: "24 hours" },
-  { feature: "Credit-Back Guarantee", essential: "—", priority: "10% credit on monthly fee", elite: "20% credit on monthly fee" },
-  { feature: "Priority Dispatch Queue", essential: "—", priority: "Ahead of non-members", elite: "Top of queue" },
-  { feature: "Coverage Hours", essential: "M–F, 8a–5p", priority: "M–F, 7a–9p", elite: "7 days, 7a–9p" },
-  { feature: "Dedicated Support", essential: "Shared ticket queue", priority: "Named support rep", elite: "Dedicated Account Manager" },
-  { feature: "Labor Rate Discount", essential: "10% off", priority: "15% off", elite: "20% off" },
-  { feature: "Parts Discount", essential: "5% off", priority: "10% off", elite: "15% off" },
-  { feature: "Travel Fee Waivers", essential: "1 per year", priority: "4 per year", elite: "Unlimited (within service areas)" },
-  { feature: "Emergency Parts Priority", essential: "—", priority: "Yes", elite: "Yes, first access to inventory" },
-  { feature: "Preventative Maintenance", essential: "Add-on pricing", priority: "50% off PM visits", elite: "1 PM visit per year included" },
-  { feature: "Annual Site Health Report", essential: "—", priority: "One-page reliability scorecard", elite: "Detailed scorecard + recommendations" },
-  { feature: "Onboarding Site Assessment", essential: "One-time", priority: "One-time", elite: "One-time + unlimited for new/replacement chargers" },
-  { feature: "Direct Ticket Submission", essential: "Yes", priority: "Yes", elite: "Yes" },
-  { feature: "After-Hours Emergency Line", essential: "—", priority: "—", elite: "Yes" },
-  { feature: "Quarterly Business Review", essential: "—", priority: "—", elite: "Yes" },
-  { feature: "L2 AC Pricing", essential: "$10/charger/mo", priority: "$15/charger/mo", elite: "$20/charger/mo" },
-  { feature: "L3 DCFC Pricing", essential: "$25/charger/mo", priority: "$30/charger/mo", elite: "$35/charger/mo" },
+  { feature: "Onsite Response SLA", starter: "Best effort", essential: "72 hours", priority: "48 hours", elite: "24 hours", enterprise: "Custom (negotiated)" },
+  { feature: "Credit-Back Guarantee", starter: "—", essential: "—", priority: "10% credit on monthly fee", elite: "20% credit on monthly fee", enterprise: "Custom" },
+  { feature: "Priority Dispatch Queue", starter: "—", essential: "—", priority: "Ahead of non-members", elite: "Top of queue", enterprise: "Top of queue" },
+  { feature: "Coverage Hours", starter: "M–F, 8a–5p", essential: "M–F, 8a–5p", priority: "M–F, 7a–9p", elite: "7 days, 7a–9p", enterprise: "Custom (up to 24/7)" },
+  { feature: "Dedicated Support", starter: "Shared ticket queue", essential: "Shared ticket queue", priority: "Named support rep", elite: "Dedicated Account Manager", enterprise: "Dedicated NOCH team" },
+  { feature: "Labor Rate Discount", starter: "—", essential: "10% off", priority: "15% off", elite: "20% off", enterprise: "Custom volume pricing" },
+  { feature: "Parts Discount", starter: "—", essential: "5% off", priority: "10% off", elite: "15% off", enterprise: "Custom volume pricing" },
+  { feature: "Travel Fee Waivers", starter: "—", essential: "1 per year", priority: "4 per year", elite: "Unlimited (within service areas)", enterprise: "Unlimited" },
+  { feature: "Emergency Parts Priority", starter: "—", essential: "—", priority: "Yes", elite: "Yes, first access to inventory", enterprise: "Yes, with inventory reservation" },
+  { feature: "Preventative Maintenance", starter: "—", essential: "Add-on pricing", priority: "50% off PM visits", elite: "1 PM visit per year included", enterprise: "Unlimited visits included" },
+  { feature: "Annual Site Health Report", starter: "—", essential: "—", priority: "One-page reliability scorecard", elite: "Detailed scorecard + recommendations", enterprise: "Custom reporting dashboard" },
+  { feature: "Onboarding Site Assessment", starter: "1 free assessment", essential: "One-time", priority: "One-time", elite: "One-time + unlimited for new/replacement chargers", enterprise: "Unlimited" },
+  { feature: "Direct Ticket Submission", starter: "Yes", essential: "Yes", priority: "Yes", elite: "Yes", enterprise: "Yes" },
+  { feature: "After-Hours Emergency Line", starter: "—", essential: "—", priority: "—", elite: "Yes", enterprise: "Yes" },
+  { feature: "Quarterly Business Review", starter: "—", essential: "—", priority: "—", elite: "Yes", enterprise: "Yes" },
+  { feature: "L2 AC Pricing", starter: "Free", essential: "$10/charger/mo", priority: "$15/charger/mo", elite: "$20/charger/mo", enterprise: "Custom" },
+  { feature: "L3 DCFC Pricing", starter: "Free", essential: "$25/charger/mo", priority: "$30/charger/mo", elite: "$35/charger/mo", enterprise: "Custom" },
 ];
 
 export const LABOR_DISCOUNT: Record<TierName, number> = {
+  starter: 0,
   essential: 0.10,
   priority: 0.15,
   elite: 0.20,
+  enterprise: 0.20, // Used as estimate for ROI calc on enterprise
 };
 
 export const DEFAULT_Q_AND_A = [
+  { question: "What's included in the free Starter plan?", answer: "The Starter plan is completely free with no charger limit and no credit card required. You get direct ticket submission, one free site assessment, and access to the NOCH+ partner portal. Service calls are billed at standard rates with no discounts on labor, parts, or travel fees. It's a great way to get started with NOCH before upgrading to a paid tier for discounts and SLA guarantees." },
+  { question: "Do you work with large CPOs or fleet operators with thousands of chargers?", answer: "Absolutely. Our Enterprise tier is designed for large-scale operations. We build a custom reliability program with negotiated SLAs, dedicated technician teams, volume pricing, unlimited PM visits, and custom reporting. Contact us and we'll put together a tailored plan." },
   { question: "What happens if you miss the SLA?", answer: "Priority members get a 10% credit on their monthly membership fee. Elite members get 20%. We put skin in the game so you know we're accountable." },
   { question: "Do you cover all charger brands?", answer: "Yes. Our technicians are trained on all major L2 and DCFC brands including ChargePoint, BTC Power, Chaevi, EV Connect, AmpUp, and more. We confirm specific models during your onboarding assessment." },
   { question: "What states do you cover?", answer: "NOCH Power operates across multiple states with our own W2 in-house technicians and a vetted partner network for broader coverage. We'll confirm your specific locations during discovery." },
