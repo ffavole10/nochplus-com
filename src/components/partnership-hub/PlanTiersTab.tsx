@@ -145,7 +145,7 @@ function renderCell(value: Cell) {
 
 export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
   const [toggle, setToggle] = useState<ChargerToggle>("ac");
-  const [showFeatures, setShowFeatures] = useState(false);
+  
   const [showInvoices, setShowInvoices] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
 
@@ -185,12 +185,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
           >
             DC Chargers
           </button>
-        </div>
-        <div className="flex items-center gap-3">
-          <Switch id="show-features" checked={showFeatures} onCheckedChange={setShowFeatures} />
-          <Label htmlFor="show-features" className="text-sm text-muted-foreground cursor-pointer">
-            View all features
-          </Label>
         </div>
       </div>
 
@@ -338,60 +332,58 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
       </div>
 
       {/* Unified feature comparison — uses SAME grid template as pricing cards above for perfect alignment */}
-      {showFeatures && (
-        <div className="rounded-lg border border-border overflow-hidden bg-card">
-          {/* Header row */}
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4 bg-muted/50 border-b border-border px-4 py-3">
-            <div className="text-left font-semibold text-foreground text-sm">Feature</div>
-            {ALL_TIERS.map((tier) => {
-              const isPriority = tier === "priority";
-              return (
-                <div
-                  key={tier}
-                  className={`text-center font-semibold text-sm flex items-center justify-center gap-1 ${
-                    isPriority ? "text-primary" : "text-foreground"
-                  }`}
-                >
-                  {isPriority && <Crown className="h-3 w-3" />}
-                  {TIER_LABELS[tier]}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Body */}
-          {FEATURE_SECTIONS.map((section) => (
-            <React.Fragment key={section.title}>
-              <div className="bg-muted/30 border-b border-border px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">
-                {section.title}
+      <div className="rounded-lg border border-border overflow-hidden bg-card">
+        {/* Header row */}
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4 bg-muted/50 border-b border-border px-4 py-3">
+          <div className="text-left font-semibold text-foreground text-sm">Feature</div>
+          {ALL_TIERS.map((tier) => {
+            const isPriority = tier === "priority";
+            return (
+              <div
+                key={tier}
+                className={`text-center font-semibold text-sm flex items-center justify-center gap-1 ${
+                  isPriority ? "text-primary" : "text-foreground"
+                }`}
+              >
+                {isPriority && <Crown className="h-3 w-3" />}
+                {TIER_LABELS[tier]}
               </div>
-              {section.rows.map((row, rIdx) => (
-                <div
-                  key={`${section.title}-${row.name}`}
-                  className={`grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4 border-b border-border/50 px-4 py-2.5 items-center ${
-                    rIdx % 2 === 1 ? "bg-muted/20" : ""
-                  }`}
-                >
-                  <div className="text-sm text-foreground">{row.name}</div>
-                  {row.values.map((val, i) => {
-                    const isPriorityCol = TIER_ORDER[i] === "priority";
-                    return (
-                      <div
-                        key={i}
-                        className={`text-center text-sm flex items-center justify-center min-h-[1.5rem] ${
-                          isPriorityCol ? "bg-primary/5 -my-2.5 py-2.5" : ""
-                        }`}
-                      >
-                        {renderCell(val)}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </React.Fragment>
-          ))}
+            );
+          })}
         </div>
-      )}
+
+        {/* Body */}
+        {FEATURE_SECTIONS.map((section) => (
+          <React.Fragment key={section.title}>
+            <div className="bg-muted/30 border-b border-border px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">
+              {section.title}
+            </div>
+            {section.rows.map((row, rIdx) => (
+              <div
+                key={`${section.title}-${row.name}`}
+                className={`grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4 border-b border-border/50 px-4 py-2.5 items-center ${
+                  rIdx % 2 === 1 ? "bg-muted/20" : ""
+                }`}
+              >
+                <div className="text-sm text-foreground">{row.name}</div>
+                {row.values.map((val, i) => {
+                  const isPriorityCol = TIER_ORDER[i] === "priority";
+                  return (
+                    <div
+                      key={i}
+                      className={`text-center text-sm flex items-center justify-center min-h-[1.5rem] ${
+                        isPriorityCol ? "bg-primary/5 -my-2.5 py-2.5" : ""
+                      }`}
+                    >
+                      {renderCell(val)}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </React.Fragment>
+        ))}
+      </div>
 
       {/* Demo invoices toggle */}
       <div className="flex justify-center">
