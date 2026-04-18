@@ -115,6 +115,8 @@ export function PlanBuilderTab({
           <CardContent className="px-5 pb-4 pt-1 space-y-4">
             {sites.map((site) => {
               const monthly = calcSiteMonthlyCost(site.l2Count, site.dcCount, site.tier);
+              const customPriced = isCustomPricedTier(site.tier);
+              const freeTier = isFreeTier(site.tier);
               return (
                 <div key={site.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -124,7 +126,9 @@ export function PlanBuilderTab({
                       className="font-medium w-48 h-8 text-sm"
                     />
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-primary">{fmt(monthly)}/mo</span>
+                      <span className="text-sm font-semibold text-primary">
+                        {customPriced ? "Custom" : freeTier ? "Free" : `${fmt(monthly)}/mo`}
+                      </span>
                       {sites.length > 1 && (
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeSite(site.id)}>
                           <X className="h-3.5 w-3.5" />
@@ -143,18 +147,21 @@ export function PlanBuilderTab({
                     </div>
                     <div className="space-y-1 col-span-2">
                       <Label className="text-xs text-muted-foreground">Tier</Label>
-                      <div className="flex gap-1">
-                        {TIERS.map((t) => (
-                          <Button
-                            key={t}
-                            size="sm"
-                            variant={site.tier === t ? "default" : "outline"}
-                            className="flex-1 h-8 text-xs"
-                            onClick={() => updateSite(site.id, { tier: t })}
-                          >
-                            {TIER_LABELS[t]}
-                          </Button>
-                        ))}
+                      <div className="flex flex-wrap gap-1">
+                        {TIERS.map((t) => {
+                          const selected = site.tier === t;
+                          return (
+                            <Button
+                              key={t}
+                              size="sm"
+                              variant={selected ? "default" : "outline"}
+                              className={`flex-1 min-w-[72px] h-8 text-xs ${tierButtonClass(t, selected)}`}
+                              onClick={() => updateSite(site.id, { tier: t })}
+                            >
+                              {TIER_LABELS[t]}
+                            </Button>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
