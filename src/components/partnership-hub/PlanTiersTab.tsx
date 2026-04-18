@@ -194,10 +194,10 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {/* Pricing Cards: Trust Signals sidebar (left) + 5 tiers */}
-      <div className="grid grid-cols-1 xl:grid-cols-6 gap-4">
+      {/* Pricing Cards: Trust Signals sidebar (left) + 5 tiers — shared grid with table below */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4">
         {/* Trust Signals — sidebar on xl (LEFT), strip above on smaller */}
-        <div className="xl:col-span-1 xl:order-1 flex flex-col gap-4 justify-start xl:sticky xl:top-6 self-start">
+        <div className="xl:order-1 flex flex-col gap-4 justify-start self-start">
           <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Why NOCH+?</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
             {TRUST_SIGNALS.map((t, i) => (
