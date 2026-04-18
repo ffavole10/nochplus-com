@@ -9,8 +9,6 @@ import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, Receipt, Sparkl
 import invoiceEssential from "@/assets/noch-plus-invoice-essential.png";
 import invoicePriority from "@/assets/noch-plus-invoice-priority.png";
 import invoiceElite from "@/assets/noch-plus-invoice-elite.png";
-import starterBadge from "@/assets/tier-starter-badge.png";
-import enterpriseBadge from "@/assets/tier-enterprise-badge.png";
 import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
 import { EnterpriseContactModal } from "./EnterpriseContactModal";
 
