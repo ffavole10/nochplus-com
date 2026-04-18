@@ -145,7 +145,7 @@ function renderCell(value: Cell) {
 
 export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
   const [toggle, setToggle] = useState<ChargerToggle>("ac");
-  const [showFeatures, setShowFeatures] = useState(false);
+  
   const [showInvoices, setShowInvoices] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
 
