@@ -1,9 +1,11 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FEATURE_MATRIX, TIER_PRICING, TierName, ALL_TIERS } from "@/constants/nochPlusTiers";
-import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, ChevronDown, ChevronUp, Receipt, Sparkles, Building2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { TIER_PRICING, TierName, ALL_TIERS, TIER_LABELS } from "@/constants/nochPlusTiers";
+import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, Receipt, Sparkles, Building2 } from "lucide-react";
 import invoiceEssential from "@/assets/noch-plus-invoice-essential.png";
 import invoicePriority from "@/assets/noch-plus-invoice-priority.png";
 import invoiceElite from "@/assets/noch-plus-invoice-elite.png";
@@ -67,34 +69,88 @@ const TRUST_SIGNALS = [
   { icon: ShieldCheck, title: "SLA Credit-Back Guarantee", desc: "We credit your account if we miss our response window" },
 ];
 
-function isBooleanNo(val: string) {
-  return val.trim() === "—" || val.trim() === "-" || val.trim() === "";
+// Progressive feature comparison sections
+type Cell = string | boolean;
+interface FeatureRow {
+  name: string;
+  values: [Cell, Cell, Cell, Cell, Cell]; // starter, essential, priority, elite, enterprise
+}
+interface FeatureSection {
+  title: string;
+  rows: FeatureRow[];
+}
+
+const FEATURE_SECTIONS: FeatureSection[] = [
+  {
+    title: "Included in all tiers",
+    rows: [
+      { name: "Direct ticket submission", values: [true, true, true, true, true] },
+      { name: "Partner portal access", values: [true, true, true, true, true] },
+      { name: "Coverage hours", values: ["M–F 8a–5p", "M–F 8a–5p", "M–F 7a–9p", "7 days 7a–9p", "Custom (24/7)"] },
+      { name: "Shared ticket queue", values: [true, true, false, false, false] },
+    ],
+  },
+  {
+    title: "Essential adds",
+    rows: [
+      { name: "Onsite response SLA", values: [false, "72 hrs", "48 hrs", "24 hrs", "Custom"] },
+      { name: "Labor rate discount", values: [false, "10% off", "15% off", "20% off", "Custom"] },
+      { name: "Parts discount", values: [false, "5% off", "10% off", "15% off", "Custom"] },
+      { name: "Travel fee waivers", values: [false, "1 / year", "4 / year", "Unlimited", "Unlimited"] },
+      { name: "Onboarding site assessment", values: ["1 free", "1 free", "1 free", "Unlimited", "Unlimited"] },
+    ],
+  },
+  {
+    title: "Priority adds",
+    rows: [
+      { name: "SLA credit-back guarantee", values: [false, false, "10% monthly fee", "20% monthly fee", "Custom"] },
+      { name: "Priority dispatch queue", values: [false, false, "Ahead of queue", "Top of queue", "Top of queue"] },
+      { name: "Named support rep", values: [false, false, true, false, false] },
+      { name: "Preventative maintenance", values: [false, "Add-on", "50% off", "1 visit / yr", "Unlimited"] },
+      { name: "Emergency parts priority", values: [false, false, true, true, true] },
+      { name: "Annual site health report", values: [false, false, "1-page scorecard", "Detailed + recs", "Custom dashboard"] },
+    ],
+  },
+  {
+    title: "Elite adds",
+    rows: [
+      { name: "Dedicated Account Manager", values: [false, false, false, true, true] },
+      { name: "After-hours emergency line", values: [false, false, false, true, true] },
+      { name: "Quarterly business review", values: [false, false, false, true, true] },
+      { name: "Unlimited site assessments", values: [false, false, false, true, true] },
+    ],
+  },
+  {
+    title: "Enterprise adds",
+    rows: [
+      { name: "Dedicated NOCH team", values: [false, false, false, false, true] },
+      { name: "Custom volume pricing", values: [false, false, false, false, true] },
+      { name: "Inventory reservation", values: [false, false, false, false, true] },
+      { name: "Custom reporting dashboard", values: [false, false, false, false, true] },
+    ],
+  },
+];
+
+const TIER_ORDER: TierName[] = ["starter", "essential", "priority", "elite", "enterprise"];
+
+function renderCell(value: Cell) {
+  if (value === true) {
+    return <Check className="h-4 w-4 text-primary mx-auto" />;
+  }
+  if (value === false) {
+    return <Minus className="h-3.5 w-3.5 text-muted-foreground/40 mx-auto" />;
+  }
+  return <span className="text-xs text-foreground">{value}</span>;
 }
 
 export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
   const [toggle, setToggle] = useState<ChargerToggle>("ac");
-  const [expanded, setExpanded] = useState(false);
+  const [showFeatures, setShowFeatures] = useState(false);
   const [showInvoices, setShowInvoices] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
 
   const corePrice = (tier: "essential" | "priority" | "elite") =>
     toggle === "ac" ? TIER_PRICING[tier].l2 : TIER_PRICING[tier].dc;
-
-  const featureRows = FEATURE_MATRIX.filter(
-    (r) => !r.feature.startsWith("L2 AC") && !r.feature.startsWith("L3 DCFC")
-  );
-
-  const renderFeatureValue = (value: string) => {
-    if (isBooleanNo(value)) {
-      return <Minus className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />;
-    }
-    return (
-      <div className="flex items-start gap-1.5">
-        <Check className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
-        <span>{value}</span>
-      </div>
-    );
-  };
 
   return (
     <div className="space-y-8">
@@ -132,16 +188,13 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {expanded && (
-        <div className="flex justify-center">
-          <button
-            onClick={() => setExpanded(false)}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronUp className="h-4 w-4" /> Collapse Features
-          </button>
-        </div>
-      )}
+      {/* Show features toggle */}
+      <div className="flex justify-center items-center gap-3">
+        <Switch id="show-features" checked={showFeatures} onCheckedChange={setShowFeatures} />
+        <Label htmlFor="show-features" className="text-sm text-muted-foreground cursor-pointer">
+          Show feature comparison
+        </Label>
+      </div>
 
       {/* Pricing Cards: 5 tiers + Trust Signals (sidebar on xl) */}
       <div className="grid grid-cols-1 xl:grid-cols-6 gap-4">
@@ -261,39 +314,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                     ))}
                   </ul>
 
-                  {/* Expanded feature list */}
-                  {expanded && (
-                    <div
-                      className={`mt-4 pt-4 border-t space-y-0 ${
-                        isEnterprise ? "border-slate-700" : "border-border"
-                      }`}
-                    >
-                      {featureRows.map((row, i) => {
-                        const value = row[tier];
-                        return (
-                          <div
-                            key={i}
-                            className={`flex items-start gap-2 text-xs py-2 px-1 rounded ${
-                              i % 2 === 1 ? (isEnterprise ? "bg-slate-800/40" : "bg-muted/30") : ""
-                            }`}
-                          >
-                            <div className="w-full">
-                              <p
-                                className={`text-[10px] mb-0.5 ${
-                                  isEnterprise ? "text-slate-500" : "text-muted-foreground/60"
-                                }`}
-                              >
-                                {row.feature}
-                              </p>
-                              <div className={isEnterprise ? "text-slate-200" : "text-foreground"}>
-                                {renderFeatureValue(value)}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             );
@@ -319,18 +339,78 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {/* Toggle buttons row */}
-      <div className="flex flex-wrap justify-center items-center gap-6">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {expanded ? (
-            <><ChevronUp className="h-4 w-4" /> Collapse Features</>
-          ) : (
-            <><ChevronDown className="h-4 w-4" /> Expand All Features</>
-          )}
-        </button>
+      {/* Unified feature comparison table */}
+      {showFeatures && (
+        <div className="rounded-lg border border-border overflow-hidden bg-card">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="text-left font-semibold text-foreground px-4 py-3 min-w-[200px]">
+                    Feature
+                  </th>
+                  {ALL_TIERS.map((tier) => {
+                    const isPriority = tier === "priority";
+                    return (
+                      <th
+                        key={tier}
+                        className={`text-center font-semibold px-3 py-3 min-w-[120px] ${
+                          isPriority ? "bg-primary/10 text-primary" : "text-foreground"
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          {isPriority && <Crown className="h-3 w-3" />}
+                          {TIER_LABELS[tier]}
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {FEATURE_SECTIONS.map((section) => (
+                  <React.Fragment key={section.title}>
+                    <tr className="bg-muted/30 border-b border-border">
+                      <td
+                        colSpan={6}
+                        className="px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground"
+                      >
+                        {section.title}
+                      </td>
+                    </tr>
+                    {section.rows.map((row, rIdx) => (
+                      <tr
+                        key={`${section.title}-${row.name}`}
+                        className={`border-b border-border/50 ${
+                          rIdx % 2 === 1 ? "bg-muted/20" : ""
+                        }`}
+                      >
+                        <td className="px-4 py-2.5 text-foreground">{row.name}</td>
+                        {row.values.map((val, i) => {
+                          const isPriorityCol = TIER_ORDER[i] === "priority";
+                          return (
+                            <td
+                              key={i}
+                              className={`text-center px-3 py-2.5 align-middle ${
+                                isPriorityCol ? "bg-primary/5" : ""
+                              }`}
+                            >
+                              {renderCell(val)}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Demo invoices toggle */}
+      <div className="flex justify-center">
         <button
           onClick={() => setShowInvoices(!showInvoices)}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
