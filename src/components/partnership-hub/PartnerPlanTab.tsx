@@ -39,12 +39,21 @@ interface PartnerPlanTabProps {
 
 type Mode = "share" | "activate" | "trial";
 
-const TIER_RANK: Record<TierName, number> = { essential: 0, priority: 1, elite: 2 };
+const TIER_RANK: Record<TierName, number> = {
+  starter: -1,
+  essential: 0,
+  priority: 1,
+  elite: 2,
+  enterprise: 3,
+};
 
+// Starter and Enterprise reuse Essential/Elite badge visuals
 const TIER_BADGE_IMAGES: Record<TierName, string> = {
+  starter: nochEssentialBadge,
   essential: nochEssentialBadge,
   priority: nochPriorityBadge,
   elite: nochEliteBadge,
+  enterprise: nochEliteBadge,
 };
 
 // Benefits with tier availability
@@ -81,9 +90,11 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const UPGRADE_LABELS: Record<TierName, string> = {
+  starter: "",
   essential: "",
   priority: "Available on Priority & Elite",
   elite: "Available on Elite",
+  enterprise: "Available on Enterprise",
 };
 
 export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabProps) {
