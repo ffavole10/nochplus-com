@@ -79,8 +79,8 @@ export interface FeatureRow {
 }
 
 export const FEATURE_MATRIX: FeatureRow[] = [
-  { feature: "Onsite Response SLA", starter: "Best effort", essential: "72 hours", priority: "48 hours", elite: "24 hours", enterprise: "Custom (negotiated)" },
-  { feature: "Credit-Back Guarantee", starter: "—", essential: "—", priority: "10% credit on monthly fee", elite: "20% credit on monthly fee", enterprise: "Custom" },
+  { feature: "Guaranteed Response Time", starter: "Best effort", essential: "72 hours", priority: "48 hours", elite: "24 hours", enterprise: "Custom (negotiated)" },
+  { feature: "Response Credit-Back Guarantee", starter: "—", essential: "—", priority: "10% credit on monthly fee", elite: "20% credit on monthly fee", enterprise: "Custom" },
   { feature: "Priority Dispatch Queue", starter: "—", essential: "—", priority: "Ahead of non-members", elite: "Top of queue", enterprise: "Top of queue" },
   { feature: "Coverage Hours", starter: "M–F, 8a–5p", essential: "M–F, 8a–5p", priority: "M–F, 7a–9p", elite: "7 days, 7a–9p", enterprise: "Custom (up to 24/7)" },
   { feature: "Dedicated Support", starter: "Shared ticket queue", essential: "Shared ticket queue", priority: "Named support rep", elite: "Dedicated Account Manager", enterprise: "Dedicated NOCH team" },
@@ -107,9 +107,9 @@ export const LABOR_DISCOUNT: Record<TierName, number> = {
 };
 
 export const DEFAULT_Q_AND_A = [
-  { question: "What's included in the free Starter plan?", answer: "The Starter plan is completely free with no charger limit and no credit card required. You get direct ticket submission, one free site assessment, and access to the NOCH+ partner portal. Service calls are billed at standard rates with no discounts on labor, parts, or travel fees. It's a great way to get started with NOCH before upgrading to a paid tier for discounts and SLA guarantees." },
-  { question: "Do you work with large CPOs or fleet operators with thousands of chargers?", answer: "Absolutely. Our Enterprise tier is designed for large-scale operations. We build a custom reliability program with negotiated SLAs, dedicated technician teams, volume pricing, unlimited PM visits, and custom reporting. Contact us and we'll put together a tailored plan." },
-  { question: "What happens if you miss the SLA?", answer: "Priority members get a 10% credit on their monthly membership fee. Elite members get 20%. We put skin in the game so you know we're accountable." },
+  { question: "What's included in the free Starter plan?", answer: "The Starter plan is completely free with no charger limit and no credit card required. You get direct ticket submission, one free site assessment, and access to the NOCH+ partner portal. Service calls are billed at standard rates with no discounts on labor, parts, or travel fees. It's a great way to get started with NOCH before upgrading to a paid tier for discounts and response guarantees." },
+  { question: "Do you work with large CPOs or fleet operators with thousands of chargers?", answer: "Absolutely. Our Enterprise tier is designed for large-scale operations. We build a custom reliability program with negotiated response guarantees, dedicated technician teams, volume pricing, unlimited PM visits, and custom reporting. Contact us and we'll put together a tailored plan." },
+  { question: "What happens if you miss the response window?", answer: "Priority members get a 10% credit on their monthly membership fee. Elite members get 20%. We put skin in the game so you know we're accountable." },
   { question: "Do you cover all charger brands?", answer: "Yes. Our technicians are trained on all major L2 and DCFC brands including ChargePoint, BTC Power, Chaevi, EV Connect, AmpUp, and more. We confirm specific models during your onboarding assessment." },
   { question: "What states do you cover?", answer: "NOCH Power operates across multiple states with our own W2 in-house technicians and a vetted partner network for broader coverage. We'll confirm your specific locations during discovery." },
   { question: "Is there a contract or lock-in?", answer: "NOCH+ is month-to-month with 30 days notice to cancel. If you pre-pay annually, you get one month free. No long-term lock-in. We want you to stay because we earn it." },
@@ -120,11 +120,11 @@ export const DEFAULT_Q_AND_A = [
   { question: "How fast can we get onboarded?", answer: "Typically 5 business days from signed agreement to active coverage. That includes the onboarding site assessment, account setup, and first dispatch readiness." },
   { question: "Can we mix tiers across sites?", answer: "Yes, and we recommend it. Put Elite on your flagship or mission-critical sites, Priority on your main fleet, and Essential on lower-traffic locations. One contract, one invoice." },
   { question: "Do we still pay for service calls?", answer: "Yes, but at a discounted rate. 10 to 20% off labor and 5 to 15% off parts depending on your tier. Trip fees are waived up to your tier limit, and PM visits are included or discounted on Priority and Elite." },
-  { question: "What's the credit-back guarantee?", answer: "If we miss your guaranteed response SLA, you get a credit applied to your next monthly invoice. 10% for Priority members, 20% for Elite. It's our way of putting money where our mouth is." },
+  { question: "What's the credit-back guarantee?", answer: "If we miss your guaranteed response window, you get a credit applied to your next monthly invoice. 10% for Priority members, 20% for Elite. It's our way of putting money where our mouth is." },
   { question: "Who are your technicians?", answer: "We have our own W2 in-house technicians, not 1099 contractors. That means we control dispatch, quality, and training directly. Our team includes EVITP-certified techs covering multiple states." },
   { question: "What about OEM warranty?", answer: "NOCH+ covers field service response, not OEM warranty parts. Warranty covers defects; we cover the person who physically gets to the site, diagnoses, and installs. Think of NOCH+ plus warranty as the complete reliability package." },
   { question: "Can I upgrade or downgrade my tier?", answer: "Yes, anytime. Upgrades take effect immediately. Downgrades take effect at the next billing cycle. No penalties." },
   { question: "What's the Annual Site Health Report?", answer: "A reliability scorecard showing uptime trends, service history, recurring issues, parts usage, and actionable recommendations. Priority gets a one-page version. Elite gets a detailed report with capital planning guidance." },
   { question: "Can you offer a trial?", answer: "Yes. We can set you up with a 30-day free trial on one or two sites. Full coverage at your selected tier, no payment required upfront. If we don't prove the value by day 30, you walk." },
-  { question: "Where can I find the terms of service?", answer: "You can view the full NOCH+ Membership Terms of Service at any time from the Plan Tiers page or the Partner Plan page. A copy is also included in your welcome email when you activate your membership. The terms cover services, pricing, SLA guarantees, billing, cancellation, and liability." },
+  { question: "Where can I find the terms of service?", answer: "You can view the full NOCH+ Membership Terms of Service at any time from the Plan Tiers page or the Partner Plan page. A copy is also included in your welcome email when you activate your membership. The terms cover services, pricing, response guarantees, billing, cancellation, and liability." },
 ];

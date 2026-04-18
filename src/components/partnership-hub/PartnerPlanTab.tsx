@@ -58,7 +58,7 @@ const TIER_BADGE_IMAGES: Record<TierName, string> = {
 
 // Benefits with tier availability
 const BENEFITS: { icon: any; title: string; desc: string; minTier: TierName }[] = [
-  { icon: Clock, title: "Guaranteed Response SLA", desc: "24 to 72 hour onsite response with credit-back if we miss it", minTier: "essential" },
+  { icon: Clock, title: "Guaranteed Response Time", desc: "24 to 72 hour onsite response with credit-back if we miss it", minTier: "essential" },
   { icon: Shield, title: "Priority Dispatch Queue", desc: "NOCH+ members jump ahead of non-members in the service queue", minTier: "priority" },
   { icon: DollarSign, title: "Labor Rate Discounts", desc: "10% to 20% off standard labor rates on every service call", minTier: "essential" },
   { icon: Package, title: "Parts Discounts", desc: "5% to 15% off parts pricing with expedited sourcing", minTier: "essential" },
@@ -71,7 +71,7 @@ const BENEFITS: { icon: any; title: string; desc: string; minTier: TierName }[] 
   { icon: Ticket, title: "Direct Ticket Submission", desc: "Open service tickets directly in our system for fast response", minTier: "essential" },
   { icon: BarChart3, title: "Quarterly Business Review", desc: "Strategic review of service performance and recommendations", minTier: "elite" },
   { icon: Phone, title: "After-Hours Emergency Line", desc: "Direct emergency contact outside coverage hours", minTier: "elite" },
-  { icon: DollarSign, title: "SLA Credit-Back Guarantee", desc: "10% to 20% credit on monthly fee if we miss the response window", minTier: "priority" },
+  { icon: DollarSign, title: "Response Credit-Back Guarantee", desc: "10% to 20% credit on monthly fee if we miss the response window", minTier: "priority" },
   { icon: Users, title: "W2 In-House Technicians", desc: "Our own certified technicians, not contractors. We control quality.", minTier: "essential" },
   { icon: MapPin, title: "Multi-State Coverage", desc: "In-house technicians plus vetted partners for nationwide reach", minTier: "essential" },
 ];

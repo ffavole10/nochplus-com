@@ -33,28 +33,28 @@ const TIER_HIGHLIGHTS: Record<TierName, string[]> = {
     "Standard rates (no discounts)",
   ],
   essential: [
-    "72-hour onsite response SLA",
+    "72-hour guaranteed response",
     "Business hours coverage (M–F, 8a–5p)",
     "10% off labor rates",
     "5% off parts",
     "1 travel fee waiver per year",
   ],
   priority: [
-    "48-hour onsite response SLA",
+    "48-hour guaranteed response",
     "Extended hours coverage (M–F, 7a–9p)",
     "15% off labor rates",
     "10% off parts",
     "50% off preventative maintenance visits",
   ],
   elite: [
-    "24-hour onsite response SLA",
+    "24-hour guaranteed response",
     "7-day coverage (7a–9p)",
     "20% off labor rates",
     "15% off parts",
     "1 PM visit per year included",
   ],
   enterprise: [
-    "Custom SLA (as fast as needed)",
+    "Custom response guarantee",
     "Dedicated NOCH team",
     "Volume pricing on labor & parts",
     "Unlimited PM visits & assessments",
@@ -66,7 +66,7 @@ const TRUST_SIGNALS = [
   { icon: Users, title: "22 W2 In-House Technicians", desc: "Our own certified team, not contractors" },
   { icon: Award, title: "EVITP Certified", desc: "Industry-standard EV infrastructure training" },
   { icon: MapPin, title: "Multi-State Coverage", desc: "Nationwide reach with local expertise" },
-  { icon: ShieldCheck, title: "SLA Credit-Back Guarantee", desc: "We credit your account if we miss our response window" },
+  { icon: ShieldCheck, title: "Response Credit-Back Guarantee", desc: "We credit your account if we miss our response window" },
 ];
 
 // Progressive feature comparison sections
@@ -93,7 +93,7 @@ const FEATURE_SECTIONS: FeatureSection[] = [
   {
     title: "Essential adds",
     rows: [
-      { name: "Onsite response SLA", values: [false, "72 hrs", "48 hrs", "24 hrs", "Custom"] },
+      { name: "Guaranteed response time", values: [false, "72 hrs", "48 hrs", "24 hrs", "Custom"] },
       { name: "Labor rate discount", values: [false, "10% off", "15% off", "20% off", "Custom"] },
       { name: "Parts discount", values: [false, "5% off", "10% off", "15% off", "Custom"] },
       { name: "Travel fee waivers", values: [false, "1 / year", "4 / year", "Unlimited", "Unlimited"] },
@@ -103,7 +103,7 @@ const FEATURE_SECTIONS: FeatureSection[] = [
   {
     title: "Priority adds",
     rows: [
-      { name: "SLA credit-back guarantee", values: [false, false, "10% monthly fee", "20% monthly fee", "Custom"] },
+      { name: "Response credit-back guarantee", values: [false, false, "10% monthly fee", "20% monthly fee", "Custom"] },
       { name: "Priority dispatch queue", values: [false, false, "Ahead of queue", "Top of queue", "Top of queue"] },
       { name: "Named support rep", values: [false, false, true, false, false] },
       { name: "Preventative maintenance", values: [false, "Add-on", "50% off", "1 visit / yr", "Unlimited"] },
@@ -162,8 +162,8 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </p>
       </div>
 
-      {/* AC / DC Toggle */}
-      <div className="flex justify-center">
+      {/* Controls row: AC/DC toggle + Show features toggle, left-aligned */}
+      <div className="flex flex-wrap items-center gap-6">
         <div className="inline-flex items-center rounded-full bg-muted p-1 gap-0.5">
           <button
             onClick={() => setToggle("ac")}
@@ -186,20 +186,36 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
             L3 DC Fast Chargers
           </button>
         </div>
+        <div className="flex items-center gap-3">
+          <Switch id="show-features" checked={showFeatures} onCheckedChange={setShowFeatures} />
+          <Label htmlFor="show-features" className="text-sm text-muted-foreground cursor-pointer">
+            Show feature comparison
+          </Label>
+        </div>
       </div>
 
-      {/* Show features toggle */}
-      <div className="flex justify-center items-center gap-3">
-        <Switch id="show-features" checked={showFeatures} onCheckedChange={setShowFeatures} />
-        <Label htmlFor="show-features" className="text-sm text-muted-foreground cursor-pointer">
-          Show feature comparison
-        </Label>
-      </div>
-
-      {/* Pricing Cards: 5 tiers + Trust Signals (sidebar on xl) */}
+      {/* Pricing Cards: Trust Signals sidebar (left) + 5 tiers */}
       <div className="grid grid-cols-1 xl:grid-cols-6 gap-4">
+        {/* Trust Signals — sidebar on xl (LEFT), strip above on smaller */}
+        <div className="xl:col-span-1 xl:order-1 flex flex-col gap-4 justify-start xl:sticky xl:top-6 self-start">
+          <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Why NOCH+?</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
+            {TRUST_SIGNALS.map((t, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <div className="shrink-0 h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <t.icon className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium leading-tight">{t.title}</p>
+                  <p className="text-xs text-muted-foreground leading-snug">{t.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* 5 pricing cards span 5 columns on xl */}
-        <div className="xl:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="xl:col-span-5 xl:order-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {ALL_TIERS.map((tier) => {
             const isPriority = tier === "priority";
             const isStarter = tier === "starter";
@@ -318,24 +334,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
               </Card>
             );
           })}
-        </div>
-
-        {/* Trust Signals — sidebar on xl, strip below on smaller */}
-        <div className="xl:col-span-1 flex flex-col gap-4 justify-start xl:sticky xl:top-6 self-start">
-          <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Why NOCH+?</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
-            {TRUST_SIGNALS.map((t, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="shrink-0 h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <t.icon className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium leading-tight">{t.title}</p>
-                  <p className="text-xs text-muted-foreground leading-snug">{t.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
