@@ -122,8 +122,11 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
   // Highest tier across all sites
   const highestTier: TierName = sites.reduce(
     (best, site) => (TIER_RANK[site.tier] > TIER_RANK[best] ? site.tier : best),
-    "essential" as TierName
+    "starter" as TierName
   );
+
+  const isStarterPlan = highestTier === "starter";
+  const isEnterprisePlan = highestTier === "enterprise";
 
   // Handle Stripe checkout return
   useEffect(() => {
