@@ -401,7 +401,7 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                         })}
                       </tr>
                     ))}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
