@@ -186,16 +186,13 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {expanded && (
-        <div className="flex justify-center">
-          <button
-            onClick={() => setExpanded(false)}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronUp className="h-4 w-4" /> Collapse Features
-          </button>
-        </div>
-      )}
+      {/* Show features toggle */}
+      <div className="flex justify-center items-center gap-3">
+        <Switch id="show-features" checked={showFeatures} onCheckedChange={setShowFeatures} />
+        <Label htmlFor="show-features" className="text-sm text-muted-foreground cursor-pointer">
+          Show feature comparison
+        </Label>
+      </div>
 
       {/* Pricing Cards: 5 tiers + Trust Signals (sidebar on xl) */}
       <div className="grid grid-cols-1 xl:grid-cols-6 gap-4">
