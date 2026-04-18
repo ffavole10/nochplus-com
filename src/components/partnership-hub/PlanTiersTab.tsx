@@ -186,12 +186,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
             DC Chargers
           </button>
         </div>
-        <div className="flex items-center gap-3">
-          <Switch id="show-features" checked={showFeatures} onCheckedChange={setShowFeatures} />
-          <Label htmlFor="show-features" className="text-sm text-muted-foreground cursor-pointer">
-            View all features
-          </Label>
-        </div>
       </div>
 
       {/* Pricing Cards: Trust Signals sidebar (left) + 5 tiers — shared grid with table below */}
