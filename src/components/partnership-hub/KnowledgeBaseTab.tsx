@@ -101,7 +101,7 @@ export function KnowledgeBaseTab() {
           <Input
             value={newQuestion}
             onChange={(e) => setNewQuestion(e.target.value)}
-            placeholder="Question — e.g. What happens if you miss the SLA?"
+            placeholder="Question — e.g. What happens if you miss the response window?"
           />
           <Textarea
             value={newAnswer}
