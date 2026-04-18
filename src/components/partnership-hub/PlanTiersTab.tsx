@@ -173,7 +173,7 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            L2 AC Chargers
+            AC Chargers
           </button>
           <button
             onClick={() => setToggle("dc")}
@@ -183,13 +183,13 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            L3 DC Fast Chargers
+            DC Chargers
           </button>
         </div>
         <div className="flex items-center gap-3">
           <Switch id="show-features" checked={showFeatures} onCheckedChange={setShowFeatures} />
           <Label htmlFor="show-features" className="text-sm text-muted-foreground cursor-pointer">
-            Show feature comparison
+            View all features
           </Label>
         </div>
       </div>
