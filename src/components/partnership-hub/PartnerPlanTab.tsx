@@ -215,7 +215,7 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
     try {
       const dominantTier = sites.reduce(
         (best, site) => (TIER_RANK[site.tier] > TIER_RANK[best] ? site.tier : best),
-        "essential" as TierName
+        "starter" as TierName
       );
       const { data, error } = await supabase.functions.invoke("create-noch-checkout", {
         body: {
