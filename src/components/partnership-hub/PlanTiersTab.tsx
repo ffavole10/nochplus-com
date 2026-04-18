@@ -253,17 +253,9 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                 )}
 
                 <CardContent className="flex flex-col flex-1 p-5 pt-6">
-                  <div className="flex items-center gap-2">
-                    {isStarter && (
-                      <img src={starterBadge} alt="Starter tier badge" className="h-7 w-7 object-contain opacity-80" />
-                    )}
-                    {isEnterprise && (
-                      <img src={enterpriseBadge} alt="Enterprise tier badge" className="h-7 w-7 object-contain" />
-                    )}
-                    <p className={`text-sm font-semibold tracking-wide uppercase ${tierLabelClass}`}>
-                      {tier.charAt(0).toUpperCase() + tier.slice(1)}
-                    </p>
-                  </div>
+                  <p className={`text-sm font-semibold tracking-wide uppercase ${tierLabelClass}`}>
+                    {tier.charAt(0).toUpperCase() + tier.slice(1)}
+                  </p>
 
                   {/* Price block */}
                   {isStarter ? (
