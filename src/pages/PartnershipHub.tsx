@@ -19,11 +19,11 @@ export default function PartnershipHub() {
     <div className="p-6 space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-4 w-full max-w-3xl">
-          <TabsTrigger value="plan-builder" className="flex items-center gap-1.5 text-xs">
-            <Wrench className="h-3.5 w-3.5" /> Plan Builder
-          </TabsTrigger>
           <TabsTrigger value="plan-tiers" className="flex items-center gap-1.5 text-xs">
             <Layers className="h-3.5 w-3.5" /> Plan Tiers
+          </TabsTrigger>
+          <TabsTrigger value="plan-builder" className="flex items-center gap-1.5 text-xs">
+            <Wrench className="h-3.5 w-3.5" /> Plan Builder
           </TabsTrigger>
           <TabsTrigger value="partner-plan" className="flex items-center gap-1.5 text-xs">
             <FileText className="h-3.5 w-3.5" /> Partner Plan
