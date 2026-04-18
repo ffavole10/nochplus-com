@@ -335,24 +335,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
             );
           })}
         </div>
-
-        {/* Trust Signals — sidebar on xl, strip below on smaller */}
-        <div className="xl:col-span-1 flex flex-col gap-4 justify-start xl:sticky xl:top-6 self-start">
-          <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Why NOCH+?</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
-            {TRUST_SIGNALS.map((t, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="shrink-0 h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <t.icon className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium leading-tight">{t.title}</p>
-                  <p className="text-xs text-muted-foreground leading-snug">{t.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Unified feature comparison table */}
