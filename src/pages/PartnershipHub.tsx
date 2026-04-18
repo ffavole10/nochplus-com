@@ -8,7 +8,7 @@ import { PartnerPlanTab } from "@/components/partnership-hub/PartnerPlanTab";
 import { KnowledgeBaseTab } from "@/components/partnership-hub/KnowledgeBaseTab";
 
 export default function PartnershipHub() {
-  const [activeTab, setActiveTab] = useState("plan-builder");
+  const [activeTab, setActiveTab] = useState("plan-tiers");
   const hub = usePartnershipHub();
 
   const handleNavigate = (tab: string) => {
