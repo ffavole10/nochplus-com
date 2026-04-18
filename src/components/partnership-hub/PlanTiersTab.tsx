@@ -65,7 +65,7 @@ const TIER_HIGHLIGHTS: Record<TierName, string[]> = {
 };
 
 const TRUST_SIGNALS = [
-  { icon: Users, title: "22 W2 In-House Technicians", desc: "Our own certified team, not contractors" },
+  { icon: Users, title: "In-House Technicians", desc: "Our own certified team, not contractors" },
   { icon: Award, title: "EVITP Certified", desc: "Industry-standard EV infrastructure training" },
   { icon: MapPin, title: "Multi-State Coverage", desc: "Nationwide reach with local expertise" },
   { icon: ShieldCheck, title: "Response Credit-Back Guarantee", desc: "We credit your account if we miss our response window" },
