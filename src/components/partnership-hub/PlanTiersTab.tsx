@@ -312,39 +312,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                     ))}
                   </ul>
 
-                  {/* Expanded feature list */}
-                  {expanded && (
-                    <div
-                      className={`mt-4 pt-4 border-t space-y-0 ${
-                        isEnterprise ? "border-slate-700" : "border-border"
-                      }`}
-                    >
-                      {featureRows.map((row, i) => {
-                        const value = row[tier];
-                        return (
-                          <div
-                            key={i}
-                            className={`flex items-start gap-2 text-xs py-2 px-1 rounded ${
-                              i % 2 === 1 ? (isEnterprise ? "bg-slate-800/40" : "bg-muted/30") : ""
-                            }`}
-                          >
-                            <div className="w-full">
-                              <p
-                                className={`text-[10px] mb-0.5 ${
-                                  isEnterprise ? "text-slate-500" : "text-muted-foreground/60"
-                                }`}
-                              >
-                                {row.feature}
-                              </p>
-                              <div className={isEnterprise ? "text-slate-200" : "text-foreground"}>
-                                {renderFeatureValue(value)}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             );
