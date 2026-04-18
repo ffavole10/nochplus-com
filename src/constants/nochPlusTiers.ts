@@ -95,4 +95,5 @@ export const DEFAULT_Q_AND_A = [
   { question: "Can I upgrade or downgrade my tier?", answer: "Yes, anytime. Upgrades take effect immediately. Downgrades take effect at the next billing cycle. No penalties." },
   { question: "What's the Annual Site Health Report?", answer: "A reliability scorecard showing uptime trends, service history, recurring issues, parts usage, and actionable recommendations. Priority gets a one-page version. Elite gets a detailed report with capital planning guidance." },
   { question: "Can you offer a trial?", answer: "Yes. We can set you up with a 30-day free trial on one or two sites. Full coverage at your selected tier, no payment required upfront. If we don't prove the value by day 30, you walk." },
+  { question: "Where can I find the terms of service?", answer: "You can view the full NOCH+ Membership Terms of Service at any time from the Plan Tiers page or the Partner Plan page. A copy is also included in your welcome email when you activate your membership. The terms cover services, pricing, SLA guarantees, billing, cancellation, and liability." },
 ];

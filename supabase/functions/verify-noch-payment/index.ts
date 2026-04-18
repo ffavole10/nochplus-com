@@ -118,6 +118,14 @@ serve(async (req) => {
       await supabaseClient.from("noch_plus_sites").insert(siteRows);
     }
 
+    // TODO: Send welcome email with NOCH+ Terms of Service PDF attached.
+    // When the email provider (Resend) is connected:
+    //   - Recipient: meta.email
+    //   - Subject: `Welcome to NOCH+ ${meta.tier} — your membership is ${memberStatus === "trial" ? "in trial" : "active"}`
+    //   - Body should include: "Your NOCH+ membership terms are attached for your records."
+    //   - Attachment: public/NOCH_Plus_Terms_of_Service.pdf (fetch from project origin or bundle into the function)
+    //   - Idempotency key: `noch-welcome-${member.id}` to prevent duplicate sends on retry.
+
     return new Response(
       JSON.stringify({ success: true, memberId: member?.id, status: memberStatus }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }

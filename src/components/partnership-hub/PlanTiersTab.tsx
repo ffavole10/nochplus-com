@@ -7,6 +7,7 @@ import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, ChevronDown, Ch
 import invoiceEssential from "@/assets/noch-plus-invoice-essential.png";
 import invoicePriority from "@/assets/noch-plus-invoice-priority.png";
 import invoiceElite from "@/assets/noch-plus-invoice-elite.png";
+import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
 
 const INVOICE_IMAGES: Record<TierName, string> = {
   essential: invoiceEssential,
@@ -273,6 +274,18 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
           </div>
         </div>
       )}
+
+      {/* Footer Terms of Service link */}
+      <div className="pt-4 text-center">
+        <a
+          href={NOCH_PLUS_TOS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+        >
+          View NOCH+ Terms of Service
+        </a>
+      </div>
     </div>
   );
 }
