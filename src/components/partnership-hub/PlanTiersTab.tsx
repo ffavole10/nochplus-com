@@ -131,6 +131,8 @@ const FEATURE_SECTIONS: FeatureSection[] = [
   },
 ];
 
+const TIER_ORDER: TierName[] = ["starter", "essential", "priority", "elite", "enterprise"];
+
 function renderCell(value: Cell) {
   if (value === true) {
     return <Check className="h-4 w-4 text-primary mx-auto" />;
