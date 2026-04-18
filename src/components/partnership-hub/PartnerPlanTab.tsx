@@ -25,6 +25,7 @@ import { useKnowledgeBase, type KBItem } from "@/hooks/useKnowledgeBase";
 import { usePartnershipPlans, useCreatePartnershipPlan } from "@/hooks/usePartnershipPlans";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
+import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
 
 interface PartnerPlanTabProps {
   partnerInfo: PartnerInfo;
@@ -427,6 +428,19 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
           </Button>
         </div>
 
+        {/* Terms of Service informational link */}
+        <p className="text-center text-xs text-muted-foreground">
+          By activating, you confirm the partner agrees to our{" "}
+          <a
+            href={NOCH_PLUS_TOS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground transition-colors"
+          >
+            Terms of Service
+          </a>
+        </p>
+
         {/* Partner summary */}
         <Card className="bg-sidebar text-sidebar-foreground border-sidebar-border">
           <CardContent className="p-6">
@@ -504,6 +518,17 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
                 <ShieldCheck className="h-4 w-4 text-primary" />
                 <span>Secured by Stripe — card data never touches NOCH servers</span>
               </div>
+              <p className="text-center text-xs text-muted-foreground">
+                Partner agrees to the{" "}
+                <a
+                  href={NOCH_PLUS_TOS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground transition-colors"
+                >
+                  NOCH+ Terms of Service
+                </a>
+              </p>
             </CardContent>
           </Card>
         )}
@@ -529,6 +554,17 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
                 <ShieldCheck className="h-4 w-4 text-primary" />
                 <span>Secured by Stripe — no charge during trial</span>
               </div>
+              <p className="text-center text-xs text-muted-foreground">
+                Partner agrees to the{" "}
+                <a
+                  href={NOCH_PLUS_TOS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground transition-colors"
+                >
+                  NOCH+ Terms of Service
+                </a>
+              </p>
             </CardContent>
           </Card>
         )}
