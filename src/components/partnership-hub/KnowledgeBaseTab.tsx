@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit2, Trash2, Save, X, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -11,6 +12,10 @@ import {
   useAddKBItem, useUpdateKBItem, useDeleteKBItem,
   type KBItem,
 } from "@/hooks/useKnowledgeBase";
+import { KB_CATEGORIES, KB_CATEGORY_BADGE_CLASSES, type KBCategory } from "@/constants/nochPlusTiers";
+import { cn } from "@/lib/utils";
+
+type Filter = "All" | KBCategory;
 
 export function KnowledgeBaseTab() {
   const { data: items = [], isLoading } = useKnowledgeBase();
@@ -19,23 +24,33 @@ export function KnowledgeBaseTab() {
   const updateItem = useUpdateKBItem();
   const deleteItem = useDeleteKBItem();
 
+  const [filter, setFilter] = useState<Filter>("All");
   const [search, setSearch] = useState("");
   const [newQuestion, setNewQuestion] = useState("");
   const [newAnswer, setNewAnswer] = useState("");
+  const [newCategory, setNewCategory] = useState<KBCategory>("Commercial");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQuestion, setEditQuestion] = useState("");
   const [editAnswer, setEditAnswer] = useState("");
+  const [editCategory, setEditCategory] = useState<KBCategory>("Commercial");
 
   // Auto-seed if empty
   useEffect(() => {
     if (!isLoading && items.length === 0 && !seedKB.isPending) {
       seedKB.mutate(undefined, {
-        onSuccess: () => toast.success("Knowledge Base pre-loaded with 17 Q&A pairs."),
+        onSuccess: () => toast.success("Knowledge Base loaded with the full Q&A library."),
       });
     }
   }, [isLoading, items.length]);
 
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { All: items.length };
+    KB_CATEGORIES.forEach((cat) => { c[cat] = items.filter((i) => i.category === cat).length; });
+    return c;
+  }, [items]);
+
   const filtered = items.filter((item) => {
+    if (filter !== "All" && item.category !== filter) return false;
     if (!search) return true;
     const lower = search.toLowerCase();
     return item.question.toLowerCase().includes(lower) || item.answer.toLowerCase().includes(lower);
@@ -46,7 +61,7 @@ export function KnowledgeBaseTab() {
       toast.error("Both question and answer are required.");
       return;
     }
-    addItem.mutate({ question: newQuestion, answer: newAnswer }, {
+    addItem.mutate({ question: newQuestion, answer: newAnswer, category: newCategory }, {
       onSuccess: () => {
         setNewQuestion("");
         setNewAnswer("");
@@ -59,11 +74,12 @@ export function KnowledgeBaseTab() {
     setEditingId(item.id);
     setEditQuestion(item.question);
     setEditAnswer(item.answer);
+    setEditCategory(item.category);
   };
 
   const handleSaveEdit = () => {
     if (!editingId) return;
-    updateItem.mutate({ id: editingId, question: editQuestion, answer: editAnswer }, {
+    updateItem.mutate({ id: editingId, question: editQuestion, answer: editAnswer, category: editCategory }, {
       onSuccess: () => {
         setEditingId(null);
         toast.success("Q&A updated.");
@@ -77,8 +93,25 @@ export function KnowledgeBaseTab() {
     });
   };
 
+  const filterPills: Filter[] = ["All", ...KB_CATEGORIES];
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Category Filter Pills */}
+      <div className="flex flex-wrap gap-2">
+        {filterPills.map((f) => (
+          <Button
+            key={f}
+            variant={filter === f ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter(f)}
+            className="text-xs"
+          >
+            {f} <span className="ml-1.5 opacity-70">({counts[f] ?? 0})</span>
+          </Button>
+        ))}
+      </div>
+
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -98,11 +131,21 @@ export function KnowledgeBaseTab() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Input
-            value={newQuestion}
-            onChange={(e) => setNewQuestion(e.target.value)}
-            placeholder="Question — e.g. What happens if you miss the response window?"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3">
+            <Input
+              value={newQuestion}
+              onChange={(e) => setNewQuestion(e.target.value)}
+              placeholder="Question — e.g. What happens if you miss the response window?"
+            />
+            <Select value={newCategory} onValueChange={(v) => setNewCategory(v as KBCategory)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {KB_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Textarea
             value={newAnswer}
             onChange={(e) => setNewAnswer(e.target.value)}
@@ -125,7 +168,17 @@ export function KnowledgeBaseTab() {
             <CardContent className="p-4">
               {editingId === item.id ? (
                 <div className="space-y-3">
-                  <Input value={editQuestion} onChange={(e) => setEditQuestion(e.target.value)} />
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3">
+                    <Input value={editQuestion} onChange={(e) => setEditQuestion(e.target.value)} />
+                    <Select value={editCategory} onValueChange={(v) => setEditCategory(v as KBCategory)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {KB_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Textarea value={editAnswer} onChange={(e) => setEditAnswer(e.target.value)} rows={3} />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleSaveEdit} disabled={updateItem.isPending}>
@@ -139,8 +192,13 @@ export function KnowledgeBaseTab() {
               ) : (
                 <div>
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm mb-1">{item.question}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <Badge variant="outline" className={cn("text-[10px] font-medium", KB_CATEGORY_BADGE_CLASSES[item.category])}>
+                          {item.category}
+                        </Badge>
+                        <p className="font-semibold text-sm">{item.question}</p>
+                      </div>
                       <p className="text-sm text-muted-foreground">{item.answer}</p>
                     </div>
                     <div className="flex gap-1 shrink-0">
