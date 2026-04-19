@@ -34,6 +34,7 @@ import {
 "@/components/ui/sidebar";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSectionAccess } from "@/hooks/useSectionAccess";
 import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { cn } from "@/lib/utils";
@@ -90,6 +91,7 @@ export function PlatformSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasRole } = useUserRole();
+  const { canAccess } = useSectionAccess();
   const { filters, toggleArrayFilter, clearFilters, hasActiveFilters } = useFilters();
   const {
     selectedCampaignName, selectedCampaignId: contextCampaignId, selectedCustomer,
@@ -274,134 +276,154 @@ export function PlatformSidebar() {
 
       <SidebarContent className="custom-scrollbar px-2 py-2 space-y-1">
         {/* ─── CAMPAIGNS SECTION ─── */}
-        <SectionHeader label="CAMPAIGNS" icon={Crosshair} section="campaigns" />
-        {expandedSection === "campaigns" &&
-        <div className="space-y-2 pl-1">
-            {/* Customer/Partner dropdown */}
-            <div className="space-y-1.5 px-2">
-              <Select
-                value={selectedCustomer || "__all__"}
-                onValueChange={(v) => {
-                  if (v === "__new_partner__") {
-                    setNewPartnerOpen(true);
-                    return;
-                  }
-                  handleCustomerChange(v);
-                }}
-              >
-                <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-xs h-8">
-                  <SelectValue placeholder="All Partners" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-                  <SelectItem value="__all__" className="cursor-pointer text-xs text-muted-foreground">
-                    All Partners
-                  </SelectItem>
-                  {customers.map((c) =>
-                    <SelectItem key={c.value} value={c.value} className="cursor-pointer text-xs">
-                      {c.label}
-                    </SelectItem>
-                  )}
-                  <Separator className="my-1" />
-                  <SelectItem value="__new_partner__" className="cursor-pointer text-xs">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Plus className="h-3 w-3" />
-                      <span>New Partner</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        {canAccess("campaigns") && (
+          <>
+            <SectionHeader label="CAMPAIGNS" icon={Crosshair} section="campaigns" />
+            {expandedSection === "campaigns" &&
+            <div className="space-y-2 pl-1">
+                {/* Customer/Partner dropdown */}
+                <div className="space-y-1.5 px-2">
+                  <Select
+                    value={selectedCustomer || "__all__"}
+                    onValueChange={(v) => {
+                      if (v === "__new_partner__") {
+                        setNewPartnerOpen(true);
+                        return;
+                      }
+                      handleCustomerChange(v);
+                    }}
+                  >
+                    <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-xs h-8">
+                      <SelectValue placeholder="All Partners" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+                      <SelectItem value="__all__" className="cursor-pointer text-xs text-muted-foreground">
+                        All Partners
+                      </SelectItem>
+                      {customers.map((c) =>
+                        <SelectItem key={c.value} value={c.value} className="cursor-pointer text-xs">
+                          {c.label}
+                        </SelectItem>
+                      )}
+                      <Separator className="my-1" />
+                      <SelectItem value="__new_partner__" className="cursor-pointer text-xs">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Plus className="h-3 w-3" />
+                          <span>New Partner</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Campaign dropdown */}
-            <div className="space-y-1.5 px-2">
-              <Select
-                value={contextCampaignId || "__none__"}
-                onValueChange={handleCampaignChange}
-              >
-                <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-xs h-8">
-                  <SelectValue placeholder="Select campaign..." />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
-                  <SelectItem value="__none__" className="cursor-pointer text-xs text-muted-foreground">
-                    Select campaign...
-                  </SelectItem>
-                  {sortedCampaigns.map((c) => (
-                    <SelectItem key={c.id} value={c.id} className="cursor-pointer text-xs">
-                      <div className="flex items-center gap-2">
-                        <span>{c.name}</span>
-                        <Badge variant="outline" className={`text-[8px] px-1 py-0 capitalize ${CAMPAIGN_STATUS_COLORS[c.status || "draft"]}`}>
-                          {(c.status || "draft").replace("_", " ")}
-                        </Badge>
-                      </div>
-                    </SelectItem>
+                {/* Campaign dropdown */}
+                <div className="space-y-1.5 px-2">
+                  <Select
+                    value={contextCampaignId || "__none__"}
+                    onValueChange={handleCampaignChange}
+                  >
+                    <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground text-xs h-8">
+                      <SelectValue placeholder="Select campaign..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+                      <SelectItem value="__none__" className="cursor-pointer text-xs text-muted-foreground">
+                        Select campaign...
+                      </SelectItem>
+                      {sortedCampaigns.map((c) => (
+                        <SelectItem key={c.id} value={c.id} className="cursor-pointer text-xs">
+                          <div className="flex items-center gap-2">
+                            <span>{c.name}</span>
+                            <Badge variant="outline" className={`text-[8px] px-1 py-0 capitalize ${CAMPAIGN_STATUS_COLORS[c.status || "draft"]}`}>
+                              {(c.status || "draft").replace("_", " ")}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      ))}
+                      <Separator className="my-1" />
+                      <SelectItem value="__new__" className="cursor-pointer text-xs">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Plus className="h-3 w-3" />
+                          <span>New Campaign</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Campaign nav pages */}
+                <SidebarMenu className="px-1 mt-1">
+                  {CAMPAIGN_PAGES.map((page) => (
+                    <NavItem key={page.url} item={page} />
                   ))}
-                  <Separator className="my-1" />
-                  <SelectItem value="__new__" className="cursor-pointer text-xs">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Plus className="h-3 w-3" />
-                      <span>New Campaign</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Campaign nav pages */}
-            <SidebarMenu className="px-1 mt-1">
-              {CAMPAIGN_PAGES.map((page) => (
-                <NavItem key={page.url} item={page} />
-              ))}
-            </SidebarMenu>
-          </div>
-        }
+                </SidebarMenu>
+              </div>
+            }
+          </>
+        )}
 
         {/* ─── SERVICE DESK SECTION ─── */}
-        <SectionHeader label="SERVICE DESK" icon={Ticket} section="service-desk" />
-        {expandedSection === "service-desk" &&
-        <div className="pl-1">
-            <SidebarMenu className="px-1">
-              {serviceDeskPages.map((item) =>
-            <NavItem key={item.title} item={item} />
-            )}
-            </SidebarMenu>
-          </div>
-        }
+        {canAccess("service_desk") && (
+          <>
+            <SectionHeader label="SERVICE DESK" icon={Ticket} section="service-desk" />
+            {expandedSection === "service-desk" &&
+            <div className="pl-1">
+                <SidebarMenu className="px-1">
+                  {serviceDeskPages.map((item) =>
+                <NavItem key={item.title} item={item} />
+                )}
+                </SidebarMenu>
+              </div>
+            }
+          </>
+        )}
 
         {/* ─── NOCH+ PROGRAM SECTION ─── */}
-        <SectionHeader label="NOCH+" icon={Diamond} section="noch-plus" />
-        {expandedSection === "noch-plus" &&
-        <div className="pl-1">
-            <SidebarMenu className="px-1">
-              {nochPlusPages.map((item) =>
-            <NavItem key={item.title} item={item} />
-            )}
-            </SidebarMenu>
-          </div>
-        }
+        {canAccess("noch_plus") && (
+          <>
+            <SectionHeader label="NOCH+" icon={Diamond} section="noch-plus" />
+            {expandedSection === "noch-plus" &&
+            <div className="pl-1">
+                <SidebarMenu className="px-1">
+                  {nochPlusPages.map((item) =>
+                <NavItem key={item.title} item={item} />
+                )}
+                </SidebarMenu>
+              </div>
+            }
+          </>
+        )}
 
         {/* ─── PARTNERS SECTION ─── */}
-        <SectionHeader label="PARTNERS" icon={Handshake} section="partners" />
-        {expandedSection === "partners" &&
-        <div className="pl-1">
-            <SidebarMenu className="px-1">
-              {partnersPages.map((item) =>
-            <NavItem key={item.title} item={item} />
-            )}
-            </SidebarMenu>
-          </div>
-        }
+        {canAccess("partners") && (
+          <>
+            <SectionHeader label="PARTNERS" icon={Handshake} section="partners" />
+            {expandedSection === "partners" &&
+            <div className="pl-1">
+                <SidebarMenu className="px-1">
+                  {partnersPages.map((item) =>
+                <NavItem key={item.title} item={item} />
+                )}
+                </SidebarMenu>
+              </div>
+            }
+          </>
+        )}
 
         {/* ─── AUTOHEAL SECTION ─── */}
-        <SectionHeader label={<span>AUTOHEAL<sup className="text-[8px] align-super ml-0.5">TM</sup></span>} icon={Zap} section="autoheal" />
-        {expandedSection === "autoheal" &&
-        <div className="pl-1">
-            <SidebarMenu className="px-1">
-              {autohealPages.map((item) =>
-            <NavItem key={item.title} item={item} />
-            )}
-            </SidebarMenu>
-          </div>
-        }
+        {canAccess("autoheal") && (
+          <>
+            <SectionHeader label={<span>AUTOHEAL<sup className="text-[8px] align-super ml-0.5">TM</sup></span>} icon={Zap} section="autoheal" />
+            {expandedSection === "autoheal" &&
+            <div className="pl-1">
+                <SidebarMenu className="px-1">
+                  {autohealPages.map((item) =>
+                <NavItem key={item.title} item={item} />
+                )}
+                </SidebarMenu>
+              </div>
+            }
+          </>
+        )}
 
         {/* ─── FILTERS SECTION ─── */}
         <div className="border-t border-sidebar-border mt-2 pt-2">

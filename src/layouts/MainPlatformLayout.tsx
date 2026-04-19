@@ -6,6 +6,7 @@ import { PlatformHeader } from "@/components/PlatformHeader";
 import { FilterProvider } from "@/contexts/FilterContext";
 import { CampaignProvider } from "@/contexts/CampaignContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { SectionAccessGuard } from "@/components/SectionAccessGuard";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
 
 function ActivityTracker() {
@@ -27,7 +28,9 @@ export default function MainPlatformLayout() {
               <PlatformHeader />
               <main className="flex-1">
                 <ErrorBoundary>
-                  <Outlet />
+                  <SectionAccessGuard>
+                    <Outlet />
+                  </SectionAccessGuard>
                 </ErrorBoundary>
               </main>
             </div>

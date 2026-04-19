@@ -50,7 +50,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, email, role, display_name, company, user_id, redirect_origin } = body;
+    const { action, email, role, display_name, company, user_id, redirect_origin, section_access } = body;
 
     // Build absolute redirect URL so the recovery token survives Supabase's allow-list check
     const origin = (redirect_origin || req.headers.get("origin") || "https://nochplus.com").replace(/\/$/, "");
@@ -72,6 +72,22 @@ serve(async (req) => {
       await supabaseAdmin
         .from("user_roles")
         .insert({ user_id: newUser.user.id, role });
+
+      // Seed section access (5 rows). Defaults to all-false unless caller provided overrides.
+      const SECTIONS = ["campaigns", "service_desk", "noch_plus", "partners", "autoheal"];
+      const accessRows = SECTIONS.map((s) => ({
+        user_id: newUser.user.id,
+        section_key: s,
+        has_access:
+          section_access && typeof section_access === "object"
+            ? section_access[s] === true
+            : false,
+        granted_by: caller.id,
+      }));
+      const { error: accessErr } = await supabaseAdmin
+        .from("user_section_access")
+        .upsert(accessRows, { onConflict: "user_id,section_key" });
+      if (accessErr) console.warn("Failed to seed section access:", accessErr.message);
 
       // Generate a password reset link so the user can set their own password
       const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
