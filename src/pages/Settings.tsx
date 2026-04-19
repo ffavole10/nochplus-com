@@ -331,6 +331,13 @@ const Settings = () => {
         {activeTab === "partners" && <PartnerManagement />}
         {activeTab === "quoting" && <QuotingAndRatesSection />}
         {activeTab === "analytics" && <AnalyticsTab />}
+        {activeTab === "access" && <AccessControlTab users={users.map(u => ({
+          user_id: u.user_id,
+          email: u.email,
+          display_name: u.display_name,
+          avatar_url: u.avatar_url,
+          roles: u.roles || [],
+        }))} />}
         {activeTab === "users" && (
           <>
             {/* Header */}
@@ -366,7 +373,7 @@ const Settings = () => {
                       Create User
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Create New User</DialogTitle>
                     </DialogHeader>
