@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, X, Zap, Target, Shield, Info } from "lucide-react";
+import { Plus, X, Zap, Target, Shield, Info, ChevronDown, ChevronUp } from "lucide-react";
 import {
   TierName, TIER_LABELS, ALL_TIERS,
   calcSiteMonthlyCost, isCustomPricedTier, isFreeTier,
@@ -54,6 +54,15 @@ export function PlanBuilderTab({
   roiInputs, setRoiInputs, summary, onNavigate,
 }: PlanBuilderTabProps) {
   const fmt = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 });
+  const fmt2 = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // After-tax cost section
+  const [taxExpanded, setTaxExpanded] = useState(false);
+  const [taxRate, setTaxRate] = useState<number>(25);
+  const taxDeduction = (summary.annualTotal * taxRate) / 100;
+  const realAfterTaxCost = summary.annualTotal - taxDeduction;
+  const effectivePerChargerMo =
+    summary.totalChargers > 0 ? realAfterTaxCost / 12 / summary.totalChargers : 0;
 
   // Response time bar widths (normalize to max of current vs 120)
   const maxHours = Math.max(roiInputs.avgResponseTime, 120);
