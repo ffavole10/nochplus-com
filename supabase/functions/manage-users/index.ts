@@ -50,11 +50,13 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, email, role, display_name, company, user_id, redirect_origin, section_access } = body;
+    const { action, email, role, display_name, company, user_id, section_access } = body;
 
-    // Build absolute redirect URL so the recovery token survives Supabase's allow-list check
-    const origin = (redirect_origin || req.headers.get("origin") || "https://nochplus.com").replace(/\/$/, "");
-    const buildRedirect = (path: string) => `${origin}${path.startsWith("/") ? path : `/${path}`}`;
+    // ALWAYS use the production domain for auth links, regardless of where the admin
+    // is calling from (Lovable preview, custom domain, etc). This ensures invite/reset
+    // links in emails point to nochplus.com — which is whitelisted in Supabase Auth.
+    const PRODUCTION_ORIGIN = "https://nochplus.com";
+    const buildRedirect = (path: string) => `${PRODUCTION_ORIGIN}${path.startsWith("/") ? path : `/${path}`}`;
 
     if (action === "create_user") {
       // Generate a secure invite link instead of using plaintext passwords
