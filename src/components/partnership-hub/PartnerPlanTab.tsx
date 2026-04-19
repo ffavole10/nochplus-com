@@ -312,6 +312,9 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
             <p className="text-2xl font-bold">{fmt(summary.monthlyTotal)}</p>
             <p className="text-xs text-muted-foreground">per month</p>
             <p className="text-sm font-medium mt-1">Monthly Investment</p>
+            <p className="text-[11px] text-emerald-600 mt-1">
+              ~{(summary.monthlyTotal * 0.75).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo after tax deduction
+            </p>
           </CardContent>
         </Card>
         <Card>
