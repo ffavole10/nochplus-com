@@ -34,6 +34,9 @@ interface PartnerPlanTabProps {
     totalL2: number; totalDC: number; totalChargers: number;
     monthlyTotal: number; annualTotal: number; annualPrePay: number;
     estimatedSavings: number;
+    downtimeSavings: number;
+    brandProtectionSavings: number;
+    combinedSavings: number;
   };
 }
 
@@ -320,9 +323,14 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
         </Card>
         <Card className="border-emerald-500/30">
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-emerald-600">{fmt(summary.estimatedSavings)}</p>
+            <p className="text-2xl font-bold text-emerald-600">{fmt(summary.combinedSavings)}</p>
             <p className="text-xs text-muted-foreground">estimated</p>
             <p className="text-sm font-medium mt-1">Annual Savings</p>
+            <div className="mt-2 pt-2 border-t border-emerald-500/20 space-y-0.5 text-[10px] text-muted-foreground text-left">
+              <div className="flex justify-between"><span>Labor & parts:</span><span>{fmt(summary.estimatedSavings)}</span></div>
+              <div className="flex justify-between"><span>Reduced downtime:</span><span>{fmt(summary.downtimeSavings)}</span></div>
+              <div className="flex justify-between"><span>Brand protection:</span><span>{fmt(summary.brandProtectionSavings)}</span></div>
+            </div>
           </CardContent>
         </Card>
       </div>
