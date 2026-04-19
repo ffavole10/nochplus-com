@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DEFAULT_Q_AND_A } from "@/constants/nochPlusTiers";
+import { DEFAULT_Q_AND_A, type KBCategory } from "@/constants/nochPlusTiers";
 
 export interface KBItem {
   id: string;
   question: string;
   answer: string;
+  category: KBCategory;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -20,6 +21,7 @@ export function useKnowledgeBase() {
       const { data, error } = await supabase
         .from("noch_plus_knowledge_base" as any)
         .select("*")
+        .order("category", { ascending: true })
         .order("created_at", { ascending: true });
       if (error) throw error;
       return (data || []) as unknown as KBItem[];
@@ -34,6 +36,7 @@ export function useSeedKnowledgeBase() {
       const rows = DEFAULT_Q_AND_A.map((qa) => ({
         question: qa.question,
         answer: qa.answer,
+        category: qa.category,
         created_by: "system",
       }));
       const { error } = await supabase.from("noch_plus_knowledge_base" as any).insert(rows as any);
@@ -46,7 +49,7 @@ export function useSeedKnowledgeBase() {
 export function useAddKBItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (item: { question: string; answer: string }) => {
+    mutationFn: async (item: { question: string; answer: string; category: KBCategory }) => {
       const { error } = await supabase
         .from("noch_plus_knowledge_base" as any)
         .insert({ ...item, created_by: "staff" } as any);
@@ -59,10 +62,10 @@ export function useAddKBItem() {
 export function useUpdateKBItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, question, answer }: { id: string; question: string; answer: string }) => {
+    mutationFn: async ({ id, question, answer, category }: { id: string; question: string; answer: string; category: KBCategory }) => {
       const { error } = await supabase
         .from("noch_plus_knowledge_base" as any)
-        .update({ question, answer, updated_at: new Date().toISOString() } as any)
+        .update({ question, answer, category, updated_at: new Date().toISOString() } as any)
         .eq("id", id);
       if (error) throw error;
     },
