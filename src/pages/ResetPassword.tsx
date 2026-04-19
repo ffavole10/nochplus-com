@@ -10,19 +10,37 @@ import nochLogo from "@/assets/noch-logo-white.png";
 import { toast } from "sonner";
 
 const ResetPassword = () => {
-  usePageTitle("Reset Password");
+  usePageTitle("Set Up Account");
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
+  // First-time setup vs returning password reset
+  const [isFirstTime, setIsFirstTime] = useState(true);
 
   useEffect(() => {
+    const detectMode = (user: any) => {
+      // If the user has never signed in before, treat as first-time setup
+      const lastSignIn = user?.last_sign_in_at;
+      const createdAt = user?.created_at;
+      // Consider "first-time" when last_sign_in_at is missing OR equals created_at
+      // (the recovery click itself sets last_sign_in_at on some configs)
+      if (!lastSignIn) {
+        setIsFirstTime(true);
+      } else if (createdAt && Math.abs(new Date(lastSignIn).getTime() - new Date(createdAt).getTime()) < 60_000) {
+        setIsFirstTime(true);
+      } else {
+        setIsFirstTime(false);
+      }
+    };
+
     // Listen for the PASSWORD_RECOVERY event from the hash token
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event) => {
-        if (event === "PASSWORD_RECOVERY") {
+      (event, session) => {
+        if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && window.location.hash.includes("type=recovery"))) {
           setReady(true);
+          if (session?.user) detectMode(session.user);
         }
       }
     );
@@ -30,6 +48,9 @@ const ResetPassword = () => {
     const hash = window.location.hash;
     if (hash.includes("type=recovery")) {
       setReady(true);
+      supabase.auth.getUser().then(({ data }) => {
+        if (data.user) detectMode(data.user);
+      });
     }
     return () => subscription.unsubscribe();
   }, []);
@@ -48,7 +69,7 @@ const ResetPassword = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast.success("Password updated successfully!");
+      toast.success(isFirstTime ? "Account created! Welcome to NOCH+" : "Password updated successfully!");
       navigate("/dashboard");
     } catch (error: any) {
       toast.error(error.message);
@@ -56,6 +77,10 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
+
+  const copy = isFirstTime
+    ? { title: "Welcome to NOCH+!", subtitle: "Create your password to get started", button: "Create My Account", busy: "Creating…" }
+    : { title: "Reset Your Password", subtitle: "Enter your new password", button: "Update Password", busy: "Updating…" };
 
   return (
     <div
@@ -68,21 +93,32 @@ const ResetPassword = () => {
         </div>
 
         <h1 className="text-4xl font-bold text-center text-foreground mb-1" style={{ fontFamily: "'AntroVectra', cursive" }}>
-          Set New Password
+          {copy.title}
         </h1>
         <p className="text-center text-foreground/60 text-sm mb-8">
-          Enter your new password below
+          {copy.subtitle}
         </p>
 
         {!ready ? (
-          <p className="text-center text-foreground/60 text-sm">
-            Verifying your reset link…
-          </p>
+          <div className="text-center text-foreground/60 text-sm space-y-3">
+            <p>Verifying your link…</p>
+            <p className="text-xs text-foreground/50">
+              If this link has expired, return to the sign-in page and click "Forgot password?" to get a new one.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/login")}
+              className="mt-2"
+            >
+              Back to Sign In
+            </Button>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="password" className="text-foreground/80 text-xs uppercase tracking-wider">
-                New Password
+                {isFirstTime ? "Choose a Password" : "New Password"}
               </Label>
               <Input
                 id="password"
@@ -115,7 +151,7 @@ const ResetPassword = () => {
               disabled={loading}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-5"
             >
-              {loading ? "Updating…" : "Update Password"}
+              {loading ? copy.busy : copy.button}
             </Button>
           </form>
         )}
