@@ -116,6 +116,17 @@ export function usePartnershipHub() {
     });
   }, [sites]);
 
+  // Auto-update drivers-affected when response time changes (unless user overrode)
+  useEffect(() => {
+    if (driversManuallySet.current) return;
+    setRoiInputs((prev) => {
+      const smart = calcSmartDriversAffected(prev.avgResponseTime);
+      return prev.driversAffectedPerIncident === smart
+        ? prev
+        : { ...prev, driversAffectedPerIncident: smart };
+    });
+  }, [roiInputs.avgResponseTime]);
+
   const handleSetRoiInputs = useCallback((next: RoiInputs) => {
     setRoiInputs((prev) => {
       if (next.downtimeCostPerDay !== prev.downtimeCostPerDay) {
@@ -123,6 +134,9 @@ export function usePartnershipHub() {
       }
       if (next.serviceCallsPerYear !== prev.serviceCallsPerYear) {
         serviceCallsManuallySet.current = true;
+      }
+      if (next.driversAffectedPerIncident !== prev.driversAffectedPerIncident) {
+        driversManuallySet.current = true;
       }
       return next;
     });
