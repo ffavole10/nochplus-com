@@ -20,6 +20,7 @@ import SubmitAssessment from "./pages/public/SubmitAssessment";
 import SubmissionConfirmation from "./pages/public/SubmissionConfirmation";
 import TrackSubmission from "./pages/public/TrackSubmission";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { SectionAccessGuard } from "./components/SectionAccessGuard";
 import MainPlatformLayout from "./layouts/MainPlatformLayout";
 
 // Placeholder pages for new sections
