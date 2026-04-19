@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wrench, FileText, BookOpen, Layers } from "lucide-react";
+import { Wrench, FileText, BookOpen, Layers, Receipt } from "lucide-react";
 import { usePartnershipHub } from "@/hooks/usePartnershipHub";
 import { PlanBuilderTab } from "@/components/partnership-hub/PlanBuilderTab";
 import { PlanTiersTab } from "@/components/partnership-hub/PlanTiersTab";
 import { PartnerPlanTab } from "@/components/partnership-hub/PartnerPlanTab";
 import { KnowledgeBaseTab } from "@/components/partnership-hub/KnowledgeBaseTab";
+import { DemoInvoicesTab } from "@/components/partnership-hub/DemoInvoicesTab";
 
 export default function PartnershipHub() {
   const [activeTab, setActiveTab] = useState("plan-tiers");
@@ -18,9 +19,12 @@ export default function PartnershipHub() {
   return (
     <div className="p-6 space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 w-full max-w-3xl">
+        <TabsList className="grid grid-cols-5 w-full max-w-4xl">
           <TabsTrigger value="plan-tiers" className="flex items-center gap-1.5 text-xs">
             <Layers className="h-3.5 w-3.5" /> Plan Tiers
+          </TabsTrigger>
+          <TabsTrigger value="demo-invoices" className="flex items-center gap-1.5 text-xs">
+            <Receipt className="h-3.5 w-3.5" /> Demo Invoices
           </TabsTrigger>
           <TabsTrigger value="plan-builder" className="flex items-center gap-1.5 text-xs">
             <Wrench className="h-3.5 w-3.5" /> Plan Builder
@@ -32,6 +36,10 @@ export default function PartnershipHub() {
             <BookOpen className="h-3.5 w-3.5" /> Knowledge Base
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="demo-invoices" className="mt-6">
+          <DemoInvoicesTab onNavigate={handleNavigate} />
+        </TabsContent>
 
         <TabsContent value="plan-builder" className="mt-6">
           <PlanBuilderTab
