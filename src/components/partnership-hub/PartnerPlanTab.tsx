@@ -8,21 +8,23 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import {
   Clock, Shield, Wrench, Package, CalendarCheck, Car, HeadphonesIcon,
   FileText, ClipboardCheck, AlertTriangle, Ticket, BarChart3,
   Phone, DollarSign, Users, MapPin, Search, MessageSquare,
-  Share2, CreditCard, Gift, Mail, Check, ShieldCheck, Loader2,
-  CheckCircle2, XCircle, ChevronDown, ChevronUp,
+  Share2, CreditCard, Mail, Check, ShieldCheck, Loader2,
+  CheckCircle2, XCircle, ChevronDown, ChevronUp, Bookmark, Trash2, FolderOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   TierName, TIER_LABELS, TIER_BADGE_CLASSES, TIER_BORDER_COLORS,
   calcSiteMonthlyCost,
 } from "@/constants/nochPlusTiers";
-import type { PartnerInfo, SiteConfig } from "@/hooks/usePartnershipHub";
+import type { PartnerInfo, SiteConfig, RoiInputs } from "@/hooks/usePartnershipHub";
 import { useKnowledgeBase, type KBItem } from "@/hooks/useKnowledgeBase";
-import { usePartnershipPlans, useCreatePartnershipPlan } from "@/hooks/usePartnershipPlans";
+import { usePartnershipPlans, useCreatePartnershipPlan, useDeletePartnershipPlan, type PartnershipPlan } from "@/hooks/usePartnershipPlans";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
@@ -30,6 +32,7 @@ import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
 interface PartnerPlanTabProps {
   partnerInfo: PartnerInfo;
   sites: SiteConfig[];
+  roiInputs: RoiInputs;
   summary: {
     totalL2: number; totalDC: number; totalChargers: number;
     monthlyTotal: number; annualTotal: number; annualPrePay: number;
@@ -38,9 +41,10 @@ interface PartnerPlanTabProps {
     brandProtectionSavings: number;
     combinedSavings: number;
   };
+  onLoadPlan: (plan: PartnershipPlan) => void;
 }
 
-type Mode = "share" | "activate" | "trial";
+type Mode = "share" | "activate" | "draft";
 
 const TIER_RANK: Record<TierName, number> = {
   starter: -1,
@@ -50,7 +54,6 @@ const TIER_RANK: Record<TierName, number> = {
   enterprise: 3,
 };
 
-// Starter and Enterprise reuse Essential/Elite badge visuals
 const TIER_BADGE_IMAGES: Record<TierName, string> = {
   starter: nochEssentialBadge,
   essential: nochEssentialBadge,
@@ -59,7 +62,6 @@ const TIER_BADGE_IMAGES: Record<TierName, string> = {
   enterprise: nochEliteBadge,
 };
 
-// Benefits with tier availability
 const BENEFITS: { icon: any; title: string; desc: string; minTier: TierName }[] = [
   { icon: Clock, title: "Guaranteed Response Time", desc: "24 to 72 hour onsite response with credit-back if we miss it", minTier: "essential" },
   { icon: Shield, title: "Priority Dispatch Queue", desc: "NOCH+ members jump ahead of non-members in the service queue", minTier: "priority" },
@@ -75,7 +77,7 @@ const BENEFITS: { icon: any; title: string; desc: string; minTier: TierName }[] 
   { icon: BarChart3, title: "Quarterly Business Review", desc: "Strategic review of service performance and recommendations", minTier: "elite" },
   { icon: Phone, title: "After-Hours Emergency Line", desc: "Direct emergency contact outside coverage hours", minTier: "elite" },
   { icon: DollarSign, title: "Response Credit-Back Guarantee", desc: "10% to 20% credit on monthly fee if we miss the response window", minTier: "priority" },
-  { icon: Users, title: "W2 In-House Technicians", desc: "Our own certified technicians, not contractors. We control quality.", minTier: "essential" },
+  { icon: Users, title: "In-House Technicians", desc: "Our own certified technicians, not contractors. We control quality.", minTier: "essential" },
   { icon: MapPin, title: "Multi-State Coverage", desc: "In-house technicians plus vetted partners for nationwide reach", minTier: "essential" },
 ];
 
@@ -85,10 +87,10 @@ const QUICK_QUESTIONS = [
 ];
 
 const STATUS_COLORS: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground border border-border",
   shared: "bg-amber-500/10 text-amber-600",
   viewed: "bg-blue-500/10 text-blue-600",
   activated: "bg-emerald-500/10 text-emerald-600",
-  trial: "bg-purple-500/10 text-purple-600",
   expired: "bg-muted text-muted-foreground",
 };
 
@@ -100,7 +102,7 @@ const UPGRADE_LABELS: Record<TierName, string> = {
   enterprise: "Available on Enterprise",
 };
 
-export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabProps) {
+export function PartnerPlanTab({ partnerInfo, sites, roiInputs, summary, onLoadPlan }: PartnerPlanTabProps) {
   // Q&A state
   const { data: kbItems = [] } = useKnowledgeBase();
   const [query, setQuery] = useState("");
@@ -119,6 +121,8 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: plans = [] } = usePartnershipPlans();
   const createPlan = useCreatePartnershipPlan();
+  const deletePlan = useDeletePartnershipPlan();
+  const { confirm, dialogProps } = useConfirmDialog();
 
   const fmt = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 });
 
@@ -129,7 +133,6 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
   );
 
   const isStarterPlan = highestTier === "starter";
-  const isEnterprisePlan = highestTier === "enterprise";
 
   // Handle Stripe checkout return
   useEffect(() => {
@@ -149,6 +152,7 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
       searchParams.delete("checkout");
       setSearchParams(searchParams, { replace: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const verifyPayment = async (sessionId: string) => {
@@ -159,11 +163,7 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
       if (data?.alreadyExists) {
         toast.info("This membership was already activated.");
       } else {
-        toast.success(
-          data?.status === "trial"
-            ? "🎉 30-day free trial activated! Welcome to NOCH+."
-            : "🎉 Partnership activated! Welcome to NOCH+."
-        );
+        toast.success(`Partnership activated! ${partnerInfo.companyName || "The partner"} is now a NOCH+ ${TIER_LABELS[highestTier]} member.`);
       }
     } catch (err: any) {
       console.error("Verification error:", err);
@@ -189,23 +189,111 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
     }
   };
 
+  const buildPlanData = () => ({ sites, partnerInfo, roiInputs });
+
+  const handleSaveDraft = async () => {
+    if (!partnerInfo.companyName) {
+      toast.error("Add a company name in the Plan Builder tab before saving a draft.");
+      return;
+    }
+    try {
+      await createPlan.mutateAsync({
+        company_name: partnerInfo.companyName,
+        contact_email: partnerInfo.email || "",
+        plan_data: buildPlanData(),
+        total_monthly: summary.monthlyTotal,
+        total_annual: summary.annualTotal,
+        billing_cycle: billingCycle,
+        status: "draft",
+      });
+      toast.success("Draft saved!");
+    } catch {
+      toast.error("Failed to save draft.");
+    }
+  };
+
   const handleShare = async () => {
     if (!partnerInfo.email) { toast.error("Please fill in the partner email in the Plan Builder tab."); return; }
     try {
       await createPlan.mutateAsync({
         company_name: partnerInfo.companyName,
         contact_email: partnerInfo.email,
-        plan_data: { sites, partnerInfo },
+        plan_data: buildPlanData(),
         total_monthly: summary.monthlyTotal,
         total_annual: summary.annualTotal,
         billing_cycle: billingCycle,
         status: "shared",
       });
-      toast.success("Partnership plan shared! Email would be sent in Phase 2.");
+      toast.success("Partnership plan shared!");
     } catch { toast.error("Failed to share plan."); }
   };
 
-  const startCheckout = async (isTrial: boolean) => {
+  const activateStarterFree = async () => {
+    if (!partnerInfo.companyName || !partnerInfo.email) {
+      toast.error("Please fill in company name and email in the Plan Builder tab.");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      // 1) Create the member record (free, no Stripe)
+      const { data: member, error: memberError } = await supabase
+        .from("noch_plus_members")
+        .insert({
+          company_name: partnerInfo.companyName,
+          contact_name: partnerInfo.contactName || "",
+          email: partnerInfo.email,
+          phone: partnerInfo.phone || "",
+          status: "active",
+          tier: "starter",
+          billing_cycle: "monthly",
+          monthly_amount: 0,
+        })
+        .select()
+        .single();
+      if (memberError) throw memberError;
+
+      // 2) Create site rows
+      if (sites.length > 0 && member) {
+        await supabase.from("noch_plus_sites").insert(
+          sites.map((s) => ({
+            member_id: member.id,
+            site_name: s.name,
+            l2_charger_count: s.l2Count,
+            dc_charger_count: s.dcCount,
+            tier: s.tier,
+            monthly_cost: calcSiteMonthlyCost(s.l2Count, s.dcCount, s.tier),
+          }))
+        );
+      }
+
+      // 3) Save activated plan record for the pipeline
+      await createPlan.mutateAsync({
+        company_name: partnerInfo.companyName,
+        contact_email: partnerInfo.email,
+        plan_data: buildPlanData(),
+        total_monthly: 0,
+        total_annual: 0,
+        billing_cycle: billingCycle,
+        status: "activated",
+      });
+
+      toast.success(`Welcome! ${partnerInfo.companyName} is now a NOCH+ Starter member.`);
+      setCheckoutResult("success");
+    } catch (err: any) {
+      console.error("Starter activation error:", err);
+      toast.error(`Failed to activate Starter: ${err?.message || "Unknown error"}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const startCheckout = async () => {
+    if (isStarterPlan) {
+      // Free tier — skip Stripe entirely
+      await activateStarterFree();
+      return;
+    }
+
     if (!partnerInfo.companyName || !partnerInfo.email) {
       toast.error("Please fill in company name and email in the Plan Builder tab.");
       return;
@@ -220,6 +308,18 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
         (best, site) => (TIER_RANK[site.tier] > TIER_RANK[best] ? site.tier : best),
         "starter" as TierName
       );
+
+      // Pre-create a partnership plan record so we can flag it activated after checkout
+      const planRow = await createPlan.mutateAsync({
+        company_name: partnerInfo.companyName,
+        contact_email: partnerInfo.email,
+        plan_data: buildPlanData(),
+        total_monthly: summary.monthlyTotal,
+        total_annual: summary.annualTotal,
+        billing_cycle: billingCycle,
+        status: "shared",
+      });
+
       const { data, error } = await supabase.functions.invoke("create-noch-checkout", {
         body: {
           companyName: partnerInfo.companyName,
@@ -231,7 +331,7 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
           billingCycle,
           tier: dominantTier,
           sites: sites.map(s => ({ name: s.name, l2Count: s.l2Count, dcCount: s.dcCount, tier: s.tier })),
-          isTrial,
+          planId: planRow.id,
         },
       });
       if (error) throw error;
@@ -244,8 +344,41 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
     } finally { setIsProcessing(false); }
   };
 
+  const handleDeletePlan = async (plan: PartnershipPlan) => {
+    const ok = await confirm({
+      title: "Delete partnership plan?",
+      description: `This permanently removes the ${plan.status} plan for ${plan.company_name || plan.contact_email}. This cannot be undone.`,
+      confirmLabel: "Delete plan",
+      variant: "destructive",
+    });
+    if (!ok) return;
+    try {
+      await deletePlan.mutateAsync(plan.id);
+      toast.success("Plan deleted.");
+    } catch {
+      toast.error("Failed to delete plan.");
+    }
+  };
+
+  // Determine the dominant tier for a saved plan from its plan_data
+  const tierForPlan = (p: PartnershipPlan): TierName => {
+    const planSites: SiteConfig[] = p?.plan_data?.sites || [];
+    if (!planSites.length) return "priority";
+    return planSites.reduce(
+      (best, s) => (TIER_RANK[s.tier as TierName] > TIER_RANK[best] ? (s.tier as TierName) : best),
+      "starter" as TierName
+    );
+  };
+
+  const chargerCountForPlan = (p: PartnershipPlan): number => {
+    const planSites: SiteConfig[] = p?.plan_data?.sites || [];
+    return planSites.reduce((sum, s) => sum + (Number(s.l2Count) || 0) + (Number(s.dcCount) || 0), 0);
+  };
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
+      <ConfirmDialog {...dialogProps} />
+
       {/* Success/Cancel banner */}
       {checkoutResult === "success" && (
         <Card className="border-emerald-500 bg-emerald-500/5">
@@ -253,7 +386,7 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
             <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0" />
             <div>
               <p className="font-semibold text-emerald-700">Partnership Activated!</p>
-              <p className="text-sm text-muted-foreground">Payment processed successfully. The membership is now active.</p>
+              <p className="text-sm text-muted-foreground">The membership is now active and visible in NOCH+ → Members.</p>
             </div>
           </CardContent>
         </Card>
@@ -273,7 +406,6 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
       {/* ─── Section 1: Hero Banner ─── */}
       <div className="rounded-xl bg-gradient-to-r from-sidebar to-sidebar/80 p-8 text-sidebar-foreground">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          {/* Left content */}
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
               <img src={nochPlusIcon} alt="NOCH+" className="w-10 h-10 rounded-lg" />
@@ -286,7 +418,6 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
               Fast response, priority dispatch, and discounted service, all for a flat monthly fee.
             </p>
           </div>
-          {/* Right badge image */}
           <div className="flex justify-center md:justify-end shrink-0">
             <img
               src={TIER_BADGE_IMAGES[highestTier]}
@@ -337,7 +468,6 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
           </CardContent>
         </Card>
       </div>
-
 
       {/* ─── Section 4: What's Included (Collapsible) ─── */}
       <Card>
@@ -448,8 +578,8 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
           <Button variant={mode === "activate" ? "default" : "outline"} onClick={() => setMode("activate")} className="flex-1">
             <CreditCard className="h-4 w-4 mr-2" /> Activate Now
           </Button>
-          <Button variant={mode === "trial" ? "default" : "outline"} onClick={() => setMode("trial")} className="flex-1">
-            <Gift className="h-4 w-4 mr-2" /> Start 30-Day Free Trial
+          <Button variant={mode === "draft" ? "default" : "outline"} onClick={() => setMode("draft")} className="flex-1">
+            <Bookmark className="h-4 w-4 mr-2" /> Save Draft
           </Button>
         </div>
 
@@ -490,8 +620,8 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
           </CardContent>
         </Card>
 
-        {/* Billing toggle (not for trial) */}
-        {mode !== "trial" && (
+        {/* Billing toggle (paid tiers only, doesn't apply to Starter) */}
+        {mode === "activate" && !isStarterPlan && (
           <div className="flex gap-2 justify-center">
             <Button size="sm" variant={billingCycle === "monthly" ? "default" : "outline"} onClick={() => setBillingCycle("monthly")}>
               Monthly — {fmt(summary.monthlyTotal)}/mo
@@ -524,25 +654,35 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
             <CardContent className="p-6 space-y-5">
               <div className="text-center space-y-2">
                 <p className="text-lg font-semibold">
-                  {billingCycle === "annual" ? `${fmt(summary.annualPrePay)}/year` : `${fmt(summary.monthlyTotal)}/month`}
+                  {isStarterPlan
+                    ? "Free — Starter plan"
+                    : billingCycle === "annual"
+                      ? `${fmt(summary.annualPrePay)}/year`
+                      : `${fmt(summary.monthlyTotal)}/month`}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  You'll be redirected to a secure Stripe Checkout page to enter payment details.
+                  {isStarterPlan
+                    ? "Starter is free — no credit card needed. The partner will be activated immediately."
+                    : "You'll be redirected to a secure Stripe Checkout page to enter payment details."}
                 </p>
               </div>
               <div className="text-center">
-                <Button size="lg" onClick={() => startCheckout(false)} disabled={isProcessing}>
+                <Button size="lg" onClick={startCheckout} disabled={isProcessing}>
                   {isProcessing ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processing…</>
+                  ) : isStarterPlan ? (
+                    <><CheckCircle2 className="h-4 w-4 mr-2" /> Activate Starter Membership</>
                   ) : (
                     <><CreditCard className="h-4 w-4 mr-2" /> Process Payment & Activate Partnership</>
                   )}
                 </Button>
               </div>
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                <span>Secured by Stripe — card data never touches NOCH servers</span>
-              </div>
+              {!isStarterPlan && (
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  <span>Secured by Stripe — card data never touches NOCH servers</span>
+                </div>
+              )}
               <p className="text-center text-xs text-muted-foreground">
                 Partner agrees to the{" "}
                 <a
@@ -558,38 +698,17 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
           </Card>
         )}
 
-        {mode === "trial" && (
+        {mode === "draft" && (
           <Card>
             <CardContent className="p-6 text-center space-y-4">
-              <Gift className="h-8 w-8 mx-auto text-purple-500" />
-              <p className="text-sm font-medium">30-Day Free Trial</p>
+              <Bookmark className="h-8 w-8 mx-auto text-muted-foreground" />
+              <p className="text-sm font-medium">Save Draft</p>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Full tier access for 30 days. Card on file is optional —
-                you'll be taken to Stripe Checkout where you can choose to add a card or skip.
-                Auto-converts at day 30 if card is on file.
+                Save the current plan configuration to come back to later. The draft will appear in the Partnership Pipeline below.
               </p>
-              <Button size="lg" onClick={() => startCheckout(true)} disabled={isProcessing} className="bg-purple-600 hover:bg-purple-700">
-                {isProcessing ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processing…</>
-                ) : (
-                  <><Gift className="h-4 w-4 mr-2" /> Start 30-Day Free Trial</>
-                )}
+              <Button size="lg" variant="outline" onClick={handleSaveDraft} disabled={createPlan.isPending}>
+                <Bookmark className="h-4 w-4 mr-2" /> Save Draft
               </Button>
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                <span>Secured by Stripe — no charge during trial</span>
-              </div>
-              <p className="text-center text-xs text-muted-foreground">
-                Partner agrees to the{" "}
-                <a
-                  href={NOCH_PLUS_TOS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline underline-offset-2 hover:text-foreground transition-colors"
-                >
-                  NOCH+ Terms of Service
-                </a>
-              </p>
             </CardContent>
           </Card>
         )}
@@ -608,25 +727,62 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
                   <tr className="border-b">
                     <th className="text-left p-2 font-medium">Company</th>
                     <th className="text-left p-2 font-medium">Email</th>
+                    <th className="text-left p-2 font-medium">Tier</th>
+                    <th className="text-right p-2 font-medium">Chargers</th>
                     <th className="text-left p-2 font-medium">Date</th>
                     <th className="text-left p-2 font-medium">Status</th>
                     <th className="text-right p-2 font-medium">MRR</th>
+                    <th className="text-right p-2 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {plans.map((plan) => (
-                    <tr key={plan.id} className="border-b last:border-0">
-                      <td className="p-2 font-medium">{plan.company_name || "—"}</td>
-                      <td className="p-2 text-muted-foreground">{plan.contact_email}</td>
-                      <td className="p-2 text-muted-foreground">{new Date(plan.shared_at).toLocaleDateString()}</td>
-                      <td className="p-2">
-                        <Badge className={STATUS_COLORS[plan.status] || STATUS_COLORS.shared}>
-                          {plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
-                        </Badge>
-                      </td>
-                      <td className="p-2 text-right font-medium">{fmt(plan.total_monthly)}</td>
-                    </tr>
-                  ))}
+                  {plans.map((plan) => {
+                    const planTier = tierForPlan(plan);
+                    const planChargers = chargerCountForPlan(plan);
+                    return (
+                      <tr
+                        key={plan.id}
+                        className="border-b last:border-0 cursor-pointer hover:bg-muted/40 transition-colors"
+                        onClick={() => onLoadPlan(plan)}
+                      >
+                        <td className="p-2 font-medium">{plan.company_name || "—"}</td>
+                        <td className="p-2 text-muted-foreground">{plan.contact_email || "—"}</td>
+                        <td className="p-2">
+                          <Badge variant="outline" className={TIER_BADGE_CLASSES[planTier]}>
+                            {TIER_LABELS[planTier]}
+                          </Badge>
+                        </td>
+                        <td className="p-2 text-right">{planChargers}</td>
+                        <td className="p-2 text-muted-foreground">{new Date(plan.shared_at).toLocaleDateString()}</td>
+                        <td className="p-2">
+                          <Badge className={STATUS_COLORS[plan.status] || STATUS_COLORS.draft}>
+                            {plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
+                          </Badge>
+                        </td>
+                        <td className="p-2 text-right font-medium">{fmt(plan.total_monthly)}</td>
+                        <td className="p-2 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => onLoadPlan(plan)}
+                            >
+                              <FolderOpen className="h-3.5 w-3.5" /> Open
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs text-destructive hover:text-destructive gap-1"
+                              onClick={() => handleDeletePlan(plan)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" /> Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
