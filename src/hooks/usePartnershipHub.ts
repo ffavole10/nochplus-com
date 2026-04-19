@@ -22,7 +22,11 @@ export interface RoiInputs {
   avgResponseTime: number;
   serviceCallsPerYear: number;
   downtimeCostPerDay: number;
+  driversAffectedPerIncident: number;
+  customerLifetimeValue: number;
 }
+
+const NEGATIVE_REVIEW_RATE = 0.10;
 
 const L2_DAILY_REVENUE = 16;
 const DC_DAILY_REVENUE = 137;
@@ -66,6 +70,10 @@ function calcSmartServiceCalls(totalL2: number, totalDC: number): number {
   return totalL2 * L2_CALLS_PER_YEAR + totalDC * DC_CALLS_PER_YEAR;
 }
 
+function calcSmartDriversAffected(responseHours: number): number {
+  return Math.max(2, Math.round(responseHours / 12));
+}
+
 export function usePartnershipHub() {
   const [partnerInfo, setPartnerInfo] = useState<PartnerInfo>({
     companyName: "",
@@ -79,11 +87,15 @@ export function usePartnershipHub() {
   const downtimeManuallySet = useRef(false);
   const serviceCallsManuallySet = useRef(false);
 
+  const driversManuallySet = useRef(false);
+
   const [roiInputs, setRoiInputs] = useState<RoiInputs>({
     avgServiceCallCost: 750,
     avgResponseTime: 96,
     serviceCallsPerYear: 0,
     downtimeCostPerDay: 0,
+    driversAffectedPerIncident: calcSmartDriversAffected(96),
+    customerLifetimeValue: 750,
   });
 
   useEffect(() => {
