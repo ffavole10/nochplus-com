@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_audit_log: {
+        Row: {
+          action: string
+          actor_name: string | null
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          section_key: string
+          target_name: string | null
+          target_user_id: string
+        }
+        Insert: {
+          action: string
+          actor_name?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          section_key: string
+          target_name?: string | null
+          target_user_id: string
+        }
+        Update: {
+          action?: string
+          actor_name?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          section_key?: string
+          target_name?: string | null
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       ai_agent_prompts: {
         Row: {
           agent_id: string
@@ -3805,6 +3838,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_section_access: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          has_access: boolean
+          id: string
+          section_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          has_access?: boolean
+          id?: string
+          section_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          has_access?: boolean
+          id?: string
+          section_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -3815,6 +3878,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_section_access: {
+        Args: { _section_key: string; _user_id: string }
         Returns: boolean
       }
       show_limit: { Args: never; Returns: number }
