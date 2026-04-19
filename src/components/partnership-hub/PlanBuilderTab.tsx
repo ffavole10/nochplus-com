@@ -330,9 +330,68 @@ export function PlanBuilderTab({
                 </Badge>
               )}
 
-              {/* Response Time Comparison */}
+              {/* Real Cost After Tax Deduction */}
               <Separator className="bg-sidebar-border" />
-              <p className="text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">Response Time Comparison</p>
+              <button
+                type="button"
+                onClick={() => setTaxExpanded((v) => !v)}
+                className="w-full flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
+              >
+                <span>Show after-tax cost</span>
+                {taxExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </button>
+              {taxExpanded && (
+                <div className="space-y-2.5 pt-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs text-sidebar-foreground/70">Estimated Tax Rate</Label>
+                    <div className="flex items-center gap-1">
+                      {[20, 25, 30].map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setTaxRate(r)}
+                          className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                            taxRate === r
+                              ? "bg-sidebar-accent text-primary-foreground"
+                              : "bg-sidebar-border/40 text-sidebar-foreground/70 hover:bg-sidebar-border/70"
+                          }`}
+                        >
+                          {r}%
+                        </button>
+                      ))}
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={taxRate}
+                        onChange={(e) => setTaxRate(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                        className="h-6 w-14 text-[11px] px-1.5 bg-sidebar-border/30 border-sidebar-border text-sidebar-foreground"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-sidebar-foreground/70">Annual NOCH+ membership</span>
+                    <span>{fmt(summary.annualTotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-sidebar-foreground/70">Est. tax deduction</span>
+                    <span className="text-emerald-400">−{fmt(taxDeduction)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-sidebar-foreground/70">Real after-tax cost</span>
+                    <span className="font-bold">{fmt(realAfterTaxCost)}</span>
+                  </div>
+                  {summary.totalChargers > 0 && (
+                    <div className="rounded-md bg-sidebar-accent/20 border border-sidebar-border p-2.5 text-center">
+                      <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">Effective cost per charger</p>
+                      <p className="text-base font-bold text-sidebar-foreground">{fmt2(effectivePerChargerMo)}<span className="text-xs font-normal text-sidebar-foreground/70">/charger/mo after tax</span></p>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-sidebar-foreground/50 leading-snug">
+                    NOCH+ membership fees are a tax-deductible business expense. Consult your tax advisor for your specific situation.
+                  </p>
+                </div>
+              )}
               <div className="space-y-2">
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
