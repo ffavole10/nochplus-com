@@ -22,7 +22,11 @@ export interface RoiInputs {
   avgResponseTime: number;
   serviceCallsPerYear: number;
   downtimeCostPerDay: number;
+  driversAffectedPerIncident: number;
+  customerLifetimeValue: number;
 }
+
+const NEGATIVE_REVIEW_RATE = 0.10;
 
 const L2_DAILY_REVENUE = 16;
 const DC_DAILY_REVENUE = 137;
@@ -66,6 +70,10 @@ function calcSmartServiceCalls(totalL2: number, totalDC: number): number {
   return totalL2 * L2_CALLS_PER_YEAR + totalDC * DC_CALLS_PER_YEAR;
 }
 
+function calcSmartDriversAffected(responseHours: number): number {
+  return Math.max(2, Math.round(responseHours / 12));
+}
+
 export function usePartnershipHub() {
   const [partnerInfo, setPartnerInfo] = useState<PartnerInfo>({
     companyName: "",
@@ -79,11 +87,15 @@ export function usePartnershipHub() {
   const downtimeManuallySet = useRef(false);
   const serviceCallsManuallySet = useRef(false);
 
+  const driversManuallySet = useRef(false);
+
   const [roiInputs, setRoiInputs] = useState<RoiInputs>({
     avgServiceCallCost: 750,
     avgResponseTime: 96,
     serviceCallsPerYear: 0,
     downtimeCostPerDay: 0,
+    driversAffectedPerIncident: calcSmartDriversAffected(96),
+    customerLifetimeValue: 750,
   });
 
   useEffect(() => {
@@ -104,6 +116,17 @@ export function usePartnershipHub() {
     });
   }, [sites]);
 
+  // Auto-update drivers-affected when response time changes (unless user overrode)
+  useEffect(() => {
+    if (driversManuallySet.current) return;
+    setRoiInputs((prev) => {
+      const smart = calcSmartDriversAffected(prev.avgResponseTime);
+      return prev.driversAffectedPerIncident === smart
+        ? prev
+        : { ...prev, driversAffectedPerIncident: smart };
+    });
+  }, [roiInputs.avgResponseTime]);
+
   const handleSetRoiInputs = useCallback((next: RoiInputs) => {
     setRoiInputs((prev) => {
       if (next.downtimeCostPerDay !== prev.downtimeCostPerDay) {
@@ -111,6 +134,9 @@ export function usePartnershipHub() {
       }
       if (next.serviceCallsPerYear !== prev.serviceCallsPerYear) {
         serviceCallsManuallySet.current = true;
+      }
+      if (next.driversAffectedPerIncident !== prev.driversAffectedPerIncident) {
+        driversManuallySet.current = true;
       }
       return next;
     });
@@ -177,9 +203,21 @@ export function usePartnershipHub() {
     const hoursSaved = Math.max(0, roiInputs.avgResponseTime - slaTargetHours);
     const downtimeSavings = (hoursSaved / 24) * roiInputs.downtimeCostPerDay * roiInputs.serviceCallsPerYear;
 
-    const netCost = annualTotal - estimatedSavings - downtimeSavings;
+    // Brand reputation protection
+    const brandReputationExposure =
+      roiInputs.serviceCallsPerYear *
+      roiInputs.driversAffectedPerIncident *
+      NEGATIVE_REVIEW_RATE *
+      roiInputs.customerLifetimeValue;
+    const responseRatio =
+      roiInputs.avgResponseTime > 0
+        ? Math.max(0, 1 - slaTargetHours / roiInputs.avgResponseTime)
+        : 0;
+    const brandProtectionSavings = brandReputationExposure * responseRatio;
+
+    const netCost = annualTotal - estimatedSavings - downtimeSavings - brandProtectionSavings;
     const totalSavings = currentAnnualSpend + downtimeSavings * 1 - netCost;
-    const combinedSavings = estimatedSavings + downtimeSavings;
+    const combinedSavings = estimatedSavings + downtimeSavings + brandProtectionSavings;
 
     // Recommended tier logic
     const hasDC = totalDC > 0;
@@ -211,6 +249,8 @@ export function usePartnershipHub() {
       currentAnnualSpend,
       estimatedSavings,
       downtimeSavings,
+      brandProtectionSavings,
+      brandReputationExposure,
       combinedSavings,
       netCost,
       totalSavings,

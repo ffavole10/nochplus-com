@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, X, Zap, Target } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Plus, X, Zap, Target, Shield, Info } from "lucide-react";
 import {
   TierName, TIER_LABELS, ALL_TIERS,
   calcSiteMonthlyCost, isCustomPricedTier, isFreeTier,
@@ -25,6 +26,7 @@ interface PlanBuilderTabProps {
     totalL2: number; totalDC: number; totalChargers: number; siteCount: number;
     monthlyTotal: number; annualTotal: number; annualPrePay: number;
     currentAnnualSpend: number; estimatedSavings: number; downtimeSavings: number;
+    brandProtectionSavings: number; brandReputationExposure: number;
     combinedSavings: number; netCost: number; totalSavings: number;
     dominantTier: TierName; slaTargetHours: number; hoursSaved: number;
     recommendedTier: TierName; recommendedReason: string;
@@ -198,6 +200,62 @@ export function PlanBuilderTab({
               <p className="text-[10px] text-muted-foreground leading-tight">Industry avg: L2 ~$16/day, DCFC ~$137/day. Edit to match actual revenue.</p>
             </div>
           </CardContent>
+
+          {/* Brand Impact Estimate sub-section */}
+          <div className="mx-5 mb-4 rounded-md border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-amber-600" />
+              <span className="text-sm font-semibold">Brand Impact Estimate</span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="text-muted-foreground hover:text-foreground">
+                      <Info className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    Every charger failure risks negative reviews and lost customers. Faster response times reduce the number of drivers who encounter broken chargers, protecting your brand reputation and customer retention.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Avg. Drivers Affected per Incident</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={roiInputs.driversAffectedPerIncident}
+                  onChange={(e) =>
+                    setRoiInputs({
+                      ...roiInputs,
+                      driversAffectedPerIncident: Math.max(1, parseInt(e.target.value) || 0),
+                    })
+                  }
+                />
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  Estimated drivers who encounter a broken charger before it's fixed.
+                </p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Est. Customer Lifetime Value ($)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={roiInputs.customerLifetimeValue}
+                  onChange={(e) =>
+                    setRoiInputs({
+                      ...roiInputs,
+                      customerLifetimeValue: Math.max(0, parseFloat(e.target.value) || 0),
+                    })
+                  }
+                />
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  Revenue from a repeat customer over 12 months.
+                </p>
+              </div>
+            </div>
+          </div>
         </Card>
       </div>
 
@@ -248,6 +306,10 @@ export function PlanBuilderTab({
               <div className="flex justify-between text-sm">
                 <span className="text-sidebar-foreground/70">Est. Downtime Savings</span>
                 <span className="text-emerald-400">{fmt(summary.downtimeSavings)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-sidebar-foreground/70">Est. Brand Protection</span>
+                <span className="text-emerald-400">{fmt(summary.brandProtectionSavings)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-sidebar-foreground/70">Net Cost with NOCH+</span>
