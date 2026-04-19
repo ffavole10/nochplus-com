@@ -50,7 +50,11 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, email, role, display_name, company, user_id } = body;
+    const { action, email, role, display_name, company, user_id, redirect_origin } = body;
+
+    // Build absolute redirect URL so the recovery token survives Supabase's allow-list check
+    const origin = (redirect_origin || req.headers.get("origin") || "https://nochplus.com").replace(/\/$/, "");
+    const buildRedirect = (path: string) => `${origin}${path.startsWith("/") ? path : `/${path}`}`;
 
     if (action === "create_user") {
       // Generate a secure invite link instead of using plaintext passwords
