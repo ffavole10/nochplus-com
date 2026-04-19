@@ -396,6 +396,25 @@ const Settings = () => {
                           </SelectContent>
                         </Select>
                       </div>
+                      <div className="space-y-2 pt-2 border-t border-border">
+                        <Label className="text-sm font-semibold">Section Access</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Choose which platform sections this user can see. Defaults are based on role.
+                        </p>
+                        <div className="space-y-2 pt-1 max-h-56 overflow-y-auto">
+                          {SECTION_KEYS.map((s) => (
+                            <div key={s} className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2">
+                              <span className="text-sm text-foreground">{SECTION_LABELS[s]}</span>
+                              <Switch
+                                checked={newAccess[s]}
+                                onCheckedChange={(v) =>
+                                  setNewAccess((prev) => ({ ...prev, [s]: v }))
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
