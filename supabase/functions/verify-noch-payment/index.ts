@@ -62,8 +62,8 @@ serve(async (req) => {
 
     const meta = session.metadata || {};
     const subscription = session.subscription as Stripe.Subscription;
-    const isTrial = subscription?.status === "trialing";
-    const memberStatus = isTrial ? "trial" : "active";
+    const memberStatus = "active";
+    const planId = meta.plan_id || null;
 
     // Check if member already exists for this subscription
     const { data: existing } = await supabaseClient
@@ -73,6 +73,13 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
+      // Make sure the partnership plan is also flagged activated even on a retry
+      if (planId) {
+        await supabaseClient
+          .from("noch_plus_partnership_plans")
+          .update({ status: "activated", activated_at: new Date().toISOString(), member_id: existing.id })
+          .eq("id", planId);
+      }
       return new Response(
         JSON.stringify({ success: true, memberId: existing.id, alreadyExists: true }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
@@ -93,9 +100,6 @@ serve(async (req) => {
         monthly_amount: parseFloat(meta.monthly_amount || "0"),
         stripe_customer_id: session.customer as string,
         stripe_subscription_id: subscription?.id || null,
-        trial_ends_at: isTrial && subscription?.trial_end
-          ? new Date(subscription.trial_end * 1000).toISOString()
-          : null,
       })
       .select()
       .single();
@@ -108,23 +112,34 @@ serve(async (req) => {
     // Create site records
     const sites = JSON.parse(meta.sites || "[]");
     if (sites.length > 0 && member) {
-      const siteRows = sites.map((s: any) => ({
-        member_id: member.id,
-        site_name: s.name || "",
-        l2_charger_count: s.l2Count || 0,
-        dc_charger_count: s.dcCount || 0,
-        tier: s.tier || meta.tier || "priority",
-      }));
+      const siteRows = sites.map((s: any) => {
+        const tier = s.tier || meta.tier || "priority";
+        const l2 = Number(s.l2Count) || 0;
+        const dc = Number(s.dcCount) || 0;
+        // Recompute monthly_cost defensively from the trusted tier table on the client side later if needed
+        return {
+          member_id: member.id,
+          site_name: s.name || "",
+          l2_charger_count: l2,
+          dc_charger_count: dc,
+          tier,
+          monthly_cost: 0,
+        };
+      });
       await supabaseClient.from("noch_plus_sites").insert(siteRows);
     }
 
-    // TODO: Send welcome email with NOCH+ Terms of Service PDF attached.
-    // When the email provider (Resend) is connected:
-    //   - Recipient: meta.email
-    //   - Subject: `Welcome to NOCH+ ${meta.tier} — your membership is ${memberStatus === "trial" ? "in trial" : "active"}`
-    //   - Body should include: "Your NOCH+ membership terms are attached for your records."
-    //   - Attachment: public/NOCH_Plus_Terms_of_Service.pdf (fetch from project origin or bundle into the function)
-    //   - Idempotency key: `noch-welcome-${member.id}` to prevent duplicate sends on retry.
+    // Mark partnership plan as activated and link member
+    if (planId && member) {
+      await supabaseClient
+        .from("noch_plus_partnership_plans")
+        .update({
+          status: "activated",
+          activated_at: new Date().toISOString(),
+          member_id: member.id,
+        })
+        .eq("id", planId);
+    }
 
     return new Response(
       JSON.stringify({ success: true, memberId: member?.id, status: memberStatus }),
