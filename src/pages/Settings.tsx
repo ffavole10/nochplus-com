@@ -25,6 +25,9 @@ import { QuoteRulesTab } from "@/components/settings/QuoteRulesTab";
 import { CustomerOverridesTab } from "@/components/settings/CustomerOverridesTab";
 import { CustomerRateSheetsTab } from "@/components/settings/CustomerRateSheetsTab";
 import { QuoteFlowDiagram } from "@/components/settings/QuoteFlowDiagram";
+import { AccessControlTab } from "@/components/settings/AccessControlTab";
+import { Switch } from "@/components/ui/switch";
+import { SECTION_KEYS, SECTION_LABELS, type SectionKey } from "@/hooks/useSectionAccess";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRateCards, useQuoteRules, useCustomerOverrides } from "@/hooks/useQuotingSettings";
 import { useCustomerRateSheetsList } from "@/hooks/useCustomerRateSheets";
@@ -73,7 +76,7 @@ const ROLE_ICONS: Record<string, string> = {
 
 const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner"];
 
-type SettingsTab = "campaigns" | "data" | "partners" | "users" | "quoting" | "analytics";
+type SettingsTab = "campaigns" | "data" | "partners" | "users" | "access" | "quoting" | "analytics";
 
 const TABS: { value: SettingsTab; label: string }[] = [
   { value: "campaigns", label: "Campaigns" },
@@ -81,8 +84,17 @@ const TABS: { value: SettingsTab; label: string }[] = [
   { value: "partners", label: "Partners" },
   { value: "quoting", label: "Quoting & Rates" },
   { value: "users", label: "Users" },
+  { value: "access", label: "Access Control" },
   { value: "analytics", label: "Analytics" },
 ];
+
+const DEFAULT_ACCESS_BY_ROLE: Record<string, Record<SectionKey, boolean>> = {
+  admin: { campaigns: true, service_desk: true, noch_plus: true, partners: true, autoheal: true },
+  manager: { campaigns: true, service_desk: true, noch_plus: true, partners: true, autoheal: false },
+  employee: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false },
+  customer: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false },
+  partner: { campaigns: false, service_desk: false, noch_plus: true, partners: true, autoheal: false },
+};
 
 function QuotingAndRatesSection() {
   const { data: cards = [] } = useRateCards();
@@ -132,7 +144,15 @@ const Settings = () => {
   const [newName, setNewName] = useState("");
   const [newCompany, setNewCompany] = useState("");
   const [newRole, setNewRole] = useState<string>("employee");
+  const [newAccess, setNewAccess] = useState<Record<SectionKey, boolean>>(
+    DEFAULT_ACCESS_BY_ROLE.employee,
+  );
   const [creating, setCreating] = useState(false);
+
+  // Reset access defaults when role changes
+  useEffect(() => {
+    setNewAccess(DEFAULT_ACCESS_BY_ROLE[newRole] || DEFAULT_ACCESS_BY_ROLE.employee);
+  }, [newRole]);
   // Per-user "add role" selector state
   const [addRoleSelections, setAddRoleSelections] = useState<Record<string, string>>({});
 
@@ -183,6 +203,7 @@ const Settings = () => {
         display_name: newName,
         company: newCompany,
         role: newRole,
+        section_access: newAccess,
       });
       toast.success("User created — invite email sent with setup link");
       setDialogOpen(false);
