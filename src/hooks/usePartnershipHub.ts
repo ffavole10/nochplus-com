@@ -163,6 +163,35 @@ export function usePartnershipHub() {
     setSites((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates } : s)));
   }, []);
 
+  // Hydrate the entire builder state from a saved plan (used by Pipeline → Open).
+  const loadPlan = useCallback(
+    (data: { partnerInfo?: Partial<PartnerInfo>; sites?: SiteConfig[]; roiInputs?: Partial<RoiInputs> }) => {
+      if (data.partnerInfo) {
+        setPartnerInfo((prev) => ({ ...prev, ...data.partnerInfo }));
+      }
+      if (data.sites && Array.isArray(data.sites) && data.sites.length > 0) {
+        // Re-mint ids so React keys stay stable even if the saved plan had reused ids
+        setSites(
+          data.sites.map((s) => ({
+            id: s.id || crypto.randomUUID(),
+            name: s.name || "Site",
+            l2Count: Number(s.l2Count) || 0,
+            dcCount: Number(s.dcCount) || 0,
+            tier: (s.tier as TierName) || "priority",
+          }))
+        );
+      }
+      if (data.roiInputs) {
+        // Mark every loaded numeric override as "manual" so smart auto-calc doesn't clobber it
+        downtimeManuallySet.current = true;
+        serviceCallsManuallySet.current = true;
+        driversManuallySet.current = true;
+        setRoiInputs((prev) => ({ ...prev, ...data.roiInputs }));
+      }
+    },
+    []
+  );
+
   const summary = useMemo(() => {
     const totalL2 = sites.reduce((a, s) => a + s.l2Count, 0);
     const totalDC = sites.reduce((a, s) => a + s.dcCount, 0);
@@ -276,5 +305,6 @@ export function usePartnershipHub() {
     roiInputs,
     setRoiInputs: handleSetRoiInputs,
     summary,
+    loadPlan,
   };
 }

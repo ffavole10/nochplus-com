@@ -7,6 +7,8 @@ import { PlanTiersTab } from "@/components/partnership-hub/PlanTiersTab";
 import { PartnerPlanTab } from "@/components/partnership-hub/PartnerPlanTab";
 import { KnowledgeBaseTab } from "@/components/partnership-hub/KnowledgeBaseTab";
 import { DemoInvoicesTab } from "@/components/partnership-hub/DemoInvoicesTab";
+import type { PartnershipPlan } from "@/hooks/usePartnershipPlans";
+import { toast } from "sonner";
 
 export default function PartnershipHub() {
   const [activeTab, setActiveTab] = useState("plan-tiers");
@@ -14,6 +16,17 @@ export default function PartnershipHub() {
 
   const handleNavigate = (tab: string) => {
     setActiveTab(tab);
+  };
+
+  const handleLoadPlan = (plan: PartnershipPlan) => {
+    const data = plan.plan_data || {};
+    hub.loadPlan({
+      partnerInfo: data.partnerInfo,
+      sites: data.sites,
+      roiInputs: data.roiInputs,
+    });
+    setActiveTab("plan-builder");
+    toast.success(`Loaded plan for ${plan.company_name || plan.contact_email}.`);
   };
 
   return (
@@ -64,7 +77,9 @@ export default function PartnershipHub() {
           <PartnerPlanTab
             partnerInfo={hub.partnerInfo}
             sites={hub.sites}
+            roiInputs={hub.roiInputs}
             summary={hub.summary}
+            onLoadPlan={handleLoadPlan}
           />
         </TabsContent>
 

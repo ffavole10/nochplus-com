@@ -19,7 +19,7 @@ const BodySchema = z.object({
   billingCycle: z.enum(["monthly", "annual"]),
   tier: z.string().min(1),
   sites: z.array(z.any()),
-  isTrial: z.boolean().optional().default(false),
+  planId: z.string().optional(),
 });
 
 serve(async (req) => {
@@ -112,16 +112,9 @@ serve(async (req) => {
         billing_cycle: body.billingCycle,
         monthly_amount: body.monthlyAmount.toString(),
         sites: JSON.stringify(body.sites),
+        plan_id: body.planId || "",
       },
     };
-
-    // Add trial if requested
-    if (body.isTrial) {
-      sessionParams.subscription_data = {
-        trial_period_days: 30,
-      };
-      sessionParams.payment_method_collection = "if_required";
-    }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
