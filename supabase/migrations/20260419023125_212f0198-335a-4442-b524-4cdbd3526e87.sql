@@ -1,0 +1,1 @@
+ALTER TABLE public.noch_plus_knowledge_base ADD COLUMN IF NOT EXISTS category text NOT NULL DEFAULT 'Commercial';
