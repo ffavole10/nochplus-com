@@ -39,6 +39,7 @@ type UserWithRole = {
   role: string;
   roles: string[];
   created_at: string;
+  last_sign_in_at: string | null;
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -440,9 +441,15 @@ const Settings = () => {
 
                           {/* Status */}
                           <div>
-                            <Badge className="bg-primary/15 text-primary border-primary/20 text-xs font-medium">
-                              Active
-                            </Badge>
+                            {user.last_sign_in_at ? (
+                              <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/20 text-xs font-medium">
+                                Active
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/20 text-xs font-medium">
+                                Invited
+                              </Badge>
+                            )}
                           </div>
 
                           {/* Current Roles */}
@@ -505,8 +512,8 @@ const Settings = () => {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-primary"
-                                  title="Send password reset"
+                                  className={`h-8 w-8 ${user.last_sign_in_at ? "text-muted-foreground hover:text-primary" : "text-amber-600 hover:text-amber-700"}`}
+                                  title={user.last_sign_in_at ? "Send password reset" : "Resend invite"}
                                   onClick={() => handleSendReset(user.email)}
                                 >
                                   <Send className="h-3.5 w-3.5" />

@@ -50,7 +50,11 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, email, role, display_name, company, user_id } = body;
+    const { action, email, role, display_name, company, user_id, redirect_origin } = body;
+
+    // Build absolute redirect URL so the recovery token survives Supabase's allow-list check
+    const origin = (redirect_origin || req.headers.get("origin") || "https://nochplus.com").replace(/\/$/, "");
+    const buildRedirect = (path: string) => `${origin}${path.startsWith("/") ? path : `/${path}`}`;
 
     if (action === "create_user") {
       // Generate a secure invite link instead of using plaintext passwords
@@ -73,14 +77,14 @@ serve(async (req) => {
       const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
         type: "recovery",
         email,
+        options: { redirectTo: buildRedirect("/reset-password") },
       });
 
       if (linkError) {
         console.warn("Failed to generate setup link:", linkError.message);
       }
 
-      const rawUrl = linkData?.properties?.action_link;
-      const setupUrl = rawUrl ? rawUrl.replace(/redirect_to=[^&]*/, 'redirect_to=' + encodeURIComponent('/reset-password')) : null;
+      const setupUrl = linkData?.properties?.action_link || null;
 
       // Send invite email via Resend
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -104,7 +108,7 @@ serve(async (req) => {
                   Set Up Your Account
                 </a>
               </div>
-              <p style="color: #64748b; font-size: 13px;">This link will expire in 24 hours. If you didn't expect this invitation, please disregard this email.</p>
+              <p style="color: #64748b; font-size: 13px;">This link will expire in 1 hour for security. If it expires before you set up your account, go to the sign-in page and click "Forgot password?" to get a new link.</p>
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
               <p style="color: #94a3b8; font-size: 12px;">
                 This is an automated message from the NOCH Power Platform.
@@ -194,12 +198,12 @@ serve(async (req) => {
       const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
         type: "recovery",
         email,
+        options: { redirectTo: buildRedirect("/reset-password") },
       });
 
       if (linkError) throw linkError;
 
-      const rawRecoveryUrl = linkData?.properties?.action_link;
-      const recoveryUrl = rawRecoveryUrl ? rawRecoveryUrl.replace(/redirect_to=[^&]*/, 'redirect_to=' + encodeURIComponent('/reset-password')) : null;
+      const recoveryUrl = linkData?.properties?.action_link || null;
       if (!recoveryUrl) {
         throw new Error("Failed to generate recovery link");
       }
@@ -276,6 +280,13 @@ serve(async (req) => {
         .from("user_roles")
         .select("*");
 
+      // Fetch auth users to get last_sign_in_at for status tracking
+      const { data: authList } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+      const authByUserId: Record<string, { last_sign_in_at: string | null }> = {};
+      for (const u of authList?.users || []) {
+        authByUserId[u.id] = { last_sign_in_at: u.last_sign_in_at ?? null };
+      }
+
       // Group roles by user_id
       const rolesByUser: Record<string, string[]> = {};
       for (const r of roles || []) {
@@ -288,6 +299,7 @@ serve(async (req) => {
         roles: rolesByUser[p.user_id] || [],
         // Keep backward compat
         role: (rolesByUser[p.user_id] || ["employee"])[0],
+        last_sign_in_at: authByUserId[p.user_id]?.last_sign_in_at ?? null,
       }));
 
       return new Response(JSON.stringify({ users }), {
