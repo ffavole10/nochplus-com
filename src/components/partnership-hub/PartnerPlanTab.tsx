@@ -471,20 +471,20 @@ export function PartnerPlanTab({ partnerInfo, sites, summary }: PartnerPlanTabPr
           <CardContent className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-xs text-sidebar-foreground/50">Company</p>
+                <p className="text-xs text-primary-foreground">Company</p>
                 <p className="font-medium">{partnerInfo.companyName || "—"}</p>
               </div>
               <div>
-                <p className="text-xs text-sidebar-foreground/50">Email</p>
+                <p className="text-xs text-primary-foreground">Email</p>
                 <p className="font-medium">{partnerInfo.email || "—"}</p>
               </div>
               <div>
-                <p className="text-xs text-sidebar-foreground/50">Total Chargers</p>
+                <p className="text-xs text-primary-foreground">Total Chargers</p>
                 <p className="font-medium">{summary.totalChargers}</p>
               </div>
               <div>
-                <p className="text-xs text-sidebar-foreground/50">Est. Savings</p>
-                <p className="font-medium text-emerald-400">{fmt(summary.estimatedSavings)}/yr</p>
+                <p className="text-xs text-primary-foreground">Est. Savings</p>
+                <p className="font-medium text-primary-foreground">{fmt(summary.estimatedSavings)}/yr</p>
               </div>
             </div>
           </CardContent>
