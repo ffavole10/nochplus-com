@@ -34,6 +34,7 @@ import {
 "@/components/ui/sidebar";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSectionAccess } from "@/hooks/useSectionAccess";
 import { useFilters, type StatusLevel } from "@/contexts/FilterContext";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { cn } from "@/lib/utils";
@@ -90,6 +91,7 @@ export function PlatformSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasRole } = useUserRole();
+  const { canAccess } = useSectionAccess();
   const { filters, toggleArrayFilter, clearFilters, hasActiveFilters } = useFilters();
   const {
     selectedCampaignName, selectedCampaignId: contextCampaignId, selectedCustomer,
