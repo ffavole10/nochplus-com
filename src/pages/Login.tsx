@@ -20,6 +20,26 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [resetting, setResetting] = useState(false);
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Enter your email above, then click Forgot password?");
+      return;
+    }
+    setResetting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success(`Password reset link sent to ${email}. Check your inbox.`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send reset link");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   // If already authenticated, redirect to dashboard
   useEffect(() => {
@@ -139,9 +159,11 @@ const Login = () => {
               </div>
               <button
                 type="button"
-                className="text-xs text-foreground/50 hover:text-foreground/80 transition-colors"
+                onClick={handleForgotPassword}
+                disabled={resetting}
+                className="text-xs text-foreground/50 hover:text-foreground/80 transition-colors disabled:opacity-50"
               >
-                Forgot password?
+                {resetting ? "Sending…" : "Forgot password?"}
               </button>
             </div>
           )}
