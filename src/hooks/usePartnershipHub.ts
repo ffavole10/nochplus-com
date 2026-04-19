@@ -203,9 +203,21 @@ export function usePartnershipHub() {
     const hoursSaved = Math.max(0, roiInputs.avgResponseTime - slaTargetHours);
     const downtimeSavings = (hoursSaved / 24) * roiInputs.downtimeCostPerDay * roiInputs.serviceCallsPerYear;
 
-    const netCost = annualTotal - estimatedSavings - downtimeSavings;
+    // Brand reputation protection
+    const brandReputationExposure =
+      roiInputs.serviceCallsPerYear *
+      roiInputs.driversAffectedPerIncident *
+      NEGATIVE_REVIEW_RATE *
+      roiInputs.customerLifetimeValue;
+    const responseRatio =
+      roiInputs.avgResponseTime > 0
+        ? Math.max(0, 1 - slaTargetHours / roiInputs.avgResponseTime)
+        : 0;
+    const brandProtectionSavings = brandReputationExposure * responseRatio;
+
+    const netCost = annualTotal - estimatedSavings - downtimeSavings - brandProtectionSavings;
     const totalSavings = currentAnnualSpend + downtimeSavings * 1 - netCost;
-    const combinedSavings = estimatedSavings + downtimeSavings;
+    const combinedSavings = estimatedSavings + downtimeSavings + brandProtectionSavings;
 
     // Recommended tier logic
     const hasDC = totalDC > 0;
@@ -237,6 +249,8 @@ export function usePartnershipHub() {
       currentAnnualSpend,
       estimatedSavings,
       downtimeSavings,
+      brandProtectionSavings,
+      brandReputationExposure,
       combinedSavings,
       netCost,
       totalSavings,
