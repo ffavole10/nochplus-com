@@ -56,3 +56,17 @@ export function useCreatePartnershipPlan() {
     onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
   });
 }
+
+export function useDeletePartnershipPlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("noch_plus_partnership_plans" as any)
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
+  });
+}
