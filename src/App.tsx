@@ -19,6 +19,7 @@ import EstimateStatus from "./pages/EstimateStatus";
 import SubmitAssessment from "./pages/public/SubmitAssessment";
 import SubmissionConfirmation from "./pages/public/SubmissionConfirmation";
 import TrackSubmission from "./pages/public/TrackSubmission";
+import PublicReport from "./pages/public/PublicReport";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { SectionAccessGuard } from "./components/SectionAccessGuard";
 import MainPlatformLayout from "./layouts/MainPlatformLayout";
@@ -159,6 +160,7 @@ const App = () => (
           <Route path="/submit/confirmation/:submissionId" element={<SubmissionConfirmation />} />
           <Route path="/track" element={<TrackSubmission />} />
           <Route path="/track/:submissionId" element={<TrackSubmission />} />
+          <Route path="/r/:token" element={<PublicReport />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

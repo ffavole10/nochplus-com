@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { User, LogOut, Pencil, Check, X, Search, ChevronRight } from "lucide-react";
+import { User, LogOut, Pencil, Check, X, Search, ChevronRight, FileText, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,6 +10,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useFilters } from "@/contexts/FilterContext";
+import { useCampaign, useChargerRecords } from "@/hooks/useCampaigns";
+import { chargerRecordToCharger, getNetworkStats } from "@/data/chargerData";
+import { chargerRecordToAssessment } from "@/lib/assessmentParser";
+import { getTicketPriorityStats } from "@/lib/ticketPriority";
+import { GenerateCampaignReportModal } from "@/components/reports/GenerateCampaignReportModal";
+import type { ReportSnapshot } from "@/lib/campaignReportPdf";
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -68,8 +74,81 @@ function getCampaignPageTitle(pathname: string): string | null {
 export function PlatformHeader() {
   const { session } = useAuth();
   const location = useLocation();
-  const { selectedCampaignName, setSelectedCampaignName, selectedCustomer } = useCampaignContext();
+  const { selectedCampaignId, selectedCampaignName, setSelectedCampaignName, selectedCustomer } = useCampaignContext();
   const { filters, updateFilter } = useFilters();
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const isDashboard = location.pathname === "/dashboard";
+  const { data: campaignData } = useCampaign(isDashboard ? selectedCampaignId || null : null);
+  const { data: chargerRecords = [] } = useChargerRecords(isDashboard ? selectedCampaignId || null : null);
+
+  const reportSnapshot = useMemo<ReportSnapshot | null>(() => {
+    if (!isDashboard || !selectedCampaignId || chargerRecords.length === 0) return null;
+    const customer = campaignData?.customer || selectedCustomer || "";
+    const chargers = chargerRecords.map((r) => chargerRecordToCharger(r, customer));
+    const stats = getNetworkStats(chargers);
+    const assessments = chargerRecords.map((r) => chargerRecordToAssessment(r));
+    const ts = getTicketPriorityStats(assessments);
+
+    // Top risk sites
+    const siteMap = new Map<string, { site_name: string; city: string; state: string; count: number }>();
+    chargers.forEach((c) => {
+      if (c.status !== "Critical" && c.status !== "Degraded") return;
+      const k = `${c.site_name}|${c.city}|${c.state}`;
+      const ex = siteMap.get(k);
+      if (ex) ex.count++;
+      else siteMap.set(k, { site_name: c.site_name, city: c.city, state: c.state, count: 1 });
+    });
+    const topRiskSites = Array.from(siteMap.values()).sort((a, b) => b.count - a.count).slice(0, 10);
+
+    // Top priority chargers
+    const topPriorityChargers = chargers
+      .filter((c) => c.status === "Critical" || c.status === "Degraded")
+      .slice(0, 10)
+      .map((c) => ({
+        station_id: c.station_id || "—",
+        site_name: c.site_name || "—",
+        type: c.type || "—",
+        priority: c.status,
+        location: `${c.city}, ${c.state}`,
+      }));
+
+    // Geo distribution
+    const geoMap = new Map<string, number>();
+    chargers.forEach((c) => {
+      if (!c.state) return;
+      geoMap.set(c.state, (geoMap.get(c.state) || 0) + 1);
+    });
+    const geoDistribution = Array.from(geoMap.entries())
+      .map(([state, count]) => ({ state, count }))
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      totalChargers: stats.total,
+      serviced: stats.serviced,
+      healthScore: stats.healthScore,
+      critical: stats.critical,
+      high: stats.high,
+      medium: stats.medium,
+      low: stats.low,
+      ticketStats: ts
+        ? {
+            open: ts.open,
+            solved: ts.solved,
+            p1: ts.p1,
+            p2: ts.p2,
+            p3: ts.p3,
+            p4: ts.p4,
+            slaBreached: ts.slaBreached,
+            over90Days: ts.over90Days,
+          }
+        : undefined,
+      topRiskSites,
+      topPriorityChargers,
+      geoDistribution,
+      customerName: customer,
+      campaignName: selectedCampaignName || campaignData?.name || "Campaign",
+    };
+  }, [isDashboard, selectedCampaignId, chargerRecords, campaignData, selectedCustomer, selectedCampaignName]);
   const { state, toggleSidebar } = useSidebar();
   const sidebarCollapsed = state === "collapsed";
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
