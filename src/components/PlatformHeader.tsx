@@ -89,10 +89,10 @@ export function PlatformHeader() {
     const assessments = chargerRecords.map((r) => chargerRecordToAssessment(r));
     const ts = getTicketPriorityStats(assessments);
 
-    // Top risk sites
+    // Top risk sites (Critical + High)
     const siteMap = new Map<string, { site_name: string; city: string; state: string; count: number }>();
     chargers.forEach((c) => {
-      if (c.status !== "Critical" && c.status !== "Degraded") return;
+      if (c.status !== "Critical" && c.status !== "High") return;
       const k = `${c.site_name}|${c.city}|${c.state}`;
       const ex = siteMap.get(k);
       if (ex) ex.count++;
@@ -102,12 +102,12 @@ export function PlatformHeader() {
 
     // Top priority chargers
     const topPriorityChargers = chargers
-      .filter((c) => c.status === "Critical" || c.status === "Degraded")
+      .filter((c) => c.status === "Critical" || c.status === "High")
       .slice(0, 10)
       .map((c) => ({
-        station_id: c.station_id || "—",
+        station_id: c.station_number || c.charger_id || "—",
         site_name: c.site_name || "—",
-        type: c.type || "—",
+        type: c.model || "—",
         priority: c.status,
         location: `${c.city}, ${c.state}`,
       }));
@@ -132,14 +132,14 @@ export function PlatformHeader() {
       low: stats.low,
       ticketStats: ts
         ? {
-            open: ts.open,
-            solved: ts.solved,
+            open: ts.total,
+            solved: 0,
             p1: ts.p1,
             p2: ts.p2,
             p3: ts.p3,
             p4: ts.p4,
-            slaBreached: ts.slaBreached,
-            over90Days: ts.over90Days,
+            slaBreached: 0,
+            over90Days: 0,
           }
         : undefined,
       topRiskSites,
