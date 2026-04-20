@@ -1004,6 +1004,93 @@ export type Database = {
           },
         ]
       }
+      campaign_reports: {
+        Row: {
+          ai_executive_summary: string | null
+          campaign_id: string
+          created_at: string
+          created_by: string | null
+          created_by_email: string | null
+          created_by_name: string | null
+          customer_id: string | null
+          expires_at: string
+          id: string
+          intro_note: string | null
+          pdf_storage_path: string | null
+          public_token: string
+          report_name: string
+          require_email_to_view: boolean
+          revoked_at: string | null
+          revoked_by: string | null
+          sections_included: Json
+          snapshot_data: Json
+          status: Database["public"]["Enums"]["campaign_report_status"]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          ai_executive_summary?: string | null
+          campaign_id: string
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          created_by_name?: string | null
+          customer_id?: string | null
+          expires_at?: string
+          id?: string
+          intro_note?: string | null
+          pdf_storage_path?: string | null
+          public_token: string
+          report_name: string
+          require_email_to_view?: boolean
+          revoked_at?: string | null
+          revoked_by?: string | null
+          sections_included?: Json
+          snapshot_data?: Json
+          status?: Database["public"]["Enums"]["campaign_report_status"]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          ai_executive_summary?: string | null
+          campaign_id?: string
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          created_by_name?: string | null
+          customer_id?: string | null
+          expires_at?: string
+          id?: string
+          intro_note?: string | null
+          pdf_storage_path?: string | null
+          public_token?: string
+          report_name?: string
+          require_email_to_view?: boolean
+          revoked_at?: string | null
+          revoked_by?: string | null
+          sections_included?: Json
+          snapshot_data?: Json
+          status?: Database["public"]["Enums"]["campaign_report_status"]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_reports_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_reports_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_schedule: {
         Row: {
           campaign_id: string
@@ -3208,6 +3295,100 @@ export type Database = {
         }
         Relationships: []
       }
+      report_audit_log: {
+        Row: {
+          action: string
+          id: string
+          metadata: Json | null
+          performed_at: string
+          performed_by: string | null
+          performed_by_name: string | null
+          report_id: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          metadata?: Json | null
+          performed_at?: string
+          performed_by?: string | null
+          performed_by_name?: string | null
+          report_id: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          metadata?: Json | null
+          performed_at?: string
+          performed_by?: string | null
+          performed_by_name?: string | null
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_audit_log_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_views: {
+        Row: {
+          country: string | null
+          downloaded_pdf: boolean
+          id: string
+          last_heartbeat_at: string
+          max_scroll_depth_percent: number
+          report_id: string
+          sections_viewed: Json
+          session_duration_seconds: number
+          session_id: string
+          user_agent: string | null
+          viewed_at: string
+          viewer_email: string | null
+          viewer_ip_hash: string | null
+        }
+        Insert: {
+          country?: string | null
+          downloaded_pdf?: boolean
+          id?: string
+          last_heartbeat_at?: string
+          max_scroll_depth_percent?: number
+          report_id: string
+          sections_viewed?: Json
+          session_duration_seconds?: number
+          session_id: string
+          user_agent?: string | null
+          viewed_at?: string
+          viewer_email?: string | null
+          viewer_ip_hash?: string | null
+        }
+        Update: {
+          country?: string | null
+          downloaded_pdf?: boolean
+          id?: string
+          last_heartbeat_at?: string
+          max_scroll_depth_percent?: number
+          report_id?: string
+          sections_viewed?: Json
+          session_duration_seconds?: number
+          session_id?: string
+          user_agent?: string | null
+          viewed_at?: string
+          viewer_email?: string | null
+          viewer_ip_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_views_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_regions: {
         Row: {
           cities: string[] | null
@@ -4305,6 +4486,7 @@ export type Database = {
         | "customer"
         | "manager"
         | "partner"
+      campaign_report_status: "active" | "revoked" | "expired"
       enterprise_inquiry_status: "new" | "contacted" | "qualified" | "closed"
       ticket_assessment_status: "pending_review" | "assessed" | "rejected"
     }
@@ -4442,6 +4624,7 @@ export const Constants = {
         "manager",
         "partner",
       ],
+      campaign_report_status: ["active", "revoked", "expired"],
       enterprise_inquiry_status: ["new", "contacted", "qualified", "closed"],
       ticket_assessment_status: ["pending_review", "assessed", "rejected"],
     },
