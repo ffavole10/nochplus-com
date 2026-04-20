@@ -8,18 +8,11 @@ import {
   Font,
 } from "@react-pdf/renderer";
 
-// Register Helvetica family with explicit weights so `fontWeight: 700`
-// resolves to Helvetica-Bold. Without this, @react-pdf/renderer can throw
-// "Cannot read properties of undefined (reading 'unitsPerEm')".
-Font.register({
-  family: "Helvetica",
-  fonts: [
-    { src: "Helvetica", fontWeight: 400 },
-    { src: "Helvetica-Bold", fontWeight: 700 },
-  ],
-});
-
-// Disable hyphenation to avoid font-internal lookups on long strings.
+// Disable hyphenation to avoid font-internal lookups on long strings
+// that can trigger "Cannot read properties of undefined (reading 'unitsPerEm')".
+// Do NOT call Font.register() for built-in PDF fonts (Helvetica, Times-Roman,
+// Courier) — `src` must be a real URL. Built-ins work automatically when
+// referenced via `fontFamily` + `fontWeight: "bold"`.
 Font.registerHyphenationCallback((word) => [word]);
 
 // ---------- Brand tokens ----------
