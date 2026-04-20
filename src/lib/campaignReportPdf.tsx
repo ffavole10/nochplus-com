@@ -30,6 +30,53 @@ const RISK = {
   low: "#22c55e",
 };
 
+const PDF_CHAR_REPLACEMENTS: Record<string, string> = {
+  "—": " - ",
+  "–": " - ",
+  "·": " | ",
+  "•": "-",
+  "●": "-",
+  "’": "'",
+  "‘": "'",
+  "“": '"',
+  "”": '"',
+  "…": "...",
+  "≥": ">=",
+  "≤": "<=",
+  "•": "-",
+};
+
+function sanitizePdfString(value: string): string {
+  const replaced = value.replace(/[—–·•●’‘“”…≥≤]/g, (char) => PDF_CHAR_REPLACEMENTS[char] ?? "");
+  return replaced
+    .normalize("NFKD")
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "")
+    .replace(/ {2,}/g, " ")
+    .trim();
+}
+
+function sanitizePdfValue<T>(value: T): T {
+  if (typeof value === "string") {
+    return sanitizePdfString(value) as T;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizePdfValue(item)) as T;
+  }
+
+  if (value instanceof Date || value instanceof Blob || value == null) {
+    return value;
+  }
+
+  if (typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nested]) => [key, sanitizePdfValue(nested)])
+    ) as T;
+  }
+
+  return value;
+}
+
 const styles = StyleSheet.create({
   page: {
     padding: 56, // ~0.78"
@@ -227,7 +274,7 @@ export type ReportProps = {
 const Footer = ({ customer, totalPages }: { customer: string; totalPages?: number }) => (
   <View style={styles.footer} fixed>
     <Text style={styles.footerText}>
-      Noch+ Campaign Report · {customer}
+      Noch+ Campaign Report | {customer}
     </Text>
     <Text
       style={styles.footerText}
@@ -341,6 +388,273 @@ function DashboardPage({ snapshot }: ReportProps) {
           <Text style={styles.riskChipLabel}>CRITICAL</Text>
         </View>
         <View style={[styles.riskChip, { backgroundColor: RISK.high }]}>
+          <Text style={styles.riskChipNum}>{snapshot.high}</Text>
+          <Text style={styles.riskChipLabel}>HIGH</Text>
+        </View>
+        <View style={[styles.riskChip, { backgroundColor: RISK.medium }]}>
+          <Text style={styles.riskChipNum}>{snapshot.medium}</Text>
+          <Text style={styles.riskChipLabel}>MEDIUM</Text>
+        </View>
+        <View style={[styles.riskChip, { backgroundColor: RISK.low }]}>
+          <Text style={styles.riskChipNum}>{snapshot.low}</Text>
+          <Text style={styles.riskChipLabel}>HEALTHY</Text>
+        </View>
+      </View>
+
+      {snapshot.topRiskSites && snapshot.topRiskSites.length > 0 && (
+        <>
+          <Text style={[styles.para, { marginTop: 28, fontWeight: "bold" }]}>
+            High Risk Areas
+          </Text>
+          <View style={styles.table}>
+            <View style={styles.th}>
+              <Text style={[styles.thText, { flex: 3 }]}>Site</Text>
+              <Text style={[styles.thText, { flex: 2 }]}>Location</Text>
+              <Text style={[styles.thText, { flex: 1, textAlign: "right" }]}>Issues</Text>
+            </View>
+            {snapshot.topRiskSites.slice(0, 8).map((s, i) => (
+              <View style={styles.tr} key={i}>
+                <Text style={[styles.tdText, { flex: 3 }]}>{s.site_name}</Text>
+                <Text style={[styles.tdText, { flex: 2 }]}>
+                  {s.city}, {s.state}
+                </Text>
+                <Text style={[styles.tdText, { flex: 1, textAlign: "right", color: RISK.critical, fontWeight: "bold" }]}>
+                  {s.count}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+
+      <Footer customer={snapshot.customerName} />
+    </Page>
+  );
+}
+
+function DatasetPage({ snapshot }: ReportProps) {
+  return (
+    <Page size="LETTER" style={styles.page}>
+      <Text style={styles.sectionTitle}>Dataset</Text>
+      <View style={styles.sectionRule} />
+
+      <Text style={styles.para}>
+        Asset breakdown and chargers requiring assessment.
+      </Text>
+
+      <View style={styles.statRow}>
+        <View style={styles.statBox}>
+          <Text style={styles.statNumTeal}>{snapshot.totalChargers.toLocaleString()}</Text>
+          <Text style={styles.statLabel}>Total Chargers</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statNum}>{snapshot.serviced}</Text>
+          <Text style={styles.statLabel}>Serviced to Date</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statNum}>
+            {snapshot.totalChargers - snapshot.serviced}
+          </Text>
+          <Text style={styles.statLabel}>Remaining</Text>
+        </View>
+      </View>
+
+      {snapshot.topPriorityChargers && snapshot.topPriorityChargers.length > 0 && (
+        <>
+          <Text style={[styles.para, { marginTop: 24, fontWeight: "bold" }]}>
+            Top Priority Chargers
+          </Text>
+          <View style={styles.table}>
+            <View style={styles.th}>
+              <Text style={[styles.thText, { flex: 2 }]}>Charger ID</Text>
+              <Text style={[styles.thText, { flex: 3 }]}>Site</Text>
+              <Text style={[styles.thText, { flex: 1.5 }]}>Type</Text>
+              <Text style={[styles.thText, { flex: 1 }]}>Priority</Text>
+            </View>
+            {snapshot.topPriorityChargers.slice(0, 14).map((c, i) => (
+              <View style={styles.tr} key={i}>
+                <Text style={[styles.tdText, { flex: 2 }]}>{c.station_id}</Text>
+                <Text style={[styles.tdText, { flex: 3 }]}>{c.site_name}</Text>
+                <Text style={[styles.tdText, { flex: 1.5 }]}>{c.type}</Text>
+                <Text
+                  style={[
+                    styles.tdText,
+                    {
+                      flex: 1,
+                      fontWeight: "bold",
+                      color:
+                        c.priority === "Critical"
+                          ? RISK.critical
+                          : c.priority === "High"
+                          ? RISK.high
+                          : c.priority === "Medium"
+                          ? RISK.medium
+                          : RISK.low,
+                    },
+                  ]}
+                >
+                  {c.priority}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+
+      <Footer customer={snapshot.customerName} />
+    </Page>
+  );
+}
+
+function FlaggedPage({ snapshot }: ReportProps) {
+  const t = snapshot.ticketStats;
+  return (
+    <Page size="LETTER" style={styles.page}>
+      <Text style={styles.sectionTitle}>Flagged Tickets</Text>
+      <View style={styles.sectionRule} />
+
+      <Text style={styles.para}>
+        Open service tickets, SLA performance, and aging breakdown.
+      </Text>
+
+      {t && (
+        <>
+          <View style={styles.statRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statNumTeal}>{t.open}</Text>
+              <Text style={styles.statLabel}>Open Tickets</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statNum}>{t.solved}</Text>
+              <Text style={styles.statLabel}>Solved</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={[styles.statNum, { color: RISK.critical }]}>{t.slaBreached}</Text>
+              <Text style={styles.statLabel}>SLA Breached</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={[styles.statNum, { color: RISK.high }]}>{t.over90Days}</Text>
+              <Text style={styles.statLabel}>&gt; 90 Days</Text>
+            </View>
+          </View>
+
+          <View style={styles.riskRow}>
+            <View style={[styles.riskChip, { backgroundColor: RISK.critical }]}>
+              <Text style={styles.riskChipNum}>{t.p1}</Text>
+              <Text style={styles.riskChipLabel}>P1</Text>
+            </View>
+            <View style={[styles.riskChip, { backgroundColor: RISK.high }]}>
+              <Text style={styles.riskChipNum}>{t.p2}</Text>
+              <Text style={styles.riskChipLabel}>P2</Text>
+            </View>
+            <View style={[styles.riskChip, { backgroundColor: RISK.medium }]}>
+              <Text style={styles.riskChipNum}>{t.p3}</Text>
+              <Text style={styles.riskChipLabel}>P3</Text>
+            </View>
+            <View style={[styles.riskChip, { backgroundColor: RISK.low }]}>
+              <Text style={styles.riskChipNum}>{t.p4}</Text>
+              <Text style={styles.riskChipLabel}>P4</Text>
+            </View>
+          </View>
+
+          {t.over90Days > 0 && t.open > 0 && (
+            <View style={styles.insight}>
+              <Text style={styles.insightLabel}>KEY INSIGHT</Text>
+              <Text style={styles.insightText}>
+                {Math.round((t.over90Days / Math.max(t.open, 1)) * 100)}% of open
+                tickets are over 90 days old - a strong signal that current dispatch
+                cadence is not keeping pace with incoming demand.
+              </Text>
+            </View>
+          )}
+        </>
+      )}
+
+      {snapshot.geoDistribution && snapshot.geoDistribution.length > 0 && (
+        <>
+          <Text style={[styles.para, { marginTop: 22, fontWeight: "bold" }]}>
+            Geographic Distribution
+          </Text>
+          <View style={styles.table}>
+            <View style={styles.th}>
+              <Text style={[styles.thText, { flex: 3 }]}>State</Text>
+              <Text style={[styles.thText, { flex: 1, textAlign: "right" }]}>Tickets</Text>
+            </View>
+            {snapshot.geoDistribution.slice(0, 10).map((g, i) => (
+              <View style={styles.tr} key={i}>
+                <Text style={[styles.tdText, { flex: 3 }]}>{g.state || "-"}</Text>
+                <Text style={[styles.tdText, { flex: 1, textAlign: "right", fontWeight: "bold" }]}>
+                  {g.count}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+
+      <Footer customer={snapshot.customerName} />
+    </Page>
+  );
+}
+
+function ClosingPage({ snapshot, preparedBy }: ReportProps) {
+  return (
+    <Page size="LETTER" style={styles.page}>
+      <Text style={styles.closingTitle}>How Noch+ Helps</Text>
+      <View style={styles.sectionRule} />
+
+      {[
+        "AI-driven reliability - every charger is monitored, scored, and prioritized automatically so issues surface before they become outages.",
+        "Rapid dispatch - a national network of certified field technicians, mobilized in days, not weeks.",
+        "Certified technicians - OEM-trained for every major charger brand, with full diagnostic and repair coverage.",
+        "Transparent reporting - live dashboards, branded customer reports, and full audit trail on every action.",
+      ].map((b, i) => (
+        <View style={styles.bullet} key={i}>
+          <Text style={styles.bulletDot}>-</Text>
+          <Text style={styles.bulletText}>{b}</Text>
+        </View>
+      ))}
+
+      <View style={styles.contactBox}>
+        <Text style={styles.coverLabel}>Your contact</Text>
+        <Text style={[styles.coverValue, { marginBottom: 4 }]}>
+          {preparedBy.name || preparedBy.email}
+        </Text>
+        <Text style={[styles.tdText, { color: MUTED }]}>{preparedBy.email}</Text>
+      </View>
+
+      <View style={styles.cta}>
+        <Text style={styles.ctaText}>Ready to move forward? Let's talk.</Text>
+      </View>
+
+      <Footer customer={snapshot.customerName} />
+    </Page>
+  );
+}
+
+export function CampaignReportDocument(props: ReportProps) {
+  const sections = props.sectionsIncluded;
+  return (
+    <Document
+      title={props.reportName}
+      author="Noch+"
+      subject="Campaign Report"
+    >
+      <CoverPage {...props} />
+      <ExecSummaryPage {...props} />
+      {sections.includes("dashboard") && <DashboardPage {...props} />}
+      {sections.includes("dataset") && <DatasetPage {...props} />}
+      {sections.includes("flagged") && <FlaggedPage {...props} />}
+      <ClosingPage {...props} />
+    </Document>
+  );
+}
+
+export async function renderCampaignReportPdf(props: ReportProps): Promise<Blob> {
+  const safeProps = sanitizePdfValue(props);
+  const blob = await pdf(<CampaignReportDocument {...safeProps} />).toBlob();
+  return blob;
+}
           <Text style={styles.riskChipNum}>{snapshot.high}</Text>
           <Text style={styles.riskChipLabel}>HIGH</Text>
         </View>
