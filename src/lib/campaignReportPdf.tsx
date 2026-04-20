@@ -40,10 +40,10 @@ const styles = StyleSheet.create({
   },
   // Cover
   coverPage: { padding: 64, color: INK, fontFamily: "Helvetica" },
-  coverBrand: { color: TEAL, fontSize: 16, fontWeight: 700, letterSpacing: 2 },
+  coverBrand: { color: TEAL, fontSize: 16, fontWeight: "bold", letterSpacing: 2 },
   coverTitle: {
     fontSize: 38,
-    fontWeight: 700,
+    fontWeight: "bold",
     marginTop: 40,
     color: INK,
     lineHeight: 1.15,
@@ -61,20 +61,20 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     marginBottom: 4,
   },
-  coverValue: { fontSize: 16, fontWeight: 700, color: INK, marginBottom: 18 },
+  coverValue: { fontSize: 16, fontWeight: "bold", color: INK, marginBottom: 18 },
   heroStat: {
     marginTop: 60,
     padding: 28,
     backgroundColor: SOFT,
     borderRadius: 8,
   },
-  heroNumber: { fontSize: 56, fontWeight: 700, color: TEAL },
+  heroNumber: { fontSize: 56, fontWeight: "bold", color: TEAL },
   heroLabel: { fontSize: 12, color: MUTED, marginTop: 4 },
 
   // Sections
   sectionTitle: {
     fontSize: 22,
-    fontWeight: 700,
+    fontWeight: "bold",
     color: INK,
     marginBottom: 6,
   },
@@ -102,14 +102,14 @@ const styles = StyleSheet.create({
     backgroundColor: SOFT,
     borderRadius: 6,
   },
-  statNum: { fontSize: 24, fontWeight: 700, color: INK },
-  statNumTeal: { fontSize: 24, fontWeight: 700, color: TEAL },
+  statNum: { fontSize: 24, fontWeight: "bold", color: INK },
+  statNumTeal: { fontSize: 24, fontWeight: "bold", color: TEAL },
   statLabel: { fontSize: 9, color: MUTED, marginTop: 4, textTransform: "uppercase", letterSpacing: 0.5 },
 
   // Risk row
   riskRow: { flexDirection: "row", marginTop: 12, gap: 8 },
   riskChip: { flex: 1, padding: 10, borderRadius: 4 },
-  riskChipNum: { fontSize: 18, fontWeight: 700, color: "#fff" },
+  riskChipNum: { fontSize: 18, fontWeight: "bold", color: "#fff" },
   riskChipLabel: { fontSize: 8, color: "rgba(255,255,255,0.9)", marginTop: 2, letterSpacing: 0.5 },
 
   // Tables
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderBottom: `1px solid ${BORDER}`,
   },
-  thText: { fontSize: 9, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5 },
+  thText: { fontSize: 9, fontWeight: "bold", color: MUTED, textTransform: "uppercase", letterSpacing: 0.5 },
   tr: {
     flexDirection: "row",
     paddingVertical: 6,
@@ -141,14 +141,14 @@ const styles = StyleSheet.create({
   insightLabel: {
     fontSize: 8,
     color: "#92400e",
-    fontWeight: 700,
+    fontWeight: "bold",
     letterSpacing: 1,
     marginBottom: 4,
   },
   insightText: { fontSize: 11, color: "#78350f" },
 
   // Closing
-  closingTitle: { fontSize: 28, fontWeight: 700, color: INK, marginBottom: 6 },
+  closingTitle: { fontSize: 28, fontWeight: "bold", color: INK, marginBottom: 6 },
   bullet: { flexDirection: "row", marginBottom: 10 },
   bulletDot: { color: TEAL, fontSize: 11, marginRight: 8 },
   bulletText: { fontSize: 11, color: INK, flex: 1, lineHeight: 1.5 },
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     color: "#fff",
   },
-  ctaText: { color: "#fff", fontSize: 14, fontWeight: 700 },
+  ctaText: { color: "#fff", fontSize: 14, fontWeight: "bold" },
 
   // Footer
   footer: {
@@ -356,7 +356,7 @@ function DashboardPage({ snapshot }: ReportProps) {
 
       {snapshot.topRiskSites && snapshot.topRiskSites.length > 0 && (
         <>
-          <Text style={[styles.para, { marginTop: 28, fontWeight: 700 }]}>
+          <Text style={[styles.para, { marginTop: 28, fontWeight: "bold" }]}>
             High Risk Areas
           </Text>
           <View style={styles.table}>
@@ -371,7 +371,7 @@ function DashboardPage({ snapshot }: ReportProps) {
                 <Text style={[styles.tdText, { flex: 2 }]}>
                   {s.city}, {s.state}
                 </Text>
-                <Text style={[styles.tdText, { flex: 1, textAlign: "right", color: RISK.critical, fontWeight: 700 }]}>
+                <Text style={[styles.tdText, { flex: 1, textAlign: "right", color: RISK.critical, fontWeight: "bold" }]}>
                   {s.count}
                 </Text>
               </View>
@@ -414,7 +414,7 @@ function DatasetPage({ snapshot }: ReportProps) {
 
       {snapshot.topPriorityChargers && snapshot.topPriorityChargers.length > 0 && (
         <>
-          <Text style={[styles.para, { marginTop: 24, fontWeight: 700 }]}>
+          <Text style={[styles.para, { marginTop: 24, fontWeight: "bold" }]}>
             Top Priority Chargers
           </Text>
           <View style={styles.table}>
@@ -434,7 +434,7 @@ function DatasetPage({ snapshot }: ReportProps) {
                     styles.tdText,
                     {
                       flex: 1,
-                      fontWeight: 700,
+                      fontWeight: "bold",
                       color:
                         c.priority === "Critical"
                           ? RISK.critical
@@ -525,7 +525,7 @@ function FlaggedPage({ snapshot }: ReportProps) {
 
       {snapshot.geoDistribution && snapshot.geoDistribution.length > 0 && (
         <>
-          <Text style={[styles.para, { marginTop: 22, fontWeight: 700 }]}>
+          <Text style={[styles.para, { marginTop: 22, fontWeight: "bold" }]}>
             Geographic Distribution
           </Text>
           <View style={styles.table}>
@@ -536,7 +536,7 @@ function FlaggedPage({ snapshot }: ReportProps) {
             {snapshot.geoDistribution.slice(0, 10).map((g, i) => (
               <View style={styles.tr} key={i}>
                 <Text style={[styles.tdText, { flex: 3 }]}>{g.state || "—"}</Text>
-                <Text style={[styles.tdText, { flex: 1, textAlign: "right", fontWeight: 700 }]}>
+                <Text style={[styles.tdText, { flex: 1, textAlign: "right", fontWeight: "bold" }]}>
                   {g.count}
                 </Text>
               </View>
