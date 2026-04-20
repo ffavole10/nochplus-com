@@ -258,6 +258,19 @@ export function PlatformHeader() {
               />
             </div>
           )}
+          {isDashboard && (
+            <Button
+              size="sm"
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+              disabled={!reportSnapshot}
+              onClick={() => setReportModalOpen(true)}
+              title={!reportSnapshot ? "Select a campaign to generate a report" : "Generate Campaign Report"}
+            >
+              <FileText className="w-4 h-4" />
+              <Share2 className="w-3.5 h-3.5 -ml-1" />
+              <span className="hidden md:inline">Generate Report</span>
+            </Button>
+          )}
           <NotificationBell />
           <Avatar className="h-9 w-9 cursor-pointer">
             <AvatarImage src={avatarUrl || undefined} alt="Profile" />
@@ -278,6 +291,16 @@ export function PlatformHeader() {
           </Button>
         </div>
       </div>
+      {isDashboard && reportSnapshot && selectedCampaignId && (
+        <GenerateCampaignReportModal
+          open={reportModalOpen}
+          onOpenChange={setReportModalOpen}
+          campaignId={selectedCampaignId}
+          campaignName={reportSnapshot.campaignName}
+          campaignCustomerId={campaignData?.customer_id ?? null}
+          snapshot={reportSnapshot}
+        />
+      )}
     </header>
   );
 }
