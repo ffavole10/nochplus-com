@@ -614,7 +614,6 @@ export default function PublicReport() {
             <SectionHeader title="How Noch+ Helps" />
             <ul className="space-y-3">
               {[
-                "AI-driven reliability — every charger is monitored, scored, and prioritized automatically.",
                 "Rapid dispatch — a national network of certified field technicians, mobilized in days.",
                 "Certified technicians — OEM-trained for every major charger brand.",
                 "Transparent reporting — live dashboards, branded customer reports, full audit trail.",
@@ -630,12 +629,8 @@ export default function PublicReport() {
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
                 Your contact
               </p>
-              <p className="font-bold text-foreground">
-                {report.created_by_name || report.created_by_email || "Noch+ Team"}
-              </p>
-              {report.created_by_email && (
-                <p className="text-sm text-muted-foreground">{report.created_by_email}</p>
-              )}
+              <p className="font-bold text-foreground">Joe Rose</p>
+              <p className="text-sm text-muted-foreground">jrose@nochpower.com</p>
             </div>
 
             <div className="p-5 bg-primary text-primary-foreground rounded-lg">
