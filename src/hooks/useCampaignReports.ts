@@ -73,8 +73,8 @@ export function useCreateCampaignReport() {
       ).toISOString();
 
       // 1. Insert report row
-      const { data: inserted, error: insertErr } = await supabase
-        .from("campaign_reports")
+      const { data: inserted, error: insertErr } = await (supabase
+        .from("campaign_reports") as any)
         .insert({
           campaign_id: args.campaign_id,
           customer_id: args.customer_id,
