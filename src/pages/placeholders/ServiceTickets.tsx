@@ -17,6 +17,7 @@ import { ServiceTicket } from "@/types/serviceTicket";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useServiceTicketsSync, persistTicketToDB } from "@/hooks/useServiceTicketsDB";
 import { AutoHealResult } from "@/services/autoHealService";
+import { rpcApproveAndRunAssessment, rpcRejectTicket } from "@/hooks/useTicketLifecycle";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 
@@ -211,9 +212,30 @@ export default function ServiceTickets() {
 
   const [postApproveTab, setPostApproveTab] = useState<Record<string, string>>({});
 
-  const handleApproveTicket = (ticketId: string, result: AutoHealResult, notes: string) => {
+  const handleApproveTicket = async (ticketId: string, result: AutoHealResult, notes: string) => {
     const t = useServiceTicketsStore.getState().getTicketById(ticketId);
     if (!t) return;
+
+    // Server is the source of truth — atomic check + update + audit
+    try {
+      await rpcApproveAndRunAssessment(
+        ticketId,
+        {
+          assessment_data: result.assessment as any,
+          swi_match_data: (result.swiMatch as any) || null,
+        },
+        notes,
+      );
+    } catch (err: any) {
+      const msg = err?.message || "";
+      if (msg.toLowerCase().includes("already")) {
+        toast.error("This ticket was already assessed by another user. Refreshing...");
+      } else {
+        toast.error(msg || "Could not approve ticket");
+      }
+      return;
+    }
+
     const now = new Date().toISOString();
     const updatedSteps = t.workflowSteps.map(s => {
       if (s.number === 1) return { ...s, status: "complete" as const, completedAt: now };
@@ -223,8 +245,6 @@ export default function ServiceTickets() {
       return s;
     });
     const newStep = result.swiMatch?.matched_swi_id ? 3 : 2;
-    // Set the post-approve tab BEFORE updating the store, so when the
-    // DetailPanel mounts (triggered by the store update) the defaultTab is ready.
     setPostApproveTab(prev => ({ ...prev, [ticketId]: "estimate" }));
     updateTicketInStore(ticketId, {
       status: "in_progress" as const,
@@ -252,11 +272,18 @@ export default function ServiceTickets() {
         ...(result.swiMatch?.matched_swi_id ? [{ id: `h-${Date.now() + 1}`, timestamp: now, action: `SWI matched: ${result.swiMatch.matched_swi_id} (${result.swiMatch.confidence}%)`, performedBy: "AI Engine" }] : []),
       ],
     });
+    toast.success("Assessment complete — opening estimate");
   };
 
-  const handleRejectTicket = (ticketId: string, reason: string) => {
+  const handleRejectTicket = async (ticketId: string, reason: string) => {
     const t = useServiceTicketsStore.getState().getTicketById(ticketId);
     if (!t) return;
+    try {
+      await rpcRejectTicket(ticketId, reason);
+    } catch (err: any) {
+      toast.error(err?.message || "Could not reject ticket");
+      return;
+    }
     const now = new Date().toISOString();
     updateTicketInStore(ticketId, {
       status: "rejected" as const,
@@ -264,6 +291,7 @@ export default function ServiceTickets() {
       updatedAt: now,
       history: [...t.history, { id: `h-${Date.now()}`, timestamp: now, action: `Ticket rejected: ${reason}`, performedBy: "Account Manager" }],
     });
+    toast.success("Ticket rejected");
   };
 
   // Check if the expanded ticket is a child ticket (to render it inline under its parent)

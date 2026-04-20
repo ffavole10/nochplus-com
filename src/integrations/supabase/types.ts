@@ -3240,6 +3240,10 @@ export type Database = {
       }
       service_tickets: {
         Row: {
+          assessed_at: string | null
+          assessed_by: string | null
+          assessment_data: Json | null
+          assessment_status: Database["public"]["Enums"]["ticket_assessment_status"]
           charger_count: number | null
           city: string
           company_id: string | null
@@ -3255,6 +3259,15 @@ export type Database = {
           oem_ticket_number: string | null
           parent_ticket_id: string | null
           phone: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          revert_reason: string | null
+          reverted_at: string | null
+          reverted_by: string | null
+          sent_to_customer_at: string | null
+          sent_to_customer_by: string | null
+          sent_to_customer_email: string | null
           service_urgency: string | null
           source: string
           staff_notes: string | null
@@ -3262,12 +3275,17 @@ export type Database = {
           status: string
           street_address: string | null
           submission_id: string | null
+          swi_match_data: Json | null
           technician_id: string | null
           ticket_id: string
           updated_at: string
           zip_code: string | null
         }
         Insert: {
+          assessed_at?: string | null
+          assessed_by?: string | null
+          assessment_data?: Json | null
+          assessment_status?: Database["public"]["Enums"]["ticket_assessment_status"]
           charger_count?: number | null
           city: string
           company_id?: string | null
@@ -3283,6 +3301,15 @@ export type Database = {
           oem_ticket_number?: string | null
           parent_ticket_id?: string | null
           phone: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          revert_reason?: string | null
+          reverted_at?: string | null
+          reverted_by?: string | null
+          sent_to_customer_at?: string | null
+          sent_to_customer_by?: string | null
+          sent_to_customer_email?: string | null
           service_urgency?: string | null
           source?: string
           staff_notes?: string | null
@@ -3290,12 +3317,17 @@ export type Database = {
           status?: string
           street_address?: string | null
           submission_id?: string | null
+          swi_match_data?: Json | null
           technician_id?: string | null
           ticket_id: string
           updated_at?: string
           zip_code?: string | null
         }
         Update: {
+          assessed_at?: string | null
+          assessed_by?: string | null
+          assessment_data?: Json | null
+          assessment_status?: Database["public"]["Enums"]["ticket_assessment_status"]
           charger_count?: number | null
           city?: string
           company_id?: string | null
@@ -3311,6 +3343,15 @@ export type Database = {
           oem_ticket_number?: string | null
           parent_ticket_id?: string | null
           phone?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          revert_reason?: string | null
+          reverted_at?: string | null
+          reverted_by?: string | null
+          sent_to_customer_at?: string | null
+          sent_to_customer_by?: string | null
+          sent_to_customer_email?: string | null
           service_urgency?: string | null
           source?: string
           staff_notes?: string | null
@@ -3318,6 +3359,7 @@ export type Database = {
           status?: string
           street_address?: string | null
           submission_id?: string | null
+          swi_match_data?: Json | null
           technician_id?: string | null
           ticket_id?: string
           updated_at?: string
@@ -3665,6 +3707,47 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_audit_log: {
+        Row: {
+          action: string
+          id: string
+          metadata: Json | null
+          notes: string | null
+          performed_at: string
+          performed_by: string | null
+          performed_by_name: string | null
+          ticket_id: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          performed_at?: string
+          performed_by?: string | null
+          performed_by_name?: string | null
+          ticket_id: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          performed_at?: string
+          performed_by?: string | null
+          performed_by_name?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_audit_log_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "service_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_chargers: {
         Row: {
           brand: string
@@ -3873,6 +3956,63 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_and_run_assessment: {
+        Args: {
+          _assessment_data: Json
+          _notes?: string
+          _performer_name?: string
+          _swi_match_data: Json
+          _ticket_id: string
+        }
+        Returns: {
+          assessed_at: string | null
+          assessed_by: string | null
+          assessment_data: Json | null
+          assessment_status: Database["public"]["Enums"]["ticket_assessment_status"]
+          charger_count: number | null
+          city: string
+          company_id: string | null
+          company_name: string
+          created_at: string
+          customer_notes: string | null
+          email: string
+          full_name: string
+          id: string
+          is_parent: boolean | null
+          location_id: string | null
+          oem_ticket_exists: string | null
+          oem_ticket_number: string | null
+          parent_ticket_id: string | null
+          phone: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          revert_reason: string | null
+          reverted_at: string | null
+          reverted_by: string | null
+          sent_to_customer_at: string | null
+          sent_to_customer_by: string | null
+          sent_to_customer_email: string | null
+          service_urgency: string | null
+          source: string
+          staff_notes: string | null
+          state: string
+          status: string
+          street_address: string | null
+          submission_id: string | null
+          swi_match_data: Json | null
+          technician_id: string | null
+          ticket_id: string
+          updated_at: string
+          zip_code: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_tickets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3883,6 +4023,276 @@ export type Database = {
       has_section_access: {
         Args: { _section_key: string; _user_id: string }
         Returns: boolean
+      }
+      is_ticket_overrider: { Args: { _user_id: string }; Returns: boolean }
+      mark_assessment_sent: {
+        Args: { _email: string; _performer_name?: string; _ticket_id: string }
+        Returns: {
+          assessed_at: string | null
+          assessed_by: string | null
+          assessment_data: Json | null
+          assessment_status: Database["public"]["Enums"]["ticket_assessment_status"]
+          charger_count: number | null
+          city: string
+          company_id: string | null
+          company_name: string
+          created_at: string
+          customer_notes: string | null
+          email: string
+          full_name: string
+          id: string
+          is_parent: boolean | null
+          location_id: string | null
+          oem_ticket_exists: string | null
+          oem_ticket_number: string | null
+          parent_ticket_id: string | null
+          phone: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          revert_reason: string | null
+          reverted_at: string | null
+          reverted_by: string | null
+          sent_to_customer_at: string | null
+          sent_to_customer_by: string | null
+          sent_to_customer_email: string | null
+          service_urgency: string | null
+          source: string
+          staff_notes: string | null
+          state: string
+          status: string
+          street_address: string | null
+          submission_id: string | null
+          swi_match_data: Json | null
+          technician_id: string | null
+          ticket_id: string
+          updated_at: string
+          zip_code: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_tickets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      reject_ticket: {
+        Args: { _performer_name?: string; _reason: string; _ticket_id: string }
+        Returns: {
+          assessed_at: string | null
+          assessed_by: string | null
+          assessment_data: Json | null
+          assessment_status: Database["public"]["Enums"]["ticket_assessment_status"]
+          charger_count: number | null
+          city: string
+          company_id: string | null
+          company_name: string
+          created_at: string
+          customer_notes: string | null
+          email: string
+          full_name: string
+          id: string
+          is_parent: boolean | null
+          location_id: string | null
+          oem_ticket_exists: string | null
+          oem_ticket_number: string | null
+          parent_ticket_id: string | null
+          phone: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          revert_reason: string | null
+          reverted_at: string | null
+          reverted_by: string | null
+          sent_to_customer_at: string | null
+          sent_to_customer_by: string | null
+          sent_to_customer_email: string | null
+          service_urgency: string | null
+          source: string
+          staff_notes: string | null
+          state: string
+          status: string
+          street_address: string | null
+          submission_id: string | null
+          swi_match_data: Json | null
+          technician_id: string | null
+          ticket_id: string
+          updated_at: string
+          zip_code: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_tickets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      rerun_assessment: {
+        Args: {
+          _assessment_data: Json
+          _performer_name?: string
+          _swi_match_data: Json
+          _ticket_id: string
+        }
+        Returns: {
+          assessed_at: string | null
+          assessed_by: string | null
+          assessment_data: Json | null
+          assessment_status: Database["public"]["Enums"]["ticket_assessment_status"]
+          charger_count: number | null
+          city: string
+          company_id: string | null
+          company_name: string
+          created_at: string
+          customer_notes: string | null
+          email: string
+          full_name: string
+          id: string
+          is_parent: boolean | null
+          location_id: string | null
+          oem_ticket_exists: string | null
+          oem_ticket_number: string | null
+          parent_ticket_id: string | null
+          phone: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          revert_reason: string | null
+          reverted_at: string | null
+          reverted_by: string | null
+          sent_to_customer_at: string | null
+          sent_to_customer_by: string | null
+          sent_to_customer_email: string | null
+          service_urgency: string | null
+          source: string
+          staff_notes: string | null
+          state: string
+          status: string
+          street_address: string | null
+          submission_id: string | null
+          swi_match_data: Json | null
+          technician_id: string | null
+          ticket_id: string
+          updated_at: string
+          zip_code: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_tickets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      resend_assessment: {
+        Args: {
+          _email: string
+          _note: string
+          _performer_name?: string
+          _ticket_id: string
+        }
+        Returns: {
+          assessed_at: string | null
+          assessed_by: string | null
+          assessment_data: Json | null
+          assessment_status: Database["public"]["Enums"]["ticket_assessment_status"]
+          charger_count: number | null
+          city: string
+          company_id: string | null
+          company_name: string
+          created_at: string
+          customer_notes: string | null
+          email: string
+          full_name: string
+          id: string
+          is_parent: boolean | null
+          location_id: string | null
+          oem_ticket_exists: string | null
+          oem_ticket_number: string | null
+          parent_ticket_id: string | null
+          phone: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          revert_reason: string | null
+          reverted_at: string | null
+          reverted_by: string | null
+          sent_to_customer_at: string | null
+          sent_to_customer_by: string | null
+          sent_to_customer_email: string | null
+          service_urgency: string | null
+          source: string
+          staff_notes: string | null
+          state: string
+          status: string
+          street_address: string | null
+          submission_id: string | null
+          swi_match_data: Json | null
+          technician_id: string | null
+          ticket_id: string
+          updated_at: string
+          zip_code: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_tickets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      revert_rejection: {
+        Args: {
+          _performer_name?: string
+          _revert_reason: string
+          _ticket_id: string
+        }
+        Returns: {
+          assessed_at: string | null
+          assessed_by: string | null
+          assessment_data: Json | null
+          assessment_status: Database["public"]["Enums"]["ticket_assessment_status"]
+          charger_count: number | null
+          city: string
+          company_id: string | null
+          company_name: string
+          created_at: string
+          customer_notes: string | null
+          email: string
+          full_name: string
+          id: string
+          is_parent: boolean | null
+          location_id: string | null
+          oem_ticket_exists: string | null
+          oem_ticket_number: string | null
+          parent_ticket_id: string | null
+          phone: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          revert_reason: string | null
+          reverted_at: string | null
+          reverted_by: string | null
+          sent_to_customer_at: string | null
+          sent_to_customer_by: string | null
+          sent_to_customer_email: string | null
+          service_urgency: string | null
+          source: string
+          staff_notes: string | null
+          state: string
+          status: string
+          street_address: string | null
+          submission_id: string | null
+          swi_match_data: Json | null
+          technician_id: string | null
+          ticket_id: string
+          updated_at: string
+          zip_code: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_tickets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
@@ -3896,6 +4306,7 @@ export type Database = {
         | "manager"
         | "partner"
       enterprise_inquiry_status: "new" | "contacted" | "qualified" | "closed"
+      ticket_assessment_status: "pending_review" | "assessed" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4032,6 +4443,7 @@ export const Constants = {
         "partner",
       ],
       enterprise_inquiry_status: ["new", "contacted", "qualified", "closed"],
+      ticket_assessment_status: ["pending_review", "assessed", "rejected"],
     },
   },
 } as const
