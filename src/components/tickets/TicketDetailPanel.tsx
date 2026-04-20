@@ -21,6 +21,8 @@ import { useState } from "react";
 import { runAutoHealAssessment } from "@/services/autoHealService";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { toast } from "sonner";
+import { useTicketLifecycle, rpcRerunAssessment, canOverrideTicketLifecycle, formatAuditAction } from "@/hooks/useTicketLifecycle";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface TicketDetailPanelProps {
   ticket: ServiceTicket;
