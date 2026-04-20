@@ -534,12 +534,12 @@ function renderClosing(doc: jsPDF, props: ReportProps) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   setText(doc, INK);
-  doc.text(`${props.preparedBy.name}`, MARGIN, y);
+  doc.setFont("helvetica", "bold");
+  doc.text("Joe Rose", MARGIN, y);
   y += 5;
-  if (props.preparedBy.email) {
-    doc.text(props.preparedBy.email, MARGIN, y);
-    y += 5;
-  }
+  doc.setFont("helvetica", "normal");
+  doc.text("jrose@nochpower.com", MARGIN, y);
+  y += 5;
   doc.text("nochplus.com", MARGIN, y);
 }
 
