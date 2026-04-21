@@ -38,14 +38,11 @@ interface PlanBuilderTabProps {
 // are sold via a direct conversation with Joe or Katie, not through this flow.
 const TIERS: TierName[] = ALL_TIERS.filter((t) => t !== "enterprise");
 
-// Tier-specific styling for builder buttons
+// Tier-specific styling for builder buttons — selected always uses primary green
 const tierButtonClass = (tier: TierName, selected: boolean): string => {
   if (selected) {
-    if (tier === "starter") return "bg-foreground text-background border-foreground hover:bg-foreground/90";
-    if (tier === "elite") return "bg-amber-500 text-white hover:bg-amber-400 border-amber-500";
-    return ""; // default for essential/priority
+    return "bg-primary text-primary-foreground border-primary hover:bg-primary/90";
   }
-  if (tier === "starter") return "border-border text-muted-foreground";
   return "";
 };
 
