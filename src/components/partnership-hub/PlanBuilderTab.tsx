@@ -88,19 +88,19 @@ export function PlanBuilderTab({
           <CardContent className="px-5 pb-4 pt-1 space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs">Company Name</Label>
+                <Label className="text-xs">Company Name <span className="text-destructive">*</span></Label>
                 <Input value={partnerInfo.companyName} onChange={(e) => setPartnerInfo({ ...partnerInfo, companyName: e.target.value })} placeholder="e.g. GreenCharge Networks" />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Contact Name</Label>
+                <Label className="text-xs">Contact Name <span className="text-destructive">*</span></Label>
                 <Input value={partnerInfo.contactName} onChange={(e) => setPartnerInfo({ ...partnerInfo, contactName: e.target.value })} placeholder="e.g. Sarah Chen" />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Email</Label>
+                <Label className="text-xs">Email <span className="text-destructive">*</span></Label>
                 <Input type="email" value={partnerInfo.email} onChange={(e) => setPartnerInfo({ ...partnerInfo, email: e.target.value })} placeholder="sarah@greencharge.com" />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Phone</Label>
+                <Label className="text-xs">Phone <span className="text-destructive">*</span></Label>
                 <Input value={partnerInfo.phone} onChange={(e) => setPartnerInfo({ ...partnerInfo, phone: e.target.value })} placeholder="(555) 123-4567" />
               </div>
             </div>
