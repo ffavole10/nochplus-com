@@ -206,21 +206,16 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
           {ALL_TIERS.filter((t) => t !== "enterprise").map((tier) => {
             const isPriority = tier === "priority";
             const isStarter = tier === "starter";
-            const isEnterprise = tier === "enterprise";
-            const isCore = !isStarter && !isEnterprise;
+            const isCore = !isStarter;
 
             // Card styling per tier
             const cardClass = isPriority
               ? "border-primary shadow-lg ring-1 ring-primary/20 lg:scale-[1.03] z-10 bg-card"
-              : isEnterprise
-              ? "border-amber-500/40 ring-1 ring-amber-500/20 bg-slate-900 text-slate-100 shadow-lg"
               : isStarter
               ? "border-border bg-muted/30 shadow-sm"
               : "border-border shadow-sm bg-card";
 
-            const tierLabelClass = isEnterprise
-              ? "text-amber-400"
-              : tier === "elite"
+            const tierLabelClass = tier === "elite"
               ? "text-amber-600"
               : isPriority
               ? "text-primary"
@@ -232,13 +227,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className="bg-primary text-primary-foreground text-[10px] px-3 py-0.5">
                       <Crown className="h-3 w-3 mr-1" /> Recommended
-                    </Badge>
-                  </div>
-                )}
-                {isEnterprise && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-amber-500 text-slate-900 text-[10px] px-3 py-0.5 border-0">
-                      <Sparkles className="h-3 w-3 mr-1" /> Custom
                     </Badge>
                   </div>
                 )}
@@ -254,16 +242,9 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                       <div className="mt-3">
                         <span className="text-3xl font-bold">Free</span>
                       </div>
-                      <p className={`text-xs ${isEnterprise ? "text-slate-400" : "text-muted-foreground"}`}>
+                      <p className="text-xs text-muted-foreground">
                         no credit card required
                       </p>
-                    </>
-                  ) : isEnterprise ? (
-                    <>
-                      <div className="mt-3">
-                        <span className="text-2xl font-bold text-slate-100">Custom Pricing</span>
-                      </div>
-                      <p className="text-xs text-slate-400">for large-scale operations</p>
                     </>
                   ) : (
                     <>
@@ -284,13 +265,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                     >
                       Get Started
                     </Button>
-                  ) : isEnterprise ? (
-                    <Button
-                      className="mt-4 w-full bg-amber-500 hover:bg-amber-400 text-slate-900 border-0"
-                      onClick={() => setContactOpen(true)}
-                    >
-                      <Building2 className="h-4 w-4 mr-1.5" /> Contact Us
-                    </Button>
                   ) : (
                     <Button
                       variant={isPriority ? "default" : "outline"}
@@ -305,14 +279,8 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                   <ul className="mt-5 space-y-2.5 flex-1">
                     {TIER_HIGHLIGHTS[tier].map((h, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs">
-                        <Check
-                          className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${
-                            isEnterprise ? "text-amber-400" : "text-primary"
-                          }`}
-                        />
-                        <span className={isEnterprise ? "text-slate-300" : "text-muted-foreground"}>
-                          {h}
-                        </span>
+                        <Check className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+                        <span className="text-muted-foreground">{h}</span>
                       </li>
                     ))}
                   </ul>
