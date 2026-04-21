@@ -137,6 +137,7 @@ function renderCell(value: Cell) {
 
 export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
   const [toggle, setToggle] = useState<ChargerToggle>("ac");
+  const [enterpriseOpen, setEnterpriseOpen] = useState(false);
 
   const corePrice = (tier: "essential" | "priority" | "elite") =>
     toggle === "ac" ? TIER_PRICING[tier].l2 : TIER_PRICING[tier].dc;
