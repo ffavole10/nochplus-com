@@ -292,12 +292,12 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {/* Unified feature comparison — uses SAME grid template as pricing cards above for perfect alignment */}
+      {/* Unified feature comparison — Enterprise column hidden; that tier is sold via direct contact */}
       <div className="rounded-lg border border-border overflow-hidden bg-card">
         {/* Header row */}
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4 bg-muted/50 border-b border-border px-4 py-3">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(4,minmax(0,1fr))] gap-4 bg-muted/50 border-b border-border px-4 py-3">
           <div className="text-left font-semibold text-foreground text-sm">Feature</div>
-          {ALL_TIERS.map((tier) => {
+          {ALL_TIERS.filter((t) => t !== "enterprise").map((tier) => {
             const isPriority = tier === "priority";
             return (
               <div
@@ -314,7 +314,7 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
 
         {/* Body */}
-        {FEATURE_SECTIONS.map((section) => (
+        {FEATURE_SECTIONS.filter((s) => s.title !== "Enterprise adds").map((section) => (
           <React.Fragment key={section.title}>
             <div className="bg-muted/30 border-b border-border px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">
               {section.title}
@@ -322,12 +322,12 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
             {section.rows.map((row, rIdx) => (
               <div
                 key={`${section.title}-${row.name}`}
-                className={`grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4 border-b border-border/50 px-4 py-2.5 items-center ${
+                className={`grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(4,minmax(0,1fr))] gap-4 border-b border-border/50 px-4 py-2.5 items-center ${
                   rIdx % 2 === 1 ? "bg-muted/20" : ""
                 }`}
               >
                 <div className="text-sm text-foreground">{row.name}</div>
-                {row.values.map((val, i) => {
+                {row.values.slice(0, 4).map((val, i) => {
                   const isPriorityCol = TIER_ORDER[i] === "priority";
                   return (
                     <div
@@ -357,8 +357,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
           View NOCH+ Terms of Service
         </a>
       </div>
-
-      <EnterpriseContactModal open={contactOpen} onOpenChange={setContactOpen} />
     </div>
   );
 }
