@@ -7,8 +7,13 @@ import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, Sparkles, Build
 import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
 import { EnterpriseContactModal } from "./EnterpriseContactModal";
 
+export interface PlanBuilderPreset {
+  tier: TierName;
+  chargerType: "ac" | "dc";
+}
+
 interface PlanTiersTabProps {
-  onNavigate?: (tab: string) => void;
+  onNavigate?: (tab: string, preset?: PlanBuilderPreset) => void;
 }
 
 type ChargerToggle = "ac" | "dc";
@@ -274,7 +279,7 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                     <Button
                       variant="outline"
                       className="mt-4 w-full"
-                      onClick={() => onNavigate?.("plan-builder")}
+                      onClick={() => onNavigate?.("plan-builder", { tier: "starter", chargerType: toggle })}
                     >
                       Get Started
                     </Button>
@@ -289,7 +294,7 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                     <Button
                       variant={isPriority ? "default" : "outline"}
                       className="mt-4 w-full"
-                      onClick={() => onNavigate?.("plan-builder")}
+                      onClick={() => onNavigate?.("plan-builder", { tier: tier as TierName, chargerType: toggle })}
                     >
                       Build a Plan
                     </Button>
