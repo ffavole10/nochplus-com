@@ -97,8 +97,6 @@ const FEATURE_SECTIONS: FeatureSection[] = [
     title: "Priority adds",
     rows: [
       { name: "Priority dispatch queue", values: [false, false, "Ahead of queue", "Top of queue", "Top of queue"] },
-      { name: "Response credit-back guarantee", values: [false, false, "10% monthly fee", "20% monthly fee", "Custom"] },
-      { name: "Named support rep", values: [false, false, true, false, false] },
       { name: "Preventative maintenance", values: [false, "Add-on", "50% off", "1 visit / yr", "Unlimited"] },
       { name: "Emergency parts priority", values: [false, false, true, true, true] },
       { name: "Annual site health report", values: [false, false, "1-page scorecard", "Detailed + recs", "Custom dashboard"] },
