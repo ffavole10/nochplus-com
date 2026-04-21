@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wrench, FileText, BookOpen, Layers, Receipt } from "lucide-react";
 import { usePartnershipHub } from "@/hooks/usePartnershipHub";
 import { PlanBuilderTab } from "@/components/partnership-hub/PlanBuilderTab";
-import { PlanTiersTab } from "@/components/partnership-hub/PlanTiersTab";
+import { PlanTiersTab, type PlanBuilderPreset } from "@/components/partnership-hub/PlanTiersTab";
 import { PartnerPlanTab } from "@/components/partnership-hub/PartnerPlanTab";
 import { KnowledgeBaseTab } from "@/components/partnership-hub/KnowledgeBaseTab";
 import { DemoInvoicesTab } from "@/components/partnership-hub/DemoInvoicesTab";
@@ -14,7 +14,18 @@ export default function PartnershipHub() {
   const [activeTab, setActiveTab] = useState("plan-tiers");
   const hub = usePartnershipHub();
 
-  const handleNavigate = (tab: string) => {
+  const handleNavigate = (tab: string, preset?: PlanBuilderPreset) => {
+    if (tab === "plan-builder" && preset && hub.sites.length > 0) {
+      // Apply tier + charger-type preset from Plan Tiers to the first site so the
+      // builder + summary immediately reflect the user's choice.
+      const first = hub.sites[0];
+      const updates: Partial<typeof first> = { tier: preset.tier };
+      if (first.l2Count === 0 && first.dcCount === 0) {
+        if (preset.chargerType === "dc") updates.dcCount = 1;
+        else updates.l2Count = 1;
+      }
+      hub.updateSite(first.id, updates);
+    }
     setActiveTab(tab);
   };
 
