@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TIER_PRICING, TierName, ALL_TIERS, TIER_LABELS } from "@/constants/nochPlusTiers";
-import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, Sparkles, Building2 } from "lucide-react";
+import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, Sparkles, Building2, Shield, TrendingUp, DollarSign } from "lucide-react";
 import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
 import { EnterpriseContactModal } from "./EnterpriseContactModal";
 
@@ -57,10 +57,11 @@ const TIER_HIGHLIGHTS: Record<TierName, string[]> = {
 };
 
 const TRUST_SIGNALS = [
-  { icon: Users, title: "In-House Technicians", desc: "Our own certified team, not contractors" },
-  { icon: Award, title: "EVITP Certified", desc: "Industry-standard EV infrastructure training" },
-  { icon: MapPin, title: "Multi-State Coverage", desc: "Nationwide reach with local expertise" },
-  { icon: ShieldCheck, title: "Response Credit-Back Guarantee", desc: "We credit your account if we miss our response window" },
+  { icon: Shield, title: "Brand Protection", desc: "Keep chargers online and drivers happy. Protect your brand from downtime and frustration." },
+  { icon: TrendingUp, title: "Increase Revenue", desc: "More uptime means more sessions. Turn every charger into a consistent revenue driver." },
+  { icon: DollarSign, title: "Reduce Costs", desc: "Lower service costs with faster fixes and built-in discounts on labor and parts." },
+  { icon: Award, title: "EVITP Certified", desc: "Trained experts in EV infrastructure. No guesswork, just reliable execution." },
+  { icon: Users, title: "In-House Technicians", desc: "Our own team, not contractors. Better quality, faster response, full accountability." },
 ];
 
 // Progressive feature comparison sections
