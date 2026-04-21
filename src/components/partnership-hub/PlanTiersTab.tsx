@@ -3,8 +3,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TIER_PRICING, TierName, ALL_TIERS, TIER_LABELS } from "@/constants/nochPlusTiers";
-import { Crown, Check, Minus, Users, Award, Shield, TrendingUp, DollarSign } from "lucide-react";
+import { Crown, Check, Minus, Users, Award, Shield, TrendingUp, DollarSign, Sparkles } from "lucide-react";
 import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
+import { EnterpriseContactModal } from "./EnterpriseContactModal";
 
 export interface PlanBuilderPreset {
   tier: TierName;
