@@ -3,9 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TIER_PRICING, TierName, ALL_TIERS, TIER_LABELS } from "@/constants/nochPlusTiers";
-import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, Sparkles, Building2, Shield, TrendingUp, DollarSign } from "lucide-react";
+import { Crown, Check, Minus, Users, Award, Shield, TrendingUp, DollarSign } from "lucide-react";
 import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
-import { EnterpriseContactModal } from "./EnterpriseContactModal";
 
 export interface PlanBuilderPreset {
   tier: TierName;
@@ -140,7 +139,6 @@ function renderCell(value: Cell) {
 
 export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
   const [toggle, setToggle] = useState<ChargerToggle>("ac");
-  const [contactOpen, setContactOpen] = useState(false);
 
   const corePrice = (tier: "essential" | "priority" | "elite") =>
     toggle === "ac" ? TIER_PRICING[tier].l2 : TIER_PRICING[tier].dc;
@@ -181,8 +179,8 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {/* Pricing Cards: Trust Signals sidebar (left) + 5 tiers — shared grid with table below */}
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4">
+      {/* Pricing Cards: Trust Signals sidebar (left) + 4 visible tiers — Enterprise is sold via direct contact, not through the builder */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(4,minmax(0,1fr))] gap-4">
         {/* Trust Signals — sidebar on xl (LEFT), strip above on smaller */}
         <div className="xl:order-1 flex flex-col gap-4 justify-start self-start">
           <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Why NOCH+?</h3>
@@ -201,26 +199,21 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
           </div>
         </div>
 
-        {/* 5 pricing cards span 5 columns on xl */}
-        <div className="xl:col-span-5 xl:order-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-          {ALL_TIERS.map((tier) => {
+        {/* 4 pricing cards span 4 columns on xl */}
+        <div className="xl:col-span-4 xl:order-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {ALL_TIERS.filter((t) => t !== "enterprise").map((tier) => {
             const isPriority = tier === "priority";
             const isStarter = tier === "starter";
-            const isEnterprise = tier === "enterprise";
-            const isCore = !isStarter && !isEnterprise;
+            const isCore = !isStarter;
 
             // Card styling per tier
             const cardClass = isPriority
               ? "border-primary shadow-lg ring-1 ring-primary/20 lg:scale-[1.03] z-10 bg-card"
-              : isEnterprise
-              ? "border-amber-500/40 ring-1 ring-amber-500/20 bg-slate-900 text-slate-100 shadow-lg"
               : isStarter
               ? "border-border bg-muted/30 shadow-sm"
               : "border-border shadow-sm bg-card";
 
-            const tierLabelClass = isEnterprise
-              ? "text-amber-400"
-              : tier === "elite"
+            const tierLabelClass = tier === "elite"
               ? "text-amber-600"
               : isPriority
               ? "text-primary"
@@ -232,13 +225,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className="bg-primary text-primary-foreground text-[10px] px-3 py-0.5">
                       <Crown className="h-3 w-3 mr-1" /> Recommended
-                    </Badge>
-                  </div>
-                )}
-                {isEnterprise && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-amber-500 text-slate-900 text-[10px] px-3 py-0.5 border-0">
-                      <Sparkles className="h-3 w-3 mr-1" /> Custom
                     </Badge>
                   </div>
                 )}
@@ -254,16 +240,9 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                       <div className="mt-3">
                         <span className="text-3xl font-bold">Free</span>
                       </div>
-                      <p className={`text-xs ${isEnterprise ? "text-slate-400" : "text-muted-foreground"}`}>
+                      <p className="text-xs text-muted-foreground">
                         no credit card required
                       </p>
-                    </>
-                  ) : isEnterprise ? (
-                    <>
-                      <div className="mt-3">
-                        <span className="text-2xl font-bold text-slate-100">Custom Pricing</span>
-                      </div>
-                      <p className="text-xs text-slate-400">for large-scale operations</p>
                     </>
                   ) : (
                     <>
@@ -284,13 +263,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                     >
                       Get Started
                     </Button>
-                  ) : isEnterprise ? (
-                    <Button
-                      className="mt-4 w-full bg-amber-500 hover:bg-amber-400 text-slate-900 border-0"
-                      onClick={() => setContactOpen(true)}
-                    >
-                      <Building2 className="h-4 w-4 mr-1.5" /> Contact Us
-                    </Button>
                   ) : (
                     <Button
                       variant={isPriority ? "default" : "outline"}
@@ -305,14 +277,8 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                   <ul className="mt-5 space-y-2.5 flex-1">
                     {TIER_HIGHLIGHTS[tier].map((h, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs">
-                        <Check
-                          className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${
-                            isEnterprise ? "text-amber-400" : "text-primary"
-                          }`}
-                        />
-                        <span className={isEnterprise ? "text-slate-300" : "text-muted-foreground"}>
-                          {h}
-                        </span>
+                        <Check className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+                        <span className="text-muted-foreground">{h}</span>
                       </li>
                     ))}
                   </ul>
@@ -324,12 +290,12 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {/* Unified feature comparison — uses SAME grid template as pricing cards above for perfect alignment */}
+      {/* Unified feature comparison — Enterprise column hidden; that tier is sold via direct contact */}
       <div className="rounded-lg border border-border overflow-hidden bg-card">
         {/* Header row */}
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4 bg-muted/50 border-b border-border px-4 py-3">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(4,minmax(0,1fr))] gap-4 bg-muted/50 border-b border-border px-4 py-3">
           <div className="text-left font-semibold text-foreground text-sm">Feature</div>
-          {ALL_TIERS.map((tier) => {
+          {ALL_TIERS.filter((t) => t !== "enterprise").map((tier) => {
             const isPriority = tier === "priority";
             return (
               <div
@@ -346,7 +312,7 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
 
         {/* Body */}
-        {FEATURE_SECTIONS.map((section) => (
+        {FEATURE_SECTIONS.filter((s) => s.title !== "Enterprise adds").map((section) => (
           <React.Fragment key={section.title}>
             <div className="bg-muted/30 border-b border-border px-4 py-2 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">
               {section.title}
@@ -354,12 +320,12 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
             {section.rows.map((row, rIdx) => (
               <div
                 key={`${section.title}-${row.name}`}
-                className={`grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4 border-b border-border/50 px-4 py-2.5 items-center ${
+                className={`grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(4,minmax(0,1fr))] gap-4 border-b border-border/50 px-4 py-2.5 items-center ${
                   rIdx % 2 === 1 ? "bg-muted/20" : ""
                 }`}
               >
                 <div className="text-sm text-foreground">{row.name}</div>
-                {row.values.map((val, i) => {
+                {row.values.slice(0, 4).map((val, i) => {
                   const isPriorityCol = TIER_ORDER[i] === "priority";
                   return (
                     <div
@@ -389,8 +355,6 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
           View NOCH+ Terms of Service
         </a>
       </div>
-
-      <EnterpriseContactModal open={contactOpen} onOpenChange={setContactOpen} />
     </div>
   );
 }
