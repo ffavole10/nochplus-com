@@ -455,13 +455,13 @@ export function PlanBuilderTab({
                     className={`w-full mt-2 rounded-lg px-5 py-3.5 flex flex-col items-center justify-center gap-0.5 transition-all ${
                       isReady
                         ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg cursor-pointer shadow-md"
-                        : "cursor-not-allowed text-medium bg-medium"
+                        : "cursor-not-allowed text-medium bg-muted-foreground"
                     }`}
                   >
-                    <span className="flex items-center gap-1.5 font-semibold text-sm text-primary-foreground">
+                    <span className="flex items-center gap-1.5 font-semibold text-sm text-accent-foreground">
                       Review Final Plan <ArrowRight className="h-4 w-4" />
                     </span>
-                    <span className={`text-[11px] ${isReady ? "text-primary-foreground/80" : "text-primary-foreground"}`}>
+                    <span className={`text-[11px] ${isReady ? "text-primary-foreground/80" : "text-accent-foreground"}`}>
                       Confirm pricing and capture payment
                     </span>
                   </button>
