@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, X, Zap, Target, Shield, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, X, Zap, Target, Shield, Info, ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
 import {
   TierName, TIER_LABELS, ALL_TIERS,
   calcSiteMonthlyCost, isCustomPricedTier, isFreeTier,
@@ -437,6 +437,54 @@ export function PlanBuilderTab({
                   </div>
                 </>
               )}
+
+              {/* Review Final Plan CTA */}
+              {(() => {
+                const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(partnerInfo.email.trim());
+                const isReady =
+                  partnerInfo.companyName.trim().length > 0 &&
+                  partnerInfo.contactName.trim().length > 0 &&
+                  emailValid &&
+                  summary.totalChargers > 0;
+
+                const button = (
+                  <button
+                    type="button"
+                    disabled={!isReady}
+                    onClick={() => isReady && onNavigate("partner-plan")}
+                    className={`w-full mt-2 rounded-lg px-5 py-3.5 flex flex-col items-center justify-center gap-0.5 transition-all ${
+                      isReady
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg cursor-pointer shadow-md"
+                        : "bg-sidebar-border/40 text-sidebar-foreground/40 cursor-not-allowed"
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5 font-semibold text-sm">
+                      Review Final Plan <ArrowRight className="h-4 w-4" />
+                    </span>
+                    <span className={`text-[11px] ${isReady ? "text-primary-foreground/80" : "text-sidebar-foreground/40"}`}>
+                      Confirm pricing and capture payment
+                    </span>
+                  </button>
+                );
+
+                return (
+                  <>
+                    <Separator className="bg-sidebar-border" />
+                    {isReady ? (
+                      button
+                    ) : (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="block w-full">{button}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>Complete partner information to continue</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
         </div>
