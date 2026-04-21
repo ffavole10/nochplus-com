@@ -80,8 +80,8 @@ const FEATURE_SECTIONS: FeatureSection[] = [
     rows: [
       { name: "Direct ticket submission", values: [true, true, true, true, true] },
       { name: "Partner portal access", values: [true, true, true, true, true] },
+      { name: "Onboarding site assessment", values: [true, true, true, true, true] },
       { name: "Coverage hours", values: ["M–F 8a–5p", "M–F 8a–5p", "M–F 7a–9p", "7 days 7a–9p", "Custom (24/7)"] },
-      { name: "Shared ticket queue", values: [true, true, false, false, false] },
     ],
   },
   {
@@ -91,14 +91,13 @@ const FEATURE_SECTIONS: FeatureSection[] = [
       { name: "Labor rate discount", values: [false, "10% off", "15% off", "20% off", "Custom"] },
       { name: "Parts discount", values: [false, "5% off", "10% off", "15% off", "Custom"] },
       { name: "Travel fee waivers", values: [false, "1 / year", "4 / year", "Unlimited", "Unlimited"] },
-      { name: "Onboarding site assessment", values: ["1 free", "1 free", "1 free", "Unlimited", "Unlimited"] },
     ],
   },
   {
     title: "Priority adds",
     rows: [
-      { name: "Response credit-back guarantee", values: [false, false, "10% monthly fee", "20% monthly fee", "Custom"] },
       { name: "Priority dispatch queue", values: [false, false, "Ahead of queue", "Top of queue", "Top of queue"] },
+      { name: "Response credit-back guarantee", values: [false, false, "10% monthly fee", "20% monthly fee", "Custom"] },
       { name: "Named support rep", values: [false, false, true, false, false] },
       { name: "Preventative maintenance", values: [false, "Add-on", "50% off", "1 visit / yr", "Unlimited"] },
       { name: "Emergency parts priority", values: [false, false, true, true, true] },
@@ -111,7 +110,7 @@ const FEATURE_SECTIONS: FeatureSection[] = [
       { name: "Dedicated Account Manager", values: [false, false, false, true, true] },
       { name: "After-hours emergency line", values: [false, false, false, true, true] },
       { name: "Quarterly business review", values: [false, false, false, true, true] },
-      { name: "Unlimited site assessments", values: [false, false, false, true, true] },
+      { name: "Unlimited site assessments (new/replacement)", values: [false, false, false, true, true] },
     ],
   },
   {
