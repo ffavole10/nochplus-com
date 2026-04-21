@@ -3,9 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TIER_PRICING, TierName, ALL_TIERS, TIER_LABELS } from "@/constants/nochPlusTiers";
-import { Crown, Check, Minus, Users, Award, MapPin, ShieldCheck, Sparkles, Building2, Shield, TrendingUp, DollarSign } from "lucide-react";
+import { Crown, Check, Minus, Users, Award, Shield, TrendingUp, DollarSign } from "lucide-react";
 import { NOCH_PLUS_TOS_URL } from "@/constants/termsOfService";
-import { EnterpriseContactModal } from "./EnterpriseContactModal";
 
 export interface PlanBuilderPreset {
   tier: TierName;
@@ -140,7 +139,6 @@ function renderCell(value: Cell) {
 
 export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
   const [toggle, setToggle] = useState<ChargerToggle>("ac");
-  const [contactOpen, setContactOpen] = useState(false);
 
   const corePrice = (tier: "essential" | "priority" | "elite") =>
     toggle === "ac" ? TIER_PRICING[tier].l2 : TIER_PRICING[tier].dc;
