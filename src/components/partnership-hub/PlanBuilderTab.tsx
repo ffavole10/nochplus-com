@@ -458,7 +458,7 @@ export function PlanBuilderTab({
                         : "cursor-not-allowed text-medium bg-muted-foreground"
                     }`}
                   >
-                    <span className="flex items-center gap-1.5 font-semibold text-sm text-accent-foreground">
+                    <span className="flex items-center gap-1.5 font-semibold text-sm text-primary-foreground">
                       Review Final Plan <ArrowRight className="h-4 w-4" />
                     </span>
                     <span className={`text-[11px] ${isReady ? "text-primary-foreground/80" : "text-accent-foreground"}`}>
