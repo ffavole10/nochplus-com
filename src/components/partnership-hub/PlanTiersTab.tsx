@@ -181,8 +181,8 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </div>
       </div>
 
-      {/* Pricing Cards: Trust Signals sidebar (left) + 5 tiers — shared grid with table below */}
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(5,minmax(0,1fr))] gap-4">
+      {/* Pricing Cards: Trust Signals sidebar (left) + 4 visible tiers — Enterprise is sold via direct contact, not through the builder */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(200px,1.2fr)_repeat(4,minmax(0,1fr))] gap-4">
         {/* Trust Signals — sidebar on xl (LEFT), strip above on smaller */}
         <div className="xl:order-1 flex flex-col gap-4 justify-start self-start">
           <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Why NOCH+?</h3>
@@ -201,9 +201,9 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
           </div>
         </div>
 
-        {/* 5 pricing cards span 5 columns on xl */}
-        <div className="xl:col-span-5 xl:order-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-          {ALL_TIERS.map((tier) => {
+        {/* 4 pricing cards span 4 columns on xl */}
+        <div className="xl:col-span-4 xl:order-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {ALL_TIERS.filter((t) => t !== "enterprise").map((tier) => {
             const isPriority = tier === "priority";
             const isStarter = tier === "starter";
             const isEnterprise = tier === "enterprise";
