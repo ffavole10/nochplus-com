@@ -34,18 +34,18 @@ interface PlanBuilderTabProps {
   onNavigate: (tab: string) => void;
 }
 
-const TIERS: TierName[] = ALL_TIERS;
+// Enterprise is intentionally excluded from the in-app builder — those plans
+// are sold via a direct conversation with Joe or Katie, not through this flow.
+const TIERS: TierName[] = ALL_TIERS.filter((t) => t !== "enterprise");
 
 // Tier-specific styling for builder buttons
 const tierButtonClass = (tier: TierName, selected: boolean): string => {
   if (selected) {
-    if (tier === "starter") return "bg-muted text-foreground border-border hover:bg-muted/80";
-    if (tier === "enterprise") return "bg-slate-900 text-amber-400 border-amber-500/40 hover:bg-slate-800";
+    if (tier === "starter") return "bg-foreground text-background border-foreground hover:bg-foreground/90";
     if (tier === "elite") return "bg-amber-500 text-white hover:bg-amber-400 border-amber-500";
     return ""; // default for essential/priority
   }
   if (tier === "starter") return "border-border text-muted-foreground";
-  if (tier === "enterprise") return "border-slate-700 text-slate-700 hover:bg-slate-50";
   return "";
 };
 
