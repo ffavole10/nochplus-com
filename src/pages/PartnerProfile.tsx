@@ -25,6 +25,9 @@ import {
   Pencil, Globe, ArrowLeft, Upload, Loader2, MapPin, Phone, Mail,
   Crosshair, Ticket, DollarSign, Users, Building2, ExternalLink
 } from "lucide-react";
+import { AccountMapTab } from "@/components/growth/AccountMapTab";
+import { StakeholdersTab } from "@/components/growth/StakeholdersTab";
+import { DealsTab } from "@/components/growth/DealsTab";
 
 const CATEGORIES = ["OEM", "CSMS", "CPO", "Site Host", "Other"] as const;
 
