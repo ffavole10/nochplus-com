@@ -72,6 +72,7 @@ function getActiveSection(pathname: string): SectionKey {
   if (pathname.startsWith("/campaigns")) return "campaigns";
   if (pathname.startsWith("/service-desk")) return "service-desk";
   if (pathname.startsWith("/noch-plus")) return "noch-plus";
+  if (pathname.startsWith("/growth")) return "growth";
   if (pathname.startsWith("/partners")) return "partners";
   if (pathname.startsWith("/autoheal")) return "autoheal";
   if (["/dashboard", "/dataset", "/tickets", "/issues", "/schedule", "/field-reports"].includes(pathname)) return "campaigns";
