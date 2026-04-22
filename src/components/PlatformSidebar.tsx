@@ -400,6 +400,22 @@ export function PlatformSidebar() {
           </>
         )}
 
+        {/* ─── GROWTH SECTION ─── */}
+        {canAccess("growth") && (
+          <>
+            <SectionHeader label="GROWTH" icon={TrendingUp} section="growth" />
+            {expandedSection === "growth" &&
+            <div className="pl-1">
+                <SidebarMenu className="px-1">
+                  {growthPages.map((item) =>
+                <NavItem key={item.title} item={item} />
+                )}
+                </SidebarMenu>
+              </div>
+            }
+          </>
+        )}
+
         {/* ─── PARTNERS SECTION ─── */}
         {canAccess("partners") && (
           <>
