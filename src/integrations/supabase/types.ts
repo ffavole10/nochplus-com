@@ -47,6 +47,76 @@ export type Database = {
         }
         Relationships: []
       }
+      activities: {
+        Row: {
+          activity_date: string
+          created_at: string
+          deal_id: string | null
+          id: string
+          logged_by_user_id: string | null
+          next_step: string | null
+          next_step_date: string | null
+          outcome: string | null
+          partner_id: string
+          stakeholder_id: string | null
+          summary: string
+          type: Database["public"]["Enums"]["activity_type"]
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          created_at?: string
+          deal_id?: string | null
+          id?: string
+          logged_by_user_id?: string | null
+          next_step?: string | null
+          next_step_date?: string | null
+          outcome?: string | null
+          partner_id: string
+          stakeholder_id?: string | null
+          summary?: string
+          type?: Database["public"]["Enums"]["activity_type"]
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          created_at?: string
+          deal_id?: string | null
+          id?: string
+          logged_by_user_id?: string | null
+          next_step?: string | null
+          next_step_date?: string | null
+          outcome?: string | null
+          partner_id?: string
+          stakeholder_id?: string | null
+          summary?: string
+          type?: Database["public"]["Enums"]["activity_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_agent_prompts: {
         Row: {
           agent_id: string
@@ -1781,6 +1851,95 @@ export type Database = {
         }
         Relationships: []
       }
+      deal_stakeholders: {
+        Row: {
+          created_at: string
+          deal_id: string
+          stakeholder_id: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          stakeholder_id: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          stakeholder_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_stakeholders_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_stakeholders_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          created_at: string
+          deal_name: string
+          description: string | null
+          expected_close_date: string | null
+          id: string
+          next_action: string | null
+          next_action_date: string | null
+          owner_user_id: string | null
+          partner_id: string
+          probability: number
+          stage: Database["public"]["Enums"]["deal_stage"]
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          deal_name: string
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          owner_user_id?: string | null
+          partner_id: string
+          probability?: number
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          created_at?: string
+          deal_name?: string
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          owner_user_id?: string | null
+          partner_id?: string
+          probability?: number
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deep_learning_uploads: {
         Row: {
           error_message: string | null
@@ -2527,6 +2686,95 @@ export type Database = {
           value?: string
         }
         Relationships: []
+      }
+      partners_meta: {
+        Row: {
+          annual_run_rate: number | null
+          charger_footprint_estimate: number | null
+          charger_footprint_notes: string | null
+          created_at: string
+          expansion_thesis: string | null
+          hardware_brands: Json
+          id: string
+          motion: Database["public"]["Enums"]["growth_motion"] | null
+          network_type:
+            | Database["public"]["Enums"]["growth_network_type"]
+            | null
+          nochplus_fit_score: number | null
+          nochplus_timing:
+            | Database["public"]["Enums"]["growth_nochplus_timing"]
+            | null
+          partner_id: string
+          regions: Json
+          services_not_provided: Json
+          services_provided: Json
+          share_of_wallet_pct: number | null
+          strategic_notes: string | null
+          tier: Database["public"]["Enums"]["growth_tier"] | null
+          updated_at: string
+          white_space_notes: string | null
+        }
+        Insert: {
+          annual_run_rate?: number | null
+          charger_footprint_estimate?: number | null
+          charger_footprint_notes?: string | null
+          created_at?: string
+          expansion_thesis?: string | null
+          hardware_brands?: Json
+          id?: string
+          motion?: Database["public"]["Enums"]["growth_motion"] | null
+          network_type?:
+            | Database["public"]["Enums"]["growth_network_type"]
+            | null
+          nochplus_fit_score?: number | null
+          nochplus_timing?:
+            | Database["public"]["Enums"]["growth_nochplus_timing"]
+            | null
+          partner_id: string
+          regions?: Json
+          services_not_provided?: Json
+          services_provided?: Json
+          share_of_wallet_pct?: number | null
+          strategic_notes?: string | null
+          tier?: Database["public"]["Enums"]["growth_tier"] | null
+          updated_at?: string
+          white_space_notes?: string | null
+        }
+        Update: {
+          annual_run_rate?: number | null
+          charger_footprint_estimate?: number | null
+          charger_footprint_notes?: string | null
+          created_at?: string
+          expansion_thesis?: string | null
+          hardware_brands?: Json
+          id?: string
+          motion?: Database["public"]["Enums"]["growth_motion"] | null
+          network_type?:
+            | Database["public"]["Enums"]["growth_network_type"]
+            | null
+          nochplus_fit_score?: number | null
+          nochplus_timing?:
+            | Database["public"]["Enums"]["growth_nochplus_timing"]
+            | null
+          partner_id?: string
+          regions?: Json
+          services_not_provided?: Json
+          services_provided?: Json
+          share_of_wallet_pct?: number | null
+          strategic_notes?: string | null
+          tier?: Database["public"]["Enums"]["growth_tier"] | null
+          updated_at?: string
+          white_space_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partners_meta_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       parts: {
         Row: {
@@ -3577,6 +3825,62 @@ export type Database = {
           },
         ]
       }
+      stakeholders: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          last_touch_date: string | null
+          name: string
+          notes: string | null
+          owner_user_id: string | null
+          partner_id: string
+          phone: string | null
+          relationship_status: Database["public"]["Enums"]["relationship_status"]
+          role: Database["public"]["Enums"]["stakeholder_role"]
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_touch_date?: string | null
+          name: string
+          notes?: string | null
+          owner_user_id?: string | null
+          partner_id: string
+          phone?: string | null
+          relationship_status?: Database["public"]["Enums"]["relationship_status"]
+          role?: Database["public"]["Enums"]["stakeholder_role"]
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_touch_date?: string | null
+          name?: string
+          notes?: string | null
+          owner_user_id?: string | null
+          partner_id?: string
+          phone?: string | null
+          relationship_status?: Database["public"]["Enums"]["relationship_status"]
+          role?: Database["public"]["Enums"]["stakeholder_role"]
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stakeholders_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           balance_after: number
@@ -4479,6 +4783,13 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
+      activity_type:
+        | "Call"
+        | "Email"
+        | "Meeting"
+        | "LinkedIn"
+        | "InPerson"
+        | "Other"
       app_role:
         | "super_admin"
         | "admin"
@@ -4487,7 +4798,46 @@ export type Database = {
         | "manager"
         | "partner"
       campaign_report_status: "active" | "revoked" | "expired"
+      deal_stage:
+        | "Account Mapped"
+        | "Relationship Warmed"
+        | "Expansion Opportunity Identified"
+        | "Proposal Out"
+        | "NOCH+ Introduced"
+        | "Pilot / Contract Signed"
+        | "Expanded & Recurring"
       enterprise_inquiry_status: "new" | "contacted" | "qualified" | "closed"
+      growth_motion:
+        | "Volume"
+        | "Strategic"
+        | "Government"
+        | "OEM"
+        | "New_Logo"
+        | "Maintain"
+      growth_network_type:
+        | "CPO"
+        | "CMS"
+        | "OEM"
+        | "Government"
+        | "Fleet"
+        | "Utility"
+        | "Other"
+      growth_nochplus_timing:
+        | "Live"
+        | "0-3 months"
+        | "3-6 months"
+        | "6-12 months"
+        | "12+ months"
+        | "Never"
+      growth_tier: "A" | "B" | "C"
+      relationship_status: "Cold" | "Warm" | "Hot" | "Champion"
+      stakeholder_role:
+        | "Decision Maker"
+        | "Influencer"
+        | "Champion"
+        | "Blocker"
+        | "Operational"
+        | "Unknown"
       ticket_assessment_status: "pending_review" | "assessed" | "rejected"
     }
     CompositeTypes: {
@@ -4616,6 +4966,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_type: [
+        "Call",
+        "Email",
+        "Meeting",
+        "LinkedIn",
+        "InPerson",
+        "Other",
+      ],
       app_role: [
         "super_admin",
         "admin",
@@ -4625,7 +4983,51 @@ export const Constants = {
         "partner",
       ],
       campaign_report_status: ["active", "revoked", "expired"],
+      deal_stage: [
+        "Account Mapped",
+        "Relationship Warmed",
+        "Expansion Opportunity Identified",
+        "Proposal Out",
+        "NOCH+ Introduced",
+        "Pilot / Contract Signed",
+        "Expanded & Recurring",
+      ],
       enterprise_inquiry_status: ["new", "contacted", "qualified", "closed"],
+      growth_motion: [
+        "Volume",
+        "Strategic",
+        "Government",
+        "OEM",
+        "New_Logo",
+        "Maintain",
+      ],
+      growth_network_type: [
+        "CPO",
+        "CMS",
+        "OEM",
+        "Government",
+        "Fleet",
+        "Utility",
+        "Other",
+      ],
+      growth_nochplus_timing: [
+        "Live",
+        "0-3 months",
+        "3-6 months",
+        "6-12 months",
+        "12+ months",
+        "Never",
+      ],
+      growth_tier: ["A", "B", "C"],
+      relationship_status: ["Cold", "Warm", "Hot", "Champion"],
+      stakeholder_role: [
+        "Decision Maker",
+        "Influencer",
+        "Champion",
+        "Blocker",
+        "Operational",
+        "Unknown",
+      ],
       ticket_assessment_status: ["pending_review", "assessed", "rejected"],
     },
   },
