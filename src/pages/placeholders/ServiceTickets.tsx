@@ -162,10 +162,10 @@ export default function ServiceTickets() {
   const addTicket = useServiceTicketsStore((s) => s.addTicket);
   const createParentWithChildren = useServiceTicketsStore((s) => s.createParentWithChildren);
 
-  const handleSubmit = (data: TicketCreationData) => {
+  const handleSubmit = async (data: TicketCreationData) => {
     const nextId = useServiceTicketsStore.getState().getNextTicketId();
-    const newTicket: ServiceTicket = {
-      id: `st-${Date.now()}`,
+    // Build a draft without an id — the DB row's UUID will be the canonical id.
+    const draft: Omit<ServiceTicket, "id"> = {
       ticketId: nextId,
       source: "manual",
       customer: {
@@ -192,9 +192,14 @@ export default function ServiceTickets() {
       updatedAt: new Date().toISOString(),
       history: [{ id: "h1", timestamp: new Date().toISOString(), action: "Manual ticket created", performedBy: "Current User" }],
     };
-    addTicket(newTicket);
-    persistTicketToDB(newTicket);
-    toast.success(`Ticket ${newTicket.ticketId} created successfully`);
+    // Persist FIRST so the in-memory store ticket carries a real Postgres UUID.
+    const dbId = await persistTicketToDB({ ...draft, id: "pending" } as ServiceTicket);
+    if (!dbId) {
+      toast.error("Failed to create ticket. Please try again.");
+      return;
+    }
+    addTicket({ ...draft, id: dbId } as ServiceTicket);
+    toast.success(`Ticket ${nextId} created successfully`);
     setFormOpen(false);
   };
 
