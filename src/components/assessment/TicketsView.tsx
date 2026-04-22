@@ -40,7 +40,7 @@ import { getSlaStatus, SlaStatus, AgeBand, getAgeBand } from "@/components/flagg
 interface TicketsViewProps {
   chargers: AssessmentCharger[];
   onSelectCharger: (charger: AssessmentCharger) => void;
-  onApproveToServiceDesk?: (charger: AssessmentCharger) => string | null;
+  onApproveToServiceDesk?: (charger: AssessmentCharger) => string | null | Promise<string | null>;
 }
 
 const PRIORITY_CONFIG: Record<TicketPriority, { color: string; bg: string; label: string }> = {
@@ -666,12 +666,12 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className={confirmAction?.type === "reject" ? "bg-destructive hover:bg-destructive/90" : ""}
-              onClick={() => {
+              onClick={async () => {
                 if (!confirmAction) return;
                 const { type, chargerId, chargerName, charger } = confirmAction;
                 setReviewStatuses(prev => ({ ...prev, [chargerId]: type === "approve" ? "approved" : "rejected" }));
                 if (type === "approve" && charger && onApproveToServiceDesk) {
-                  const ticketId = onApproveToServiceDesk(charger);
+                  const ticketId = await onApproveToServiceDesk(charger);
                   if (ticketId) {
                     setCreatedTicketIds(prev => ({ ...prev, [chargerId]: ticketId }));
                     toast.success(
@@ -684,6 +684,8 @@ export function TicketsView({ chargers, onSelectCharger, onApproveToServiceDesk 
                         duration: 6000,
                       }
                     );
+                  } else {
+                    toast.error("Could not create service ticket. Please try again.");
                   }
                 } else if (type === "approve") {
                   toast.success(`Issue approved — service ticket created for ${chargerName}`);
