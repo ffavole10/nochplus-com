@@ -139,6 +139,12 @@ const App = () => (
             <Route path="/partners" element={<Partners />} />
             <Route path="/partners/:partnerId" element={<PartnerProfile />} />
 
+            {/* Growth section */}
+            <Route path="/growth" element={<Navigate to="/growth/accounts" replace />} />
+            <Route path="/growth/accounts" element={<GrowthAccounts />} />
+            <Route path="/growth/pipeline" element={<GrowthPipeline />} />
+            <Route path="/growth/deals/:dealId" element={<GrowthDealDetail />} />
+
             {/* AutoHeal section */}
             <Route path="/autoheal/ai-agent" element={<AIAgent />} />
             <Route path="/autoheal/deep-learning" element={<DeepLearning />} />
