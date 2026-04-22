@@ -43,7 +43,7 @@ import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useEstimates } from "@/hooks/useEstimates";
 import { NewPartnerModal } from "@/components/campaigns/NewPartnerModal";
 
-type SectionKey = "campaigns" | "service-desk" | "noch-plus" | "partners" | "autoheal" | null;
+type SectionKey = "campaigns" | "service-desk" | "noch-plus" | "growth" | "partners" | "autoheal" | null;
 
 const STATUS_LEVELS: {value: StatusLevel;label: string;colorClass: string;}[] = [
 { value: "Critical", label: "Critical", colorClass: "bg-critical" },
