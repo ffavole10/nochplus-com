@@ -199,6 +199,10 @@ export function PlatformSidebar() {
   { title: "Members", url: "/noch-plus/members", icon: Users },
   { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
 
+  const growthPages = [
+  { title: "Accounts", url: "/growth/accounts", icon: Building2 },
+  { title: "Pipeline", url: "/growth/pipeline", icon: Kanban }];
+
   const partnersPages = [
   { title: "All Partners", url: "/partners", icon: Building2 }];
 
