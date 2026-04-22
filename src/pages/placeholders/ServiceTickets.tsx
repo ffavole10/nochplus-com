@@ -222,6 +222,14 @@ export default function ServiceTickets() {
     const t = useServiceTicketsStore.getState().getTicketById(ticketId);
     if (!t) return;
 
+    // Guard rail: never call the RPC with a mock id (e.g. "st-1776875513928").
+    try {
+      assertTicketUuid(ticketId, "approve this ticket");
+    } catch (err: any) {
+      toast.error(err?.message || "Ticket id is invalid");
+      return;
+    }
+
     // Server is the source of truth — atomic check + update + audit
     try {
       await rpcApproveAndRunAssessment(
@@ -284,6 +292,12 @@ export default function ServiceTickets() {
   const handleRejectTicket = async (ticketId: string, reason: string) => {
     const t = useServiceTicketsStore.getState().getTicketById(ticketId);
     if (!t) return;
+    try {
+      assertTicketUuid(ticketId, "reject this ticket");
+    } catch (err: any) {
+      toast.error(err?.message || "Ticket id is invalid");
+      return;
+    }
     try {
       await rpcRejectTicket(ticketId, reason);
     } catch (err: any) {
