@@ -6,7 +6,8 @@ import {
   MapPin, Zap, FileCheck, UserCog, Ticket, DollarSign,
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned, Building2, Handshake,
-  Brain, Sliders, BarChart3, List, Plus, LayoutGrid, Eye, FileText } from
+  Brain, Sliders, BarChart3, List, Plus, LayoutGrid, Eye, FileText,
+  TrendingUp, Kanban } from
 "lucide-react";
 import { toast } from "sonner";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -42,7 +43,7 @@ import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useEstimates } from "@/hooks/useEstimates";
 import { NewPartnerModal } from "@/components/campaigns/NewPartnerModal";
 
-type SectionKey = "campaigns" | "service-desk" | "noch-plus" | "partners" | "autoheal" | null;
+type SectionKey = "campaigns" | "service-desk" | "noch-plus" | "growth" | "partners" | "autoheal" | null;
 
 const STATUS_LEVELS: {value: StatusLevel;label: string;colorClass: string;}[] = [
 { value: "Critical", label: "Critical", colorClass: "bg-critical" },
@@ -71,6 +72,7 @@ function getActiveSection(pathname: string): SectionKey {
   if (pathname.startsWith("/campaigns")) return "campaigns";
   if (pathname.startsWith("/service-desk")) return "service-desk";
   if (pathname.startsWith("/noch-plus")) return "noch-plus";
+  if (pathname.startsWith("/growth")) return "growth";
   if (pathname.startsWith("/partners")) return "partners";
   if (pathname.startsWith("/autoheal")) return "autoheal";
   if (["/dashboard", "/dataset", "/tickets", "/issues", "/schedule", "/field-reports"].includes(pathname)) return "campaigns";
@@ -159,6 +161,7 @@ export function PlatformSidebar() {
     "campaigns": "/campaigns",
     "service-desk": "/service-desk/tickets",
     "noch-plus": "/noch-plus/monitoring",
+    "growth": "/growth/accounts",
     "partners": "/partners",
     "autoheal": "/autoheal/ai-agent",
   };
@@ -195,6 +198,10 @@ export function PlatformSidebar() {
   { title: "Assessments", url: "/noch-plus/assessments", icon: FolderOpen },
   { title: "Members", url: "/noch-plus/members", icon: Users },
   { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
+
+  const growthPages = [
+  { title: "Accounts", url: "/growth/accounts", icon: Building2 },
+  { title: "Pipeline", url: "/growth/pipeline", icon: Kanban }];
 
   const partnersPages = [
   { title: "All Partners", url: "/partners", icon: Building2 }];
@@ -385,6 +392,22 @@ export function PlatformSidebar() {
             <div className="pl-1">
                 <SidebarMenu className="px-1">
                   {nochPlusPages.map((item) =>
+                <NavItem key={item.title} item={item} />
+                )}
+                </SidebarMenu>
+              </div>
+            }
+          </>
+        )}
+
+        {/* ─── GROWTH SECTION ─── */}
+        {canAccess("growth") && (
+          <>
+            <SectionHeader label="GROWTH" icon={TrendingUp} section="growth" />
+            {expandedSection === "growth" &&
+            <div className="pl-1">
+                <SidebarMenu className="px-1">
+                  {growthPages.map((item) =>
                 <NavItem key={item.title} item={item} />
                 )}
                 </SidebarMenu>

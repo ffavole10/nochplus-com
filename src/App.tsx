@@ -54,6 +54,11 @@ import CampaignSchedule from "./pages/campaigns/CampaignSchedule";
 import CampaignCost from "./pages/campaigns/CampaignCost";
 import CampaignReports from "./pages/campaigns/CampaignReports";
 
+// Growth module
+import GrowthAccounts from "./pages/growth/GrowthAccounts";
+import GrowthPipeline from "./pages/growth/GrowthPipeline";
+import GrowthDealDetail from "./pages/growth/GrowthDealDetail";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -133,6 +138,12 @@ const App = () => (
             {/* Partners section */}
             <Route path="/partners" element={<Partners />} />
             <Route path="/partners/:partnerId" element={<PartnerProfile />} />
+
+            {/* Growth section */}
+            <Route path="/growth" element={<Navigate to="/growth/accounts" replace />} />
+            <Route path="/growth/accounts" element={<GrowthAccounts />} />
+            <Route path="/growth/pipeline" element={<GrowthPipeline />} />
+            <Route path="/growth/deals/:dealId" element={<GrowthDealDetail />} />
 
             {/* AutoHeal section */}
             <Route path="/autoheal/ai-agent" element={<AIAgent />} />

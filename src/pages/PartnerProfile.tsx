@@ -25,6 +25,9 @@ import {
   Pencil, Globe, ArrowLeft, Upload, Loader2, MapPin, Phone, Mail,
   Crosshair, Ticket, DollarSign, Users, Building2, ExternalLink
 } from "lucide-react";
+import { AccountMapTab } from "@/components/growth/AccountMapTab";
+import { StakeholdersTab } from "@/components/growth/StakeholdersTab";
+import { DealsTab } from "@/components/growth/DealsTab";
 
 const CATEGORIES = ["OEM", "CSMS", "CPO", "Site Host", "Other"] as const;
 
@@ -179,11 +182,26 @@ export default function PartnerProfile() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="account-map">Account Map</TabsTrigger>
+          <TabsTrigger value="stakeholders">Stakeholders</TabsTrigger>
+          <TabsTrigger value="deals">Deals</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="service">Service History</TabsTrigger>
           <TabsTrigger value="contacts">Contacts</TabsTrigger>
           <TabsTrigger value="locations">Locations</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="account-map">
+          <AccountMapTab partnerId={partner.id} />
+        </TabsContent>
+
+        <TabsContent value="stakeholders">
+          <StakeholdersTab partnerId={partner.id} />
+        </TabsContent>
+
+        <TabsContent value="deals">
+          <DealsTab partnerId={partner.id} />
+        </TabsContent>
 
         <TabsContent value="overview">
           {editing ? (

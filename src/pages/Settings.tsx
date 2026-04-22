@@ -89,11 +89,11 @@ const TABS: { value: SettingsTab; label: string }[] = [
 ];
 
 const DEFAULT_ACCESS_BY_ROLE: Record<string, Record<SectionKey, boolean>> = {
-  admin: { campaigns: true, service_desk: true, noch_plus: true, partners: true, autoheal: true },
-  manager: { campaigns: true, service_desk: true, noch_plus: true, partners: true, autoheal: false },
-  employee: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false },
-  customer: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false },
-  partner: { campaigns: false, service_desk: false, noch_plus: true, partners: true, autoheal: false },
+  admin: { campaigns: true, service_desk: true, noch_plus: true, partners: true, autoheal: true, growth: true },
+  manager: { campaigns: true, service_desk: true, noch_plus: true, partners: true, autoheal: false, growth: true },
+  employee: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false, growth: false },
+  customer: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false, growth: false },
+  partner: { campaigns: false, service_desk: false, noch_plus: true, partners: true, autoheal: false, growth: false },
 };
 
 function QuotingAndRatesSection() {

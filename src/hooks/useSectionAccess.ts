@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 
-export type SectionKey = "campaigns" | "service_desk" | "noch_plus" | "partners" | "autoheal";
+export type SectionKey = "campaigns" | "service_desk" | "noch_plus" | "partners" | "autoheal" | "growth";
 
 export const SECTION_KEYS: SectionKey[] = [
   "campaigns",
@@ -11,6 +11,7 @@ export const SECTION_KEYS: SectionKey[] = [
   "noch_plus",
   "partners",
   "autoheal",
+  "growth",
 ];
 
 export const SECTION_LABELS: Record<SectionKey, string> = {
@@ -19,10 +20,12 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
   noch_plus: "NOCH+",
   partners: "Partners",
   autoheal: "AutoHeal",
+  growth: "Growth",
 };
 
 /** Maps a URL path to the SectionKey it belongs to (or null for global pages). */
 export function pathToSection(pathname: string): SectionKey | null {
+  if (pathname.startsWith("/growth")) return "growth";
   if (pathname.startsWith("/campaigns") || pathname === "/dashboard" ||
       pathname === "/dataset" || pathname === "/issues" ||
       pathname === "/schedule" || pathname === "/field-reports") return "campaigns";
