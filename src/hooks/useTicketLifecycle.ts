@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { assertTicketUuid } from "@/lib/uuid";
 
 export type AssessmentStatus = "pending_review" | "assessed" | "rejected";
 
@@ -113,6 +114,7 @@ async function getDisplayName(): Promise<string | null> {
 }
 
 export async function rpcApproveAndRunAssessment(ticketDbId: string, payload: AssessmentPayload, notes?: string) {
+  assertTicketUuid(ticketDbId, "approve this ticket");
   const performer_name = await getDisplayName();
   const { data, error } = await supabase.rpc("approve_and_run_assessment", {
     _ticket_id: ticketDbId,
@@ -126,6 +128,7 @@ export async function rpcApproveAndRunAssessment(ticketDbId: string, payload: As
 }
 
 export async function rpcRerunAssessment(ticketDbId: string, payload: AssessmentPayload) {
+  assertTicketUuid(ticketDbId, "re-run this assessment");
   const performer_name = await getDisplayName();
   const { data, error } = await supabase.rpc("rerun_assessment", {
     _ticket_id: ticketDbId,
@@ -138,6 +141,7 @@ export async function rpcRerunAssessment(ticketDbId: string, payload: Assessment
 }
 
 export async function rpcRejectTicket(ticketDbId: string, reason: string) {
+  assertTicketUuid(ticketDbId, "reject this ticket");
   const performer_name = await getDisplayName();
   const { data, error } = await supabase.rpc("reject_ticket", {
     _ticket_id: ticketDbId,
@@ -149,6 +153,7 @@ export async function rpcRejectTicket(ticketDbId: string, reason: string) {
 }
 
 export async function rpcRevertRejection(ticketDbId: string, revertReason: string) {
+  assertTicketUuid(ticketDbId, "revert this rejection");
   const performer_name = await getDisplayName();
   const { data, error } = await supabase.rpc("revert_rejection", {
     _ticket_id: ticketDbId,
@@ -160,6 +165,7 @@ export async function rpcRevertRejection(ticketDbId: string, revertReason: strin
 }
 
 export async function rpcMarkAssessmentSent(ticketDbId: string, email: string) {
+  assertTicketUuid(ticketDbId, "send this assessment");
   const performer_name = await getDisplayName();
   const { data, error } = await supabase.rpc("mark_assessment_sent", {
     _ticket_id: ticketDbId,
@@ -171,6 +177,7 @@ export async function rpcMarkAssessmentSent(ticketDbId: string, email: string) {
 }
 
 export async function rpcResendAssessment(ticketDbId: string, email: string, note: string) {
+  assertTicketUuid(ticketDbId, "resend this assessment");
   const performer_name = await getDisplayName();
   const { data, error } = await supabase.rpc("resend_assessment", {
     _ticket_id: ticketDbId,

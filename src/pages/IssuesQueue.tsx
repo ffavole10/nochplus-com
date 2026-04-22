@@ -30,7 +30,7 @@ const IssuesQueue = () => {
     setModalOpen(true);
   }, []);
 
-  const handleApproveToServiceDesk = useCallback((charger: AssessmentCharger): string | null => {
+  const handleApproveToServiceDesk = useCallback(async (charger: AssessmentCharger): Promise<string | null> => {
     const ticketId = getNextTicketId();
     const now = new Date().toISOString();
 
@@ -45,8 +45,8 @@ const IssuesQueue = () => {
       Low: "Low",
     };
 
-    const newTicket: ServiceTicket = {
-      id: `st-${Date.now()}`,
+    // Build a draft (no id yet) — the DB row's UUID will become the canonical id.
+    const draft: Omit<ServiceTicket, "id"> = {
       ticketId,
       source: "campaign",
       sourceCampaignName: selectedCampaignName || "Campaign",
@@ -97,8 +97,14 @@ const IssuesQueue = () => {
       },
     };
 
-    addTicket(newTicket);
-    persistTicketToDB(newTicket);
+    // Persist FIRST so the ticket has a real Postgres UUID before it ever
+    // enters local state. This prevents downstream RPC calls (approve / reject /
+    // dispatch / AutoHeal) from being invoked with a mock "st-…" id.
+    const dbId = await persistTicketToDB({ ...draft, id: "pending" } as ServiceTicket);
+    if (!dbId) {
+      return null;
+    }
+    addTicket({ ...draft, id: dbId } as ServiceTicket);
     return ticketId;
   }, [addTicket, getNextTicketId, selectedCampaignId, selectedCampaignName, selectedCustomer]);
 

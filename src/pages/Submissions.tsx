@@ -539,58 +539,89 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
                 },
               }));
 
-              // Create parent ticket in Zustand store for UI
+              // Build parent + child drafts WITHOUT mock ids. We persist to the
+              // DB first and then add records to the store using the real
+              // Postgres UUIDs as `id`. This guarantees that any subsequent
+              // approve / reject / dispatch / AutoHeal action carries a UUID
+              // that the server-side RPCs accept.
               const ticketStore = useServiceTicketsStore.getState();
-              const parentStoreId = ticketStore.createParentWithChildren(
-                customerInfo,
-                chargerData,
-                "noch_plus",
-                `Submission ${updated.submission_id}`
-              );
-              const parent = ticketStore.getTicketById(parentStoreId);
+              const nextTicketId = ticketStore.getNextTicketId();
+              const now = new Date().toISOString();
 
-              // Persist parent to DB
-              let parentDbId: string | null = null;
-              if (parent) {
-                parentDbId = await persistTicketToDB(parent, {
-                  submissionId: updated.id,
-                  isParent: true,
-                  chargerCount: chargerData.length,
-                });
-              }
+              // Persist the parent first
+              const parentDraft = {
+                id: "pending",
+                ticketId: nextTicketId,
+                source: "noch_plus" as const,
+                sourceCampaignName: `Submission ${updated.submission_id}`,
+                customer: customerInfo,
+                charger: { brand: "" as any, serialNumber: "", type: "" as any, location: chargerData[0]?.charger.location || "" },
+                photos: [],
+                issue: { description: `Customer request — ${chargerData.length} charger${chargerData.length > 1 ? "s" : ""} require service.` },
+                priority: "Medium" as const,
+                status: "pending_review" as const,
+                currentStep: 1,
+                workflowSteps: makeSteps(1),
+                createdAt: now,
+                updatedAt: now,
+                history: [{ id: `h-${Date.now()}`, timestamp: now, action: `Parent ticket created — ${chargerData.length} chargers`, performedBy: "Current User" }],
+                isParent: true,
+                childTicketIds: [] as string[],
+              };
+
+              const parentDbId = await persistTicketToDB(parentDraft as any, {
+                submissionId: updated.id,
+                isParent: true,
+                chargerCount: chargerData.length,
+              });
 
               if (!parentDbId) {
                 toast.error("Failed to create service ticket in database. Please try again.");
                 return;
               }
 
-              // Persist children directly from chargerData (don't rely on store lookups)
-              const parentTicketId = parent?.ticketId || "NP-?";
+              // Persist children, collecting their real DB UUIDs
+              const childDbIds: string[] = [];
+              const childRecords: any[] = [];
               for (let i = 0; i < chargerData.length; i++) {
                 const cd = chargerData[i];
-                const childTicket = {
-                  id: `temp-child-${i}`,
-                  ticketId: `${parentTicketId}/${i + 1}`,
+                const childDraft = {
+                  id: "pending",
+                  ticketId: `${nextTicketId}/${i + 1}`,
                   source: "noch_plus" as const,
+                  sourceCampaignName: `Submission ${updated.submission_id}`,
                   customer: customerInfo,
                   charger: cd.charger,
                   photos: [],
                   issue: cd.issue,
                   priority: "Medium" as const,
                   status: "pending_review" as const,
-                  currentStep: 1 as number,
+                  currentStep: 1,
                   workflowSteps: makeSteps(1),
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                  history: [],
+                  createdAt: now,
+                  updatedAt: now,
+                  history: [{ id: `h-${Date.now()}-${i}`, timestamp: now, action: "Child ticket created", performedBy: "System" }],
                   parentTicketId: parentDbId,
                   childIndex: i + 1,
                 };
-                await persistTicketToDB(childTicket, {
+                const childDbId = await persistTicketToDB(childDraft as any, {
                   submissionId: updated.id,
                   parentTicketDbId: parentDbId,
                 });
+                if (childDbId) {
+                  childDbIds.push(childDbId);
+                  childRecords.push({ ...childDraft, id: childDbId });
+                }
               }
+
+              // Add fully-persisted records to the store using real UUIDs.
+              const parentRecord = { ...parentDraft, id: parentDbId, childTicketIds: childDbIds };
+              ticketStore.addTicket(parentRecord as any);
+              for (const child of childRecords) {
+                ticketStore.addTicket(child);
+              }
+
+              const parent = parentRecord;
 
               // Mark submission as tickets_created
               const submissionTable = updated.source === "assessment" ? "noch_plus_submissions" : "submissions";

@@ -18,6 +18,7 @@ import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useServiceTicketsSync, persistTicketToDB } from "@/hooks/useServiceTicketsDB";
 import { AutoHealResult } from "@/services/autoHealService";
 import { rpcApproveAndRunAssessment, rpcRejectTicket } from "@/hooks/useTicketLifecycle";
+import { assertTicketUuid } from "@/lib/uuid";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 
@@ -162,10 +163,10 @@ export default function ServiceTickets() {
   const addTicket = useServiceTicketsStore((s) => s.addTicket);
   const createParentWithChildren = useServiceTicketsStore((s) => s.createParentWithChildren);
 
-  const handleSubmit = (data: TicketCreationData) => {
+  const handleSubmit = async (data: TicketCreationData) => {
     const nextId = useServiceTicketsStore.getState().getNextTicketId();
-    const newTicket: ServiceTicket = {
-      id: `st-${Date.now()}`,
+    // Build a draft without an id — the DB row's UUID will be the canonical id.
+    const draft: Omit<ServiceTicket, "id"> = {
       ticketId: nextId,
       source: "manual",
       customer: {
@@ -192,9 +193,14 @@ export default function ServiceTickets() {
       updatedAt: new Date().toISOString(),
       history: [{ id: "h1", timestamp: new Date().toISOString(), action: "Manual ticket created", performedBy: "Current User" }],
     };
-    addTicket(newTicket);
-    persistTicketToDB(newTicket);
-    toast.success(`Ticket ${newTicket.ticketId} created successfully`);
+    // Persist FIRST so the in-memory store ticket carries a real Postgres UUID.
+    const dbId = await persistTicketToDB({ ...draft, id: "pending" } as ServiceTicket);
+    if (!dbId) {
+      toast.error("Failed to create ticket. Please try again.");
+      return;
+    }
+    addTicket({ ...draft, id: dbId } as ServiceTicket);
+    toast.success(`Ticket ${nextId} created successfully`);
     setFormOpen(false);
   };
 
@@ -215,6 +221,14 @@ export default function ServiceTickets() {
   const handleApproveTicket = async (ticketId: string, result: AutoHealResult, notes: string) => {
     const t = useServiceTicketsStore.getState().getTicketById(ticketId);
     if (!t) return;
+
+    // Guard rail: never call the RPC with a mock id (e.g. "st-1776875513928").
+    try {
+      assertTicketUuid(ticketId, "approve this ticket");
+    } catch (err: any) {
+      toast.error(err?.message || "Ticket id is invalid");
+      return;
+    }
 
     // Server is the source of truth — atomic check + update + audit
     try {
@@ -278,6 +292,12 @@ export default function ServiceTickets() {
   const handleRejectTicket = async (ticketId: string, reason: string) => {
     const t = useServiceTicketsStore.getState().getTicketById(ticketId);
     if (!t) return;
+    try {
+      assertTicketUuid(ticketId, "reject this ticket");
+    } catch (err: any) {
+      toast.error(err?.message || "Ticket id is invalid");
+      return;
+    }
     try {
       await rpcRejectTicket(ticketId, reason);
     } catch (err: any) {
