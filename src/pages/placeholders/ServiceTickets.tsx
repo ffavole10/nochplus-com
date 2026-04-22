@@ -18,6 +18,7 @@ import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { useServiceTicketsSync, persistTicketToDB } from "@/hooks/useServiceTicketsDB";
 import { AutoHealResult } from "@/services/autoHealService";
 import { rpcApproveAndRunAssessment, rpcRejectTicket } from "@/hooks/useTicketLifecycle";
+import { assertTicketUuid } from "@/lib/uuid";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 
