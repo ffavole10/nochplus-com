@@ -54,6 +54,11 @@ import CampaignSchedule from "./pages/campaigns/CampaignSchedule";
 import CampaignCost from "./pages/campaigns/CampaignCost";
 import CampaignReports from "./pages/campaigns/CampaignReports";
 
+// Growth module
+import GrowthAccounts from "./pages/growth/GrowthAccounts";
+import GrowthPipeline from "./pages/growth/GrowthPipeline";
+import GrowthDealDetail from "./pages/growth/GrowthDealDetail";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
