@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Plus, Search, ArrowUpDown, Users, Eye, Upload, Loader2, Building2, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Users, Eye, Upload, Loader2, Building2, Trash2, AlertTriangle, Pencil, Check } from "lucide-react";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
