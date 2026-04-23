@@ -274,9 +274,20 @@ export default function Partners() {
               <SelectItem value="tickets">Tickets</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => setFormOpen(true)} className="gap-2 ml-auto">
-            <Plus className="h-4 w-4" />Add Partner
-          </Button>
+          <div className="flex gap-2 ml-auto">
+            <Button
+              variant={editMode ? "default" : "outline"}
+              size="icon"
+              onClick={() => setEditMode(v => !v)}
+              aria-label={editMode ? "Done editing" : "Edit partner list"}
+              title={editMode ? "Done" : "Edit list"}
+            >
+              {editMode ? <Check className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+            </Button>
+            <Button onClick={() => setFormOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" />Add Partner
+            </Button>
+          </div>
         </div>
         {/* Category pills */}
         <div className="flex gap-2 flex-wrap">
