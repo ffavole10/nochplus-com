@@ -355,14 +355,25 @@ export default function Partners() {
                       </div>
                     </td>
                     <td className="py-3 text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1 text-xs"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/partners/${c.id}`); }}
-                      >
-                        <Eye className="h-3.5 w-3.5" />View
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1 text-xs"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/partners/${c.id}`); }}
+                        >
+                          <Eye className="h-3.5 w-3.5" />View
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(c); }}
+                          aria-label={`Delete ${c.company}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
