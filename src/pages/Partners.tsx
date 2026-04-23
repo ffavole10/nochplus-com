@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Plus, Search, ArrowUpDown, Users, Eye, Upload, Loader2, Building2 } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Users, Eye, Upload, Loader2, Building2, Trash2, AlertTriangle } from "lucide-react";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,9 +15,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useCustomers, useCreateCustomer, type Customer } from "@/hooks/useCustomers";
+import { useCustomers, useCreateCustomer, useDeleteCustomer, type Customer } from "@/hooks/useCustomers";
 import { useCreateContact } from "@/hooks/useContacts";
 import { useCampaigns } from "@/hooks/useCampaigns";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 const CATEGORIES = ["OEM", "CSMS", "CPO", "Site Host", "Other"] as const;
 
@@ -30,12 +32,15 @@ export default function Partners() {
   const { data: campaigns = [] } = useCampaigns();
   const createCustomer = useCreateCustomer();
   const createContact = useCreateContact();
+  const deleteCustomer = useDeleteCustomer();
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"name" | "date" | "campaigns" | "tickets">("name");
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categoryFilter ? [categoryFilter] : []);
   const [formOpen, setFormOpen] = useState(false);
+  const [duplicateMatch, setDuplicateMatch] = useState<Customer | null>(null);
 
   // Add partner form state
   const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", categories: [] as string[] });
@@ -130,9 +135,39 @@ export default function Partners() {
     }
   };
 
+  // Normalize a company name for fuzzy matching
+  const normalizeName = (s: string) =>
+    s.toLowerCase()
+      .replace(/\b(inc|llc|ltd|corp|corporation|company|co|the)\b/g, "")
+      .replace(/[^a-z0-9]/g, "")
+      .trim();
+
+  const findDuplicate = (companyName: string): Customer | null => {
+    const target = normalizeName(companyName);
+    if (!target) return null;
+    for (const c of customers) {
+      const existing = normalizeName(c.company);
+      if (!existing) continue;
+      // Exact normalized match, or one fully contains the other (and is at least 4 chars)
+      if (existing === target) return c;
+      if (target.length >= 4 && existing.length >= 4 && (existing.includes(target) || target.includes(existing))) {
+        return c;
+      }
+    }
+    return null;
+  };
+
   const handleAdd = () => {
     if (!form.company.trim()) { toast.error("Company name is required"); return; }
     if (form.categories.length === 0) { toast.error("Select at least one category"); return; }
+
+    // Block duplicates
+    const existing = findDuplicate(form.company);
+    if (existing) {
+      setDuplicateMatch(existing);
+      return;
+    }
+
     createCustomer.mutate({
       company: form.company.trim(),
       contact_name: form.contact_name.trim(),
@@ -163,6 +198,16 @@ export default function Partners() {
         navigate(`/partners/${newCustomer?.id}`);
       },
     });
+  };
+
+  const handleDelete = async (c: Customer) => {
+    const ok = await confirmDialog({
+      title: "Delete Partner?",
+      description: `This will permanently delete "${c.company}" and unlink any related tickets, submissions, and locations. This cannot be undone.`,
+      confirmLabel: "Delete Partner",
+    });
+    if (!ok) return;
+    deleteCustomer.mutate(c.id);
   };
 
   if (isLoading) {
@@ -310,14 +355,25 @@ export default function Partners() {
                       </div>
                     </td>
                     <td className="py-3 text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1 text-xs"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/partners/${c.id}`); }}
-                      >
-                        <Eye className="h-3.5 w-3.5" />View
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1 text-xs"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/partners/${c.id}`); }}
+                        >
+                          <Eye className="h-3.5 w-3.5" />View
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(c); }}
+                          aria-label={`Delete ${c.company}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -402,6 +458,54 @@ export default function Partners() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Duplicate Partner Dialog */}
+      <Dialog open={!!duplicateMatch} onOpenChange={(open) => !open && setDuplicateMatch(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-medium" />
+              Possible Duplicate Partner
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              A similar partner already exists. To keep the directory clean, we don't allow duplicates.
+            </p>
+            {duplicateMatch && (
+              <div className="flex items-center gap-3 rounded-md border border-border p-3 bg-muted/30">
+                <CustomerLogo logoUrl={duplicateMatch.logo_url} companyName={duplicateMatch.company} size="sm" />
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground truncate">{duplicateMatch.company}</p>
+                  <p className="text-xs text-muted-foreground truncate">{duplicateMatch.contact_name || duplicateMatch.email || "—"}</p>
+                </div>
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground">
+              Recommended: open the existing partner and add this contact, location, or note there instead of creating a new record.
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDuplicateMatch(null)}>
+                Back to Form
+              </Button>
+              <Button
+                onClick={() => {
+                  if (duplicateMatch) {
+                    const id = duplicateMatch.id;
+                    setDuplicateMatch(null);
+                    setFormOpen(false);
+                    navigate(`/partners/${id}`);
+                  }
+                }}
+              >
+                Open Existing Partner
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }
