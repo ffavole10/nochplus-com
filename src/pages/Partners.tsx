@@ -135,9 +135,39 @@ export default function Partners() {
     }
   };
 
+  // Normalize a company name for fuzzy matching
+  const normalizeName = (s: string) =>
+    s.toLowerCase()
+      .replace(/\b(inc|llc|ltd|corp|corporation|company|co|the)\b/g, "")
+      .replace(/[^a-z0-9]/g, "")
+      .trim();
+
+  const findDuplicate = (companyName: string): Customer | null => {
+    const target = normalizeName(companyName);
+    if (!target) return null;
+    for (const c of customers) {
+      const existing = normalizeName(c.company);
+      if (!existing) continue;
+      // Exact normalized match, or one fully contains the other (and is at least 4 chars)
+      if (existing === target) return c;
+      if (target.length >= 4 && existing.length >= 4 && (existing.includes(target) || target.includes(existing))) {
+        return c;
+      }
+    }
+    return null;
+  };
+
   const handleAdd = () => {
     if (!form.company.trim()) { toast.error("Company name is required"); return; }
     if (form.categories.length === 0) { toast.error("Select at least one category"); return; }
+
+    // Block duplicates
+    const existing = findDuplicate(form.company);
+    if (existing) {
+      setDuplicateMatch(existing);
+      return;
+    }
+
     createCustomer.mutate({
       company: form.company.trim(),
       contact_name: form.contact_name.trim(),
@@ -168,6 +198,16 @@ export default function Partners() {
         navigate(`/partners/${newCustomer?.id}`);
       },
     });
+  };
+
+  const handleDelete = async (c: Customer) => {
+    const ok = await confirmDialog({
+      title: "Delete Partner?",
+      description: `This will permanently delete "${c.company}" and unlink any related tickets, submissions, and locations. This cannot be undone.`,
+      confirmLabel: "Delete Partner",
+    });
+    if (!ok) return;
+    deleteCustomer.mutate(c.id);
   };
 
   if (isLoading) {
