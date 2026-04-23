@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Plus, Search, ArrowUpDown, Users, Eye, Upload, Loader2, Building2, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Users, Eye, Upload, Loader2, Building2, Trash2, AlertTriangle, Pencil, Check } from "lucide-react";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,6 +41,7 @@ export default function Partners() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categoryFilter ? [categoryFilter] : []);
   const [formOpen, setFormOpen] = useState(false);
   const [duplicateMatch, setDuplicateMatch] = useState<Customer | null>(null);
+  const [editMode, setEditMode] = useState(false);
 
   // Add partner form state
   const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", categories: [] as string[] });
@@ -273,9 +274,20 @@ export default function Partners() {
               <SelectItem value="tickets">Tickets</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => setFormOpen(true)} className="gap-2 ml-auto">
-            <Plus className="h-4 w-4" />Add Partner
-          </Button>
+          <div className="flex gap-2 ml-auto">
+            <Button
+              variant={editMode ? "default" : "outline"}
+              size="icon"
+              onClick={() => setEditMode(v => !v)}
+              aria-label={editMode ? "Done editing" : "Edit partner list"}
+              title={editMode ? "Done" : "Edit list"}
+            >
+              {editMode ? <Check className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+            </Button>
+            <Button onClick={() => setFormOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" />Add Partner
+            </Button>
+          </div>
         </div>
         {/* Category pills */}
         <div className="flex gap-2 flex-wrap">
@@ -364,15 +376,17 @@ export default function Partners() {
                         >
                           <Eye className="h-3.5 w-3.5" />View
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={(e) => { e.stopPropagation(); handleDelete(c); }}
-                          aria-label={`Delete ${c.company}`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        {editMode && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => { e.stopPropagation(); handleDelete(c); }}
+                            aria-label={`Delete ${c.company}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
