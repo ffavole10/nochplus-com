@@ -41,6 +41,7 @@ export default function Partners() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categoryFilter ? [categoryFilter] : []);
   const [formOpen, setFormOpen] = useState(false);
   const [duplicateMatch, setDuplicateMatch] = useState<Customer | null>(null);
+  const [editMode, setEditMode] = useState(false);
 
   // Add partner form state
   const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", categories: [] as string[] });
