@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Plus, Search, ArrowUpDown, Users, Eye, Upload, Loader2, Building2 } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Users, Eye, Upload, Loader2, Building2, Trash2, AlertTriangle } from "lucide-react";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,9 +15,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useCustomers, useCreateCustomer, type Customer } from "@/hooks/useCustomers";
+import { useCustomers, useCreateCustomer, useDeleteCustomer, type Customer } from "@/hooks/useCustomers";
 import { useCreateContact } from "@/hooks/useContacts";
 import { useCampaigns } from "@/hooks/useCampaigns";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 const CATEGORIES = ["OEM", "CSMS", "CPO", "Site Host", "Other"] as const;
 
