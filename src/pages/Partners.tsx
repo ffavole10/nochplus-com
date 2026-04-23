@@ -458,6 +458,54 @@ export default function Partners() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Duplicate Partner Dialog */}
+      <Dialog open={!!duplicateMatch} onOpenChange={(open) => !open && setDuplicateMatch(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Possible Duplicate Partner
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              A similar partner already exists. To keep the directory clean, we don't allow duplicates.
+            </p>
+            {duplicateMatch && (
+              <div className="flex items-center gap-3 rounded-md border border-border p-3 bg-muted/30">
+                <CustomerLogo logoUrl={duplicateMatch.logo_url} companyName={duplicateMatch.company} size="sm" />
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground truncate">{duplicateMatch.company}</p>
+                  <p className="text-xs text-muted-foreground truncate">{duplicateMatch.contact_name || duplicateMatch.email || "—"}</p>
+                </div>
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground">
+              Recommended: open the existing partner and add this contact, location, or note there instead of creating a new record.
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDuplicateMatch(null)}>
+                Back to Form
+              </Button>
+              <Button
+                onClick={() => {
+                  if (duplicateMatch) {
+                    const id = duplicateMatch.id;
+                    setDuplicateMatch(null);
+                    setFormOpen(false);
+                    navigate(`/partners/${id}`);
+                  }
+                }}
+              >
+                Open Existing Partner
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }
