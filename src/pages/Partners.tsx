@@ -32,12 +32,15 @@ export default function Partners() {
   const { data: campaigns = [] } = useCampaigns();
   const createCustomer = useCreateCustomer();
   const createContact = useCreateContact();
+  const deleteCustomer = useDeleteCustomer();
+  const { confirm: confirmDialog, dialogProps } = useConfirmDialog();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"name" | "date" | "campaigns" | "tickets">("name");
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categoryFilter ? [categoryFilter] : []);
   const [formOpen, setFormOpen] = useState(false);
+  const [duplicateMatch, setDuplicateMatch] = useState<Customer | null>(null);
 
   // Add partner form state
   const [form, setForm] = useState({ company: "", contact_name: "", email: "", phone: "", address: "", notes: "", website_url: "", categories: [] as string[] });
