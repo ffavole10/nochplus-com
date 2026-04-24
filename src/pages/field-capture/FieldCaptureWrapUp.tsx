@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 export default function FieldCaptureWrapUp() {
   const { workOrderId } = useParams<{ workOrderId: string }>();
   const navigate = useNavigate();
+  const { session } = useAuth();
   usePageTitle("Wrap Up");
 
   const [supportMin, setSupportMin] = useState<string>("0");
