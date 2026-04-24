@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { refreshTechnicianStats } from "@/lib/nochProStats";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function FieldCaptureWrapUp() {
   const { workOrderId } = useParams<{ workOrderId: string }>();
