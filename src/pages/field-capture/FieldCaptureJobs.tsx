@@ -223,10 +223,29 @@ export default function FieldCaptureJobs() {
         </section>
       )}
 
+      {/* Past Due — scheduled/in-progress jobs from before today */}
+      {jobs && pastDueJobs.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-[18px] font-bold text-fc-warning px-0.5">
+            Past Due
+          </h2>
+          <div className="space-y-3">
+            {pastDueJobs.map((j) => (
+              <div key={j.id} className="space-y-1.5">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-fc-warning/80 px-1">
+                  {formatShortDate(j.scheduled_date)}
+                </div>
+                <JobCard job={j} flagged />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Today's jobs */}
       {jobs && todayJobs.length > 0 && (
         <section className="space-y-3">
-          {flaggedJobs.length > 0 && (
+          {(flaggedJobs.length > 0 || pastDueJobs.length > 0) && (
             <h2 className="text-[18px] font-bold text-fc-text px-0.5">
               Scheduled Today
             </h2>
