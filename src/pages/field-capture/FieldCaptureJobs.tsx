@@ -24,14 +24,22 @@ const STATUS_PILL: Record<WorkOrderStatus, string> = {
   closed: "bg-fc-border text-fc-muted",
 };
 
+// Local-date YYYY-MM-DD (avoids UTC shift that hides "today" jobs in west-of-UTC tz).
+function localISO(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return localISO(new Date());
 }
 
 function inDays(n: number) {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+  return localISO(d);
 }
 
 function formatShortDate(iso: string) {
