@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useFieldCaptureRole } from "@/hooks/useFieldCaptureRole";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { MapPin, Zap, ChevronRight, AlertTriangle, Calendar } from "lucide-react";
+import { MapPin, Zap, ChevronRight, Flag, Clock as ClockIcon } from "lucide-react";
 import maxFullBody from "@/assets/max-fullbody.png";
 import type { WorkOrder, WorkOrderStatus } from "@/types/fieldCapture";
 import { WORK_ORDER_STATUS_LABELS } from "@/types/fieldCapture";
@@ -15,22 +15,14 @@ interface JobWithCount extends WorkOrder {
 }
 
 const STATUS_PILL: Record<WorkOrderStatus, string> = {
-  scheduled: "bg-fc-primary/10 text-fc-primary-dark",
+  scheduled: "bg-fc-primary/12 text-fc-primary-dark",
   in_progress: "bg-fc-warning/15 text-fc-warning",
   submitted: "bg-fc-success/15 text-fc-success",
   pending_review: "bg-secondary/15 text-secondary",
-  flagged: "bg-destructive/15 text-destructive",
+  flagged: "bg-fc-warning/15 text-fc-warning",
   approved: "bg-fc-success/15 text-fc-success",
   closed: "bg-fc-border text-fc-muted",
 };
-
-function formatLongDate(d: Date) {
-  return d.toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -42,13 +34,30 @@ function inDays(n: number) {
   return d.toISOString().slice(0, 10);
 }
 
-function JobCard({ job }: { job: JobWithCount }) {
+function formatShortDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function JobCard({ job, flagged = false }: { job: JobWithCount; flagged?: boolean }) {
   return (
     <Link
       to={`/field-capture/job/${job.id}`}
       className="block active:scale-[0.99] transition-transform"
     >
-      <div className="bg-fc-card rounded-2xl p-4 shadow-sm border border-fc-border/60">
+      <div
+        className={cn(
+          "bg-fc-card rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-fc-border/60",
+          flagged && "border-l-[4px] border-l-fc-warning"
+        )}
+      >
         <div className="flex items-center justify-between mb-2">
           <span
             className={cn(
@@ -62,66 +71,39 @@ function JobCard({ job }: { job: JobWithCount }) {
             {job.work_order_number}
           </span>
         </div>
-        <h3 className="text-[17px] font-bold leading-tight text-fc-text">
-          {job.client_name}
-        </h3>
-        <div className="flex items-start gap-1.5 mt-1.5 text-sm">
-          <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-fc-muted" />
-          <div className="min-w-0">
-            <div className="font-medium text-fc-text truncate">
-              {job.site_name}
-            </div>
-            <div className="text-xs text-fc-muted truncate">
-              {job.site_address}
-            </div>
-          </div>
+
+        <div className="flex items-center gap-1.5">
+          {flagged && <Flag className="h-4 w-4 text-fc-warning shrink-0" />}
+          <h3 className="text-[17px] font-bold leading-tight text-fc-text truncate">
+            {job.client_name}
+          </h3>
         </div>
-        <div className="flex items-center justify-between mt-3">
-          <div className="flex items-center gap-1.5 text-sm">
-            <Zap className="h-4 w-4 text-fc-primary" />
-            <span className="font-medium text-fc-text">
+
+        <div className="text-[15px] font-medium text-fc-text/80 mt-0.5 truncate">
+          {job.site_name}
+        </div>
+        <div className="flex items-start gap-1 mt-0.5 text-[13px] text-fc-muted">
+          <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          <span className="truncate">{job.site_address}</span>
+        </div>
+
+        <div className="flex items-center justify-between mt-3 text-[13px] text-fc-muted">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1">
+              <ClockIcon className="h-3.5 w-3.5" />
+              {formatShortDate(job.scheduled_date)}
+            </span>
+            <span className="text-fc-border">•</span>
+            <span className="inline-flex items-center gap-1">
+              <Zap className="h-3.5 w-3.5 text-fc-primary" />
               {job.charger_count}{" "}
               {job.charger_count === 1 ? "charger" : "chargers"}
             </span>
           </div>
-          <ChevronRight className="h-5 w-5 text-fc-muted" />
+          <ChevronRight className="h-5 w-5 text-fc-muted/70" />
         </div>
       </div>
     </Link>
-  );
-}
-
-function Section({
-  title,
-  count,
-  accent,
-  children,
-}: {
-  title: string;
-  count: number;
-  accent?: "default" | "warning";
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="space-y-2.5">
-      <div className="flex items-center gap-2 px-1">
-        {accent === "warning" && (
-          <AlertTriangle className="h-4 w-4 text-fc-warning" />
-        )}
-        <h2
-          className={cn(
-            "text-[15px] font-semibold",
-            accent === "warning" ? "text-fc-warning" : "text-fc-text"
-          )}
-        >
-          {title}
-        </h2>
-        <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-fc-border/70 text-fc-muted">
-          {count}
-        </span>
-      </div>
-      <div className="space-y-2.5">{children}</div>
-    </section>
   );
 }
 
@@ -136,7 +118,7 @@ export default function FieldCaptureJobs() {
   const firstName =
     (session?.user?.user_metadata?.display_name as string)?.split(" ")[0] ||
     session?.user?.email?.split("@")[0] ||
-    "Tech";
+    "there";
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -165,83 +147,106 @@ export default function FieldCaptureJobs() {
     })();
   }, [session?.user?.id, isFieldAdmin, sevenDaysOut]);
 
-  const todayJobs = (jobs || []).filter((j) => j.scheduled_date === today);
   const flaggedJobs = (jobs || []).filter((j) => j.status === "flagged");
+  const todayJobs = (jobs || []).filter(
+    (j) => j.scheduled_date === today && j.status !== "flagged"
+  );
   const upcomingJobs = (jobs || []).filter(
     (j) => j.scheduled_date > today && j.status !== "flagged"
   );
 
+  const hasAnyJobs =
+    jobs !== null &&
+    (todayJobs.length > 0 || flaggedJobs.length > 0 || upcomingJobs.length > 0);
+
   return (
     <div className="px-4 py-5 space-y-6">
       <div>
-        <p className="text-fc-muted text-sm">{formatLongDate(new Date())}</p>
+        <h1 className="text-[26px] font-bold text-fc-text leading-tight">
+          Today
+        </h1>
         {jobs !== null && (
-          <h1 className="text-2xl font-bold text-fc-text mt-1 leading-tight">
+          <p className="text-[15px] text-fc-muted mt-1">
             {todayJobs.length === 0
-              ? "No jobs scheduled for today"
-              : `You have ${todayJobs.length} ${todayJobs.length === 1 ? "job" : "jobs"} today`}
-          </h1>
+              ? flaggedJobs.length > 0
+                ? "Items need your attention"
+                : "No jobs scheduled"
+              : `${todayJobs.length} ${todayJobs.length === 1 ? "job" : "jobs"} scheduled`}
+          </p>
         )}
       </div>
 
       {jobs === null && (
-        <div className="text-center py-12 text-fc-muted">
-          Loading your jobs…
-        </div>
+        <div className="text-center py-12 text-fc-muted">Loading your jobs…</div>
       )}
 
-      {jobs && jobs.length === 0 && (
-        <div className="bg-fc-card rounded-2xl p-8 text-center shadow-sm border border-fc-border/60">
+      {/* Flagged section first */}
+      {jobs && flaggedJobs.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-[18px] font-bold text-fc-warning flex items-center gap-2 px-0.5">
+            <Flag className="h-4 w-4" />
+            Needs Your Attention
+          </h2>
+          <div className="space-y-3">
+            {flaggedJobs.map((j) => (
+              <JobCard key={j.id} job={j} flagged />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Today's jobs */}
+      {jobs && todayJobs.length > 0 && (
+        <section className="space-y-3">
+          {flaggedJobs.length > 0 && (
+            <h2 className="text-[18px] font-bold text-fc-text px-0.5">
+              Scheduled Today
+            </h2>
+          )}
+          <div className="space-y-3">
+            {todayJobs.map((j) => (
+              <JobCard key={j.id} job={j} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Upcoming */}
+      {jobs && upcomingJobs.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-[18px] font-bold text-fc-text px-0.5">Upcoming</h2>
+          <div className="space-y-3">
+            {upcomingJobs.map((j) => (
+              <div key={j.id} className="space-y-1.5">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-fc-muted px-1">
+                  {new Date(j.scheduled_date).toLocaleDateString(undefined, {
+                    weekday: "long",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </div>
+                <JobCard job={j} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Empty state */}
+      {jobs && !hasAnyJobs && (
+        <div className="flex flex-col items-center text-center pt-10 pb-6">
           <img
             src={maxFullBody}
             alt="Max"
-            className="w-40 h-40 mx-auto object-contain mb-4"
+            className="w-[200px] h-[200px] object-contain fc-float"
           />
-          <h2 className="text-lg font-semibold mb-1 text-fc-text">
-            All clear, {firstName}!
+          <h2 className="text-[22px] font-bold text-fc-text mt-4">
+            All clear today, {firstName}!
           </h2>
-          <p className="text-sm text-fc-muted">
-            Enjoy your day. Check back tomorrow for new jobs.
+          <p className="text-[15px] text-fc-muted mt-1">
+            Enjoy your day. Check back tomorrow.
           </p>
         </div>
-      )}
-
-      {jobs && todayJobs.length > 0 && (
-        <Section title="Today" count={todayJobs.length}>
-          {todayJobs.map((j) => (
-            <JobCard key={j.id} job={j} />
-          ))}
-        </Section>
-      )}
-
-      {jobs && flaggedJobs.length > 0 && (
-        <Section
-          title="Flagged — Needs attention"
-          count={flaggedJobs.length}
-          accent="warning"
-        >
-          {flaggedJobs.map((j) => (
-            <JobCard key={j.id} job={j} />
-          ))}
-        </Section>
-      )}
-
-      {jobs && upcomingJobs.length > 0 && (
-        <Section title="Upcoming" count={upcomingJobs.length}>
-          {upcomingJobs.map((j) => (
-            <div key={j.id} className="space-y-1">
-              <div className="flex items-center gap-1.5 text-[11px] text-fc-muted px-1">
-                <Calendar className="h-3 w-3" />
-                {new Date(j.scheduled_date).toLocaleDateString(undefined, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </div>
-              <JobCard job={j} />
-            </div>
-          ))}
-        </Section>
       )}
     </div>
   );
