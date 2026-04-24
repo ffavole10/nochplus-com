@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, CheckCircle2, Upload, FileText, X } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Upload, FileText, X, Copy } from "lucide-react";
+import { logWorkOrderActivity } from "@/lib/workOrderActivity";
 
 interface ChargerInput {
   make_model: string;
@@ -31,7 +32,16 @@ interface TechnicianOption {
 export default function CreateTestJob() {
   usePageTitle("Create Test Job");
   const navigate = useNavigate();
+  const location = useLocation();
+  const duplicateFromId = (location.state as { duplicateFrom?: string } | null)
+    ?.duplicateFrom;
   const { session } = useAuth();
+  const [duplicateSource, setDuplicateSource] = useState<{
+    id: string;
+    work_order_number: string | null;
+    sow_document_url: string | null;
+    sow_document_name: string | null;
+  } | null>(null);
 
   const [clientName, setClientName] = useState("");
   const [siteName, setSiteName] = useState("");
