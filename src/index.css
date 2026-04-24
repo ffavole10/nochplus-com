@@ -415,3 +415,13 @@
 .animate-nod {
   animation: nod 4s ease-in-out infinite;
 }
+
+/* Field Capture: gentle floating animation for empty-state mascot */
+@keyframes fc-float {
+  0%, 100% { transform: translateY(-4px); }
+  50% { transform: translateY(4px); }
+}
+
+.fc-float {
+  animation: fc-float 3s ease-in-out infinite;
+}
