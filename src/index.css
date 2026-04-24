@@ -77,6 +77,19 @@
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 217 69% 52%;
+
+    /* Field Capture mobile palette (technician PWA) */
+    --fc-primary: 174 66% 42%;        /* #25b3a5 */
+    --fc-primary-dark: 174 68% 32%;   /* #1a8a7f */
+    --fc-primary-light: 173 56% 57%;  /* #4dd5c6 */
+    --fc-bg: 220 14% 97%;             /* #f9fafb */
+    --fc-header: 174 60% 97%;         /* #f0fcfb */
+    --fc-card: 0 0% 100%;
+    --fc-text: 0 0% 10%;              /* #1a1a1a */
+    --fc-muted: 220 9% 46%;           /* #6b7280 */
+    --fc-border: 220 13% 91%;         /* #e5e7eb */
+    --fc-warning: 38 92% 50%;         /* #f59e0b */
+    --fc-success: 160 84% 39%;        /* #10b981 */
     
     --radius: 0.75rem;
     
