@@ -4587,27 +4587,33 @@ export type Database = {
       work_order_photos: {
         Row: {
           charger_id: string | null
+          file_size_bytes: number | null
           id: string
           photo_type: Database["public"]["Enums"]["field_photo_type"]
           photo_url: string
+          storage_path: string | null
           uploaded_at: string
           uploaded_by: string | null
           work_order_id: string
         }
         Insert: {
           charger_id?: string | null
+          file_size_bytes?: number | null
           id?: string
           photo_type: Database["public"]["Enums"]["field_photo_type"]
           photo_url: string
+          storage_path?: string | null
           uploaded_at?: string
           uploaded_by?: string | null
           work_order_id: string
         }
         Update: {
           charger_id?: string | null
+          file_size_bytes?: number | null
           id?: string
           photo_type?: Database["public"]["Enums"]["field_photo_type"]
           photo_url?: string
+          storage_path?: string | null
           uploaded_at?: string
           uploaded_by?: string | null
           work_order_id?: string
