@@ -33,7 +33,7 @@ export default function FieldCaptureLanding() {
   const [jobs, setJobs] = useState<JobWithCount[] | null>(null);
   const today = new Date().toISOString().slice(0, 10);
   const firstName =
-    (session?.user?.user_metadata?.first_name as string) ||
+    (session?.user?.user_metadata?.display_name as string)?.split(" ")[0] ||
     (session?.user?.email?.split("@")[0] ?? "Tech");
 
   useEffect(() => {

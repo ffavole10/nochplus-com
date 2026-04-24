@@ -78,16 +78,12 @@ export default function AllWorkOrders() {
       );
       const { data: profs } = await supabase
         .from("profiles")
-        .select("user_id, email, first_name, last_name")
+        .select("user_id, email, display_name")
         .in("user_id", techIds);
       const labelByUser: Record<string, string> = {};
       for (const p of profs || []) {
         labelByUser[(p as any).user_id] =
-          [(p as any).first_name, (p as any).last_name]
-            .filter(Boolean)
-            .join(" ") ||
-          (p as any).email ||
-          (p as any).user_id;
+          (p as any).display_name || (p as any).email || (p as any).user_id;
       }
       const mapped: Row[] = (wos || []).map((w: any) => {
         const chargers = w.work_order_chargers || [];

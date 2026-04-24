@@ -67,14 +67,11 @@ export default function CreateTestJob() {
       // Get email/name from profiles.
       const { data: profs } = await supabase
         .from("profiles")
-        .select("user_id, email, first_name, last_name")
+        .select("user_id, email, display_name")
         .in("user_id", userIds);
       const opts: TechnicianOption[] = (profs || []).map((p: any) => ({
         user_id: p.user_id,
-        label:
-          [p.first_name, p.last_name].filter(Boolean).join(" ") ||
-          p.email ||
-          p.user_id,
+        label: p.display_name || p.email || p.user_id,
       }));
       // Include any tech without a profile row, fall back to id.
       for (const id of userIds) {
