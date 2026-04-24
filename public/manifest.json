@@ -1,9 +1,31 @@
 {
-  "name": "Noch Power",
-  "short_name": "Noch+",
-  "description": "The Future of EVSE Service — Fast, Simple, Reliable.",
-  "start_url": "/dashboard",
+  "name": "NOCH+",
+  "short_name": "NOCH+",
+  "description": "NOCH Power Operations Platform",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0a9e8a"
+  "orientation": "portrait-primary",
+  "theme_color": "#25b3a5",
+  "background_color": "#25b3a5",
+  "icons": [
+    {
+      "src": "/noch-icon-1024.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/noch-icon-1024.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/noch-icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
