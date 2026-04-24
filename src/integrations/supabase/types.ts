@@ -4502,6 +4502,7 @@ export type Database = {
             | Database["public"]["Enums"]["charger_post_work_status"]
             | null
           created_at: string
+          current_step: number
           id: string
           is_recurring_issue: boolean
           issue_category:
@@ -4529,6 +4530,7 @@ export type Database = {
             | Database["public"]["Enums"]["charger_post_work_status"]
             | null
           created_at?: string
+          current_step?: number
           id?: string
           is_recurring_issue?: boolean
           issue_category?:
@@ -4556,6 +4558,7 @@ export type Database = {
             | Database["public"]["Enums"]["charger_post_work_status"]
             | null
           created_at?: string
+          current_step?: number
           id?: string
           is_recurring_issue?: boolean
           issue_category?:

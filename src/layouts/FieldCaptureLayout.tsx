@@ -44,6 +44,9 @@ export default function FieldCaptureLayout() {
 
   // Hide header on detail/sub-screens so they can manage their own back nav
   const isDetail = /\/field-capture\/job\//.test(location.pathname);
+  // Hide bottom tabs during focus flows (charger capture, wrap-up) — tech is in focus mode
+  const hideTabs =
+    /\/field-capture\/job\/[^/]+\/(charger|wrap-up)/.test(location.pathname);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -103,7 +106,7 @@ export default function FieldCaptureLayout() {
         className={cn(
           "flex-1 w-full max-w-[480px] mx-auto",
           isDetail ? "pt-0" : "pt-[calc(72px+env(safe-area-inset-top))]",
-          "pb-[calc(80px+env(safe-area-inset-bottom))]"
+          hideTabs ? "pb-0" : "pb-[calc(80px+env(safe-area-inset-bottom))]"
         )}
       >
         <ErrorBoundary>
@@ -111,31 +114,33 @@ export default function FieldCaptureLayout() {
         </ErrorBoundary>
       </main>
 
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-fc-border shadow-[0_-1px_3px_rgba(0,0,0,0.05)]"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        <div className="max-w-[480px] mx-auto grid grid-cols-3 h-[64px]">
-          {TABS.map((tab) => (
-            <NavLink
-              key={tab.to}
-              to={tab.to}
-              end={tab.end}
-              className={({ isActive }) =>
-                cn(
-                  "flex flex-col items-center justify-center gap-1 transition-all active:scale-95",
-                  isActive
-                    ? "text-fc-primary"
-                    : "text-fc-muted hover:text-fc-text"
-                )
-              }
-            >
-              <tab.icon className="h-[22px] w-[22px]" strokeWidth={2.2} />
-              <span className="text-[11px] font-medium">{tab.label}</span>
-            </NavLink>
-          ))}
-        </div>
-      </nav>
+      {!hideTabs && (
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-fc-border shadow-[0_-1px_3px_rgba(0,0,0,0.05)]"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="max-w-[480px] mx-auto grid grid-cols-3 h-[64px]">
+            {TABS.map((tab) => (
+              <NavLink
+                key={tab.to}
+                to={tab.to}
+                end={tab.end}
+                className={({ isActive }) =>
+                  cn(
+                    "flex flex-col items-center justify-center gap-1 transition-all active:scale-95",
+                    isActive
+                      ? "text-fc-primary"
+                      : "text-fc-muted hover:text-fc-text"
+                  )
+                }
+              >
+                <tab.icon className="h-[22px] w-[22px]" strokeWidth={2.2} />
+                <span className="text-[11px] font-medium">{tab.label}</span>
+              </NavLink>
+            ))}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

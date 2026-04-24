@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Check, ChevronRight } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, CloudOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,6 +50,7 @@ export default function FieldCaptureChargerCapture() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [showCelebrate, setShowCelebrate] = useState(false);
 
   // form
@@ -70,6 +71,10 @@ export default function FieldCaptureChargerCapture() {
   const [oldSerialCount, setOldSerialCount] = useState(0);
   const [newSerialCount, setNewSerialCount] = useState(0);
 
+  const hydratedRef = useRef(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedFlashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!chargerId || !workOrderId) return;
     (async () => {
@@ -85,7 +90,7 @@ export default function FieldCaptureChargerCapture() {
           .eq("work_order_id", workOrderId),
       ]);
       if (ch) {
-        const c = ch as WorkOrderCharger;
+        const c = ch as WorkOrderCharger & { current_step?: number };
         setCharger(c);
         setIssueCategory((c.issue_category as ChargerIssueCategory) || "");
         setRootCause((c.root_cause as ChargerRootCause) || "");
@@ -99,6 +104,9 @@ export default function FieldCaptureChargerCapture() {
         setPostStatus(
           (c.charger_status_post_work as ChargerPostWorkStatus) || "",
         );
+        // resume at last step (clamp 1-4; never reopen on Review unless they reached it)
+        const resume = Math.min(4, Math.max(1, c.current_step ?? 1));
+        setStep(resume);
         // mark in_progress + capture_started_at if not already
         if (c.status === "not_started") {
           await supabase
@@ -112,6 +120,10 @@ export default function FieldCaptureChargerCapture() {
       }
       setTotal(count ?? 0);
       setLoading(false);
+      // allow auto-save to start AFTER initial hydration
+      requestAnimationFrame(() => {
+        hydratedRef.current = true;
+      });
     })();
   }, [chargerId, workOrderId]);
 
@@ -132,7 +144,7 @@ export default function FieldCaptureChargerCapture() {
   const step3Valid =
     resolution.trim().length >= 10 && !!postStatus && afterCount >= 2;
 
-  async function persist(extra: Partial<WorkOrderCharger> = {}) {
+  async function persist(extra: Partial<WorkOrderCharger> & { current_step?: number } = {}) {
     if (!chargerId) return;
     const payload: any = {
       issue_category: issueCategory || null,
@@ -152,19 +164,74 @@ export default function FieldCaptureChargerCapture() {
       .update(payload)
       .eq("id", chargerId);
     if (error) {
-      toast.error("Could not save");
+      setSaveState("error");
       throw error;
     }
   }
 
+  // Debounced auto-save on any field change (after hydration)
+  useEffect(() => {
+    if (!hydratedRef.current || !chargerId) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setSaveState("saving");
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await persist();
+        setSaveState("saved");
+        if (savedFlashRef.current) clearTimeout(savedFlashRef.current);
+        savedFlashRef.current = setTimeout(() => setSaveState("idle"), 1800);
+      } catch {
+        // persist already set "error"
+      }
+    }, 500);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    issueCategory,
+    rootCause,
+    issueDesc,
+    recurring,
+    workPerformed,
+    partsSwap,
+    oldSerial,
+    newSerial,
+    resolution,
+    postStatus,
+  ]);
+
+  // Persist current_step whenever it changes (after hydration)
+  useEffect(() => {
+    if (!hydratedRef.current || !chargerId) return;
+    supabase
+      .from("work_order_chargers")
+      .update({ current_step: step })
+      .eq("id", chargerId)
+      .then(() => {});
+  }, [step, chargerId]);
+
   async function next() {
     setSaving(true);
     try {
-      await persist();
-      setStep((s) => Math.min(4, s + 1));
+      const newStep = Math.min(4, step + 1);
+      await persist({ current_step: newStep });
+      setStep(newStep);
+      setSaveState("saved");
+      if (savedFlashRef.current) clearTimeout(savedFlashRef.current);
+      savedFlashRef.current = setTimeout(() => setSaveState("idle"), 1500);
       window.scrollTo({ top: 0 });
     } finally {
       setSaving(false);
+    }
+  }
+
+  function goBack() {
+    if (step === 1) {
+      navigate(`/field-capture/job/${workOrderId}`);
+    } else {
+      setStep((s) => Math.max(1, s - 1));
+      window.scrollTo({ top: 0 });
     }
   }
 
@@ -175,6 +242,7 @@ export default function FieldCaptureChargerCapture() {
       await persist({
         status: "complete",
         capture_completed_at: new Date().toISOString(),
+        current_step: 4,
       });
       setShowCelebrate(true);
       setTimeout(() => {
@@ -216,7 +284,7 @@ export default function FieldCaptureChargerCapture() {
       >
         <div className="px-3 py-3 flex items-center gap-2">
           <button
-            onClick={() => navigate(`/field-capture/job/${workOrderId}`)}
+            onClick={goBack}
             className="h-9 w-9 rounded-full hover:bg-fc-border/50 flex items-center justify-center"
             aria-label="Back"
           >
@@ -230,6 +298,7 @@ export default function FieldCaptureChargerCapture() {
               {charger.make_model || "—"} • {charger.serial_number || "no serial"}
             </div>
           </div>
+          <SaveBadge state={saveState} />
         </div>
         {/* Step indicator */}
         <div className="px-3 pb-3 flex items-center gap-1">
@@ -537,25 +606,23 @@ export default function FieldCaptureChargerCapture() {
         )}
       </div>
 
-      {/* Sticky footer */}
+      {/* Sticky footer — always shows Back + Continue/Submit. Tab bar hidden during capture. */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-fc-border"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-fc-border shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
       >
         <div className="max-w-[480px] mx-auto px-4 pt-3 flex gap-2">
-          {step > 1 && (
-            <Button
-              variant="outline"
-              className="h-12 rounded-xl flex-1"
-              onClick={() => setStep((s) => Math.max(1, s - 1))}
-              disabled={saving}
-            >
-              Back
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            className="h-12 rounded-xl w-[100px] shrink-0"
+            onClick={goBack}
+            disabled={saving}
+          >
+            Back
+          </Button>
           {step < 4 ? (
             <Button
-              className="h-12 rounded-xl flex-1 bg-fc-primary hover:bg-fc-primary-dark text-white font-semibold"
+              className="h-12 rounded-xl flex-1 bg-fc-primary hover:bg-fc-primary-dark text-white font-semibold disabled:bg-fc-border disabled:text-fc-muted disabled:shadow-none"
               onClick={next}
               disabled={
                 saving ||
@@ -573,7 +640,7 @@ export default function FieldCaptureChargerCapture() {
             </Button>
           ) : (
             <Button
-              className="h-14 rounded-xl flex-1 bg-fc-primary hover:bg-fc-primary-dark text-white font-bold text-base"
+              className="h-12 rounded-xl flex-1 bg-fc-primary hover:bg-fc-primary-dark text-white font-bold disabled:bg-fc-border disabled:text-fc-muted disabled:shadow-none"
               onClick={submitCharger}
               disabled={saving}
             >
@@ -583,6 +650,27 @@ export default function FieldCaptureChargerCapture() {
         </div>
       </div>
     </>
+  );
+}
+
+function SaveBadge({ state }: { state: "idle" | "saving" | "saved" | "error" }) {
+  if (state === "idle") return <div className="w-[72px]" aria-hidden />;
+  const base =
+    "inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold transition-opacity";
+  if (state === "saving")
+    return (
+      <span className={cn(base, "bg-fc-border/60 text-fc-muted")}>Saving…</span>
+    );
+  if (state === "saved")
+    return (
+      <span className={cn(base, "bg-fc-success/15 text-fc-success")}>
+        <Check className="h-3 w-3" /> Saved
+      </span>
+    );
+  return (
+    <span className={cn(base, "bg-destructive/15 text-destructive")}>
+      <CloudOff className="h-3 w-3" /> Save failed
+    </span>
   );
 }
 
