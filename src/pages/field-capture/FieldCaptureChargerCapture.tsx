@@ -473,14 +473,71 @@ export default function FieldCaptureChargerCapture() {
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-fc-text">What did you do?</h2>
 
+            {showTemplateUpdatePrompt && pendingTemplateText && (
+              <div className="rounded-xl border border-fc-primary/40 bg-fc-primary/5 p-3 space-y-2">
+                <div className="text-sm text-fc-text font-medium">
+                  You changed the issue type. Update the work description to match?
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-fc-primary hover:bg-fc-primary-dark text-white"
+                    onClick={() => {
+                      setWorkPerformed(pendingTemplateText);
+                      setTemplateApplied(true);
+                      setLastTemplateKey(`${issueCategory}__${rootCause}`);
+                      setPendingTemplateText(null);
+                      setShowTemplateUpdatePrompt(false);
+                    }}
+                  >
+                    Use New Template
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setLastTemplateKey(`${issueCategory}__${rootCause}`);
+                      setPendingTemplateText(null);
+                      setShowTemplateUpdatePrompt(false);
+                    }}
+                  >
+                    Keep My Notes
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
-              <Label>Describe the work you completed * <span className="text-fc-muted font-normal">(min 10 chars)</span></Label>
+              <div className="flex items-center justify-between">
+                <Label>Describe the work you completed * <span className="text-fc-muted font-normal">(min 10 chars)</span></Label>
+              </div>
+              {templateApplied && (
+                <div className="flex items-center justify-between text-[11px] text-fc-muted">
+                  <span>Template loaded — customize to match your work</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkPerformed("");
+                      setTemplateApplied(false);
+                    }}
+                    className="text-fc-primary font-semibold hover:underline"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
               <Textarea
                 value={workPerformed}
-                onChange={(e) => setWorkPerformed(e.target.value)}
+                onChange={(e) => {
+                  setWorkPerformed(e.target.value);
+                  if (templateApplied) setTemplateApplied(false);
+                }}
                 placeholder="Walk through what you did to address the issue"
-                className="min-h-[110px] rounded-xl"
+                className="min-h-[140px] rounded-xl"
               />
+              <div className="text-[11px] text-fc-muted text-right">
+                {workPerformed.trim().length} / 10 min
+              </div>
             </div>
 
             <div className="flex items-center justify-between p-3 rounded-xl bg-fc-bg border border-fc-border">
