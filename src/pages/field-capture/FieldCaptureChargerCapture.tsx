@@ -71,6 +71,12 @@ export default function FieldCaptureChargerCapture() {
   const [oldSerialCount, setOldSerialCount] = useState(0);
   const [newSerialCount, setNewSerialCount] = useState(0);
 
+  // template tracking
+  const [templateApplied, setTemplateApplied] = useState(false);
+  const [lastTemplateKey, setLastTemplateKey] = useState<string | null>(null);
+  const [showTemplateUpdatePrompt, setShowTemplateUpdatePrompt] = useState(false);
+  const [pendingTemplateText, setPendingTemplateText] = useState<string | null>(null);
+
   const hydratedRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedFlashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
