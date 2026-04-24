@@ -110,6 +110,10 @@ export default function CreateTestJob() {
       toast.error("Please fill in all required fields");
       return;
     }
+    if (!pocName || !pocPhone) {
+      toast.error("Point of Contact name and phone are required");
+      return;
+    }
     if (chargers.length < 1) {
       toast.error("Add at least one charger");
       return;
@@ -123,6 +127,9 @@ export default function CreateTestJob() {
           client_name: clientName,
           site_name: siteName,
           site_address: siteAddress,
+          poc_name: pocName,
+          poc_phone: pocPhone,
+          poc_email: pocEmail || null,
           assigned_technician_id: technicianId,
           scheduled_date: scheduledDate,
           status: "scheduled",
@@ -159,6 +166,9 @@ export default function CreateTestJob() {
     setClientName("");
     setSiteName("");
     setSiteAddress("");
+    setPocName("");
+    setPocPhone("");
+    setPocEmail("");
     setTechnicianId("");
     setScheduledDate(new Date().toISOString().slice(0, 10));
     setChargers([{ make_model: "", serial_number: "" }]);
