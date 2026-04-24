@@ -102,7 +102,14 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
 
   const hasAccess = (userId: string, section: SectionKey) => {
     if (superAdminIds.has(userId)) return true;
+    if (technicianIds.has(userId)) return section === "field_capture";
     return accessMap[userId]?.[section] === true;
+  };
+
+  const isLocked = (userId: string, section: SectionKey) => {
+    if (superAdminIds.has(userId)) return true;
+    if (technicianIds.has(userId)) return true; // every column locked for technicians
+    return false;
   };
 
   const sectionUsers = (section: SectionKey) =>
