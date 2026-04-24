@@ -29,7 +29,7 @@ import {
   User,
   Plug,
   FileText,
-  AlertTriangle,
+  
   Clock,
   ShieldCheck,
   Camera,
@@ -53,7 +53,7 @@ import { fetchActivityTimeline, logWorkOrderActivity } from "@/lib/workOrderActi
 import WorkOrderEditModal from "@/components/field-capture/WorkOrderEditModal";
 import ReassignTechnicianModal from "@/components/field-capture/ReassignTechnicianModal";
 import DeleteWorkOrderDialog from "@/components/field-capture/DeleteWorkOrderDialog";
-import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -121,7 +121,6 @@ export default function WorkOrderDetailModal({
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
   const [busyAction, setBusyAction] = useState(false);
-  const { confirm, dialogProps } = useConfirmDialog();
 
   const reload = async () => {
     if (!workOrder) return;
