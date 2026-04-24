@@ -44,6 +44,9 @@ export default function FieldCaptureLayout() {
 
   // Hide header on detail/sub-screens so they can manage their own back nav
   const isDetail = /\/field-capture\/job\//.test(location.pathname);
+  // Hide bottom tabs during focus flows (charger capture, wrap-up) — tech is in focus mode
+  const hideTabs =
+    /\/field-capture\/job\/[^/]+\/(charger|wrap-up)/.test(location.pathname);
 
   useEffect(() => {
     if (!session?.user?.id) return;
