@@ -166,6 +166,13 @@ export default function FieldCaptureJobs() {
   }, [session?.user?.id, isFieldAdmin, sevenDaysOut]);
 
   const flaggedJobs = (jobs || []).filter((j) => j.status === "flagged");
+  const openStatuses: WorkOrderStatus[] = ["scheduled", "in_progress"];
+  const pastDueJobs = (jobs || []).filter(
+    (j) =>
+      j.scheduled_date < today &&
+      j.status !== "flagged" &&
+      openStatuses.includes(j.status)
+  );
   const todayJobs = (jobs || []).filter(
     (j) => j.scheduled_date === today && j.status !== "flagged"
   );
@@ -175,7 +182,10 @@ export default function FieldCaptureJobs() {
 
   const hasAnyJobs =
     jobs !== null &&
-    (todayJobs.length > 0 || flaggedJobs.length > 0 || upcomingJobs.length > 0);
+    (todayJobs.length > 0 ||
+      flaggedJobs.length > 0 ||
+      upcomingJobs.length > 0 ||
+      pastDueJobs.length > 0);
 
   return (
     <div className="px-4 py-5 space-y-6">
@@ -185,11 +195,13 @@ export default function FieldCaptureJobs() {
         </h1>
         {jobs !== null && (
           <p className="text-[15px] text-fc-muted mt-1">
-            {todayJobs.length === 0
-              ? flaggedJobs.length > 0
-                ? "Items need your attention"
-                : "No jobs scheduled"
-              : `${todayJobs.length} ${todayJobs.length === 1 ? "job" : "jobs"} scheduled`}
+            {pastDueJobs.length > 0
+              ? `${pastDueJobs.length} past due • ${todayJobs.length} today`
+              : todayJobs.length === 0
+                ? flaggedJobs.length > 0
+                  ? "Items need your attention"
+                  : "No jobs scheduled"
+                : `${todayJobs.length} ${todayJobs.length === 1 ? "job" : "jobs"} scheduled`}
           </p>
         )}
       </div>
@@ -213,10 +225,29 @@ export default function FieldCaptureJobs() {
         </section>
       )}
 
+      {/* Past Due — scheduled/in-progress jobs from before today */}
+      {jobs && pastDueJobs.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-[18px] font-bold text-fc-warning px-0.5">
+            Past Due
+          </h2>
+          <div className="space-y-3">
+            {pastDueJobs.map((j) => (
+              <div key={j.id} className="space-y-1.5">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-fc-warning/80 px-1">
+                  {formatShortDate(j.scheduled_date)}
+                </div>
+                <JobCard job={j} flagged />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Today's jobs */}
       {jobs && todayJobs.length > 0 && (
         <section className="space-y-3">
-          {flaggedJobs.length > 0 && (
+          {(flaggedJobs.length > 0 || pastDueJobs.length > 0) && (
             <h2 className="text-[18px] font-bold text-fc-text px-0.5">
               Scheduled Today
             </h2>
