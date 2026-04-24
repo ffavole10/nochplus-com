@@ -22,6 +22,8 @@ const STATUS_PILL: Record<WorkOrderStatus, string> = {
   flagged: "bg-fc-warning/15 text-fc-warning",
   approved: "bg-fc-success/15 text-fc-success",
   closed: "bg-fc-border text-fc-muted",
+  cancelled: "bg-destructive/15 text-destructive",
+  archived: "bg-fc-border text-fc-muted",
 };
 
 // Local-date YYYY-MM-DD (avoids UTC shift that hides "today" jobs in west-of-UTC tz).
