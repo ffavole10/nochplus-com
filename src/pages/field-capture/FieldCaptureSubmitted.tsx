@@ -86,6 +86,11 @@ export default function FieldCaptureSubmitted() {
       >
         Back to Today's Jobs
       </Button>
+      <AchievementUnlockedModal
+        achievements={unlocked}
+        open={achievementsOpen}
+        onClose={() => setAchievementsOpen(false)}
+      />
     </div>
   );
 }
