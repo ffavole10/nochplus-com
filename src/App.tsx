@@ -200,6 +200,7 @@ const App = () => (
             <Route path="/field-capture/admin/create-job" element={<FieldCaptureAdminGuard><CreateTestJob /></FieldCaptureAdminGuard>} />
             <Route path="/field-capture/admin/work-orders" element={<FieldCaptureAdminGuard><AllWorkOrders /></FieldCaptureAdminGuard>} />
             <Route path="/field-capture/admin/templates" element={<FieldCaptureAdminGuard><WorkTemplates /></FieldCaptureAdminGuard>} />
+            <Route path="/field-capture/admin/performance" element={<FieldCaptureAdminGuard><TeamPerformance /></FieldCaptureAdminGuard>} />
 
             {/* Settings */}
             <Route path="/settings" element={<Settings />} />
