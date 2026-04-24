@@ -127,7 +127,7 @@ export default function FieldCaptureProfile() {
       </div>
 
       <Button
-        onClick={signOut}
+        onClick={handleLogout}
         variant="destructive"
         className="w-full h-12 rounded-xl text-base font-semibold"
       >
