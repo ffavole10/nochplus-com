@@ -284,7 +284,7 @@ export default function FieldCaptureChargerCapture() {
       >
         <div className="px-3 py-3 flex items-center gap-2">
           <button
-            onClick={() => navigate(`/field-capture/job/${workOrderId}`)}
+            onClick={goBack}
             className="h-9 w-9 rounded-full hover:bg-fc-border/50 flex items-center justify-center"
             aria-label="Back"
           >
@@ -298,6 +298,7 @@ export default function FieldCaptureChargerCapture() {
               {charger.make_model || "—"} • {charger.serial_number || "no serial"}
             </div>
           </div>
+          <SaveBadge state={saveState} />
         </div>
         {/* Step indicator */}
         <div className="px-3 pb-3 flex items-center gap-1">
