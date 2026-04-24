@@ -4797,6 +4797,9 @@ export type Database = {
         | "customer"
         | "manager"
         | "partner"
+        | "technician"
+        | "account_manager"
+        | "billing"
       campaign_report_status: "active" | "revoked" | "expired"
       deal_stage:
         | "Account Mapped"
@@ -4981,6 +4984,9 @@ export const Constants = {
         "customer",
         "manager",
         "partner",
+        "technician",
+        "account_manager",
+        "billing",
       ],
       campaign_report_status: ["active", "revoked", "expired"],
       deal_stage: [
