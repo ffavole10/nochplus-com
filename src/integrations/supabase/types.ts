@@ -4693,6 +4693,44 @@ export type Database = {
         }
         Relationships: []
       }
+      work_order_activity: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_label: string | null
+          created_at: string
+          details: Json
+          id: string
+          work_order_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_label?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          work_order_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_label?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_activity_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_order_chargers: {
         Row: {
           added_on_site: boolean
@@ -4842,6 +4880,8 @@ export type Database = {
       work_orders: {
         Row: {
           access_time_minutes: number | null
+          archived_at: string | null
+          archived_by: string | null
           arrival_timestamp: string | null
           assigned_technician_id: string
           client_name: string
@@ -4850,6 +4890,7 @@ export type Database = {
           departure_timestamp: string | null
           gps_location: string | null
           id: string
+          is_archived: boolean
           job_notes: string | null
           poc_email: string | null
           poc_name: string | null
@@ -4866,6 +4907,8 @@ export type Database = {
         }
         Insert: {
           access_time_minutes?: number | null
+          archived_at?: string | null
+          archived_by?: string | null
           arrival_timestamp?: string | null
           assigned_technician_id: string
           client_name: string
@@ -4874,6 +4917,7 @@ export type Database = {
           departure_timestamp?: string | null
           gps_location?: string | null
           id?: string
+          is_archived?: boolean
           job_notes?: string | null
           poc_email?: string | null
           poc_name?: string | null
@@ -4890,6 +4934,8 @@ export type Database = {
         }
         Update: {
           access_time_minutes?: number | null
+          archived_at?: string | null
+          archived_by?: string | null
           arrival_timestamp?: string | null
           assigned_technician_id?: string
           client_name?: string
@@ -4898,6 +4944,7 @@ export type Database = {
           departure_timestamp?: string | null
           gps_location?: string | null
           id?: string
+          is_archived?: boolean
           job_notes?: string | null
           poc_email?: string | null
           poc_name?: string | null
@@ -5387,6 +5434,8 @@ export type Database = {
         | "flagged"
         | "approved"
         | "closed"
+        | "cancelled"
+        | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5650,6 +5699,8 @@ export const Constants = {
         "flagged",
         "approved",
         "closed",
+        "cancelled",
+        "archived",
       ],
     },
   },
