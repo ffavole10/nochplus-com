@@ -58,7 +58,18 @@ export default function FieldCaptureWrapUp() {
       toast.error(error.message);
       return;
     }
-    navigate(`/field-capture/job/${workOrderId}/submitted`, { replace: true });
+    // Recompute stats and detect new achievements (best-effort)
+    let newAchievements: string[] = [];
+    try {
+      if (session?.user?.id) {
+        const res = await refreshTechnicianStats(session.user.id);
+        newAchievements = res.newAchievements;
+      }
+    } catch (e) {
+      console.warn("[NOCH Pro] stats refresh failed", e);
+    }
+    const qs = newAchievements.length ? `?unlocked=${newAchievements.join(",")}` : "";
+    navigate(`/field-capture/job/${workOrderId}/submitted${qs}`, { replace: true });
   }
 
   if (loading) {
