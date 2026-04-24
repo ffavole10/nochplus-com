@@ -60,6 +60,13 @@ import GrowthAccounts from "./pages/growth/GrowthAccounts";
 import GrowthPipeline from "./pages/growth/GrowthPipeline";
 import GrowthDealDetail from "./pages/growth/GrowthDealDetail";
 
+// Field Capture
+import FieldCaptureLanding from "./pages/field-capture/FieldCaptureLanding";
+import FieldCaptureJobDetail from "./pages/field-capture/FieldCaptureJobDetail";
+import CreateTestJob from "./pages/field-capture/admin/CreateTestJob";
+import AllWorkOrders from "./pages/field-capture/admin/AllWorkOrders";
+import { FieldCaptureAdminGuard } from "./components/FieldCaptureAdminGuard";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -156,6 +163,12 @@ const App = () => (
             <Route path="/autoheal/parts" element={<Parts />} />
             <Route path="/autoheal/parts-catalog" element={<PartsCatalog />} />
             <Route path="/autoheal/locations" element={<Locations />} />
+
+            {/* Field Capture */}
+            <Route path="/field-capture" element={<FieldCaptureLanding />} />
+            <Route path="/field-capture/job/:workOrderId" element={<FieldCaptureJobDetail />} />
+            <Route path="/field-capture/admin/create-job" element={<FieldCaptureAdminGuard><CreateTestJob /></FieldCaptureAdminGuard>} />
+            <Route path="/field-capture/admin/work-orders" element={<FieldCaptureAdminGuard><AllWorkOrders /></FieldCaptureAdminGuard>} />
 
             {/* Settings */}
             <Route path="/settings" element={<Settings />} />

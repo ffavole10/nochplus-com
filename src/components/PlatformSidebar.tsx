@@ -448,6 +448,19 @@ export function PlatformSidebar() {
           </>
         )}
 
+        {/* ─── FIELD CAPTURE (admin only) ─── */}
+        {(hasRole("super_admin") || hasRole("admin") || hasRole("manager") || hasRole("account_manager")) && (
+          <div className="pt-2 mt-2 border-t border-sidebar-border">
+            <div className="px-3 py-2 text-xs font-bold tracking-wider uppercase text-sidebar-foreground/70">
+              Field Capture
+            </div>
+            <SidebarMenu className="px-1">
+              <NavItem item={{ title: "All Work Orders", url: "/field-capture/admin/work-orders", icon: List }} />
+              <NavItem item={{ title: "Create Test Job", url: "/field-capture/admin/create-job", icon: Plus }} />
+            </SidebarMenu>
+          </div>
+        )}
+
         {/* ─── FILTERS SECTION ─── */}
         <div className="border-t border-sidebar-border mt-2 pt-2">
           <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>

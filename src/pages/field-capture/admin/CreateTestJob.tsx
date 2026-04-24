@@ -1,0 +1,334 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { useAuth } from "@/hooks/useAuth";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { Plus, Trash2, CheckCircle2 } from "lucide-react";
+
+interface ChargerInput {
+  make_model: string;
+  serial_number: string;
+}
+
+interface TechnicianOption {
+  user_id: string;
+  label: string;
+}
+
+export default function CreateTestJob() {
+  usePageTitle("Create Test Job");
+  const navigate = useNavigate();
+  const { session } = useAuth();
+
+  const [clientName, setClientName] = useState("");
+  const [siteName, setSiteName] = useState("");
+  const [siteAddress, setSiteAddress] = useState("");
+  const [technicianId, setTechnicianId] = useState<string>("");
+  const [scheduledDate, setScheduledDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [chargers, setChargers] = useState<ChargerInput[]>([
+    { make_model: "", serial_number: "" },
+  ]);
+  const [technicians, setTechnicians] = useState<TechnicianOption[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState<{ wo_number: string; id: string } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    (async () => {
+      // Fetch users with role=technician.
+      const { data: rows, error } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "technician");
+      if (error) {
+        console.error("[CreateTestJob] load technicians failed", error);
+        return;
+      }
+      const userIds = (rows || []).map((r) => r.user_id).filter(Boolean);
+      if (userIds.length === 0) {
+        setTechnicians([]);
+        return;
+      }
+      // Get email/name from profiles.
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, email, display_name")
+        .in("user_id", userIds);
+      const opts: TechnicianOption[] = (profs || []).map((p: any) => ({
+        user_id: p.user_id,
+        label: p.display_name || p.email || p.user_id,
+      }));
+      // Include any tech without a profile row, fall back to id.
+      for (const id of userIds) {
+        if (!opts.find((o) => o.user_id === id)) {
+          opts.push({ user_id: id, label: id });
+        }
+      }
+      setTechnicians(opts);
+    })();
+  }, []);
+
+  const updateCharger = (idx: number, field: keyof ChargerInput, value: string) => {
+    setChargers((arr) => {
+      const next = [...arr];
+      next[idx] = { ...next[idx], [field]: value };
+      return next;
+    });
+  };
+
+  const addCharger = () => {
+    if (chargers.length >= 20) return;
+    setChargers((arr) => [...arr, { make_model: "", serial_number: "" }]);
+  };
+
+  const removeCharger = (idx: number) => {
+    if (chargers.length <= 1) return;
+    setChargers((arr) => arr.filter((_, i) => i !== idx));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clientName || !siteName || !siteAddress || !technicianId) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    if (chargers.length < 1) {
+      toast.error("Add at least one charger");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data: wo, error: woErr } = await supabase
+        .from("work_orders")
+        .insert({
+          client_name: clientName,
+          site_name: siteName,
+          site_address: siteAddress,
+          assigned_technician_id: technicianId,
+          scheduled_date: scheduledDate,
+          status: "scheduled",
+          created_by: session?.user?.id ?? null,
+        })
+        .select()
+        .single();
+      if (woErr) throw woErr;
+
+      const chargerRows = chargers.map((c, idx) => ({
+        work_order_id: wo.id,
+        charger_position: idx + 1,
+        make_model: c.make_model || null,
+        serial_number: c.serial_number || null,
+        status: "not_started" as const,
+        added_on_site: false,
+      }));
+      const { error: chargersErr } = await supabase
+        .from("work_order_chargers")
+        .insert(chargerRows);
+      if (chargersErr) throw chargersErr;
+
+      setSuccess({ wo_number: wo.work_order_number ?? "(pending)", id: wo.id });
+      toast.success(`Created ${wo.work_order_number}`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to create work order");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const reset = () => {
+    setClientName("");
+    setSiteName("");
+    setSiteAddress("");
+    setTechnicianId("");
+    setScheduledDate(new Date().toISOString().slice(0, 10));
+    setChargers([{ make_model: "", serial_number: "" }]);
+    setSuccess(null);
+  };
+
+  if (success) {
+    return (
+      <div className="p-6 max-w-2xl mx-auto">
+        <Card className="p-8 text-center">
+          <CheckCircle2 className="h-14 w-14 text-primary mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-1">Work order created</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            <span className="font-mono font-semibold text-foreground">
+              {success.wo_number}
+            </span>{" "}
+            has been assigned and is now visible to the technician.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={reset} variant="outline">
+              Create Another
+            </Button>
+            <Button onClick={() => navigate("/field-capture/admin/work-orders")}>
+              View Work Orders
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 max-w-3xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Create Test Work Order</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manually scaffold a work order and assign it to a technician for
+          field testing.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card className="p-6 space-y-4">
+          <div>
+            <Label htmlFor="client">Client Name *</Label>
+            <Input
+              id="client"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="e.g. Acme Corp"
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="site">Site Name *</Label>
+            <Input
+              id="site"
+              value={siteName}
+              onChange={(e) => setSiteName(e.target.value)}
+              placeholder="e.g. Acme HQ — North Lot"
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="address">Site Address *</Label>
+            <Input
+              id="address"
+              value={siteAddress}
+              onChange={(e) => setSiteAddress(e.target.value)}
+              placeholder="123 Main St, City, State"
+              required
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Assigned Technician *</Label>
+              <Select value={technicianId} onValueChange={setTechnicianId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select technician…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {technicians.length === 0 && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">
+                      No users with the technician role yet. Assign the role in
+                      Settings → Access Control.
+                    </div>
+                  )}
+                  {technicians.map((t) => (
+                    <SelectItem key={t.user_id} value={t.user_id}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="date">Scheduled Date *</Label>
+              <Input
+                id="date"
+                type="date"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-base font-semibold">Chargers</h2>
+              <p className="text-xs text-muted-foreground">
+                {chargers.length} of max 20
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addCharger}
+              disabled={chargers.length >= 20}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Charger
+            </Button>
+          </div>
+          <div className="space-y-3">
+            {chargers.map((c, idx) => (
+              <div
+                key={idx}
+                className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end p-3 rounded-lg border border-border bg-muted/20"
+              >
+                <div>
+                  <Label className="text-xs">Make / Model #{idx + 1}</Label>
+                  <Input
+                    value={c.make_model}
+                    onChange={(e) =>
+                      updateCharger(idx, "make_model", e.target.value)
+                    }
+                    placeholder="e.g. ChargePoint CT4000"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Serial Number</Label>
+                  <Input
+                    value={c.serial_number}
+                    onChange={(e) =>
+                      updateCharger(idx, "serial_number", e.target.value)
+                    }
+                    placeholder="e.g. SN-12345"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeCharger(idx)}
+                  disabled={chargers.length <= 1}
+                  aria-label="Remove charger"
+                >
+                  <Trash2 className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <div className="flex justify-end gap-3">
+          <Button type="submit" disabled={submitting} size="lg">
+            {submitting ? "Creating…" : "Create Work Order"}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
