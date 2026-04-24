@@ -385,6 +385,7 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                   <tbody>
                     {users.map((u) => {
                       const isSuper = superAdminIds.has(u.user_id);
+                      const isTech = technicianIds.has(u.user_id);
                       return (
                         <tr key={u.user_id} className="border-b border-border/40 hover:bg-muted/30">
                           <td className="py-3 pr-4">
@@ -399,6 +400,9 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                                   {isSuper && (
                                     <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0">SUPER</Badge>
                                   )}
+                                  {isTech && !isSuper && (
+                                    <Badge className="bg-sky-500 text-white text-[9px] px-1.5 py-0">TECH</Badge>
+                                  )}
                                 </div>
                                 <div className="text-xs text-muted-foreground truncate">{u.email}</div>
                               </div>
@@ -406,17 +410,25 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                           </td>
                           {SECTION_KEYS.map((s) => {
                             const checked = hasAccess(u.user_id, s);
+                            const locked = isLocked(u.user_id, s);
+                            const tooltip = isSuper
+                              ? "Super admins have full access"
+                              : isTech
+                                ? s === "field_capture"
+                                  ? "Technicians always have Field Capture access"
+                                  : "Technicians are restricted to Field Capture only"
+                                : "";
                             return (
                               <td key={s} className="text-center py-3 px-3">
-                                {isSuper ? (
+                                {locked ? (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <div className="inline-flex items-center gap-1.5 opacity-70 cursor-not-allowed">
-                                        <Switch checked disabled />
+                                        <Switch checked={checked} disabled />
                                         <Lock className="h-3 w-3 text-muted-foreground" />
                                       </div>
                                     </TooltipTrigger>
-                                    <TooltipContent>Super admins have full access</TooltipContent>
+                                    <TooltipContent>{tooltip}</TooltipContent>
                                   </Tooltip>
                                 ) : (
                                   <Switch
