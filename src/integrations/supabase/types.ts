@@ -3637,6 +3637,62 @@ export type Database = {
           },
         ]
       }
+      safety_briefings_log: {
+        Row: {
+          area_secured_confirmed: boolean
+          briefing_completed_at: string
+          briefing_started_at: string
+          briefing_type: Database["public"]["Enums"]["briefing_type"]
+          created_at: string
+          duration_seconds: number
+          id: string
+          loto_performed: boolean
+          ppe_confirmed: boolean
+          sow_reviewed_confirmed: boolean
+          technician_id: string
+          work_order_id: string
+          zero_energy_verified: boolean
+        }
+        Insert: {
+          area_secured_confirmed?: boolean
+          briefing_completed_at?: string
+          briefing_started_at?: string
+          briefing_type: Database["public"]["Enums"]["briefing_type"]
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          loto_performed?: boolean
+          ppe_confirmed?: boolean
+          sow_reviewed_confirmed?: boolean
+          technician_id: string
+          work_order_id: string
+          zero_energy_verified?: boolean
+        }
+        Update: {
+          area_secured_confirmed?: boolean
+          briefing_completed_at?: string
+          briefing_started_at?: string
+          briefing_type?: Database["public"]["Enums"]["briefing_type"]
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          loto_performed?: boolean
+          ppe_confirmed?: boolean
+          sow_reviewed_confirmed?: boolean
+          technician_id?: string
+          work_order_id?: string
+          zero_energy_verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_briefings_log_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_regions: {
         Row: {
           cities: string[] | null
@@ -4436,6 +4492,203 @@ export type Database = {
         }
         Relationships: []
       }
+      work_order_chargers: {
+        Row: {
+          added_on_site: boolean
+          capture_completed_at: string | null
+          capture_started_at: string | null
+          charger_position: number
+          charger_status_post_work:
+            | Database["public"]["Enums"]["charger_post_work_status"]
+            | null
+          created_at: string
+          id: string
+          is_recurring_issue: boolean
+          issue_category:
+            | Database["public"]["Enums"]["charger_issue_category"]
+            | null
+          issue_description: string | null
+          make_model: string | null
+          new_serial_number: string | null
+          old_serial_number: string | null
+          parts_swap_performed: boolean
+          resolution: string | null
+          root_cause: Database["public"]["Enums"]["charger_root_cause"] | null
+          serial_number: string | null
+          status: Database["public"]["Enums"]["charger_capture_status"]
+          updated_at: string
+          work_order_id: string
+          work_performed: string | null
+        }
+        Insert: {
+          added_on_site?: boolean
+          capture_completed_at?: string | null
+          capture_started_at?: string | null
+          charger_position?: number
+          charger_status_post_work?:
+            | Database["public"]["Enums"]["charger_post_work_status"]
+            | null
+          created_at?: string
+          id?: string
+          is_recurring_issue?: boolean
+          issue_category?:
+            | Database["public"]["Enums"]["charger_issue_category"]
+            | null
+          issue_description?: string | null
+          make_model?: string | null
+          new_serial_number?: string | null
+          old_serial_number?: string | null
+          parts_swap_performed?: boolean
+          resolution?: string | null
+          root_cause?: Database["public"]["Enums"]["charger_root_cause"] | null
+          serial_number?: string | null
+          status?: Database["public"]["Enums"]["charger_capture_status"]
+          updated_at?: string
+          work_order_id: string
+          work_performed?: string | null
+        }
+        Update: {
+          added_on_site?: boolean
+          capture_completed_at?: string | null
+          capture_started_at?: string | null
+          charger_position?: number
+          charger_status_post_work?:
+            | Database["public"]["Enums"]["charger_post_work_status"]
+            | null
+          created_at?: string
+          id?: string
+          is_recurring_issue?: boolean
+          issue_category?:
+            | Database["public"]["Enums"]["charger_issue_category"]
+            | null
+          issue_description?: string | null
+          make_model?: string | null
+          new_serial_number?: string | null
+          old_serial_number?: string | null
+          parts_swap_performed?: boolean
+          resolution?: string | null
+          root_cause?: Database["public"]["Enums"]["charger_root_cause"] | null
+          serial_number?: string | null
+          status?: Database["public"]["Enums"]["charger_capture_status"]
+          updated_at?: string
+          work_order_id?: string
+          work_performed?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_chargers_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_photos: {
+        Row: {
+          charger_id: string | null
+          id: string
+          photo_type: Database["public"]["Enums"]["field_photo_type"]
+          photo_url: string
+          uploaded_at: string
+          uploaded_by: string | null
+          work_order_id: string
+        }
+        Insert: {
+          charger_id?: string | null
+          id?: string
+          photo_type: Database["public"]["Enums"]["field_photo_type"]
+          photo_url: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          work_order_id: string
+        }
+        Update: {
+          charger_id?: string | null
+          id?: string
+          photo_type?: Database["public"]["Enums"]["field_photo_type"]
+          photo_url?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_photos_charger_id_fkey"
+            columns: ["charger_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_chargers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_photos_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_orders: {
+        Row: {
+          access_time_minutes: number | null
+          arrival_timestamp: string | null
+          assigned_technician_id: string
+          client_name: string
+          created_at: string
+          created_by: string | null
+          departure_timestamp: string | null
+          gps_location: string | null
+          id: string
+          job_notes: string | null
+          scheduled_date: string
+          site_address: string
+          site_name: string
+          status: Database["public"]["Enums"]["work_order_status"]
+          support_time_minutes: number | null
+          updated_at: string
+          work_order_number: string | null
+        }
+        Insert: {
+          access_time_minutes?: number | null
+          arrival_timestamp?: string | null
+          assigned_technician_id: string
+          client_name: string
+          created_at?: string
+          created_by?: string | null
+          departure_timestamp?: string | null
+          gps_location?: string | null
+          id?: string
+          job_notes?: string | null
+          scheduled_date?: string
+          site_address: string
+          site_name: string
+          status?: Database["public"]["Enums"]["work_order_status"]
+          support_time_minutes?: number | null
+          updated_at?: string
+          work_order_number?: string | null
+        }
+        Update: {
+          access_time_minutes?: number | null
+          arrival_timestamp?: string | null
+          assigned_technician_id?: string
+          client_name?: string
+          created_at?: string
+          created_by?: string | null
+          departure_timestamp?: string | null
+          gps_location?: string | null
+          id?: string
+          job_notes?: string | null
+          scheduled_date?: string
+          site_address?: string
+          site_name?: string
+          status?: Database["public"]["Enums"]["work_order_status"]
+          support_time_minutes?: number | null
+          updated_at?: string
+          work_order_number?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -4509,6 +4762,8 @@ export type Database = {
         Args: { _section_key: string; _user_id: string }
         Returns: boolean
       }
+      is_field_capture_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_technician: { Args: { _user_id: string }; Returns: boolean }
       is_ticket_overrider: { Args: { _user_id: string }; Returns: boolean }
       mark_assessment_sent: {
         Args: { _email: string; _performer_name?: string; _ticket_id: string }
@@ -4800,7 +5055,30 @@ export type Database = {
         | "technician"
         | "account_manager"
         | "billing"
+      briefing_type: "full_briefing" | "condensed_briefing"
       campaign_report_status: "active" | "revoked" | "expired"
+      charger_capture_status: "not_started" | "in_progress" | "complete"
+      charger_issue_category:
+        | "power_issue"
+        | "screen_display"
+        | "connector"
+        | "payment_processing"
+        | "network_connectivity"
+        | "physical_damage"
+        | "other"
+      charger_post_work_status:
+        | "operational"
+        | "partially_functional"
+        | "non_operational_followup"
+        | "requires_parts_ordered"
+      charger_root_cause:
+        | "hardware_fault"
+        | "firmware"
+        | "network"
+        | "power_supply"
+        | "physical_damage"
+        | "wear"
+        | "unknown"
       deal_stage:
         | "Account Mapped"
         | "Relationship Warmed"
@@ -4810,6 +5088,14 @@ export type Database = {
         | "Pilot / Contract Signed"
         | "Expanded & Recurring"
       enterprise_inquiry_status: "new" | "contacted" | "qualified" | "closed"
+      field_photo_type:
+        | "before"
+        | "during"
+        | "after"
+        | "old_serial"
+        | "new_serial"
+        | "return_receipt"
+        | "loto_verification"
       growth_motion:
         | "Volume"
         | "Strategic"
@@ -4842,6 +5128,14 @@ export type Database = {
         | "Operational"
         | "Unknown"
       ticket_assessment_status: "pending_review" | "assessed" | "rejected"
+      work_order_status:
+        | "scheduled"
+        | "in_progress"
+        | "submitted"
+        | "pending_review"
+        | "flagged"
+        | "approved"
+        | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4988,7 +5282,33 @@ export const Constants = {
         "account_manager",
         "billing",
       ],
+      briefing_type: ["full_briefing", "condensed_briefing"],
       campaign_report_status: ["active", "revoked", "expired"],
+      charger_capture_status: ["not_started", "in_progress", "complete"],
+      charger_issue_category: [
+        "power_issue",
+        "screen_display",
+        "connector",
+        "payment_processing",
+        "network_connectivity",
+        "physical_damage",
+        "other",
+      ],
+      charger_post_work_status: [
+        "operational",
+        "partially_functional",
+        "non_operational_followup",
+        "requires_parts_ordered",
+      ],
+      charger_root_cause: [
+        "hardware_fault",
+        "firmware",
+        "network",
+        "power_supply",
+        "physical_damage",
+        "wear",
+        "unknown",
+      ],
       deal_stage: [
         "Account Mapped",
         "Relationship Warmed",
@@ -4999,6 +5319,15 @@ export const Constants = {
         "Expanded & Recurring",
       ],
       enterprise_inquiry_status: ["new", "contacted", "qualified", "closed"],
+      field_photo_type: [
+        "before",
+        "during",
+        "after",
+        "old_serial",
+        "new_serial",
+        "return_receipt",
+        "loto_verification",
+      ],
       growth_motion: [
         "Volume",
         "Strategic",
@@ -5035,6 +5364,15 @@ export const Constants = {
         "Unknown",
       ],
       ticket_assessment_status: ["pending_review", "assessed", "rejected"],
+      work_order_status: [
+        "scheduled",
+        "in_progress",
+        "submitted",
+        "pending_review",
+        "flagged",
+        "approved",
+        "closed",
+      ],
     },
   },
 } as const
