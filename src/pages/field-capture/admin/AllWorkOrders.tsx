@@ -26,7 +26,8 @@ import {
   type WorkOrder,
   type WorkOrderStatus,
 } from "@/types/fieldCapture";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
+import WorkOrderEditModal from "@/components/field-capture/WorkOrderEditModal";
 
 interface Row extends WorkOrder {
   total_chargers: number;
@@ -61,6 +62,8 @@ export default function AllWorkOrders() {
   const [techFilter, setTechFilter] = useState<string>("all");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
+  const [editing, setEditing] = useState<WorkOrder | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     (async () => {
