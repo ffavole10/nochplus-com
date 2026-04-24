@@ -4641,6 +4641,9 @@ export type Database = {
           gps_location: string | null
           id: string
           job_notes: string | null
+          poc_email: string | null
+          poc_name: string | null
+          poc_phone: string | null
           scheduled_date: string
           site_address: string
           site_name: string
@@ -4660,6 +4663,9 @@ export type Database = {
           gps_location?: string | null
           id?: string
           job_notes?: string | null
+          poc_email?: string | null
+          poc_name?: string | null
+          poc_phone?: string | null
           scheduled_date?: string
           site_address: string
           site_name: string
@@ -4679,6 +4685,9 @@ export type Database = {
           gps_location?: string | null
           id?: string
           job_notes?: string | null
+          poc_email?: string | null
+          poc_name?: string | null
+          poc_phone?: string | null
           scheduled_date?: string
           site_address?: string
           site_name?: string
