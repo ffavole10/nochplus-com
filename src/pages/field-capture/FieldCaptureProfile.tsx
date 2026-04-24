@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,8 +15,14 @@ interface Stats {
 export default function FieldCaptureProfile() {
   usePageTitle("Profile");
   const { session, signOut } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState(true);
   const [stats, setStats] = useState<Stats>({ total: 0, avgMinutes: null });
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/field", { replace: true });
+  };
 
   const fullName =
     (session?.user?.user_metadata?.display_name as string) ||
