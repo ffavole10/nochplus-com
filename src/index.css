@@ -425,3 +425,24 @@
 .fc-float {
   animation: fc-float 3s ease-in-out infinite;
 }
+
+/* Field Capture: Max safety briefing animations */
+@keyframes fc-max-slide-up {
+  0% { transform: translateY(120%) translateX(15%); opacity: 0; }
+  60% { transform: translateY(-4%) translateX(0); opacity: 1; }
+  100% { transform: translateY(0) translateX(0); opacity: 1; }
+}
+@keyframes fc-slide-in-left {
+  0% { transform: translateX(-12px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes fc-celebrate {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fc-float { animation: none !important; }
+}
+
