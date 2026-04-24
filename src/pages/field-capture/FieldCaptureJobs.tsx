@@ -166,6 +166,13 @@ export default function FieldCaptureJobs() {
   }, [session?.user?.id, isFieldAdmin, sevenDaysOut]);
 
   const flaggedJobs = (jobs || []).filter((j) => j.status === "flagged");
+  const openStatuses: WorkOrderStatus[] = ["scheduled", "in_progress"];
+  const pastDueJobs = (jobs || []).filter(
+    (j) =>
+      j.scheduled_date < today &&
+      j.status !== "flagged" &&
+      openStatuses.includes(j.status)
+  );
   const todayJobs = (jobs || []).filter(
     (j) => j.scheduled_date === today && j.status !== "flagged"
   );
@@ -175,7 +182,10 @@ export default function FieldCaptureJobs() {
 
   const hasAnyJobs =
     jobs !== null &&
-    (todayJobs.length > 0 || flaggedJobs.length > 0 || upcomingJobs.length > 0);
+    (todayJobs.length > 0 ||
+      flaggedJobs.length > 0 ||
+      upcomingJobs.length > 0 ||
+      pastDueJobs.length > 0);
 
   return (
     <div className="px-4 py-5 space-y-6">
