@@ -14,8 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Upload, FileText, X } from "lucide-react";
 
 interface ChargerInput {
   make_model: string;
@@ -45,6 +46,8 @@ export default function CreateTestJob() {
   const [chargers, setChargers] = useState<ChargerInput[]>([
     { make_model: "", serial_number: "" },
   ]);
+  const [jobNotes, setJobNotes] = useState("");
+  const [sowFile, setSowFile] = useState<File | null>(null);
   const [technicians, setTechnicians] = useState<TechnicianOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ wo_number: string; id: string } | null>(
