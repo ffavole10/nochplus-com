@@ -47,9 +47,10 @@ export default function FieldCaptureSubmitted() {
       setChargerCount(cc ?? 0);
       setPhotoCount(pc ?? 0);
     })();
+    if (achievementsOpen) return; // don't auto-redirect while celebrating
     const t = setTimeout(() => navigate("/field-capture", { replace: true }), 5000);
     return () => clearTimeout(t);
-  }, [workOrderId, navigate]);
+  }, [workOrderId, navigate, achievementsOpen]);
 
   return (
     <div
