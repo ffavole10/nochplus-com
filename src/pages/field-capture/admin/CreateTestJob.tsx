@@ -136,11 +136,30 @@ export default function CreateTestJob() {
           assigned_technician_id: technicianId,
           scheduled_date: scheduledDate,
           status: "scheduled",
+          job_notes: jobNotes || null,
           created_by: session?.user?.id ?? null,
         })
         .select()
         .single();
       if (woErr) throw woErr;
+
+      // Upload SOW document if provided
+      if (sowFile) {
+        const ext = sowFile.name.split(".").pop() || "pdf";
+        const path = `${wo.id}/sow-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("field-capture-docs")
+          .upload(path, sowFile, { contentType: sowFile.type });
+        if (upErr) {
+          console.error("[CreateTestJob] SOW upload failed", upErr);
+          toast.error("Work order created, but SOW upload failed");
+        } else {
+          await supabase
+            .from("work_orders")
+            .update({ sow_document_url: path, sow_document_name: sowFile.name })
+            .eq("id", wo.id);
+        }
+      }
 
       const chargerRows = chargers.map((c, idx) => ({
         work_order_id: wo.id,
