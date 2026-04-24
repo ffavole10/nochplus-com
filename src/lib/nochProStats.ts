@@ -48,7 +48,7 @@ export const ACHIEVEMENT_META: Record<AchievementType, AchievementMeta> = {
   versatility: { type: "versatility", name: "Versatility", emoji: "🎨", description: "5 different charger categories in 30 days" },
 };
 
-const SUBMITTED_STATUSES = ["submitted", "pending_review", "approved", "closed"];
+const SUBMITTED_STATUSES = ["submitted", "pending_review", "approved", "closed"] as const;
 
 export interface StatsResult {
   total_jobs_completed: number;
