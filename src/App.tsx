@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import FieldLogin from "./pages/FieldLogin";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
 import IssuesQueue from "./pages/IssuesQueue";
@@ -99,6 +100,27 @@ function SessionCleanup() {
   return null;
 }
 
+// When the app is launched as an installed PWA (standalone display mode)
+// and the user is not yet on a /field* route or admin route, send them to
+// the technician login. Customers use a regular browser; the PWA is for techs.
+function PWAStandaloneRedirect() {
+  useEffect(() => {
+    try {
+      const isStandalone =
+        window.matchMedia?.("(display-mode: standalone)").matches ||
+        // iOS Safari
+        (navigator as any).standalone === true;
+      if (!isStandalone) return;
+      const path = window.location.pathname;
+      // Only auto-redirect on the customer welcome root.
+      if (path === "/" || path === "/submit") {
+        window.location.replace("/field");
+      }
+    } catch {}
+  }, []);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -106,9 +128,11 @@ const App = () => (
       <Sonner />
       <PWAInstallPrompt />
       <SessionCleanup />
+      <PWAStandaloneRedirect />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/field" element={<FieldLogin />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
             {/* Campaign HQ and tab routes */}
