@@ -67,6 +67,9 @@ import FieldCaptureJobs from "./pages/field-capture/FieldCaptureJobs";
 import FieldCaptureHistory from "./pages/field-capture/FieldCaptureHistory";
 import FieldCaptureProfile from "./pages/field-capture/FieldCaptureProfile";
 import FieldCaptureJobDetail from "./pages/field-capture/FieldCaptureJobDetail";
+import FieldCaptureChargerCapture from "./pages/field-capture/FieldCaptureChargerCapture";
+import FieldCaptureWrapUp from "./pages/field-capture/FieldCaptureWrapUp";
+import FieldCaptureSubmitted from "./pages/field-capture/FieldCaptureSubmitted";
 import CreateTestJob from "./pages/field-capture/admin/CreateTestJob";
 import AllWorkOrders from "./pages/field-capture/admin/AllWorkOrders";
 import { FieldCaptureAdminGuard } from "./components/FieldCaptureAdminGuard";
@@ -205,6 +208,9 @@ const App = () => (
             <Route path="/field-capture/history" element={<FieldCaptureHistory />} />
             <Route path="/field-capture/profile" element={<FieldCaptureProfile />} />
             <Route path="/field-capture/job/:workOrderId" element={<FieldCaptureJobDetail />} />
+            <Route path="/field-capture/job/:workOrderId/charger/:chargerId" element={<FieldCaptureChargerCapture />} />
+            <Route path="/field-capture/job/:workOrderId/wrap-up" element={<FieldCaptureWrapUp />} />
+            <Route path="/field-capture/job/:workOrderId/submitted" element={<FieldCaptureSubmitted />} />
           </Route>
 
           {/* Legacy redirects */}

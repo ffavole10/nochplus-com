@@ -95,6 +95,18 @@ export interface WorkOrderCharger {
   updated_at: string;
 }
 
+export interface WorkOrderPhoto {
+  id: string;
+  work_order_id: string;
+  charger_id: string | null;
+  photo_url: string;
+  storage_path: string | null;
+  photo_type: FieldPhotoType;
+  file_size_bytes: number | null;
+  uploaded_at: string;
+  uploaded_by: string | null;
+}
+
 export const ISSUE_CATEGORY_LABELS: Record<ChargerIssueCategory, string> = {
   power_issue: "Power Issue",
   screen_display: "Screen / Display",
