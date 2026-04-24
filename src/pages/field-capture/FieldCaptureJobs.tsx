@@ -54,6 +54,10 @@ function formatShortDate(iso: string) {
   }
 }
 
+function mapsUrl(address: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+}
+
 function JobCard({ job, flagged = false }: { job: JobWithCount; flagged?: boolean }) {
   return (
     <Link
@@ -90,10 +94,16 @@ function JobCard({ job, flagged = false }: { job: JobWithCount; flagged?: boolea
         <div className="text-[15px] font-medium text-fc-text/80 mt-0.5 truncate">
           {job.site_name}
         </div>
-        <div className="flex items-start gap-1 mt-0.5 text-[13px] text-fc-muted">
+        <a
+          href={mapsUrl(job.site_address)}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-start gap-1 mt-1 text-[13px] text-fc-primary hover:underline active:opacity-70"
+        >
           <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <span className="truncate">{job.site_address}</span>
-        </div>
+        </a>
 
         <div className="flex items-center justify-between mt-3 text-[13px] text-fc-muted">
           <div className="flex items-center gap-3">

@@ -35,6 +35,9 @@ export default function CreateTestJob() {
   const [clientName, setClientName] = useState("");
   const [siteName, setSiteName] = useState("");
   const [siteAddress, setSiteAddress] = useState("");
+  const [pocName, setPocName] = useState("");
+  const [pocPhone, setPocPhone] = useState("");
+  const [pocEmail, setPocEmail] = useState("");
   const [technicianId, setTechnicianId] = useState<string>("");
   const [scheduledDate, setScheduledDate] = useState(
     new Date().toISOString().slice(0, 10),
