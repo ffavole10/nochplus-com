@@ -53,7 +53,7 @@ const ROLE_COLORS: Record<string, string> = {
   customer: "bg-muted text-muted-foreground",
   partner: "bg-accent text-accent-foreground",
   dispatcher: "bg-muted-foreground text-background",
-  technician: "bg-chart-4 text-primary-foreground",
+  technician: "bg-sky-500 text-white",
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -63,6 +63,7 @@ const ROLE_LABELS: Record<string, string> = {
   employee: "employee",
   customer: "customer",
   partner: "partner",
+  technician: "technician",
 };
 
 const ROLE_ICONS: Record<string, string> = {
@@ -72,9 +73,10 @@ const ROLE_ICONS: Record<string, string> = {
   employee: "🔧",
   customer: "📋",
   partner: "🤝",
+  technician: "🔌",
 };
 
-const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner"];
+const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner", "technician"];
 
 type SettingsTab = "campaigns" | "data" | "partners" | "users" | "access" | "quoting" | "analytics";
 
