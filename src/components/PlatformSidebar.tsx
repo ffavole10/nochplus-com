@@ -457,6 +457,7 @@ export function PlatformSidebar() {
             <SidebarMenu className="px-1">
               <NavItem item={{ title: "All Work Orders", url: "/field-capture/admin/work-orders", icon: List }} />
               <NavItem item={{ title: "Create Test Job", url: "/field-capture/admin/create-job", icon: Plus }} />
+              <NavItem item={{ title: "Work Templates", url: "/field-capture/admin/templates", icon: FileText }} />
             </SidebarMenu>
           </div>
         )}
