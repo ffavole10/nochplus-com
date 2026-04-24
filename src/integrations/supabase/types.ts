@@ -4492,6 +4492,51 @@ export type Database = {
         }
         Relationships: []
       }
+      work_description_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          is_fallback: boolean
+          issue_category:
+            | Database["public"]["Enums"]["charger_issue_category"]
+            | null
+          priority: number
+          root_cause: Database["public"]["Enums"]["charger_root_cause"] | null
+          template_text: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_fallback?: boolean
+          issue_category?:
+            | Database["public"]["Enums"]["charger_issue_category"]
+            | null
+          priority?: number
+          root_cause?: Database["public"]["Enums"]["charger_root_cause"] | null
+          template_text: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_fallback?: boolean
+          issue_category?:
+            | Database["public"]["Enums"]["charger_issue_category"]
+            | null
+          priority?: number
+          root_cause?: Database["public"]["Enums"]["charger_root_cause"] | null
+          template_text?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       work_order_chargers: {
         Row: {
           added_on_site: boolean
