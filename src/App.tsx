@@ -61,7 +61,10 @@ import GrowthPipeline from "./pages/growth/GrowthPipeline";
 import GrowthDealDetail from "./pages/growth/GrowthDealDetail";
 
 // Field Capture
-import FieldCaptureLanding from "./pages/field-capture/FieldCaptureLanding";
+import FieldCaptureLayout from "./layouts/FieldCaptureLayout";
+import FieldCaptureJobs from "./pages/field-capture/FieldCaptureJobs";
+import FieldCaptureHistory from "./pages/field-capture/FieldCaptureHistory";
+import FieldCaptureProfile from "./pages/field-capture/FieldCaptureProfile";
 import FieldCaptureJobDetail from "./pages/field-capture/FieldCaptureJobDetail";
 import CreateTestJob from "./pages/field-capture/admin/CreateTestJob";
 import AllWorkOrders from "./pages/field-capture/admin/AllWorkOrders";
@@ -164,14 +167,20 @@ const App = () => (
             <Route path="/autoheal/parts-catalog" element={<PartsCatalog />} />
             <Route path="/autoheal/locations" element={<Locations />} />
 
-            {/* Field Capture */}
-            <Route path="/field-capture" element={<FieldCaptureLanding />} />
-            <Route path="/field-capture/job/:workOrderId" element={<FieldCaptureJobDetail />} />
+            {/* Field Capture (admin-only views inside main shell) */}
             <Route path="/field-capture/admin/create-job" element={<FieldCaptureAdminGuard><CreateTestJob /></FieldCaptureAdminGuard>} />
             <Route path="/field-capture/admin/work-orders" element={<FieldCaptureAdminGuard><AllWorkOrders /></FieldCaptureAdminGuard>} />
 
             {/* Settings */}
             <Route path="/settings" element={<Settings />} />
+          </Route>
+
+          {/* Field Capture mobile shell — no sidebar, dedicated layout */}
+          <Route element={<ProtectedRoute><FieldCaptureLayout /></ProtectedRoute>}>
+            <Route path="/field-capture" element={<FieldCaptureJobs />} />
+            <Route path="/field-capture/history" element={<FieldCaptureHistory />} />
+            <Route path="/field-capture/profile" element={<FieldCaptureProfile />} />
+            <Route path="/field-capture/job/:workOrderId" element={<FieldCaptureJobDetail />} />
           </Route>
 
           {/* Legacy redirects */}
