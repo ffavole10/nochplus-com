@@ -13,7 +13,10 @@ import {
   Phone,
   Mail,
   User,
+  FileText,
+  StickyNote,
 } from "lucide-react";
+import { toast } from "sonner";
 import type {
   WorkOrder,
   WorkOrderCharger,
@@ -215,6 +218,47 @@ export default function FieldCaptureJobDetail() {
             {isInProgress ? "Continue Job" : "Start Job"}
           </Button>
         </div>
+
+        {/* Comments / Notes */}
+        {job.job_notes && (
+          <div className="bg-fc-card rounded-2xl p-5 shadow-sm border border-fc-border/60">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-fc-muted mb-2">
+              <StickyNote className="h-3.5 w-3.5" />
+              Notes from Dispatcher
+            </div>
+            <p className="text-sm text-fc-text whitespace-pre-wrap leading-relaxed">
+              {job.job_notes}
+            </p>
+          </div>
+        )}
+
+        {/* SOW / Instructions doc */}
+        {job.sow_document_url && (
+          <div className="bg-fc-card rounded-2xl p-5 shadow-sm border border-fc-border/60">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-fc-muted mb-2">
+              Scope of Work / Instructions
+            </div>
+            <button
+              onClick={async () => {
+                const { data, error } = await supabase.storage
+                  .from("field-capture-docs")
+                  .createSignedUrl(job.sow_document_url!, 300);
+                if (error || !data?.signedUrl) {
+                  toast.error("Could not open document");
+                  return;
+                }
+                window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl border border-fc-border bg-fc-bg hover:bg-fc-primary/5 active:opacity-70 transition"
+            >
+              <FileText className="h-5 w-5 text-fc-primary shrink-0" />
+              <span className="text-sm font-medium text-fc-text truncate flex-1 text-left">
+                {job.sow_document_name || "View document"}
+              </span>
+              <Navigation className="h-4 w-4 text-fc-muted" />
+            </button>
+          </div>
+        )}
 
         {/* Chargers */}
         <section className="space-y-2.5">
