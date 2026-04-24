@@ -99,6 +99,49 @@ export default function CreateTestJob() {
     })();
   }, []);
 
+  // Pre-populate from a duplicate source if requested via navigation state.
+  useEffect(() => {
+    if (!duplicateFromId) return;
+    (async () => {
+      const { data: src, error } = await supabase
+        .from("work_orders")
+        .select("*, work_order_chargers(make_model, serial_number, charger_position)")
+        .eq("id", duplicateFromId)
+        .maybeSingle();
+      if (error || !src) {
+        toast.error("Could not load source work order");
+        return;
+      }
+      setDuplicateSource({
+        id: src.id,
+        work_order_number: src.work_order_number,
+        sow_document_url: src.sow_document_url,
+        sow_document_name: src.sow_document_name,
+      });
+      setClientName(src.client_name ?? "");
+      setSiteName(src.site_name ?? "");
+      setSiteAddress(src.site_address ?? "");
+      setPocName(src.poc_name ?? "");
+      setPocPhone(src.poc_phone ?? "");
+      setPocEmail(src.poc_email ?? "");
+      setJobNotes(src.job_notes ?? "");
+      // Default scheduled date: next business day
+      const next = new Date();
+      next.setDate(next.getDate() + 1);
+      if (next.getDay() === 6) next.setDate(next.getDate() + 2);
+      else if (next.getDay() === 0) next.setDate(next.getDate() + 1);
+      setScheduledDate(next.toISOString().slice(0, 10));
+      // Chargers
+      const sortedChargers = ((src as any).work_order_chargers ?? [])
+        .sort((a: any, b: any) => a.charger_position - b.charger_position)
+        .map((c: any) => ({
+          make_model: c.make_model ?? "",
+          serial_number: c.serial_number ?? "",
+        }));
+      if (sortedChargers.length > 0) setChargers(sortedChargers);
+    })();
+  }, [duplicateFromId]);
+
   const updateCharger = (idx: number, field: keyof ChargerInput, value: string) => {
     setChargers((arr) => {
       const next = [...arr];
@@ -186,6 +229,43 @@ export default function CreateTestJob() {
 
       setSuccess({ wo_number: wo.work_order_number ?? "(pending)", id: wo.id });
       toast.success(`Created ${wo.work_order_number}`);
+
+      // Activity logs: created (and duplicated_from / duplicated source link)
+      await logWorkOrderActivity({
+        work_order_id: wo.id,
+        action: "created",
+        details: { work_order_number: wo.work_order_number },
+      });
+      if (duplicateSource) {
+        await Promise.all([
+          logWorkOrderActivity({
+            work_order_id: wo.id,
+            action: "duplicated_from",
+            details: {
+              source_work_order_id: duplicateSource.id,
+              source_work_order_number: duplicateSource.work_order_number,
+            },
+          }),
+          logWorkOrderActivity({
+            work_order_id: duplicateSource.id,
+            action: "duplicated",
+            details: {
+              new_work_order_id: wo.id,
+              new_work_order_number: wo.work_order_number,
+            },
+          }),
+        ]);
+        // If source had a SOW, copy the reference (same file, no re-upload).
+        if (duplicateSource.sow_document_url && !sowFile) {
+          await supabase
+            .from("work_orders")
+            .update({
+              sow_document_url: duplicateSource.sow_document_url,
+              sow_document_name: duplicateSource.sow_document_name,
+            })
+            .eq("id", wo.id);
+        }
+      }
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Failed to create work order");
@@ -237,11 +317,25 @@ export default function CreateTestJob() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Create Test Work Order</h1>
+        <h1 className="text-2xl font-bold">
+          {duplicateSource ? "Duplicate Work Order" : "Create Test Work Order"}
+        </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Manually scaffold a work order and assign it to a technician for
           field testing.
         </p>
+        {duplicateSource && (
+          <div className="mt-3 flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+            <Copy className="h-3.5 w-3.5 text-primary" />
+            <span>
+              Creating from template:{" "}
+              <span className="font-mono font-semibold">
+                {duplicateSource.work_order_number}
+              </span>
+              . Scheduled date and technician have been reset.
+            </span>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
