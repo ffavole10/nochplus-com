@@ -6,7 +6,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { ChevronRight, MapPin } from "lucide-react";
 import type { WorkOrder } from "@/types/fieldCapture";
 
-const COMPLETED_STATUSES = ["submitted", "pending_review", "approved", "closed"];
+const COMPLETED_STATUSES = ["submitted", "pending_review", "approved", "closed"] as const;
 
 export default function FieldCaptureHistory() {
   usePageTitle("History");
