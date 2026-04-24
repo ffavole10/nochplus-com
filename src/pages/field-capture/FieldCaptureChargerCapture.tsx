@@ -50,6 +50,7 @@ export default function FieldCaptureChargerCapture() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [showCelebrate, setShowCelebrate] = useState(false);
 
   // form
@@ -70,6 +71,10 @@ export default function FieldCaptureChargerCapture() {
   const [oldSerialCount, setOldSerialCount] = useState(0);
   const [newSerialCount, setNewSerialCount] = useState(0);
 
+  const hydratedRef = useRef(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedFlashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!chargerId || !workOrderId) return;
     (async () => {
@@ -85,7 +90,7 @@ export default function FieldCaptureChargerCapture() {
           .eq("work_order_id", workOrderId),
       ]);
       if (ch) {
-        const c = ch as WorkOrderCharger;
+        const c = ch as WorkOrderCharger & { current_step?: number };
         setCharger(c);
         setIssueCategory((c.issue_category as ChargerIssueCategory) || "");
         setRootCause((c.root_cause as ChargerRootCause) || "");
@@ -99,6 +104,9 @@ export default function FieldCaptureChargerCapture() {
         setPostStatus(
           (c.charger_status_post_work as ChargerPostWorkStatus) || "",
         );
+        // resume at last step (clamp 1-4; never reopen on Review unless they reached it)
+        const resume = Math.min(4, Math.max(1, c.current_step ?? 1));
+        setStep(resume);
         // mark in_progress + capture_started_at if not already
         if (c.status === "not_started") {
           await supabase
@@ -112,6 +120,10 @@ export default function FieldCaptureChargerCapture() {
       }
       setTotal(count ?? 0);
       setLoading(false);
+      // allow auto-save to start AFTER initial hydration
+      requestAnimationFrame(() => {
+        hydratedRef.current = true;
+      });
     })();
   }, [chargerId, workOrderId]);
 
@@ -132,7 +144,7 @@ export default function FieldCaptureChargerCapture() {
   const step3Valid =
     resolution.trim().length >= 10 && !!postStatus && afterCount >= 2;
 
-  async function persist(extra: Partial<WorkOrderCharger> = {}) {
+  async function persist(extra: Partial<WorkOrderCharger> & { current_step?: number } = {}) {
     if (!chargerId) return;
     const payload: any = {
       issue_category: issueCategory || null,
@@ -152,19 +164,74 @@ export default function FieldCaptureChargerCapture() {
       .update(payload)
       .eq("id", chargerId);
     if (error) {
-      toast.error("Could not save");
+      setSaveState("error");
       throw error;
     }
   }
 
+  // Debounced auto-save on any field change (after hydration)
+  useEffect(() => {
+    if (!hydratedRef.current || !chargerId) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setSaveState("saving");
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await persist();
+        setSaveState("saved");
+        if (savedFlashRef.current) clearTimeout(savedFlashRef.current);
+        savedFlashRef.current = setTimeout(() => setSaveState("idle"), 1800);
+      } catch {
+        // persist already set "error"
+      }
+    }, 500);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    issueCategory,
+    rootCause,
+    issueDesc,
+    recurring,
+    workPerformed,
+    partsSwap,
+    oldSerial,
+    newSerial,
+    resolution,
+    postStatus,
+  ]);
+
+  // Persist current_step whenever it changes (after hydration)
+  useEffect(() => {
+    if (!hydratedRef.current || !chargerId) return;
+    supabase
+      .from("work_order_chargers")
+      .update({ current_step: step })
+      .eq("id", chargerId)
+      .then(() => {});
+  }, [step, chargerId]);
+
   async function next() {
     setSaving(true);
     try {
-      await persist();
-      setStep((s) => Math.min(4, s + 1));
+      const newStep = Math.min(4, step + 1);
+      await persist({ current_step: newStep });
+      setStep(newStep);
+      setSaveState("saved");
+      if (savedFlashRef.current) clearTimeout(savedFlashRef.current);
+      savedFlashRef.current = setTimeout(() => setSaveState("idle"), 1500);
       window.scrollTo({ top: 0 });
     } finally {
       setSaving(false);
+    }
+  }
+
+  function goBack() {
+    if (step === 1) {
+      navigate(`/field-capture/job/${workOrderId}`);
+    } else {
+      setStep((s) => Math.max(1, s - 1));
+      window.scrollTo({ top: 0 });
     }
   }
 
@@ -175,6 +242,7 @@ export default function FieldCaptureChargerCapture() {
       await persist({
         status: "complete",
         capture_completed_at: new Date().toISOString(),
+        current_step: 4,
       });
       setShowCelebrate(true);
       setTimeout(() => {
