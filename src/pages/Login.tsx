@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import loginBg from "@/assets/login-background.webp";
 import nochLogo from "@/assets/noch-logo-white.png";
 import { toast } from "sonner";
+import { fetchRoleInfo, postLoginPath } from "@/lib/postLoginRoute";
 
 const Login = () => {
   usePageTitle('Sign In');
@@ -41,11 +42,13 @@ const Login = () => {
     }
   };
 
-  // If already authenticated, redirect to dashboard
+  // If already authenticated, route by role.
   useEffect(() => {
-    if (!authLoading && session) {
-      navigate("/dashboard", { replace: true });
-    }
+    if (authLoading || !session?.user?.id) return;
+    (async () => {
+      const info = await fetchRoleInfo(session.user.id);
+      navigate(postLoginPath(info), { replace: true });
+    })();
   }, [session, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,12 +70,28 @@ const Login = () => {
         if (error) throw error;
         toast.success("Check your email for a verification link!");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        navigate("/dashboard");
+        const userId = data.user?.id;
+        if (!userId) throw new Error("Sign-in failed. Try again.");
+
+        const info = await fetchRoleInfo(userId);
+
+        // Role validation: technicians must use /field, not /login.
+        if (info.isTechnicianOnly) {
+          await supabase.auth.signOut();
+          toast.error(
+            "Technicians should sign in at nochplus.com/field — redirecting…",
+            { duration: 5000 },
+          );
+          setTimeout(() => navigate("/field", { replace: true }), 800);
+          return;
+        }
+
+        navigate(postLoginPath(info), { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message);

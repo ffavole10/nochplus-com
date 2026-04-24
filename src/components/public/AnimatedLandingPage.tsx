@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Monitor } from "lucide-react";
+import { Users } from "lucide-react";
 import heroPerson from "@/assets/hero-person.png";
 import nochLogoWhite from "@/assets/noch-logo-white.png";
+import { TeamLoginModal } from "@/components/public/TeamLoginModal";
 
 interface AnimatedLandingPageProps {
   onStart: () => void;
@@ -11,6 +12,7 @@ interface AnimatedLandingPageProps {
 export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProps) {
   const navigate = useNavigate();
   const [stage, setStage] = useState(0);
+  const [teamLoginOpen, setTeamLoginOpen] = useState(false);
 
   useEffect(() => {
     // Check for reduced motion preference
@@ -135,15 +137,16 @@ export default function AnimatedLandingPage({ onStart }: AnimatedLandingPageProp
       {/* Footer */}
       <div className={`pb-6 pt-8 flex flex-col items-center gap-2 relative z-10 transition-all duration-700 ${stage >= 6 ? "opacity-100" : "opacity-0"}`}>
         <button
-          onClick={() => navigate("/login")}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/10 transition-all text-sm"
-          aria-label="Admin login">
-
-          <Monitor className="h-4 w-4" />
-          <span>Admin Access</span>
+          onClick={() => setTeamLoginOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/10 transition-all text-[13px]"
+          aria-label="Team login">
+          <Users className="h-3.5 w-3.5" />
+          <span>Team Login</span>
         </button>
         <span className="text-white/30 text-sm">© 2026 Noch Power. All rights reserved.</span>
       </div>
+
+      <TeamLoginModal open={teamLoginOpen} onOpenChange={setTeamLoginOpen} />
 
       <style>{`
         @keyframes float-slow {
