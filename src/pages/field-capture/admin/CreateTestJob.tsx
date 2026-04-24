@@ -405,6 +405,71 @@ export default function CreateTestJob() {
           </div>
         </Card>
 
+        <Card className="p-6 space-y-4">
+          <div>
+            <h2 className="text-base font-semibold">Comments & Instructions</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Internal notes for the technician and an optional Scope of Work attachment.
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="job-notes">Comments / Job Notes</Label>
+            <Textarea
+              id="job-notes"
+              value={jobNotes}
+              onChange={(e) => setJobNotes(e.target.value)}
+              placeholder="Special instructions, access info, parking notes, etc."
+              rows={4}
+            />
+          </div>
+
+          <div>
+            <Label>SOW / Instructions Document (PDF, DOC, image — max 10MB)</Label>
+            {sowFile ? (
+              <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/30">
+                <FileText className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{sowFile.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {(sowFile.size / 1024).toFixed(0)} KB
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSowFile(null)}
+                  aria-label="Remove file"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/30 transition-colors">
+                <Upload className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  Click to attach SOW or instructions
+                </span>
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf,.doc,.docx,image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    if (f.size > 10 * 1024 * 1024) {
+                      toast.error("File must be under 10MB");
+                      return;
+                    }
+                    setSowFile(f);
+                  }}
+                />
+              </label>
+            )}
+          </div>
+        </Card>
+
         <div className="flex justify-end gap-3">
           <Button type="submit" disabled={submitting} size="lg">
             {submitting ? "Creating…" : "Create Work Order"}
