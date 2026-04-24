@@ -2,11 +2,9 @@ import { useEffect } from 'react';
 
 export const usePageTitle = (title: string) => {
   useEffect(() => {
-    document.title = title
-      ? `${title} · Noch Power`
-      : 'Noch Power';
+    document.title = title ? `${title} | NOCH+` : 'NOCH+';
     return () => {
-      document.title = 'Noch Power';
+      document.title = 'NOCH+';
     };
   }, [title]);
 };
