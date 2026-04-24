@@ -194,6 +194,8 @@ export default function CreateTestJob() {
     setTechnicianId("");
     setScheduledDate(new Date().toISOString().slice(0, 10));
     setChargers([{ make_model: "", serial_number: "" }]);
+    setJobNotes("");
+    setSowFile(null);
     setSuccess(null);
   };
 
