@@ -96,6 +96,7 @@ const DEFAULT_ACCESS_BY_ROLE: Record<string, Record<SectionKey, boolean>> = {
   employee: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false, growth: false },
   customer: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false, growth: false },
   partner: { campaigns: false, service_desk: false, noch_plus: true, partners: true, autoheal: false, growth: false },
+  technician: { campaigns: false, service_desk: false, noch_plus: false, partners: false, autoheal: false, growth: false },
 };
 
 function QuotingAndRatesSection() {
