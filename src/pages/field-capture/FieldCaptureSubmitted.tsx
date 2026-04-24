@@ -12,7 +12,15 @@ export default function FieldCaptureSubmitted() {
   const { workOrderId } = useParams<{ workOrderId: string }>();
   const navigate = useNavigate();
   const { session } = useAuth();
+  const [params] = useSearchParams();
   usePageTitle("Submitted");
+
+  const unlocked = useMemo<AchievementType[]>(() => {
+    const raw = params.get("unlocked");
+    if (!raw) return [];
+    return raw.split(",").filter(Boolean) as AchievementType[];
+  }, [params]);
+  const [achievementsOpen, setAchievementsOpen] = useState(unlocked.length > 0);
 
   const [chargerCount, setChargerCount] = useState(0);
   const [photoCount, setPhotoCount] = useState(0);
