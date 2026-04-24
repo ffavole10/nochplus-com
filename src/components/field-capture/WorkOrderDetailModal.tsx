@@ -980,6 +980,7 @@ function TimelineRow({ entry, last }: { entry: WorkOrderActivity; last: boolean 
   const meta = ACTION_LABELS[entry.action] ?? {
     label: entry.action,
     icon: CircleDot,
+    tone: undefined as string | undefined,
   };
   const Icon = meta.icon;
   const detailText = renderDetails(entry);
