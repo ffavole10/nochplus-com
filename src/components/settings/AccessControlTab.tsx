@@ -60,6 +60,12 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
     [users],
   );
 
+  // Identify technician user_ids — Field Capture is locked ON, all other sections locked OFF
+  const technicianIds = useMemo(
+    () => new Set(users.filter((u) => u.roles?.includes("technician")).map((u) => u.user_id)),
+    [users],
+  );
+
   const loadAll = async () => {
     setLoading(true);
     const [accessRes, auditRes] = await Promise.all([
