@@ -606,25 +606,23 @@ export default function FieldCaptureChargerCapture() {
         )}
       </div>
 
-      {/* Sticky footer */}
+      {/* Sticky footer — always shows Back + Continue/Submit. Tab bar hidden during capture. */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-fc-border"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-fc-border shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
       >
         <div className="max-w-[480px] mx-auto px-4 pt-3 flex gap-2">
-          {step > 1 && (
-            <Button
-              variant="outline"
-              className="h-12 rounded-xl flex-1"
-              onClick={() => setStep((s) => Math.max(1, s - 1))}
-              disabled={saving}
-            >
-              Back
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            className="h-12 rounded-xl w-[100px] shrink-0"
+            onClick={goBack}
+            disabled={saving}
+          >
+            Back
+          </Button>
           {step < 4 ? (
             <Button
-              className="h-12 rounded-xl flex-1 bg-fc-primary hover:bg-fc-primary-dark text-white font-semibold"
+              className="h-12 rounded-xl flex-1 bg-fc-primary hover:bg-fc-primary-dark text-white font-semibold disabled:bg-fc-border disabled:text-fc-muted disabled:shadow-none"
               onClick={next}
               disabled={
                 saving ||
@@ -642,7 +640,7 @@ export default function FieldCaptureChargerCapture() {
             </Button>
           ) : (
             <Button
-              className="h-14 rounded-xl flex-1 bg-fc-primary hover:bg-fc-primary-dark text-white font-bold text-base"
+              className="h-12 rounded-xl flex-1 bg-fc-primary hover:bg-fc-primary-dark text-white font-bold disabled:bg-fc-border disabled:text-fc-muted disabled:shadow-none"
               onClick={submitCharger}
               disabled={saving}
             >
@@ -652,6 +650,27 @@ export default function FieldCaptureChargerCapture() {
         </div>
       </div>
     </>
+  );
+}
+
+function SaveBadge({ state }: { state: "idle" | "saving" | "saved" | "error" }) {
+  if (state === "idle") return <div className="w-[72px]" aria-hidden />;
+  const base =
+    "inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold transition-opacity";
+  if (state === "saving")
+    return (
+      <span className={cn(base, "bg-fc-border/60 text-fc-muted")}>Saving…</span>
+    );
+  if (state === "saved")
+    return (
+      <span className={cn(base, "bg-fc-success/15 text-fc-success")}>
+        <Check className="h-3 w-3" /> Saved
+      </span>
+    );
+  return (
+    <span className={cn(base, "bg-destructive/15 text-destructive")}>
+      <CloudOff className="h-3 w-3" /> Save failed
+    </span>
   );
 }
 
