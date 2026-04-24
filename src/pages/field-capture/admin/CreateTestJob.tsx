@@ -35,6 +35,9 @@ export default function CreateTestJob() {
   const [clientName, setClientName] = useState("");
   const [siteName, setSiteName] = useState("");
   const [siteAddress, setSiteAddress] = useState("");
+  const [pocName, setPocName] = useState("");
+  const [pocPhone, setPocPhone] = useState("");
+  const [pocEmail, setPocEmail] = useState("");
   const [technicianId, setTechnicianId] = useState<string>("");
   const [scheduledDate, setScheduledDate] = useState(
     new Date().toISOString().slice(0, 10),
@@ -107,6 +110,10 @@ export default function CreateTestJob() {
       toast.error("Please fill in all required fields");
       return;
     }
+    if (!pocName || !pocPhone) {
+      toast.error("Point of Contact name and phone are required");
+      return;
+    }
     if (chargers.length < 1) {
       toast.error("Add at least one charger");
       return;
@@ -120,6 +127,9 @@ export default function CreateTestJob() {
           client_name: clientName,
           site_name: siteName,
           site_address: siteAddress,
+          poc_name: pocName,
+          poc_phone: pocPhone,
+          poc_email: pocEmail || null,
           assigned_technician_id: technicianId,
           scheduled_date: scheduledDate,
           status: "scheduled",
@@ -156,6 +166,9 @@ export default function CreateTestJob() {
     setClientName("");
     setSiteName("");
     setSiteAddress("");
+    setPocName("");
+    setPocPhone("");
+    setPocEmail("");
     setTechnicianId("");
     setScheduledDate(new Date().toISOString().slice(0, 10));
     setChargers([{ make_model: "", serial_number: "" }]);
@@ -229,6 +242,51 @@ export default function CreateTestJob() {
               required
             />
           </div>
+        </Card>
+
+        <Card className="p-6 space-y-4">
+          <div>
+            <h2 className="text-base font-semibold">Point of Contact</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Technician will call this person when en route.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="poc-name">POC Name *</Label>
+              <Input
+                id="poc-name"
+                value={pocName}
+                onChange={(e) => setPocName(e.target.value)}
+                placeholder="John Smith"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="poc-phone">POC Phone *</Label>
+              <Input
+                id="poc-phone"
+                type="tel"
+                value={pocPhone}
+                onChange={(e) => setPocPhone(e.target.value)}
+                placeholder="(555) 123-4567"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="poc-email">POC Email (optional)</Label>
+            <Input
+              id="poc-email"
+              type="email"
+              value={pocEmail}
+              onChange={(e) => setPocEmail(e.target.value)}
+              placeholder="john@client.com"
+            />
+          </div>
+        </Card>
+
+        <Card className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Assigned Technician *</Label>

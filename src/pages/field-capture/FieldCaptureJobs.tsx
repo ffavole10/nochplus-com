@@ -24,14 +24,22 @@ const STATUS_PILL: Record<WorkOrderStatus, string> = {
   closed: "bg-fc-border text-fc-muted",
 };
 
+// Local-date YYYY-MM-DD (avoids UTC shift that hides "today" jobs in west-of-UTC tz).
+function localISO(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return localISO(new Date());
 }
 
 function inDays(n: number) {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+  return localISO(d);
 }
 
 function formatShortDate(iso: string) {
@@ -44,6 +52,10 @@ function formatShortDate(iso: string) {
   } catch {
     return iso;
   }
+}
+
+function mapsUrl(address: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
 function JobCard({ job, flagged = false }: { job: JobWithCount; flagged?: boolean }) {
@@ -82,10 +94,16 @@ function JobCard({ job, flagged = false }: { job: JobWithCount; flagged?: boolea
         <div className="text-[15px] font-medium text-fc-text/80 mt-0.5 truncate">
           {job.site_name}
         </div>
-        <div className="flex items-start gap-1 mt-0.5 text-[13px] text-fc-muted">
+        <a
+          href={mapsUrl(job.site_address)}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-start gap-1 mt-1 text-[13px] text-fc-primary hover:underline active:opacity-70"
+        >
           <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <span className="truncate">{job.site_address}</span>
-        </div>
+        </a>
 
         <div className="flex items-center justify-between mt-3 text-[13px] text-fc-muted">
           <div className="flex items-center gap-3">

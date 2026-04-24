@@ -52,6 +52,9 @@ export interface WorkOrder {
   client_name: string;
   site_name: string;
   site_address: string;
+  poc_name: string | null;
+  poc_phone: string | null;
+  poc_email: string | null;
   assigned_technician_id: string;
   scheduled_date: string;
   status: WorkOrderStatus;

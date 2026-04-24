@@ -195,6 +195,7 @@ export default function AllWorkOrders() {
               <TableHead>WO #</TableHead>
               <TableHead>Client</TableHead>
               <TableHead>Site</TableHead>
+              <TableHead>Point of Contact</TableHead>
               <TableHead>Technician</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
@@ -204,14 +205,14 @@ export default function AllWorkOrders() {
           <TableBody>
             {rows === null && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-6">
                   Loading…
                 </TableCell>
               </TableRow>
             )}
             {rows && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-6">
                   No work orders match the current filters.
                 </TableCell>
               </TableRow>
@@ -227,6 +228,23 @@ export default function AllWorkOrders() {
                   <div className="text-xs text-muted-foreground">
                     {r.site_address}
                   </div>
+                </TableCell>
+                <TableCell className="text-sm">
+                  {r.poc_name ? (
+                    <>
+                      <div className="font-medium">{r.poc_name}</div>
+                      {r.poc_phone && (
+                        <a
+                          href={`tel:${r.poc_phone.replace(/[^\d+]/g, "")}`}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          {r.poc_phone}
+                        </a>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-sm">{r.technician_label}</TableCell>
                 <TableCell className="text-sm">{r.scheduled_date}</TableCell>

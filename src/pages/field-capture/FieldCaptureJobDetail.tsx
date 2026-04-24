@@ -1,9 +1,19 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MapPin, Plus, Zap, Clock, Navigation } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Plus,
+  Zap,
+  Clock,
+  Navigation,
+  Phone,
+  Mail,
+  User,
+} from "lucide-react";
 import type {
   WorkOrder,
   WorkOrderCharger,
@@ -21,6 +31,12 @@ const STATUS_PILL: Record<WorkOrderStatus, string> = {
   approved: "bg-fc-success/15 text-fc-success",
   closed: "bg-fc-border text-fc-muted",
 };
+
+function telHref(phone: string | null | undefined) {
+  if (!phone) return "#";
+  const digits = phone.replace(/[^\d+]/g, "");
+  return `tel:${digits.startsWith("+") ? digits : `+1${digits}`}`;
+}
 
 export default function FieldCaptureJobDetail() {
   const { workOrderId } = useParams<{ workOrderId: string }>();
@@ -56,12 +72,12 @@ export default function FieldCaptureJobDetail() {
   if (!job) {
     return (
       <div className="px-4 py-8">
-        <Link
-          to="/field-capture"
+        <button
+          onClick={() => navigate("/field-capture")}
           className="inline-flex items-center gap-1 text-sm text-fc-muted mb-4 hover:text-fc-text"
         >
           <ArrowLeft className="h-4 w-4" /> Back
-        </Link>
+        </button>
         <div className="bg-fc-card rounded-2xl p-6 text-center border border-fc-border/60">
           <h1 className="text-lg font-semibold text-fc-text">Job not found</h1>
         </div>
@@ -76,7 +92,7 @@ export default function FieldCaptureJobDetail() {
 
   return (
     <>
-      {/* Compact top bar — replaces global header for detail view */}
+      {/* Compact top bar */}
       <div
         className="sticky top-0 z-30 bg-fc-header/95 backdrop-blur border-b border-fc-border"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
@@ -119,12 +135,70 @@ export default function FieldCaptureJobDetail() {
             href={mapsUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex items-start gap-2 mt-2 text-sm text-fc-primary hover:underline"
+            className="flex items-start gap-2 mt-2 text-sm text-fc-primary hover:underline active:opacity-70"
           >
             <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
             <span>{job.site_address}</span>
           </a>
-          <div className="flex items-center gap-2 mt-3 text-sm text-fc-muted">
+          <Button
+            asChild
+            variant="outline"
+            className="w-full h-11 rounded-xl border-fc-primary/40 text-fc-primary hover:bg-fc-primary/5 mt-3"
+          >
+            <a href={mapsUrl} target="_blank" rel="noreferrer">
+              <Navigation className="h-4 w-4 mr-1.5" /> Get Directions
+            </a>
+          </Button>
+        </div>
+
+        {/* Point of Contact card */}
+        {(job.poc_name || job.poc_phone || job.poc_email) && (
+          <div className="bg-fc-card rounded-2xl p-5 shadow-sm border border-fc-border/60">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-fc-muted mb-2">
+              Point of Contact
+            </div>
+            {job.poc_name && (
+              <div className="flex items-center gap-2 text-fc-text">
+                <User className="h-4 w-4 text-fc-muted" />
+                <span className="font-semibold">{job.poc_name}</span>
+              </div>
+            )}
+            {job.poc_phone && (
+              <a
+                href={telHref(job.poc_phone)}
+                className="flex items-center gap-2 text-sm text-fc-primary hover:underline mt-2 active:opacity-70"
+              >
+                <Phone className="h-4 w-4" />
+                {job.poc_phone}
+              </a>
+            )}
+            {job.poc_email && (
+              <a
+                href={`mailto:${job.poc_email}`}
+                className="flex items-center gap-2 text-sm text-fc-primary hover:underline mt-1.5 active:opacity-70"
+              >
+                <Mail className="h-4 w-4" />
+                {job.poc_email}
+              </a>
+            )}
+            {job.poc_phone && (
+              <Button
+                asChild
+                variant="outline"
+                className="w-full h-11 rounded-xl border-fc-primary/40 text-fc-primary hover:bg-fc-primary/5 mt-3"
+              >
+                <a href={telHref(job.poc_phone)}>
+                  <Phone className="h-4 w-4 mr-1.5" />
+                  Call {job.poc_name || "POC"}
+                </a>
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Schedule + Start */}
+        <div className="bg-fc-card rounded-2xl p-5 shadow-sm border border-fc-border/60">
+          <div className="flex items-center gap-2 text-sm text-fc-muted">
             <Clock className="h-4 w-4" />
             {new Date(job.scheduled_date).toLocaleDateString(undefined, {
               weekday: "long",
@@ -132,20 +206,14 @@ export default function FieldCaptureJobDetail() {
               day: "numeric",
             })}
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            <Button
-              asChild
-              variant="outline"
-              className="h-11 rounded-xl border-fc-border"
-            >
-              <a href={mapsUrl} target="_blank" rel="noreferrer">
-                <Navigation className="h-4 w-4 mr-1.5" /> Directions
-              </a>
-            </Button>
-            <Button className="h-11 rounded-xl bg-fc-primary hover:bg-fc-primary-dark text-white">
-              {isInProgress ? "Continue Job" : "Start Job"}
-            </Button>
-          </div>
+          {job.arrival_timestamp && (
+            <div className="text-xs text-fc-muted mt-1">
+              Arrived {new Date(job.arrival_timestamp).toLocaleTimeString()}
+            </div>
+          )}
+          <Button className="w-full h-12 rounded-xl bg-fc-primary hover:bg-fc-primary-dark text-white mt-3">
+            {isInProgress ? "Continue Job" : "Start Job"}
+          </Button>
         </div>
 
         {/* Chargers */}
