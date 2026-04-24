@@ -39,13 +39,18 @@ export default function FieldCaptureLayout() {
 
   useEffect(() => {
     if (!session?.user?.id) return;
-    supabase
-      .from("notifications" as any)
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", session.user.id)
-      .eq("read", false)
-      .then(({ count }) => setUnread(count ?? 0))
-      .catch(() => setUnread(0));
+    (async () => {
+      try {
+        const { count } = await supabase
+          .from("notifications" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", session.user.id)
+          .eq("read", false);
+        setUnread(count ?? 0);
+      } catch {
+        setUnread(0);
+      }
+    })();
   }, [session?.user?.id]);
 
   return (

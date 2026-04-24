@@ -88,6 +88,20 @@ export default {
           5: "hsl(var(--chart-5))",
           6: "hsl(var(--chart-6))",
         },
+        // Field Capture mobile palette
+        fc: {
+          primary: "hsl(var(--fc-primary))",
+          "primary-dark": "hsl(var(--fc-primary-dark))",
+          "primary-light": "hsl(var(--fc-primary-light))",
+          bg: "hsl(var(--fc-bg))",
+          header: "hsl(var(--fc-header))",
+          card: "hsl(var(--fc-card))",
+          text: "hsl(var(--fc-text))",
+          muted: "hsl(var(--fc-muted))",
+          border: "hsl(var(--fc-border))",
+          warning: "hsl(var(--fc-warning))",
+          success: "hsl(var(--fc-success))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
