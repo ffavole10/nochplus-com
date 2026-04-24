@@ -217,10 +217,58 @@ export default function FieldCaptureChargerCapture() {
       .then(() => {});
   }, [step, chargerId]);
 
+  async function fetchTemplate(
+    ic: ChargerIssueCategory,
+    rc: ChargerRootCause,
+  ): Promise<string | null> {
+    // try specific match
+    const { data: specific } = await supabase
+      .from("work_description_templates")
+      .select("template_text")
+      .eq("issue_category", ic)
+      .eq("root_cause", rc)
+      .eq("is_active", true)
+      .eq("is_fallback", false)
+      .limit(1)
+      .maybeSingle();
+    if (specific?.template_text) return specific.template_text;
+    // fallback
+    const { data: fb } = await supabase
+      .from("work_description_templates")
+      .select("template_text")
+      .eq("is_active", true)
+      .eq("is_fallback", true)
+      .limit(1)
+      .maybeSingle();
+    return fb?.template_text ?? null;
+  }
+
   async function next() {
     setSaving(true);
     try {
       const newStep = Math.min(4, step + 1);
+
+      // Auto-populate template when entering Step 2
+      if (step === 1 && newStep === 2 && issueCategory && rootCause) {
+        const key = `${issueCategory}__${rootCause}`;
+        const tpl = await fetchTemplate(
+          issueCategory as ChargerIssueCategory,
+          rootCause as ChargerRootCause,
+        );
+        if (tpl) {
+          if (!workPerformed.trim()) {
+            // Empty: pre-populate
+            setWorkPerformed(tpl);
+            setTemplateApplied(true);
+            setLastTemplateKey(key);
+          } else if (lastTemplateKey && lastTemplateKey !== key) {
+            // User changed issue/root cause: ask
+            setPendingTemplateText(tpl);
+            setShowTemplateUpdatePrompt(true);
+          }
+        }
+      }
+
       await persist({ current_step: newStep });
       setStep(newStep);
       setSaveState("saved");
