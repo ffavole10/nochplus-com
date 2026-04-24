@@ -64,6 +64,8 @@ export interface WorkOrder {
   support_time_minutes: number | null;
   access_time_minutes: number | null;
   job_notes: string | null;
+  sow_document_url: string | null;
+  sow_document_name: string | null;
   created_at: string;
   updated_at: string;
   created_by: string | null;

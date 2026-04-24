@@ -14,8 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Upload, FileText, X } from "lucide-react";
 
 interface ChargerInput {
   make_model: string;
@@ -45,6 +46,8 @@ export default function CreateTestJob() {
   const [chargers, setChargers] = useState<ChargerInput[]>([
     { make_model: "", serial_number: "" },
   ]);
+  const [jobNotes, setJobNotes] = useState("");
+  const [sowFile, setSowFile] = useState<File | null>(null);
   const [technicians, setTechnicians] = useState<TechnicianOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ wo_number: string; id: string } | null>(
@@ -133,11 +136,30 @@ export default function CreateTestJob() {
           assigned_technician_id: technicianId,
           scheduled_date: scheduledDate,
           status: "scheduled",
+          job_notes: jobNotes || null,
           created_by: session?.user?.id ?? null,
         })
         .select()
         .single();
       if (woErr) throw woErr;
+
+      // Upload SOW document if provided
+      if (sowFile) {
+        const ext = sowFile.name.split(".").pop() || "pdf";
+        const path = `${wo.id}/sow-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("field-capture-docs")
+          .upload(path, sowFile, { contentType: sowFile.type });
+        if (upErr) {
+          console.error("[CreateTestJob] SOW upload failed", upErr);
+          toast.error("Work order created, but SOW upload failed");
+        } else {
+          await supabase
+            .from("work_orders")
+            .update({ sow_document_url: path, sow_document_name: sowFile.name })
+            .eq("id", wo.id);
+        }
+      }
 
       const chargerRows = chargers.map((c, idx) => ({
         work_order_id: wo.id,
@@ -172,6 +194,8 @@ export default function CreateTestJob() {
     setTechnicianId("");
     setScheduledDate(new Date().toISOString().slice(0, 10));
     setChargers([{ make_model: "", serial_number: "" }]);
+    setJobNotes("");
+    setSowFile(null);
     setSuccess(null);
   };
 
@@ -378,6 +402,71 @@ export default function CreateTestJob() {
                 </Button>
               </div>
             ))}
+          </div>
+        </Card>
+
+        <Card className="p-6 space-y-4">
+          <div>
+            <h2 className="text-base font-semibold">Comments & Instructions</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Internal notes for the technician and an optional Scope of Work attachment.
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="job-notes">Comments / Job Notes</Label>
+            <Textarea
+              id="job-notes"
+              value={jobNotes}
+              onChange={(e) => setJobNotes(e.target.value)}
+              placeholder="Special instructions, access info, parking notes, etc."
+              rows={4}
+            />
+          </div>
+
+          <div>
+            <Label>SOW / Instructions Document (PDF, DOC, image — max 10MB)</Label>
+            {sowFile ? (
+              <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/30">
+                <FileText className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{sowFile.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {(sowFile.size / 1024).toFixed(0)} KB
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSowFile(null)}
+                  aria-label="Remove file"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/30 transition-colors">
+                <Upload className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  Click to attach SOW or instructions
+                </span>
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf,.doc,.docx,image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    if (f.size > 10 * 1024 * 1024) {
+                      toast.error("File must be under 10MB");
+                      return;
+                    }
+                    setSowFile(f);
+                  }}
+                />
+              </label>
+            )}
           </div>
         </Card>
 

@@ -4647,6 +4647,8 @@ export type Database = {
           scheduled_date: string
           site_address: string
           site_name: string
+          sow_document_name: string | null
+          sow_document_url: string | null
           status: Database["public"]["Enums"]["work_order_status"]
           support_time_minutes: number | null
           updated_at: string
@@ -4669,6 +4671,8 @@ export type Database = {
           scheduled_date?: string
           site_address: string
           site_name: string
+          sow_document_name?: string | null
+          sow_document_url?: string | null
           status?: Database["public"]["Enums"]["work_order_status"]
           support_time_minutes?: number | null
           updated_at?: string
@@ -4691,6 +4695,8 @@ export type Database = {
           scheduled_date?: string
           site_address?: string
           site_name?: string
+          sow_document_name?: string | null
+          sow_document_url?: string | null
           status?: Database["public"]["Enums"]["work_order_status"]
           support_time_minutes?: number | null
           updated_at?: string

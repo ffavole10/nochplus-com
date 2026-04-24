@@ -26,7 +26,8 @@ import {
   type WorkOrder,
   type WorkOrderStatus,
 } from "@/types/fieldCapture";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
+import WorkOrderEditModal from "@/components/field-capture/WorkOrderEditModal";
 
 interface Row extends WorkOrder {
   total_chargers: number;
@@ -61,6 +62,8 @@ export default function AllWorkOrders() {
   const [techFilter, setTechFilter] = useState<string>("all");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
+  const [editing, setEditing] = useState<WorkOrder | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -98,7 +101,7 @@ export default function AllWorkOrders() {
       });
       setRows(mapped);
     })();
-  }, []);
+  }, [reloadKey]);
 
   const technicians = useMemo(() => {
     const map = new Map<string, string>();
@@ -200,19 +203,20 @@ export default function AllWorkOrders() {
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Chargers</TableHead>
+              <TableHead className="w-[60px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows === null && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-6">
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-6">
                   Loading…
                 </TableCell>
               </TableRow>
             )}
             {rows && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-6">
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-6">
                   No work orders match the current filters.
                 </TableCell>
               </TableRow>
@@ -256,11 +260,29 @@ export default function AllWorkOrders() {
                 <TableCell className="text-sm">
                   {r.complete_chargers}/{r.total_chargers}
                 </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setEditing(r)}
+                    aria-label="Edit work order"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </Card>
+
+      <WorkOrderEditModal
+        workOrder={editing}
+        open={!!editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        onSaved={() => setReloadKey((k) => k + 1)}
+      />
     </div>
   );
 }
