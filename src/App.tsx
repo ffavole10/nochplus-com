@@ -73,6 +73,7 @@ import FieldCaptureSubmitted from "./pages/field-capture/FieldCaptureSubmitted";
 import CreateTestJob from "./pages/field-capture/admin/CreateTestJob";
 import AllWorkOrders from "./pages/field-capture/admin/AllWorkOrders";
 import WorkTemplates from "./pages/field-capture/admin/WorkTemplates";
+import TeamPerformance from "./pages/field-capture/admin/TeamPerformance";
 import { FieldCaptureAdminGuard } from "./components/FieldCaptureAdminGuard";
 
 const queryClient = new QueryClient({
