@@ -8,10 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { refreshTechnicianStats } from "@/lib/nochProStats";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function FieldCaptureWrapUp() {
   const { workOrderId } = useParams<{ workOrderId: string }>();
   const navigate = useNavigate();
+  const { session } = useAuth();
   usePageTitle("Wrap Up");
 
   const [supportMin, setSupportMin] = useState<string>("0");
@@ -55,7 +58,18 @@ export default function FieldCaptureWrapUp() {
       toast.error(error.message);
       return;
     }
-    navigate(`/field-capture/job/${workOrderId}/submitted`, { replace: true });
+    // Recompute stats and detect new achievements (best-effort)
+    let newAchievements: string[] = [];
+    try {
+      if (session?.user?.id) {
+        const res = await refreshTechnicianStats(session.user.id);
+        newAchievements = res.newAchievements;
+      }
+    } catch (e) {
+      console.warn("[NOCH Pro] stats refresh failed", e);
+    }
+    const qs = newAchievements.length ? `?unlocked=${newAchievements.join(",")}` : "";
+    navigate(`/field-capture/job/${workOrderId}/submitted${qs}`, { replace: true });
   }
 
   if (loading) {

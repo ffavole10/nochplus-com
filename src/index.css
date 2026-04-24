@@ -446,3 +446,7 @@
   .fc-float { animation: none !important; }
 }
 
+
+/* Hide scrollbars on horizontal stat chip row */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

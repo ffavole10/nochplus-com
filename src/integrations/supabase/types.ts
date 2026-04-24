@@ -4143,6 +4143,162 @@ export type Database = {
         }
         Relationships: []
       }
+      technician_achievements: {
+        Row: {
+          achievement_data: Json
+          achievement_type: Database["public"]["Enums"]["achievement_type"]
+          id: string
+          is_visible: boolean
+          technician_id: string
+          unlocked_at: string
+        }
+        Insert: {
+          achievement_data?: Json
+          achievement_type: Database["public"]["Enums"]["achievement_type"]
+          id?: string
+          is_visible?: boolean
+          technician_id: string
+          unlocked_at?: string
+        }
+        Update: {
+          achievement_data?: Json
+          achievement_type?: Database["public"]["Enums"]["achievement_type"]
+          id?: string
+          is_visible?: boolean
+          technician_id?: string
+          unlocked_at?: string
+        }
+        Relationships: []
+      }
+      technician_performance_snapshots: {
+        Row: {
+          chargers_captured_today: number
+          created_at: string
+          efficiency_rating: number
+          id: string
+          jobs_completed_today: number
+          jobs_on_time_today: number
+          parts_swaps_today: number
+          photos_uploaded_today: number
+          snapshot_date: string
+          technician_id: string
+          total_minutes_allocated_today: number
+          total_minutes_worked_today: number
+        }
+        Insert: {
+          chargers_captured_today?: number
+          created_at?: string
+          efficiency_rating?: number
+          id?: string
+          jobs_completed_today?: number
+          jobs_on_time_today?: number
+          parts_swaps_today?: number
+          photos_uploaded_today?: number
+          snapshot_date: string
+          technician_id: string
+          total_minutes_allocated_today?: number
+          total_minutes_worked_today?: number
+        }
+        Update: {
+          chargers_captured_today?: number
+          created_at?: string
+          efficiency_rating?: number
+          id?: string
+          jobs_completed_today?: number
+          jobs_on_time_today?: number
+          parts_swaps_today?: number
+          photos_uploaded_today?: number
+          snapshot_date?: string
+          technician_id?: string
+          total_minutes_allocated_today?: number
+          total_minutes_worked_today?: number
+        }
+        Relationships: []
+      }
+      technician_stats_cache: {
+        Row: {
+          best_efficiency_month: number
+          current_month_efficiency: number
+          current_month_jobs: number
+          current_month_on_time: number
+          current_on_time_streak: number
+          efficiency_trend: number
+          fastest_job_minutes: number | null
+          last_30_days_efficiency: number
+          lifetime_efficiency_rating: number
+          longest_on_time_streak: number
+          mastery_score: number
+          most_chargers_one_day: number
+          most_photos_one_job: number
+          noch_pro_score: number
+          previous_30_days_efficiency: number
+          previous_noch_pro_score: number
+          quality_score: number
+          reliability_score: number
+          technician_id: string
+          total_chargers_captured: number
+          total_jobs_completed: number
+          total_minutes_worked: number
+          total_parts_swaps: number
+          total_photos_uploaded: number
+          updated_at: string
+        }
+        Insert: {
+          best_efficiency_month?: number
+          current_month_efficiency?: number
+          current_month_jobs?: number
+          current_month_on_time?: number
+          current_on_time_streak?: number
+          efficiency_trend?: number
+          fastest_job_minutes?: number | null
+          last_30_days_efficiency?: number
+          lifetime_efficiency_rating?: number
+          longest_on_time_streak?: number
+          mastery_score?: number
+          most_chargers_one_day?: number
+          most_photos_one_job?: number
+          noch_pro_score?: number
+          previous_30_days_efficiency?: number
+          previous_noch_pro_score?: number
+          quality_score?: number
+          reliability_score?: number
+          technician_id: string
+          total_chargers_captured?: number
+          total_jobs_completed?: number
+          total_minutes_worked?: number
+          total_parts_swaps?: number
+          total_photos_uploaded?: number
+          updated_at?: string
+        }
+        Update: {
+          best_efficiency_month?: number
+          current_month_efficiency?: number
+          current_month_jobs?: number
+          current_month_on_time?: number
+          current_on_time_streak?: number
+          efficiency_trend?: number
+          fastest_job_minutes?: number | null
+          last_30_days_efficiency?: number
+          lifetime_efficiency_rating?: number
+          longest_on_time_streak?: number
+          mastery_score?: number
+          most_chargers_one_day?: number
+          most_photos_one_job?: number
+          noch_pro_score?: number
+          previous_30_days_efficiency?: number
+          previous_noch_pro_score?: number
+          quality_score?: number
+          reliability_score?: number
+          technician_id?: string
+          total_chargers_captured?: number
+          total_jobs_completed?: number
+          total_minutes_worked?: number
+          total_parts_swaps?: number
+          total_photos_uploaded?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       technicians: {
         Row: {
           active: boolean
@@ -5107,6 +5263,32 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
+      achievement_type:
+        | "first_job"
+        | "ten_jobs"
+        | "fifty_jobs"
+        | "century_club"
+        | "five_hundred"
+        | "first_charger"
+        | "ten_chargers"
+        | "fifty_chargers"
+        | "charger_variety"
+        | "charger_master"
+        | "photo_documentarian"
+        | "photo_master"
+        | "photo_legend"
+        | "first_swap"
+        | "swap_specialist"
+        | "swap_master"
+        | "week_of_excellence"
+        | "month_of_excellence"
+        | "speed_demon"
+        | "under_budget"
+        | "thorough_documenter"
+        | "detailed_writer"
+        | "early_adopter"
+        | "perfect_month"
+        | "versatility"
       activity_type:
         | "Call"
         | "Email"
@@ -5332,6 +5514,33 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      achievement_type: [
+        "first_job",
+        "ten_jobs",
+        "fifty_jobs",
+        "century_club",
+        "five_hundred",
+        "first_charger",
+        "ten_chargers",
+        "fifty_chargers",
+        "charger_variety",
+        "charger_master",
+        "photo_documentarian",
+        "photo_master",
+        "photo_legend",
+        "first_swap",
+        "swap_specialist",
+        "swap_master",
+        "week_of_excellence",
+        "month_of_excellence",
+        "speed_demon",
+        "under_budget",
+        "thorough_documenter",
+        "detailed_writer",
+        "early_adopter",
+        "perfect_month",
+        "versatility",
+      ],
       activity_type: [
         "Call",
         "Email",

@@ -73,6 +73,7 @@ import FieldCaptureSubmitted from "./pages/field-capture/FieldCaptureSubmitted";
 import CreateTestJob from "./pages/field-capture/admin/CreateTestJob";
 import AllWorkOrders from "./pages/field-capture/admin/AllWorkOrders";
 import WorkTemplates from "./pages/field-capture/admin/WorkTemplates";
+import TeamPerformance from "./pages/field-capture/admin/TeamPerformance";
 import { FieldCaptureAdminGuard } from "./components/FieldCaptureAdminGuard";
 
 const queryClient = new QueryClient({
@@ -199,6 +200,7 @@ const App = () => (
             <Route path="/field-capture/admin/create-job" element={<FieldCaptureAdminGuard><CreateTestJob /></FieldCaptureAdminGuard>} />
             <Route path="/field-capture/admin/work-orders" element={<FieldCaptureAdminGuard><AllWorkOrders /></FieldCaptureAdminGuard>} />
             <Route path="/field-capture/admin/templates" element={<FieldCaptureAdminGuard><WorkTemplates /></FieldCaptureAdminGuard>} />
+            <Route path="/field-capture/admin/performance" element={<FieldCaptureAdminGuard><TeamPerformance /></FieldCaptureAdminGuard>} />
 
             {/* Settings */}
             <Route path="/settings" element={<Settings />} />
