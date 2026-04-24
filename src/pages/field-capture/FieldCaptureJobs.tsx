@@ -34,15 +34,15 @@ function inDays(n: number) {
   return d.toISOString().slice(0, 10);
 }
 
-function formatTime(iso?: string | null) {
-  if (!iso) return "—";
+function formatShortDate(iso: string) {
   try {
-    return new Date(iso).toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
+    return new Date(iso).toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
     });
   } catch {
-    return "—";
+    return iso;
   }
 }
 
@@ -91,7 +91,7 @@ function JobCard({ job, flagged = false }: { job: JobWithCount; flagged?: boolea
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1">
               <ClockIcon className="h-3.5 w-3.5" />
-              {formatTime(job.scheduled_start_time)}
+              {formatShortDate(job.scheduled_date)}
             </span>
             <span className="text-fc-border">•</span>
             <span className="inline-flex items-center gap-1">
