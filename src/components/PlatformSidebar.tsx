@@ -448,8 +448,8 @@ export function PlatformSidebar() {
           </>
         )}
 
-        {/* ─── FIELD CAPTURE (admin only) ─── */}
-        {(hasRole("super_admin") || hasRole("admin") || hasRole("manager") || hasRole("account_manager")) && (
+        {/* ─── FIELD CAPTURE (admin only, requires section access) ─── */}
+        {canAccess("field_capture") && (hasRole("super_admin") || hasRole("admin") || hasRole("manager") || hasRole("account_manager")) && (
           <div className="pt-2 mt-2 border-t border-sidebar-border">
             <div className="px-3 py-2 text-xs font-bold tracking-wider uppercase text-sidebar-foreground/70">
               Field Capture

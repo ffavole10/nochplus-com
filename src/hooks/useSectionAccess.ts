@@ -2,8 +2,16 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useFieldCaptureRole } from "@/hooks/useFieldCaptureRole";
 
-export type SectionKey = "campaigns" | "service_desk" | "noch_plus" | "partners" | "autoheal" | "growth";
+export type SectionKey =
+  | "campaigns"
+  | "service_desk"
+  | "noch_plus"
+  | "partners"
+  | "autoheal"
+  | "growth"
+  | "field_capture";
 
 export const SECTION_KEYS: SectionKey[] = [
   "campaigns",
@@ -12,6 +20,7 @@ export const SECTION_KEYS: SectionKey[] = [
   "partners",
   "autoheal",
   "growth",
+  "field_capture",
 ];
 
 export const SECTION_LABELS: Record<SectionKey, string> = {
@@ -21,10 +30,12 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
   partners: "Partners",
   autoheal: "AutoHeal",
   growth: "Growth",
+  field_capture: "Field Capture",
 };
 
 /** Maps a URL path to the SectionKey it belongs to (or null for global pages). */
 export function pathToSection(pathname: string): SectionKey | null {
+  if (pathname.startsWith("/field-capture")) return "field_capture";
   if (pathname.startsWith("/growth")) return "growth";
   if (pathname.startsWith("/campaigns") || pathname === "/dashboard" ||
       pathname === "/dataset" || pathname === "/issues" ||
@@ -40,6 +51,7 @@ export function pathToSection(pathname: string): SectionKey | null {
 export function useSectionAccess() {
   const { session } = useAuth();
   const { hasRole, loading: roleLoading } = useUserRole();
+  const { isTechnician, loading: fieldRoleLoading } = useFieldCaptureRole();
   const [access, setAccess] = useState<Record<SectionKey, boolean> | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -66,13 +78,17 @@ export function useSectionAccess() {
         map[row.section_key as SectionKey] = !!row.has_access;
       }
     }
+    // Technicians always have field_capture access (locked on).
+    if (isTechnician) {
+      map.field_capture = true;
+    }
     setAccess(map);
     setLoading(false);
-  }, [session?.user?.id, hasRole]);
+  }, [session?.user?.id, hasRole, isTechnician]);
 
   useEffect(() => {
-    if (!roleLoading) load();
-  }, [load, roleLoading]);
+    if (!roleLoading && !fieldRoleLoading) load();
+  }, [load, roleLoading, fieldRoleLoading]);
 
   const canAccess = useCallback(
     (section: SectionKey | null) => {
@@ -83,5 +99,5 @@ export function useSectionAccess() {
     [access],
   );
 
-  return { access, loading: loading || roleLoading, canAccess, refetch: load };
+  return { access, loading: loading || roleLoading || fieldRoleLoading, canAccess, refetch: load };
 }

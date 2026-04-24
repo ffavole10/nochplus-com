@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
-import { Lock, Crosshair, Ticket, Diamond, Handshake, Zap, History, ShieldCheck, TrendingUp } from "lucide-react";
+import { Lock, Crosshair, Ticket, Diamond, Handshake, Zap, History, ShieldCheck, TrendingUp, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { SECTION_KEYS, SECTION_LABELS, type SectionKey } from "@/hooks/useSectionAccess";
@@ -22,6 +22,7 @@ const SECTION_ICONS: Record<SectionKey, React.ElementType> = {
   partners: Handshake,
   autoheal: Zap,
   growth: TrendingUp,
+  field_capture: Wrench,
 };
 
 type UserRow = {
@@ -56,6 +57,12 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
   // Identify super admin user_ids (locked to full access)
   const superAdminIds = useMemo(
     () => new Set(users.filter((u) => u.roles?.includes("super_admin")).map((u) => u.user_id)),
+    [users],
+  );
+
+  // Identify technician user_ids — Field Capture is locked ON, all other sections locked OFF
+  const technicianIds = useMemo(
+    () => new Set(users.filter((u) => u.roles?.includes("technician")).map((u) => u.user_id)),
     [users],
   );
 
@@ -95,7 +102,14 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
 
   const hasAccess = (userId: string, section: SectionKey) => {
     if (superAdminIds.has(userId)) return true;
+    if (technicianIds.has(userId)) return section === "field_capture";
     return accessMap[userId]?.[section] === true;
+  };
+
+  const isLocked = (userId: string, section: SectionKey) => {
+    if (superAdminIds.has(userId)) return true;
+    if (technicianIds.has(userId)) return true; // every column locked for technicians
+    return false;
   };
 
   const sectionUsers = (section: SectionKey) =>
@@ -114,6 +128,7 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
 
   const setSingleAccess = async (target: UserRow, section: SectionKey, value: boolean) => {
     if (superAdminIds.has(target.user_id)) return;
+    if (technicianIds.has(target.user_id)) return; // technicians have locked access matrix
     // optimistic update
     setAccessRows((prev) => {
       const others = prev.filter((r) => !(r.user_id === target.user_id && r.section_key === section));
@@ -370,6 +385,7 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                   <tbody>
                     {users.map((u) => {
                       const isSuper = superAdminIds.has(u.user_id);
+                      const isTech = technicianIds.has(u.user_id);
                       return (
                         <tr key={u.user_id} className="border-b border-border/40 hover:bg-muted/30">
                           <td className="py-3 pr-4">
@@ -384,6 +400,9 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                                   {isSuper && (
                                     <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0">SUPER</Badge>
                                   )}
+                                  {isTech && !isSuper && (
+                                    <Badge className="bg-sky-500 text-white text-[9px] px-1.5 py-0">TECH</Badge>
+                                  )}
                                 </div>
                                 <div className="text-xs text-muted-foreground truncate">{u.email}</div>
                               </div>
@@ -391,17 +410,25 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                           </td>
                           {SECTION_KEYS.map((s) => {
                             const checked = hasAccess(u.user_id, s);
+                            const locked = isLocked(u.user_id, s);
+                            const tooltip = isSuper
+                              ? "Super admins have full access"
+                              : isTech
+                                ? s === "field_capture"
+                                  ? "Technicians always have Field Capture access"
+                                  : "Technicians are restricted to Field Capture only"
+                                : "";
                             return (
                               <td key={s} className="text-center py-3 px-3">
-                                {isSuper ? (
+                                {locked ? (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <div className="inline-flex items-center gap-1.5 opacity-70 cursor-not-allowed">
-                                        <Switch checked disabled />
+                                        <Switch checked={checked} disabled />
                                         <Lock className="h-3 w-3 text-muted-foreground" />
                                       </div>
                                     </TooltipTrigger>
-                                    <TooltipContent>Super admins have full access</TooltipContent>
+                                    <TooltipContent>{tooltip}</TooltipContent>
                                   </Tooltip>
                                 ) : (
                                   <Switch

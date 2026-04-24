@@ -91,12 +91,12 @@ const TABS: { value: SettingsTab; label: string }[] = [
 ];
 
 const DEFAULT_ACCESS_BY_ROLE: Record<string, Record<SectionKey, boolean>> = {
-  admin: { campaigns: true, service_desk: true, noch_plus: true, partners: true, autoheal: true, growth: true },
-  manager: { campaigns: true, service_desk: true, noch_plus: true, partners: true, autoheal: false, growth: true },
-  employee: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false, growth: false },
-  customer: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false, growth: false },
-  partner: { campaigns: false, service_desk: false, noch_plus: true, partners: true, autoheal: false, growth: false },
-  technician: { campaigns: false, service_desk: false, noch_plus: false, partners: false, autoheal: false, growth: false },
+  admin: { campaigns: true, service_desk: true, noch_plus: true, partners: true, autoheal: true, growth: true, field_capture: true },
+  manager: { campaigns: true, service_desk: true, noch_plus: true, partners: true, autoheal: false, growth: true, field_capture: true },
+  employee: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false, growth: false, field_capture: false },
+  customer: { campaigns: false, service_desk: false, noch_plus: true, partners: false, autoheal: false, growth: false, field_capture: false },
+  partner: { campaigns: false, service_desk: false, noch_plus: true, partners: true, autoheal: false, growth: false, field_capture: false },
+  technician: { campaigns: false, service_desk: false, noch_plus: false, partners: false, autoheal: false, growth: false, field_capture: true },
 };
 
 function QuotingAndRatesSection() {
