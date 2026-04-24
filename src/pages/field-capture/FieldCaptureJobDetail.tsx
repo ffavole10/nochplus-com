@@ -40,6 +40,8 @@ const STATUS_PILL: Record<WorkOrderStatus, string> = {
   flagged: "bg-destructive/15 text-destructive",
   approved: "bg-fc-success/15 text-fc-success",
   closed: "bg-fc-border text-fc-muted",
+  cancelled: "bg-destructive/15 text-destructive",
+  archived: "bg-fc-border text-fc-muted",
 };
 
 const CHARGER_PILL: Record<ChargerCaptureStatus, string> = {
