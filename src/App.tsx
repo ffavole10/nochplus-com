@@ -23,6 +23,7 @@ import PublicReport from "./pages/public/PublicReport";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { SectionAccessGuard } from "./components/SectionAccessGuard";
 import MainPlatformLayout from "./layouts/MainPlatformLayout";
+import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
 // Placeholder pages for new sections
 import ServiceTickets from "./pages/placeholders/ServiceTickets";
@@ -93,6 +94,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <PWAInstallPrompt />
       <SessionCleanup />
       <BrowserRouter>
         <Routes>
