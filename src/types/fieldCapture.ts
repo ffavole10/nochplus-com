@@ -7,7 +7,9 @@ export type WorkOrderStatus =
   | "pending_review"
   | "flagged"
   | "approved"
-  | "closed";
+  | "closed"
+  | "cancelled"
+  | "archived";
 
 export type ChargerCaptureStatus = "not_started" | "in_progress" | "complete";
 
@@ -69,6 +71,9 @@ export interface WorkOrder {
   created_at: string;
   updated_at: string;
   created_by: string | null;
+  is_archived?: boolean;
+  archived_at?: string | null;
+  archived_by?: string | null;
 }
 
 export interface WorkOrderCharger {
@@ -142,4 +147,16 @@ export const WORK_ORDER_STATUS_LABELS: Record<WorkOrderStatus, string> = {
   flagged: "Flagged",
   approved: "Approved",
   closed: "Closed",
+  cancelled: "Cancelled",
+  archived: "Archived",
 };
+
+export interface WorkOrderActivity {
+  id: string;
+  work_order_id: string;
+  actor_id: string | null;
+  actor_label: string | null;
+  action: string;
+  details: Record<string, unknown>;
+  created_at: string;
+}
