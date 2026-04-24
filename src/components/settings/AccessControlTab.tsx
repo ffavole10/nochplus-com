@@ -128,6 +128,7 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
 
   const setSingleAccess = async (target: UserRow, section: SectionKey, value: boolean) => {
     if (superAdminIds.has(target.user_id)) return;
+    if (technicianIds.has(target.user_id)) return; // technicians have locked access matrix
     // optimistic update
     setAccessRows((prev) => {
       const others = prev.filter((r) => !(r.user_id === target.user_id && r.section_key === section));
