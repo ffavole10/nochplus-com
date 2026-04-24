@@ -195,11 +195,13 @@ export default function FieldCaptureJobs() {
         </h1>
         {jobs !== null && (
           <p className="text-[15px] text-fc-muted mt-1">
-            {todayJobs.length === 0
-              ? flaggedJobs.length > 0
-                ? "Items need your attention"
-                : "No jobs scheduled"
-              : `${todayJobs.length} ${todayJobs.length === 1 ? "job" : "jobs"} scheduled`}
+            {pastDueJobs.length > 0
+              ? `${pastDueJobs.length} past due • ${todayJobs.length} today`
+              : todayJobs.length === 0
+                ? flaggedJobs.length > 0
+                  ? "Items need your attention"
+                  : "No jobs scheduled"
+                : `${todayJobs.length} ${todayJobs.length === 1 ? "job" : "jobs"} scheduled`}
           </p>
         )}
       </div>
