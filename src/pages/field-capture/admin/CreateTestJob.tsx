@@ -396,7 +396,8 @@ export default function CreateTestJob() {
     setPocEmail("");
     setTechnicianId("");
     setScheduledDate(new Date().toISOString().slice(0, 10));
-    setChargers([{ make_model: "", serial_number: "" }]);
+    setChargers([blankCharger()]);
+    setJobType("repair");
     setJobNotes("");
     setSowFile(null);
     setSuccess(null);
