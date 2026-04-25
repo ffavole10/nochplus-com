@@ -233,10 +233,11 @@ export default function CreateTestJob() {
       if (next.getDay() === 6) next.setDate(next.getDate() + 2);
       else if (next.getDay() === 0) next.setDate(next.getDate() + 1);
       setScheduledDate(next.toISOString().slice(0, 10));
-      // Chargers
-      const sortedChargers = ((src as any).work_order_chargers ?? [])
+      // Chargers — duplicate make/model + serial only; reported_* fields start fresh
+      const sortedChargers: ChargerInput[] = ((src as any).work_order_chargers ?? [])
         .sort((a: any, b: any) => a.charger_position - b.charger_position)
         .map((c: any) => ({
+          ...blankCharger(),
           make_model: c.make_model ?? "",
           serial_number: c.serial_number ?? "",
         }));
