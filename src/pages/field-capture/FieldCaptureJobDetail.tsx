@@ -200,14 +200,26 @@ export default function FieldCaptureJobDetail() {
               {job.client_name}
             </div>
           </div>
-          <span
-            className={cn(
-              "px-2.5 py-1 rounded-lg text-[11px] font-semibold",
-              STATUS_PILL[job.status],
+          <div className="flex flex-col items-end gap-1">
+            <span
+              className={cn(
+                "px-2.5 py-1 rounded-lg text-[11px] font-semibold",
+                STATUS_PILL[job.status],
+              )}
+            >
+              {WORK_ORDER_STATUS_LABELS[job.status]}
+            </span>
+            {job.job_type && (
+              <span
+                className={cn(
+                  "px-2 py-0.5 rounded-md text-[10px] font-semibold border",
+                  JOB_TYPE_PILL[job.job_type],
+                )}
+              >
+                {JOB_TYPE_LABELS[job.job_type]}
+              </span>
             )}
-          >
-            {WORK_ORDER_STATUS_LABELS[job.status]}
-          </span>
+          </div>
         </div>
       </div>
 
@@ -378,23 +390,16 @@ export default function FieldCaptureJobDetail() {
               Scope of Work / Instructions
             </div>
             <button
-              onClick={async () => {
-                const { data, error } = await supabase.storage
-                  .from("field-capture-docs")
-                  .createSignedUrl(job.sow_document_url!, 300);
-                if (error || !data?.signedUrl) {
-                  toast.error("Could not open document");
-                  return;
-                }
-                window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-              }}
+              onClick={() => setSowOpen(true)}
               className="w-full flex items-center gap-3 p-3 rounded-xl border border-fc-border bg-fc-bg hover:bg-fc-primary/5 active:opacity-70 transition"
             >
               <FileText className="h-5 w-5 text-fc-primary shrink-0" />
               <span className="text-sm font-medium text-fc-text truncate flex-1 text-left">
                 {job.sow_document_name || "View document"}
               </span>
-              <Navigation className="h-4 w-4 text-fc-muted" />
+              <span className="text-[11px] font-semibold text-fc-primary shrink-0">
+                View
+              </span>
             </button>
           </div>
         )}
