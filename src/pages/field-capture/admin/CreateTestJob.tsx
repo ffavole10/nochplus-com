@@ -16,7 +16,22 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, CheckCircle2, Upload, FileText, X, Copy } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  CheckCircle2,
+  Upload,
+  FileText,
+  X,
+  Copy,
+  Wrench,
+  Search,
+  HardHat,
+  Settings as SettingsIcon,
+  Power,
+  Trash,
+  Lock,
+} from "lucide-react";
 import { logWorkOrderActivity } from "@/lib/workOrderActivity";
 import {
   PartnerPicker,
@@ -27,6 +42,18 @@ import {
   type SiteOption,
   type PocOption,
 } from "@/components/field-capture/PartnerSitePocPicker";
+import {
+  type JobType,
+  JOB_TYPE_LABELS,
+  JOB_TYPE_DESCRIPTIONS,
+  SELECTABLE_JOB_TYPES,
+  ISSUE_CATEGORY_LABELS,
+  ROOT_CAUSE_LABELS,
+  type ChargerIssueCategory,
+  type ChargerRootCause,
+} from "@/types/fieldCapture";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
 interface ChargerInput {
   make_model: string;
