@@ -58,7 +58,38 @@ import { cn } from "@/lib/utils";
 interface ChargerInput {
   make_model: string;
   serial_number: string;
+  reported_issue_category: ChargerIssueCategory | "";
+  reported_root_cause: ChargerRootCause | "";
+  reported_description: string;
+  reported_recurring: boolean;
 }
+
+const blankCharger = (): ChargerInput => ({
+  make_model: "",
+  serial_number: "",
+  reported_issue_category: "",
+  reported_root_cause: "",
+  reported_description: "",
+  reported_recurring: false,
+});
+
+const JOB_TYPE_ICONS: Record<JobType, typeof Wrench> = {
+  repair: Wrench,
+  troubleshooting: Search,
+  installation: HardHat,
+  maintenance: SettingsIcon,
+  commissioning: Power,
+  decommissioning: Trash,
+};
+
+const ALL_JOB_TYPES: JobType[] = [
+  "repair",
+  "troubleshooting",
+  "installation",
+  "maintenance",
+  "commissioning",
+  "decommissioning",
+];
 
 interface TechnicianOption {
   user_id: string;
