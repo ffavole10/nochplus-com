@@ -58,6 +58,10 @@ export default function CreateTestJob() {
   const [pocName, setPocName] = useState("");
   const [pocPhone, setPocPhone] = useState("");
   const [pocEmail, setPocEmail] = useState("");
+  // Linked records (canonical source — text fields above are denormalized for legacy display)
+  const [partner, setPartner] = useState<PartnerOption | null>(null);
+  const [site, setSite] = useState<SiteOption | null>(null);
+  const [poc, setPoc] = useState<PocOption | null>(null);
   const [technicianId, setTechnicianId] = useState<string>("");
   const [scheduledDate, setScheduledDate] = useState(
     new Date().toISOString().slice(0, 10),
