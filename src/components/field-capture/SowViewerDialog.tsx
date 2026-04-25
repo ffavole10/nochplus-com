@@ -5,9 +5,18 @@ import { Download, FileText, ExternalLink, Loader2, AlertCircle } from "lucide-r
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+type PromiseWithResolversConstructor = PromiseConstructor & {
+  withResolvers?: <T>() => {
+    promise: Promise<T>;
+    resolve: (value: T | PromiseLike<T>) => void;
+    reject: (reason?: unknown) => void;
+  };
+};
+
 function ensurePromiseWithResolvers() {
-  if (typeof Promise.withResolvers === "function") return;
-  Promise.withResolvers = function withResolvers<T>() {
+  const promiseConstructor = Promise as PromiseWithResolversConstructor;
+  if (typeof promiseConstructor.withResolvers === "function") return;
+  promiseConstructor.withResolvers = function withResolvers<T>() {
     let resolve!: (value: T | PromiseLike<T>) => void;
     let reject!: (reason?: unknown) => void;
     const promise = new Promise<T>((res, rej) => {
@@ -74,6 +83,7 @@ export default function SowViewerDialog({
       setSignedUrl(data.signedUrl);
 
       try {
+        const pdfjsLib = await loadPdfJs();
         const res = await fetch(data.signedUrl);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const pdfData = await res.arrayBuffer();
