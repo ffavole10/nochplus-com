@@ -678,7 +678,7 @@ function CreateSiteModal({
         .single();
       if (error) throw error;
       toast.success(`Site "${(data as any).site_name}" created`);
-      onCreated(data as SiteOption);
+      onCreated(data as unknown as SiteOption);
       onOpenChange(false);
     } catch (err: any) {
       toast.error(err.message || "Failed to create site");
@@ -914,7 +914,7 @@ function CreatePocModal({
         .single();
       if (error) throw error;
       toast.success(`Contact "${(data as any).name}" added`);
-      onCreated(data as PocOption);
+      onCreated(data as unknown as PocOption);
       onOpenChange(false);
     } catch (err: any) {
       toast.error(err.message || "Failed to add contact");
