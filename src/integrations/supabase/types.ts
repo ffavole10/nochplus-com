@@ -4812,6 +4812,14 @@ export type Database = {
           new_serial_number: string | null
           old_serial_number: string | null
           parts_swap_performed: boolean
+          reported_description: string | null
+          reported_issue_category:
+            | Database["public"]["Enums"]["charger_issue_category"]
+            | null
+          reported_recurring: boolean
+          reported_root_cause:
+            | Database["public"]["Enums"]["charger_root_cause"]
+            | null
           resolution: string | null
           root_cause: Database["public"]["Enums"]["charger_root_cause"] | null
           serial_number: string | null
@@ -4840,6 +4848,14 @@ export type Database = {
           new_serial_number?: string | null
           old_serial_number?: string | null
           parts_swap_performed?: boolean
+          reported_description?: string | null
+          reported_issue_category?:
+            | Database["public"]["Enums"]["charger_issue_category"]
+            | null
+          reported_recurring?: boolean
+          reported_root_cause?:
+            | Database["public"]["Enums"]["charger_root_cause"]
+            | null
           resolution?: string | null
           root_cause?: Database["public"]["Enums"]["charger_root_cause"] | null
           serial_number?: string | null
@@ -4868,6 +4884,14 @@ export type Database = {
           new_serial_number?: string | null
           old_serial_number?: string | null
           parts_swap_performed?: boolean
+          reported_description?: string | null
+          reported_issue_category?:
+            | Database["public"]["Enums"]["charger_issue_category"]
+            | null
+          reported_recurring?: boolean
+          reported_root_cause?:
+            | Database["public"]["Enums"]["charger_root_cause"]
+            | null
           resolution?: string | null
           root_cause?: Database["public"]["Enums"]["charger_root_cause"] | null
           serial_number?: string | null
@@ -4952,6 +4976,7 @@ export type Database = {
           id: string
           is_archived: boolean
           job_notes: string | null
+          job_type: Database["public"]["Enums"]["work_order_job_type"]
           partner_id: string | null
           poc_email: string | null
           poc_id: string | null
@@ -4982,6 +5007,7 @@ export type Database = {
           id?: string
           is_archived?: boolean
           job_notes?: string | null
+          job_type?: Database["public"]["Enums"]["work_order_job_type"]
           partner_id?: string | null
           poc_email?: string | null
           poc_id?: string | null
@@ -5012,6 +5038,7 @@ export type Database = {
           id?: string
           is_archived?: boolean
           job_notes?: string | null
+          job_type?: Database["public"]["Enums"]["work_order_job_type"]
           partner_id?: string | null
           poc_email?: string | null
           poc_id?: string | null
@@ -5517,6 +5544,13 @@ export type Database = {
         | "Operational"
         | "Unknown"
       ticket_assessment_status: "pending_review" | "assessed" | "rejected"
+      work_order_job_type:
+        | "repair"
+        | "troubleshooting"
+        | "installation"
+        | "maintenance"
+        | "commissioning"
+        | "decommissioning"
       work_order_status:
         | "scheduled"
         | "in_progress"
@@ -5782,6 +5816,14 @@ export const Constants = {
         "Unknown",
       ],
       ticket_assessment_status: ["pending_review", "assessed", "rejected"],
+      work_order_job_type: [
+        "repair",
+        "troubleshooting",
+        "installation",
+        "maintenance",
+        "commissioning",
+        "decommissioning",
+      ],
       work_order_status: [
         "scheduled",
         "in_progress",
