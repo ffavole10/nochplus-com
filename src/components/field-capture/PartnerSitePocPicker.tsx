@@ -249,6 +249,8 @@ function Searchable<T extends { id: string }>({
             <div className="p-3 text-xs text-muted-foreground">
               {query
                 ? `No matches found for "${query}"`
+                : emptyAction
+                ? "No options yet"
                 : "Start typing to search…"}
             </div>
           ) : (
@@ -268,7 +270,7 @@ function Searchable<T extends { id: string }>({
             ))
           )}
 
-          {emptyAction && query.trim() && !loading && (
+          {emptyAction && !loading && (query.trim() || results.length === 0) && (
             <div className="border-t border-border bg-muted/30">
               {emptyAction(query.trim(), () => {
                 setOpen(false);
@@ -752,8 +754,30 @@ export function PocPicker({
   selected: PocOption | null;
   onSelect: (p: PocOption | null) => void;
 }) {
+  const { session } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
   const [createDefaults, setCreateDefaults] = useState("");
+  const [siteContactCount, setSiteContactCount] = useState<number | null>(null);
+  const [adoptingCustomerContact, setAdoptingCustomerContact] = useState(false);
+
+  // Track contact count so we know when to offer the customer-contact shortcut
+  useEffect(() => {
+    if (!site) {
+      setSiteContactCount(null);
+      return;
+    }
+    let active = true;
+    (async () => {
+      const { count } = await supabase
+        .from("site_contacts")
+        .select("id", { count: "exact", head: true })
+        .eq("site_id", site.id);
+      if (active) setSiteContactCount(count ?? 0);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [site, selected]);
 
   const search = async (q: string): Promise<PocOption[]> => {
     if (!site) return [];
@@ -771,6 +795,51 @@ export function PocPicker({
       return [];
     }
     return (data as PocOption[]) ?? [];
+  };
+
+  const canAdoptCustomerContact =
+    !!site &&
+    !!partner &&
+    siteContactCount === 0 &&
+    !!partner.contact_name?.trim() &&
+    !!partner.phone?.trim();
+
+  const adoptCustomerContact = async (close: () => void) => {
+    if (!site || !partner || adoptingCustomerContact) return;
+    setAdoptingCustomerContact(true);
+    try {
+      // Demote any existing primaries (defensive — should be none)
+      await supabase
+        .from("site_contacts")
+        .update({ is_primary: false })
+        .eq("site_id", site.id)
+        .eq("is_primary", true);
+
+      const { data, error } = await supabase
+        .from("site_contacts" as any)
+        .insert({
+          site_id: site.id,
+          customer_id: partner.id,
+          name: partner.contact_name!.trim(),
+          phone: partner.phone!.trim(),
+          email: partner.email || null,
+          role: "Customer Contact",
+          is_primary: true,
+          created_by: session?.user?.id ?? null,
+        } as any)
+        .select("id, site_id, name, phone, email, role, is_primary")
+        .single();
+      if (error) throw error;
+      const created = data as unknown as PocOption;
+      onSelect(created);
+      setSiteContactCount((c) => (c ?? 0) + 1);
+      toast.success(`${created.name} added as POC for ${site.site_name}`);
+      close();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add customer contact");
+    } finally {
+      setAdoptingCustomerContact(false);
+    }
   };
 
   return (
@@ -818,18 +887,54 @@ export function PocPicker({
         emptyAction={
           site
             ? (q, close) => (
-                <button
-                  type="button"
-                  className="w-full text-left px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors flex items-center gap-2"
-                  onClick={() => {
-                    setCreateDefaults(q);
-                    setCreateOpen(true);
-                    close();
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                  Add new POC for this site
-                </button>
+                <div>
+                  {!q && siteContactCount === 0 && (
+                    <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-muted-foreground bg-muted/40 border-b border-border">
+                      No POCs added for this site yet
+                    </div>
+                  )}
+                  {!q && canAdoptCustomerContact && (
+                    <button
+                      type="button"
+                      disabled={adoptingCustomerContact}
+                      className="w-full text-left px-3 py-2.5 hover:bg-teal-500/10 focus:bg-teal-500/10 outline-none border-b border-border/50 transition-colors disabled:opacity-50"
+                      onClick={() => adoptCustomerContact(close)}
+                    >
+                      <div className="flex items-start gap-2">
+                        {adoptingCustomerContact ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-teal-600 mt-0.5" />
+                        ) : (
+                          <Plus className="h-4 w-4 text-teal-600 mt-0.5" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-teal-700 dark:text-teal-400">
+                            Use customer contact: {partner!.contact_name} ({partner!.company})
+                          </div>
+                          {partner!.phone && (
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {partner!.phone}
+                              {partner!.email && <> · {partner!.email}</>}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="w-full text-left px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      setCreateDefaults(q);
+                      setCreateOpen(true);
+                      close();
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    {q
+                      ? <>Add new POC: <span className="font-semibold">{q}</span></>
+                      : "Add new POC for this site"}
+                  </button>
+                </div>
               )
             : undefined
         }
@@ -842,7 +947,10 @@ export function PocPicker({
           site={site}
           partner={partner}
           defaultName={createDefaults}
-          onCreated={onSelect}
+          onCreated={(p) => {
+            onSelect(p);
+            setSiteContactCount((c) => (c ?? 0) + 1);
+          }}
         />
       )}
     </>
