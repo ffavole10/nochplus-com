@@ -1,9 +1,15 @@
-import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useEffect, useRef, useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, FileText, ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import * as pdfjsLib from "pdfjs-dist";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
 
 interface SowViewerDialogProps {
   open: boolean;
@@ -19,22 +25,25 @@ export default function SowViewerDialog({
   filename,
 }: SowViewerDialogProps) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
-  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [renderError, setRenderError] = useState(false);
+  const [pageCount, setPageCount] = useState(0);
+  const canvasContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open || !storagePath) {
       setSignedUrl(null);
-      setPdfBlobUrl(null);
       setRenderError(false);
+      setPageCount(0);
+      if (canvasContainerRef.current) canvasContainerRef.current.innerHTML = "";
       return;
     }
     let cancelled = false;
-    let createdBlobUrl: string | null = null;
     (async () => {
       setLoading(true);
       setRenderError(false);
+      setPageCount(0);
+      if (canvasContainerRef.current) canvasContainerRef.current.innerHTML = "";
       const { data, error } = await supabase.storage
         .from("field-capture-docs")
         .createSignedUrl(storagePath, 3600);
@@ -47,29 +56,46 @@ export default function SowViewerDialog({
       }
       setSignedUrl(data.signedUrl);
 
-      // Fetch as blob and create object URL — browsers render same-origin
-      // blob: URLs reliably, bypassing Chrome's block on cross-origin PDFs.
       try {
         const res = await fetch(data.signedUrl);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const blob = await res.blob();
+        const pdfData = await res.arrayBuffer();
         if (cancelled) return;
-        createdBlobUrl = URL.createObjectURL(blob);
-        setPdfBlobUrl(createdBlobUrl);
+        const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+        setPageCount(pdf.numPages);
+        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+          if (cancelled || !canvasContainerRef.current) return;
+          const page = await pdf.getPage(pageNumber);
+          const baseViewport = page.getViewport({ scale: 1 });
+          const availableWidth = Math.max(canvasContainerRef.current.clientWidth - 32, 320);
+          const scale = Math.min(2, Math.max(0.75, availableWidth / baseViewport.width));
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.floor(viewport.width);
+          canvas.height = Math.floor(viewport.height);
+          canvas.className = "mx-auto mb-4 block max-w-full rounded border border-fc-border bg-white shadow-sm";
+          canvas.setAttribute("aria-label", `Page ${pageNumber} of ${pdf.numPages}`);
+          canvasContainerRef.current.appendChild(canvas);
+          const canvasContext = canvas.getContext("2d");
+          if (!canvasContext) throw new Error("Canvas rendering is unavailable");
+          await page.render({ canvasContext, viewport, canvas }).promise;
+        }
       } catch (e) {
-        if (!cancelled) setRenderError(true);
+        if (!cancelled) {
+          setRenderError(true);
+          toast.error("Could not preview document");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => {
       cancelled = true;
-      if (createdBlobUrl) URL.revokeObjectURL(createdBlobUrl);
+      if (canvasContainerRef.current) canvasContainerRef.current.innerHTML = "";
     };
   }, [open, storagePath, onOpenChange]);
 
   const displayName = filename || "Scope of Work";
-  const iframeSrc = pdfBlobUrl || signedUrl;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
