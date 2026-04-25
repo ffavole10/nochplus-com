@@ -249,6 +249,8 @@ function Searchable<T extends { id: string }>({
             <div className="p-3 text-xs text-muted-foreground">
               {query
                 ? `No matches found for "${query}"`
+                : emptyAction
+                ? "No options yet"
                 : "Start typing to search…"}
             </div>
           ) : (
@@ -268,7 +270,7 @@ function Searchable<T extends { id: string }>({
             ))
           )}
 
-          {emptyAction && query.trim() && !loading && (
+          {emptyAction && !loading && (query.trim() || results.length === 0) && (
             <div className="border-t border-border bg-muted/30">
               {emptyAction(query.trim(), () => {
                 setOpen(false);
