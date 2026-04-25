@@ -26,11 +26,27 @@ import type {
   WorkOrderStatus,
   ChargerCaptureStatus,
   BriefingType,
+  JobType,
 } from "@/types/fieldCapture";
-import { WORK_ORDER_STATUS_LABELS } from "@/types/fieldCapture";
+import {
+  WORK_ORDER_STATUS_LABELS,
+  JOB_TYPE_LABELS,
+  ISSUE_CATEGORY_LABELS,
+  ROOT_CAUSE_LABELS,
+} from "@/types/fieldCapture";
 import { cn } from "@/lib/utils";
 import SafetyBriefingModal from "@/components/field-capture/SafetyBriefingModal";
 import AddChargerOnSiteModal from "@/components/field-capture/AddChargerOnSiteModal";
+import SowViewerDialog from "@/components/field-capture/SowViewerDialog";
+
+const JOB_TYPE_PILL: Record<JobType, string> = {
+  repair: "bg-fc-primary/15 text-fc-primary-dark border-fc-primary/30",
+  troubleshooting: "bg-fc-warning/15 text-fc-warning border-fc-warning/30",
+  installation: "bg-secondary/15 text-secondary border-secondary/30",
+  maintenance: "bg-fc-success/15 text-fc-success border-fc-success/30",
+  commissioning: "bg-accent/15 text-accent-foreground border-accent/30",
+  decommissioning: "bg-destructive/15 text-destructive border-destructive/30",
+};
 
 const STATUS_PILL: Record<WorkOrderStatus, string> = {
   scheduled: "bg-fc-primary/10 text-fc-primary-dark",
@@ -74,6 +90,7 @@ export default function FieldCaptureJobDetail() {
   const [briefingOpen, setBriefingOpen] = useState(false);
   const [briefingType, setBriefingType] = useState<BriefingType>("full_briefing");
   const [addOpen, setAddOpen] = useState(false);
+  const [sowOpen, setSowOpen] = useState(false);
 
   const fullName =
     (session?.user?.user_metadata?.display_name as string) ||
