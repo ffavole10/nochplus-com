@@ -16,7 +16,22 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, CheckCircle2, Upload, FileText, X, Copy } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  CheckCircle2,
+  Upload,
+  FileText,
+  X,
+  Copy,
+  Wrench,
+  Search,
+  HardHat,
+  Settings as SettingsIcon,
+  Power,
+  Trash,
+  Lock,
+} from "lucide-react";
 import { logWorkOrderActivity } from "@/lib/workOrderActivity";
 import {
   PartnerPicker,
@@ -27,11 +42,54 @@ import {
   type SiteOption,
   type PocOption,
 } from "@/components/field-capture/PartnerSitePocPicker";
+import {
+  type JobType,
+  JOB_TYPE_LABELS,
+  JOB_TYPE_DESCRIPTIONS,
+  SELECTABLE_JOB_TYPES,
+  ISSUE_CATEGORY_LABELS,
+  ROOT_CAUSE_LABELS,
+  type ChargerIssueCategory,
+  type ChargerRootCause,
+} from "@/types/fieldCapture";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
 interface ChargerInput {
   make_model: string;
   serial_number: string;
+  reported_issue_category: ChargerIssueCategory | "";
+  reported_root_cause: ChargerRootCause | "";
+  reported_description: string;
+  reported_recurring: boolean;
 }
+
+const blankCharger = (): ChargerInput => ({
+  make_model: "",
+  serial_number: "",
+  reported_issue_category: "",
+  reported_root_cause: "",
+  reported_description: "",
+  reported_recurring: false,
+});
+
+const JOB_TYPE_ICONS: Record<JobType, typeof Wrench> = {
+  repair: Wrench,
+  troubleshooting: Search,
+  installation: HardHat,
+  maintenance: SettingsIcon,
+  commissioning: Power,
+  decommissioning: Trash,
+};
+
+const ALL_JOB_TYPES: JobType[] = [
+  "repair",
+  "troubleshooting",
+  "installation",
+  "maintenance",
+  "commissioning",
+  "decommissioning",
+];
 
 interface TechnicianOption {
   user_id: string;
@@ -98,9 +156,8 @@ export default function CreateTestJob() {
   const [scheduledDate, setScheduledDate] = useState(
     new Date().toISOString().slice(0, 10),
   );
-  const [chargers, setChargers] = useState<ChargerInput[]>([
-    { make_model: "", serial_number: "" },
-  ]);
+  const [jobType, setJobType] = useState<JobType>("repair");
+  const [chargers, setChargers] = useState<ChargerInput[]>([blankCharger()]);
   const [jobNotes, setJobNotes] = useState("");
   const [sowFile, setSowFile] = useState<File | null>(null);
   const [technicians, setTechnicians] = useState<TechnicianOption[]>([]);
@@ -176,10 +233,11 @@ export default function CreateTestJob() {
       if (next.getDay() === 6) next.setDate(next.getDate() + 2);
       else if (next.getDay() === 0) next.setDate(next.getDate() + 1);
       setScheduledDate(next.toISOString().slice(0, 10));
-      // Chargers
-      const sortedChargers = ((src as any).work_order_chargers ?? [])
+      // Chargers — duplicate make/model + serial only; reported_* fields start fresh
+      const sortedChargers: ChargerInput[] = ((src as any).work_order_chargers ?? [])
         .sort((a: any, b: any) => a.charger_position - b.charger_position)
         .map((c: any) => ({
+          ...blankCharger(),
           make_model: c.make_model ?? "",
           serial_number: c.serial_number ?? "",
         }));
@@ -187,7 +245,11 @@ export default function CreateTestJob() {
     })();
   }, [duplicateFromId]);
 
-  const updateCharger = (idx: number, field: keyof ChargerInput, value: string) => {
+  const updateCharger = <K extends keyof ChargerInput>(
+    idx: number,
+    field: K,
+    value: ChargerInput[K],
+  ) => {
     setChargers((arr) => {
       const next = [...arr];
       next[idx] = { ...next[idx], [field]: value };
@@ -197,7 +259,7 @@ export default function CreateTestJob() {
 
   const addCharger = () => {
     if (chargers.length >= 20) return;
-    setChargers((arr) => [...arr, { make_model: "", serial_number: "" }]);
+    setChargers((arr) => [...arr, blankCharger()]);
   };
 
   const removeCharger = (idx: number) => {
@@ -219,6 +281,21 @@ export default function CreateTestJob() {
       toast.error("Add at least one charger");
       return;
     }
+    if (!SELECTABLE_JOB_TYPES.includes(jobType)) {
+      toast.error("Selected job type isn't available yet");
+      return;
+    }
+    if (jobType === "repair") {
+      const missing = chargers.findIndex(
+        (c) => !c.reported_issue_category || !c.reported_root_cause,
+      );
+      if (missing !== -1) {
+        toast.error(
+          `Charger #${missing + 1}: reported issue category and root cause are required for Repair jobs`,
+        );
+        return;
+      }
+    }
 
     setSubmitting(true);
     try {
@@ -237,6 +314,7 @@ export default function CreateTestJob() {
           assigned_technician_id: technicianId,
           scheduled_date: scheduledDate,
           status: "scheduled",
+          job_type: jobType,
           job_notes: jobNotes || null,
           created_by: session?.user?.id ?? null,
         } as any)
@@ -269,6 +347,17 @@ export default function CreateTestJob() {
         serial_number: c.serial_number || null,
         status: "not_started" as const,
         added_on_site: false,
+        reported_issue_category:
+          jobType === "repair" && c.reported_issue_category
+            ? c.reported_issue_category
+            : null,
+        reported_root_cause:
+          jobType === "repair" && c.reported_root_cause ? c.reported_root_cause : null,
+        reported_description:
+          jobType === "repair" && c.reported_description.trim()
+            ? c.reported_description.trim()
+            : null,
+        reported_recurring: jobType === "repair" ? c.reported_recurring : false,
       }));
       const { error: chargersErr } = await supabase
         .from("work_order_chargers")
@@ -334,7 +423,8 @@ export default function CreateTestJob() {
     setPocEmail("");
     setTechnicianId("");
     setScheduledDate(new Date().toISOString().slice(0, 10));
-    setChargers([{ make_model: "", serial_number: "" }]);
+    setChargers([blankCharger()]);
+    setJobType("repair");
     setJobNotes("");
     setSowFile(null);
     setSuccess(null);
@@ -480,12 +570,65 @@ export default function CreateTestJob() {
           </div>
         </Card>
 
+        <Card className="p-6 space-y-4">
+          <div>
+            <h2 className="text-base font-semibold">Job Type *</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Choose the type of work. The capture flow adapts based on this choice.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {ALL_JOB_TYPES.map((t) => {
+              const Icon = JOB_TYPE_ICONS[t];
+              const selectable = SELECTABLE_JOB_TYPES.includes(t);
+              const isSelected = jobType === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => selectable && setJobType(t)}
+                  disabled={!selectable}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "relative text-left p-4 rounded-lg border transition-all",
+                    selectable
+                      ? "cursor-pointer hover:border-primary/60 hover:bg-primary/5"
+                      : "cursor-not-allowed opacity-60",
+                    isSelected
+                      ? "border-primary bg-primary/10 ring-2 ring-primary/30"
+                      : "border-border bg-muted/20",
+                  )}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Icon className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold">
+                      {JOB_TYPE_LABELS[t]}
+                    </span>
+                    {!selectable && (
+                      <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        <Lock className="h-2.5 w-2.5" />
+                        Coming soon
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-snug">
+                    {JOB_TYPE_DESCRIPTIONS[t]}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
         <Card className="p-6">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="text-base font-semibold">Chargers</h2>
               <p className="text-xs text-muted-foreground">
                 {chargers.length} of max 20
+                {jobType === "repair" && " · Provide partner-reported diagnosis per charger"}
+                {jobType === "troubleshooting" &&
+                  " · Technician will diagnose on site"}
               </p>
             </div>
             <Button
@@ -502,38 +645,144 @@ export default function CreateTestJob() {
             {chargers.map((c, idx) => (
               <div
                 key={idx}
-                className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end p-3 rounded-lg border border-border bg-muted/20"
+                className="rounded-lg border border-border bg-muted/20 p-3 space-y-3"
               >
-                <div>
-                  <Label className="text-xs">Make / Model #{idx + 1}</Label>
-                  <Input
-                    value={c.make_model}
-                    onChange={(e) =>
-                      updateCharger(idx, "make_model", e.target.value)
-                    }
-                    placeholder="e.g. ChargePoint CT4000"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                  <div>
+                    <Label className="text-xs">Make / Model #{idx + 1}</Label>
+                    <Input
+                      value={c.make_model}
+                      onChange={(e) =>
+                        updateCharger(idx, "make_model", e.target.value)
+                      }
+                      placeholder="e.g. ChargePoint CT4000"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Serial Number</Label>
+                    <Input
+                      value={c.serial_number}
+                      onChange={(e) =>
+                        updateCharger(idx, "serial_number", e.target.value)
+                      }
+                      placeholder="e.g. SN-12345"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeCharger(idx)}
+                    disabled={chargers.length <= 1}
+                    aria-label="Remove charger"
+                  >
+                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                  </Button>
                 </div>
-                <div>
-                  <Label className="text-xs">Serial Number</Label>
-                  <Input
-                    value={c.serial_number}
-                    onChange={(e) =>
-                      updateCharger(idx, "serial_number", e.target.value)
-                    }
-                    placeholder="e.g. SN-12345"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeCharger(idx)}
-                  disabled={chargers.length <= 1}
-                  aria-label="Remove charger"
-                >
-                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
+
+                {jobType === "repair" && (
+                  <div className="space-y-3 pt-3 border-t border-border/60">
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Partner-reported diagnosis
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs">Issue Category *</Label>
+                        <Select
+                          value={c.reported_issue_category || undefined}
+                          onValueChange={(v) =>
+                            updateCharger(
+                              idx,
+                              "reported_issue_category",
+                              v as ChargerIssueCategory,
+                            )
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(
+                              Object.entries(ISSUE_CATEGORY_LABELS) as [
+                                ChargerIssueCategory,
+                                string,
+                              ][]
+                            ).map(([val, label]) => (
+                              <SelectItem key={val} value={val}>
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Suspected Root Cause *</Label>
+                        <Select
+                          value={c.reported_root_cause || undefined}
+                          onValueChange={(v) =>
+                            updateCharger(
+                              idx,
+                              "reported_root_cause",
+                              v as ChargerRootCause,
+                            )
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select root cause…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(
+                              Object.entries(ROOT_CAUSE_LABELS) as [
+                                ChargerRootCause,
+                                string,
+                              ][]
+                            ).map(([val, label]) => (
+                              <SelectItem key={val} value={val}>
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Reported Description</Label>
+                      <Textarea
+                        value={c.reported_description}
+                        onChange={(e) =>
+                          updateCharger(
+                            idx,
+                            "reported_description",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="What did the partner report? Symptoms, error codes, customer complaints…"
+                        rows={2}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between rounded-md border border-border/60 bg-background/50 px-3 py-2">
+                      <div>
+                        <div className="text-xs font-medium">Recurring issue?</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          Has this charger had this issue before?
+                        </div>
+                      </div>
+                      <Switch
+                        checked={c.reported_recurring}
+                        onCheckedChange={(v) =>
+                          updateCharger(idx, "reported_recurring", v)
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {jobType === "troubleshooting" && (
+                  <div className="pt-3 border-t border-border/60 text-xs text-muted-foreground italic">
+                    Technician will diagnose this charger on site — no upfront
+                    diagnosis required.
+                  </div>
+                )}
               </div>
             ))}
           </div>

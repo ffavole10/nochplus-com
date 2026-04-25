@@ -1,5 +1,33 @@
 // Field Capture domain types
 
+export type JobType =
+  | "repair"
+  | "troubleshooting"
+  | "installation"
+  | "maintenance"
+  | "commissioning"
+  | "decommissioning";
+
+export const JOB_TYPE_LABELS: Record<JobType, string> = {
+  repair: "Repair",
+  troubleshooting: "Troubleshooting",
+  installation: "Installation",
+  maintenance: "Maintenance",
+  commissioning: "Commissioning",
+  decommissioning: "Decommissioning",
+};
+
+export const JOB_TYPE_DESCRIPTIONS: Record<JobType, string> = {
+  repair: "Partner-reported issue. Dispatcher provides diagnosis upfront.",
+  troubleshooting: "Unknown issue. Technician diagnoses on site.",
+  installation: "New charger deployment.",
+  maintenance: "Scheduled preventive service.",
+  commissioning: "Bring a new or repaired charger online.",
+  decommissioning: "Remove a charger from service.",
+};
+
+export const SELECTABLE_JOB_TYPES: JobType[] = ["repair", "troubleshooting"];
+
 export type WorkOrderStatus =
   | "scheduled"
   | "in_progress"
