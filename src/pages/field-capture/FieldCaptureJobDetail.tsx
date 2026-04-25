@@ -78,6 +78,14 @@ function telHref(phone: string | null | undefined) {
   return `tel:${digits.startsWith("+") ? digits : `+1${digits}`}`;
 }
 
+function isStandalonePwa() {
+  const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    navigatorWithStandalone.standalone === true
+  );
+}
+
 export default function FieldCaptureJobDetail() {
   const { workOrderId } = useParams<{ workOrderId: string }>();
   const navigate = useNavigate();
@@ -91,6 +99,7 @@ export default function FieldCaptureJobDetail() {
   const [briefingType, setBriefingType] = useState<BriefingType>("full_briefing");
   const [addOpen, setAddOpen] = useState(false);
   const [sowOpen, setSowOpen] = useState(false);
+  const [sowOpening, setSowOpening] = useState(false);
 
   const fullName =
     (session?.user?.user_metadata?.display_name as string) ||
@@ -175,6 +184,47 @@ export default function FieldCaptureJobDetail() {
       return;
     }
     navigate(`/field-capture/job/${workOrderId}/charger/${c.id}`);
+  }
+
+  async function handleViewSow() {
+    if (!job?.sow_document_url) {
+      toast.error("SOW document is not available");
+      return;
+    }
+
+    setSowOpening(true);
+
+    if (!isStandalonePwa()) {
+      setSowOpen(true);
+      setSowOpening(false);
+      return;
+    }
+
+    const externalWindow = window.open("", "_blank");
+    if (externalWindow) {
+      externalWindow.opener = null;
+      externalWindow.document.write(
+        `<title>Opening Scope of Work</title><body style="font-family: system-ui; padding: 24px;">Opening Scope of Work…</body>`,
+      );
+    } else {
+      setSowOpen(true);
+      setSowOpening(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.storage
+        .from("field-capture-docs")
+        .createSignedUrl(job.sow_document_url, 3600);
+      if (error || !data?.signedUrl) throw error || new Error("Missing signed URL");
+      externalWindow.location.href = data.signedUrl;
+    } catch (error) {
+      externalWindow.close();
+      setSowOpen(true);
+      toast.error("Could not open SOW externally. Trying in-app preview.");
+    } finally {
+      setSowOpening(false);
+    }
   }
 
   return (
@@ -390,15 +440,21 @@ export default function FieldCaptureJobDetail() {
               Scope of Work / Instructions
             </div>
             <button
-              onClick={() => setSowOpen(true)}
+              type="button"
+              onClick={handleViewSow}
+              disabled={sowOpening}
               className="w-full flex items-center gap-3 p-3 rounded-xl border border-fc-border bg-fc-bg hover:bg-fc-primary/5 active:opacity-70 transition"
             >
-              <FileText className="h-5 w-5 text-fc-primary shrink-0" />
+              {sowOpening ? (
+                <Loader2 className="h-5 w-5 text-fc-primary shrink-0 animate-spin" />
+              ) : (
+                <FileText className="h-5 w-5 text-fc-primary shrink-0" />
+              )}
               <span className="text-sm font-medium text-fc-text truncate flex-1 text-left">
                 {job.sow_document_name || "View document"}
               </span>
               <span className="text-[11px] font-semibold text-fc-primary shrink-0">
-                View
+                {sowOpening ? "Opening" : "View"}
               </span>
             </button>
           </div>
