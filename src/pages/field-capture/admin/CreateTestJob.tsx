@@ -391,35 +391,24 @@ export default function CreateTestJob() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="p-6 space-y-4">
           <div>
-            <Label htmlFor="client">Client Name *</Label>
-            <Input
-              id="client"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              placeholder="e.g. Acme Corp"
-              required
-            />
+            <h2 className="text-base font-semibold">Client &amp; Site</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Search for an existing partner, site, and contact — or create new ones inline.
+            </p>
           </div>
-          <div>
-            <Label htmlFor="site">Site Name *</Label>
-            <Input
-              id="site"
-              value={siteName}
-              onChange={(e) => setSiteName(e.target.value)}
-              placeholder="e.g. Acme HQ — North Lot"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="address">Site Address *</Label>
-            <Input
-              id="address"
-              value={siteAddress}
-              onChange={(e) => setSiteAddress(e.target.value)}
-              placeholder="123 Main St, City, State"
-              required
-            />
-          </div>
+
+          <PartnerPicker selected={partner} onSelect={setPartner} />
+          <SitePicker partner={partner} selected={site} onSelect={setSite} />
+
+          <LockedField
+            id="address"
+            label="Site Address"
+            required
+            value={siteAddress}
+            onChange={setSiteAddress}
+            hasSource={!!site}
+            placeholder="123 Main St, City, State"
+          />
         </Card>
 
         <Card className="p-6 space-y-4">
@@ -429,36 +418,27 @@ export default function CreateTestJob() {
               Technician will call this person when en route.
             </p>
           </div>
+
+          <PocPicker site={site} partner={partner} selected={poc} onSelect={setPoc} />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="poc-name">POC Name *</Label>
-              <Input
-                id="poc-name"
-                value={pocName}
-                onChange={(e) => setPocName(e.target.value)}
-                placeholder="John Smith"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="poc-phone">POC Phone *</Label>
-              <Input
-                id="poc-phone"
-                type="tel"
-                value={pocPhone}
-                onChange={(e) => setPocPhone(e.target.value)}
-                placeholder="(555) 123-4567"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="poc-email">POC Email (optional)</Label>
-            <Input
+            <LockedField
+              id="poc-phone"
+              label="POC Phone"
+              required
+              type="tel"
+              value={pocPhone}
+              onChange={setPocPhone}
+              hasSource={!!poc}
+              placeholder="(555) 123-4567"
+            />
+            <LockedField
               id="poc-email"
+              label="POC Email"
               type="email"
               value={pocEmail}
-              onChange={(e) => setPocEmail(e.target.value)}
+              onChange={setPocEmail}
+              hasSource={!!poc}
               placeholder="john@client.com"
             />
           </div>
