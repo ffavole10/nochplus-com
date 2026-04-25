@@ -245,7 +245,11 @@ export default function CreateTestJob() {
     })();
   }, [duplicateFromId]);
 
-  const updateCharger = (idx: number, field: keyof ChargerInput, value: string) => {
+  const updateCharger = <K extends keyof ChargerInput>(
+    idx: number,
+    field: K,
+    value: ChargerInput[K],
+  ) => {
     setChargers((arr) => {
       const next = [...arr];
       next[idx] = { ...next[idx], [field]: value };
@@ -255,7 +259,7 @@ export default function CreateTestJob() {
 
   const addCharger = () => {
     if (chargers.length >= 20) return;
-    setChargers((arr) => [...arr, { make_model: "", serial_number: "" }]);
+    setChargers((arr) => [...arr, blankCharger()]);
   };
 
   const removeCharger = (idx: number) => {
