@@ -314,6 +314,7 @@ export default function CreateTestJob() {
           assigned_technician_id: technicianId,
           scheduled_date: scheduledDate,
           status: "scheduled",
+          job_type: jobType,
           job_notes: jobNotes || null,
           created_by: session?.user?.id ?? null,
         } as any)
