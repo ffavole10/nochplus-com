@@ -347,6 +347,17 @@ export default function CreateTestJob() {
         serial_number: c.serial_number || null,
         status: "not_started" as const,
         added_on_site: false,
+        reported_issue_category:
+          jobType === "repair" && c.reported_issue_category
+            ? c.reported_issue_category
+            : null,
+        reported_root_cause:
+          jobType === "repair" && c.reported_root_cause ? c.reported_root_cause : null,
+        reported_description:
+          jobType === "repair" && c.reported_description.trim()
+            ? c.reported_description.trim()
+            : null,
+        reported_recurring: jobType === "repair" ? c.reported_recurring : false,
       }));
       const { error: chargersErr } = await supabase
         .from("work_order_chargers")
