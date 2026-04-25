@@ -323,6 +323,9 @@ export default function CreateTestJob() {
   };
 
   const reset = () => {
+    setPartner(null);
+    setSite(null);
+    setPoc(null);
     setClientName("");
     setSiteName("");
     setSiteAddress("");
