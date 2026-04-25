@@ -424,39 +424,85 @@ export default function FieldCaptureJobDetail() {
             </div>
           )}
 
-          {chargers.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => openCharger(c)}
-              className="w-full bg-fc-card rounded-2xl p-4 shadow-sm border border-fc-border/60 flex items-center gap-3 text-left active:opacity-70 transition"
-            >
-              <div className="h-10 w-10 rounded-xl bg-fc-primary/10 text-fc-primary flex items-center justify-center font-bold">
-                {c.charger_position}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-fc-text truncate">
-                  {c.make_model || "Unknown model"}
-                </div>
-                <div className="text-xs text-fc-muted truncate">
-                  {c.serial_number || "No serial"}
-                  {c.added_on_site && " · Added on site"}
-                </div>
-              </div>
-              <span
-                className={cn(
-                  "px-2 py-0.5 rounded-md text-[10px] font-semibold inline-flex items-center gap-1",
-                  CHARGER_PILL[c.status],
-                )}
+          {chargers.map((c) => {
+            const showReported =
+              job.job_type === "repair" &&
+              (c.reported_issue_category ||
+                c.reported_root_cause ||
+                c.reported_description);
+            return (
+              <div
+                key={c.id}
+                className="bg-fc-card rounded-2xl shadow-sm border border-fc-border/60 overflow-hidden"
               >
-                {c.status === "in_progress" && (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                <button
+                  type="button"
+                  onClick={() => openCharger(c)}
+                  className="w-full p-4 flex items-center gap-3 text-left active:opacity-70 transition"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-fc-primary/10 text-fc-primary flex items-center justify-center font-bold">
+                    {c.charger_position}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-fc-text truncate">
+                      {c.make_model || "Unknown model"}
+                    </div>
+                    <div className="text-xs text-fc-muted truncate">
+                      {c.serial_number || "No serial"}
+                      {c.added_on_site && " · Added on site"}
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      "px-2 py-0.5 rounded-md text-[10px] font-semibold inline-flex items-center gap-1",
+                      CHARGER_PILL[c.status],
+                    )}
+                  >
+                    {c.status === "in_progress" && (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    )}
+                    {c.status === "complete" && (
+                      <CheckCircle2 className="h-3 w-3" />
+                    )}
+                    {CHARGER_LABEL[c.status]}
+                  </span>
+                </button>
+
+                {showReported && (
+                  <div className="px-4 pb-4 pt-0">
+                    <div className="rounded-xl bg-fc-primary/5 border border-fc-primary/20 p-3 space-y-1.5">
+                      <div className="text-[10px] font-bold uppercase tracking-wide text-fc-primary-dark">
+                        Partner-reported diagnosis
+                      </div>
+                      {c.reported_issue_category && (
+                        <div className="text-xs text-fc-text">
+                          <span className="font-semibold">Issue: </span>
+                          {ISSUE_CATEGORY_LABELS[c.reported_issue_category]}
+                        </div>
+                      )}
+                      {c.reported_root_cause && (
+                        <div className="text-xs text-fc-text">
+                          <span className="font-semibold">Root cause: </span>
+                          {ROOT_CAUSE_LABELS[c.reported_root_cause]}
+                        </div>
+                      )}
+                      {c.reported_description && (
+                        <div className="text-xs text-fc-text whitespace-pre-wrap leading-relaxed">
+                          <span className="font-semibold">Notes: </span>
+                          {c.reported_description}
+                        </div>
+                      )}
+                      {c.reported_recurring && (
+                        <div className="inline-flex items-center gap-1 text-[10px] font-semibold text-fc-warning bg-fc-warning/10 px-2 py-0.5 rounded-md mt-1">
+                          ⚠ Recurring issue
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
-                {c.status === "complete" && <CheckCircle2 className="h-3 w-3" />}
-                {CHARGER_LABEL[c.status]}
-              </span>
-            </button>
-          ))}
+              </div>
+            );
+          })}
 
           {!isSubmitted && (
             <Button
