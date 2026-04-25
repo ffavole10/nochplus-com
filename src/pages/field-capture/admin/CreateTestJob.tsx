@@ -156,9 +156,8 @@ export default function CreateTestJob() {
   const [scheduledDate, setScheduledDate] = useState(
     new Date().toISOString().slice(0, 10),
   );
-  const [chargers, setChargers] = useState<ChargerInput[]>([
-    { make_model: "", serial_number: "" },
-  ]);
+  const [jobType, setJobType] = useState<JobType>("repair");
+  const [chargers, setChargers] = useState<ChargerInput[]>([blankCharger()]);
   const [jobNotes, setJobNotes] = useState("");
   const [sowFile, setSowFile] = useState<File | null>(null);
   const [technicians, setTechnicians] = useState<TechnicianOption[]>([]);
