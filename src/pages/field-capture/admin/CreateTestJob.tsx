@@ -281,6 +281,21 @@ export default function CreateTestJob() {
       toast.error("Add at least one charger");
       return;
     }
+    if (!SELECTABLE_JOB_TYPES.includes(jobType)) {
+      toast.error("Selected job type isn't available yet");
+      return;
+    }
+    if (jobType === "repair") {
+      const missing = chargers.findIndex(
+        (c) => !c.reported_issue_category || !c.reported_root_cause,
+      );
+      if (missing !== -1) {
+        toast.error(
+          `Charger #${missing + 1}: reported issue category and root cause are required for Repair jobs`,
+        );
+        return;
+      }
+    }
 
     setSubmitting(true);
     try {
