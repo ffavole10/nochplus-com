@@ -18,6 +18,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Trash2, CheckCircle2, Upload, FileText, X, Copy } from "lucide-react";
 import { logWorkOrderActivity } from "@/lib/workOrderActivity";
+import {
+  PartnerPicker,
+  SitePicker,
+  PocPicker,
+  LockedField,
+  type PartnerOption,
+  type SiteOption,
+  type PocOption,
+} from "@/components/field-capture/PartnerSitePocPicker";
 
 interface ChargerInput {
   make_model: string;
@@ -30,7 +39,7 @@ interface TechnicianOption {
 }
 
 export default function CreateTestJob() {
-  usePageTitle("Create Test Job");
+  usePageTitle("Create Work Order");
   const navigate = useNavigate();
   const location = useLocation();
   const duplicateFromId = (location.state as { duplicateFrom?: string } | null)
@@ -49,6 +58,42 @@ export default function CreateTestJob() {
   const [pocName, setPocName] = useState("");
   const [pocPhone, setPocPhone] = useState("");
   const [pocEmail, setPocEmail] = useState("");
+  // Linked records (canonical source — text fields above are denormalized for legacy display)
+  const [partner, setPartner] = useState<PartnerOption | null>(null);
+  const [site, setSite] = useState<SiteOption | null>(null);
+  const [poc, setPoc] = useState<PocOption | null>(null);
+
+  // Sync linked record → denormalized text fields, and cascade-clear downstream
+  useEffect(() => {
+    if (partner) setClientName(partner.company);
+  }, [partner]);
+  useEffect(() => {
+    if (site) {
+      setSiteName(site.site_name);
+      const addressLine = [site.address, site.city, site.state, site.zip]
+        .filter(Boolean)
+        .join(", ");
+      if (addressLine) setSiteAddress(addressLine);
+    }
+  }, [site]);
+  useEffect(() => {
+    if (poc) {
+      setPocName(poc.name);
+      setPocPhone(poc.phone);
+      setPocEmail(poc.email ?? "");
+    }
+  }, [poc]);
+  // Clear site/poc when partner changes; clear poc when site changes
+  const partnerId = partner?.id;
+  useEffect(() => {
+    setSite(null);
+    setPoc(null);
+  }, [partnerId]);
+  const siteId = site?.id;
+  useEffect(() => {
+    setPoc(null);
+  }, [siteId]);
+
   const [technicianId, setTechnicianId] = useState<string>("");
   const [scheduledDate, setScheduledDate] = useState(
     new Date().toISOString().slice(0, 10),
@@ -186,12 +231,15 @@ export default function CreateTestJob() {
           poc_name: pocName,
           poc_phone: pocPhone,
           poc_email: pocEmail || null,
+          partner_id: partner?.id ?? null,
+          site_id: site?.id ?? null,
+          poc_id: poc?.id ?? null,
           assigned_technician_id: technicianId,
           scheduled_date: scheduledDate,
           status: "scheduled",
           job_notes: jobNotes || null,
           created_by: session?.user?.id ?? null,
-        })
+        } as any)
         .select()
         .single();
       if (woErr) throw woErr;
@@ -275,6 +323,9 @@ export default function CreateTestJob() {
   };
 
   const reset = () => {
+    setPartner(null);
+    setSite(null);
+    setPoc(null);
     setClientName("");
     setSiteName("");
     setSiteAddress("");
@@ -318,11 +369,10 @@ export default function CreateTestJob() {
     <div className="p-6 max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">
-          {duplicateSource ? "Duplicate Work Order" : "Create Test Work Order"}
+          {duplicateSource ? "Duplicate Work Order" : "Create Work Order"}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manually scaffold a work order and assign it to a technician for
-          field testing.
+          Create a new work order and assign it to a technician.
         </p>
         {duplicateSource && (
           <div className="mt-3 flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
@@ -341,35 +391,24 @@ export default function CreateTestJob() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="p-6 space-y-4">
           <div>
-            <Label htmlFor="client">Client Name *</Label>
-            <Input
-              id="client"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              placeholder="e.g. Acme Corp"
-              required
-            />
+            <h2 className="text-base font-semibold">Client &amp; Site</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Search for an existing partner, site, and contact — or create new ones inline.
+            </p>
           </div>
-          <div>
-            <Label htmlFor="site">Site Name *</Label>
-            <Input
-              id="site"
-              value={siteName}
-              onChange={(e) => setSiteName(e.target.value)}
-              placeholder="e.g. Acme HQ — North Lot"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="address">Site Address *</Label>
-            <Input
-              id="address"
-              value={siteAddress}
-              onChange={(e) => setSiteAddress(e.target.value)}
-              placeholder="123 Main St, City, State"
-              required
-            />
-          </div>
+
+          <PartnerPicker selected={partner} onSelect={setPartner} />
+          <SitePicker partner={partner} selected={site} onSelect={setSite} />
+
+          <LockedField
+            id="address"
+            label="Site Address"
+            required
+            value={siteAddress}
+            onChange={setSiteAddress}
+            hasSource={!!site}
+            placeholder="123 Main St, City, State"
+          />
         </Card>
 
         <Card className="p-6 space-y-4">
@@ -379,36 +418,27 @@ export default function CreateTestJob() {
               Technician will call this person when en route.
             </p>
           </div>
+
+          <PocPicker site={site} partner={partner} selected={poc} onSelect={setPoc} />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="poc-name">POC Name *</Label>
-              <Input
-                id="poc-name"
-                value={pocName}
-                onChange={(e) => setPocName(e.target.value)}
-                placeholder="John Smith"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="poc-phone">POC Phone *</Label>
-              <Input
-                id="poc-phone"
-                type="tel"
-                value={pocPhone}
-                onChange={(e) => setPocPhone(e.target.value)}
-                placeholder="(555) 123-4567"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="poc-email">POC Email (optional)</Label>
-            <Input
+            <LockedField
+              id="poc-phone"
+              label="POC Phone"
+              required
+              type="tel"
+              value={pocPhone}
+              onChange={setPocPhone}
+              hasSource={!!poc}
+              placeholder="(555) 123-4567"
+            />
+            <LockedField
               id="poc-email"
+              label="POC Email"
               type="email"
               value={pocEmail}
-              onChange={(e) => setPocEmail(e.target.value)}
+              onChange={setPocEmail}
+              hasSource={!!poc}
               placeholder="john@client.com"
             />
           </div>

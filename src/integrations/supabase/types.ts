@@ -2143,6 +2143,7 @@ export type Database = {
       }
       locations: {
         Row: {
+          access_notes: string | null
           address: string
           charger_count: number
           city: string
@@ -2156,6 +2157,7 @@ export type Database = {
           zip: string
         }
         Insert: {
+          access_notes?: string | null
           address?: string
           charger_count?: number
           city?: string
@@ -2169,6 +2171,7 @@ export type Database = {
           zip?: string
         }
         Update: {
+          access_notes?: string | null
           address?: string
           charger_count?: number
           city?: string
@@ -3881,6 +3884,63 @@ export type Database = {
           },
         ]
       }
+      site_contacts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          email: string | null
+          id: string
+          is_primary: boolean
+          name: string
+          phone: string
+          role: string | null
+          site_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          name: string
+          phone: string
+          role?: string | null
+          site_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          name?: string
+          phone?: string
+          role?: string | null
+          site_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_contacts_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stakeholders: {
         Row: {
           created_at: string
@@ -4892,11 +4952,14 @@ export type Database = {
           id: string
           is_archived: boolean
           job_notes: string | null
+          partner_id: string | null
           poc_email: string | null
+          poc_id: string | null
           poc_name: string | null
           poc_phone: string | null
           scheduled_date: string
           site_address: string
+          site_id: string | null
           site_name: string
           sow_document_name: string | null
           sow_document_url: string | null
@@ -4919,11 +4982,14 @@ export type Database = {
           id?: string
           is_archived?: boolean
           job_notes?: string | null
+          partner_id?: string | null
           poc_email?: string | null
+          poc_id?: string | null
           poc_name?: string | null
           poc_phone?: string | null
           scheduled_date?: string
           site_address: string
+          site_id?: string | null
           site_name: string
           sow_document_name?: string | null
           sow_document_url?: string | null
@@ -4946,11 +5012,14 @@ export type Database = {
           id?: string
           is_archived?: boolean
           job_notes?: string | null
+          partner_id?: string | null
           poc_email?: string | null
+          poc_id?: string | null
           poc_name?: string | null
           poc_phone?: string | null
           scheduled_date?: string
           site_address?: string
+          site_id?: string | null
           site_name?: string
           sow_document_name?: string | null
           sow_document_url?: string | null
@@ -4959,7 +5028,29 @@ export type Database = {
           updated_at?: string
           work_order_number?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_poc_id_fkey"
+            columns: ["poc_id"]
+            isOneToOne: false
+            referencedRelation: "site_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

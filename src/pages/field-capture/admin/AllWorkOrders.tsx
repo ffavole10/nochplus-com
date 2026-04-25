@@ -280,7 +280,7 @@ export default function AllWorkOrders() {
         </div>
         <Button asChild>
           <Link to="/field-capture/admin/create-job">
-            <Plus className="h-4 w-4 mr-1" /> Create Test Job
+            <Plus className="h-4 w-4 mr-1" /> Create Work Order
           </Link>
         </Button>
       </div>
