@@ -53,6 +53,7 @@ import { fetchActivityTimeline, logWorkOrderActivity } from "@/lib/workOrderActi
 import WorkOrderEditModal from "@/components/field-capture/WorkOrderEditModal";
 import ReassignTechnicianModal from "@/components/field-capture/ReassignTechnicianModal";
 import DeleteWorkOrderDialog from "@/components/field-capture/DeleteWorkOrderDialog";
+import SowViewerDialog from "@/components/field-capture/SowViewerDialog";
 
 import {
   AlertDialog,
@@ -121,6 +122,7 @@ export default function WorkOrderDetailModal({
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
   const [busyAction, setBusyAction] = useState(false);
+  const [sowOpen, setSowOpen] = useState(false);
 
   const reload = async () => {
     if (!workOrder) return;
@@ -550,16 +552,7 @@ export default function WorkOrderDetailModal({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={async () => {
-                        const { data, error } = await supabase.storage
-                          .from("field-capture-docs")
-                          .createSignedUrl(workOrder.sow_document_url!, 300);
-                        if (error || !data?.signedUrl) {
-                          toast.error("Could not open document");
-                          return;
-                        }
-                        window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-                      }}
+                      onClick={() => setSowOpen(true)}
                     >
                       <ExternalLink className="h-4 w-4 mr-1.5" />
                       {workOrder.sow_document_name || "Open document"}
@@ -802,6 +795,13 @@ export default function WorkOrderDetailModal({
           onOpenChange(false);
         }}
         superAdminOverride={isSuperAdmin}
+      />
+
+      <SowViewerDialog
+        open={sowOpen}
+        onOpenChange={setSowOpen}
+        storagePath={workOrder.sow_document_url}
+        filename={workOrder.sow_document_name}
       />
 
       {/* Cancel confirm */}
