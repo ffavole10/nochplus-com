@@ -62,6 +62,38 @@ export default function CreateTestJob() {
   const [partner, setPartner] = useState<PartnerOption | null>(null);
   const [site, setSite] = useState<SiteOption | null>(null);
   const [poc, setPoc] = useState<PocOption | null>(null);
+
+  // Sync linked record → denormalized text fields, and cascade-clear downstream
+  useEffect(() => {
+    if (partner) setClientName(partner.company);
+  }, [partner]);
+  useEffect(() => {
+    if (site) {
+      setSiteName(site.site_name);
+      const addressLine = [site.address, site.city, site.state, site.zip]
+        .filter(Boolean)
+        .join(", ");
+      if (addressLine) setSiteAddress(addressLine);
+    }
+  }, [site]);
+  useEffect(() => {
+    if (poc) {
+      setPocName(poc.name);
+      setPocPhone(poc.phone);
+      setPocEmail(poc.email ?? "");
+    }
+  }, [poc]);
+  // Clear site/poc when partner changes; clear poc when site changes
+  const partnerId = partner?.id;
+  useEffect(() => {
+    setSite(null);
+    setPoc(null);
+  }, [partnerId]);
+  const siteId = site?.id;
+  useEffect(() => {
+    setPoc(null);
+  }, [siteId]);
+
   const [technicianId, setTechnicianId] = useState<string>("");
   const [scheduledDate, setScheduledDate] = useState(
     new Date().toISOString().slice(0, 10),
