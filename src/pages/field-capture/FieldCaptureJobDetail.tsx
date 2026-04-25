@@ -544,6 +544,13 @@ export default function FieldCaptureJobDetail() {
           navigate(`/field-capture/job/${workOrderId}/charger/${id}`);
         }}
       />
+
+      <SowViewerDialog
+        open={sowOpen}
+        onOpenChange={setSowOpen}
+        storagePath={job.sow_document_url}
+        filename={job.sow_document_name}
+      />
     </>
   );
 }
