@@ -797,6 +797,13 @@ export default function WorkOrderDetailModal({
         superAdminOverride={isSuperAdmin}
       />
 
+      <SowViewerDialog
+        open={sowOpen}
+        onOpenChange={setSowOpen}
+        storagePath={workOrder.sow_document_url}
+        filename={workOrder.sow_document_name}
+      />
+
       {/* Cancel confirm */}
       <AlertDialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
         <AlertDialogContent>
