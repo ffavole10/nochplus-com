@@ -369,11 +369,10 @@ export default function CreateTestJob() {
     <div className="p-6 max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">
-          {duplicateSource ? "Duplicate Work Order" : "Create Test Work Order"}
+          {duplicateSource ? "Duplicate Work Order" : "Create Work Order"}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manually scaffold a work order and assign it to a technician for
-          field testing.
+          Create a new work order and assign it to a technician.
         </p>
         {duplicateSource && (
           <div className="mt-3 flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
