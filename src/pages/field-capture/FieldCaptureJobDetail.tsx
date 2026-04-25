@@ -440,15 +440,21 @@ export default function FieldCaptureJobDetail() {
               Scope of Work / Instructions
             </div>
             <button
-              onClick={() => setSowOpen(true)}
+              type="button"
+              onClick={handleViewSow}
+              disabled={sowOpening}
               className="w-full flex items-center gap-3 p-3 rounded-xl border border-fc-border bg-fc-bg hover:bg-fc-primary/5 active:opacity-70 transition"
             >
-              <FileText className="h-5 w-5 text-fc-primary shrink-0" />
+              {sowOpening ? (
+                <Loader2 className="h-5 w-5 text-fc-primary shrink-0 animate-spin" />
+              ) : (
+                <FileText className="h-5 w-5 text-fc-primary shrink-0" />
+              )}
               <span className="text-sm font-medium text-fc-text truncate flex-1 text-left">
                 {job.sow_document_name || "View document"}
               </span>
               <span className="text-[11px] font-semibold text-fc-primary shrink-0">
-                View
+                {sowOpening ? "Opening" : "View"}
               </span>
             </button>
           </div>
