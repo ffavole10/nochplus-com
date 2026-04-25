@@ -18,6 +18,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Trash2, CheckCircle2, Upload, FileText, X, Copy } from "lucide-react";
 import { logWorkOrderActivity } from "@/lib/workOrderActivity";
+import {
+  PartnerPicker,
+  SitePicker,
+  PocPicker,
+  LockedField,
+  type PartnerOption,
+  type SiteOption,
+  type PocOption,
+} from "@/components/field-capture/PartnerSitePocPicker";
 
 interface ChargerInput {
   make_model: string;
@@ -30,7 +39,7 @@ interface TechnicianOption {
 }
 
 export default function CreateTestJob() {
-  usePageTitle("Create Test Job");
+  usePageTitle("Create Work Order");
   const navigate = useNavigate();
   const location = useLocation();
   const duplicateFromId = (location.state as { duplicateFrom?: string } | null)
