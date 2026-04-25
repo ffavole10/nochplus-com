@@ -96,6 +96,7 @@ export interface WorkOrder {
   job_notes: string | null;
   sow_document_url: string | null;
   sow_document_name: string | null;
+  job_type: JobType;
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -124,6 +125,10 @@ export interface WorkOrderCharger {
   charger_status_post_work: ChargerPostWorkStatus | null;
   capture_started_at: string | null;
   capture_completed_at: string | null;
+  reported_issue_category: ChargerIssueCategory | null;
+  reported_root_cause: ChargerRootCause | null;
+  reported_description: string | null;
+  reported_recurring: boolean;
   created_at: string;
   updated_at: string;
 }

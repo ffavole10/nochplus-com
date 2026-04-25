@@ -26,11 +26,27 @@ import type {
   WorkOrderStatus,
   ChargerCaptureStatus,
   BriefingType,
+  JobType,
 } from "@/types/fieldCapture";
-import { WORK_ORDER_STATUS_LABELS } from "@/types/fieldCapture";
+import {
+  WORK_ORDER_STATUS_LABELS,
+  JOB_TYPE_LABELS,
+  ISSUE_CATEGORY_LABELS,
+  ROOT_CAUSE_LABELS,
+} from "@/types/fieldCapture";
 import { cn } from "@/lib/utils";
 import SafetyBriefingModal from "@/components/field-capture/SafetyBriefingModal";
 import AddChargerOnSiteModal from "@/components/field-capture/AddChargerOnSiteModal";
+import SowViewerDialog from "@/components/field-capture/SowViewerDialog";
+
+const JOB_TYPE_PILL: Record<JobType, string> = {
+  repair: "bg-fc-primary/15 text-fc-primary-dark border-fc-primary/30",
+  troubleshooting: "bg-fc-warning/15 text-fc-warning border-fc-warning/30",
+  installation: "bg-secondary/15 text-secondary border-secondary/30",
+  maintenance: "bg-fc-success/15 text-fc-success border-fc-success/30",
+  commissioning: "bg-accent/15 text-accent-foreground border-accent/30",
+  decommissioning: "bg-destructive/15 text-destructive border-destructive/30",
+};
 
 const STATUS_PILL: Record<WorkOrderStatus, string> = {
   scheduled: "bg-fc-primary/10 text-fc-primary-dark",
@@ -74,6 +90,7 @@ export default function FieldCaptureJobDetail() {
   const [briefingOpen, setBriefingOpen] = useState(false);
   const [briefingType, setBriefingType] = useState<BriefingType>("full_briefing");
   const [addOpen, setAddOpen] = useState(false);
+  const [sowOpen, setSowOpen] = useState(false);
 
   const fullName =
     (session?.user?.user_metadata?.display_name as string) ||
@@ -183,14 +200,26 @@ export default function FieldCaptureJobDetail() {
               {job.client_name}
             </div>
           </div>
-          <span
-            className={cn(
-              "px-2.5 py-1 rounded-lg text-[11px] font-semibold",
-              STATUS_PILL[job.status],
+          <div className="flex flex-col items-end gap-1">
+            <span
+              className={cn(
+                "px-2.5 py-1 rounded-lg text-[11px] font-semibold",
+                STATUS_PILL[job.status],
+              )}
+            >
+              {WORK_ORDER_STATUS_LABELS[job.status]}
+            </span>
+            {job.job_type && (
+              <span
+                className={cn(
+                  "px-2 py-0.5 rounded-md text-[10px] font-semibold border",
+                  JOB_TYPE_PILL[job.job_type],
+                )}
+              >
+                {JOB_TYPE_LABELS[job.job_type]}
+              </span>
             )}
-          >
-            {WORK_ORDER_STATUS_LABELS[job.status]}
-          </span>
+          </div>
         </div>
       </div>
 
@@ -361,23 +390,16 @@ export default function FieldCaptureJobDetail() {
               Scope of Work / Instructions
             </div>
             <button
-              onClick={async () => {
-                const { data, error } = await supabase.storage
-                  .from("field-capture-docs")
-                  .createSignedUrl(job.sow_document_url!, 300);
-                if (error || !data?.signedUrl) {
-                  toast.error("Could not open document");
-                  return;
-                }
-                window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-              }}
+              onClick={() => setSowOpen(true)}
               className="w-full flex items-center gap-3 p-3 rounded-xl border border-fc-border bg-fc-bg hover:bg-fc-primary/5 active:opacity-70 transition"
             >
               <FileText className="h-5 w-5 text-fc-primary shrink-0" />
               <span className="text-sm font-medium text-fc-text truncate flex-1 text-left">
                 {job.sow_document_name || "View document"}
               </span>
-              <Navigation className="h-4 w-4 text-fc-muted" />
+              <span className="text-[11px] font-semibold text-fc-primary shrink-0">
+                View
+              </span>
             </button>
           </div>
         )}
@@ -402,39 +424,85 @@ export default function FieldCaptureJobDetail() {
             </div>
           )}
 
-          {chargers.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => openCharger(c)}
-              className="w-full bg-fc-card rounded-2xl p-4 shadow-sm border border-fc-border/60 flex items-center gap-3 text-left active:opacity-70 transition"
-            >
-              <div className="h-10 w-10 rounded-xl bg-fc-primary/10 text-fc-primary flex items-center justify-center font-bold">
-                {c.charger_position}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-fc-text truncate">
-                  {c.make_model || "Unknown model"}
-                </div>
-                <div className="text-xs text-fc-muted truncate">
-                  {c.serial_number || "No serial"}
-                  {c.added_on_site && " · Added on site"}
-                </div>
-              </div>
-              <span
-                className={cn(
-                  "px-2 py-0.5 rounded-md text-[10px] font-semibold inline-flex items-center gap-1",
-                  CHARGER_PILL[c.status],
-                )}
+          {chargers.map((c) => {
+            const showReported =
+              job.job_type === "repair" &&
+              (c.reported_issue_category ||
+                c.reported_root_cause ||
+                c.reported_description);
+            return (
+              <div
+                key={c.id}
+                className="bg-fc-card rounded-2xl shadow-sm border border-fc-border/60 overflow-hidden"
               >
-                {c.status === "in_progress" && (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                <button
+                  type="button"
+                  onClick={() => openCharger(c)}
+                  className="w-full p-4 flex items-center gap-3 text-left active:opacity-70 transition"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-fc-primary/10 text-fc-primary flex items-center justify-center font-bold">
+                    {c.charger_position}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-fc-text truncate">
+                      {c.make_model || "Unknown model"}
+                    </div>
+                    <div className="text-xs text-fc-muted truncate">
+                      {c.serial_number || "No serial"}
+                      {c.added_on_site && " · Added on site"}
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      "px-2 py-0.5 rounded-md text-[10px] font-semibold inline-flex items-center gap-1",
+                      CHARGER_PILL[c.status],
+                    )}
+                  >
+                    {c.status === "in_progress" && (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    )}
+                    {c.status === "complete" && (
+                      <CheckCircle2 className="h-3 w-3" />
+                    )}
+                    {CHARGER_LABEL[c.status]}
+                  </span>
+                </button>
+
+                {showReported && (
+                  <div className="px-4 pb-4 pt-0">
+                    <div className="rounded-xl bg-fc-primary/5 border border-fc-primary/20 p-3 space-y-1.5">
+                      <div className="text-[10px] font-bold uppercase tracking-wide text-fc-primary-dark">
+                        Partner-reported diagnosis
+                      </div>
+                      {c.reported_issue_category && (
+                        <div className="text-xs text-fc-text">
+                          <span className="font-semibold">Issue: </span>
+                          {ISSUE_CATEGORY_LABELS[c.reported_issue_category]}
+                        </div>
+                      )}
+                      {c.reported_root_cause && (
+                        <div className="text-xs text-fc-text">
+                          <span className="font-semibold">Root cause: </span>
+                          {ROOT_CAUSE_LABELS[c.reported_root_cause]}
+                        </div>
+                      )}
+                      {c.reported_description && (
+                        <div className="text-xs text-fc-text whitespace-pre-wrap leading-relaxed">
+                          <span className="font-semibold">Notes: </span>
+                          {c.reported_description}
+                        </div>
+                      )}
+                      {c.reported_recurring && (
+                        <div className="inline-flex items-center gap-1 text-[10px] font-semibold text-fc-warning bg-fc-warning/10 px-2 py-0.5 rounded-md mt-1">
+                          ⚠ Recurring issue
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
-                {c.status === "complete" && <CheckCircle2 className="h-3 w-3" />}
-                {CHARGER_LABEL[c.status]}
-              </span>
-            </button>
-          ))}
+              </div>
+            );
+          })}
 
           {!isSubmitted && (
             <Button
@@ -475,6 +543,13 @@ export default function FieldCaptureJobDetail() {
         onCreated={(id) => {
           navigate(`/field-capture/job/${workOrderId}/charger/${id}`);
         }}
+      />
+
+      <SowViewerDialog
+        open={sowOpen}
+        onOpenChange={setSowOpen}
+        storagePath={job.sow_document_url}
+        filename={job.sow_document_name}
       />
     </>
   );
