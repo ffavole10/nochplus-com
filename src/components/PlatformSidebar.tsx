@@ -111,6 +111,14 @@ export function PlatformSidebar() {
   const [swiOpen, setSwiOpen] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
   const [newPartnerOpen, setNewPartnerOpen] = useState(false);
+  const [newSectionsOpen, setNewSectionsOpen] = useState({
+    "command-center": true,
+    operations: true,
+    business: true,
+    knowledge: true,
+  });
+  const toggleNewSection = (key: keyof typeof newSectionsOpen) =>
+    setNewSectionsOpen((p) => ({ ...p, [key]: !p[key] }));
 
   // Data
   const { data: dbCustomers = [] } = useCustomers();
