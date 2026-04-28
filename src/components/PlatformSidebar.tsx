@@ -7,7 +7,7 @@ import {
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned, Building2, Handshake,
   Brain, Sliders, BarChart3, List, Plus, LayoutGrid, Eye, FileText,
-  TrendingUp, Kanban } from
+  TrendingUp, Kanban, Target, Workflow, Briefcase } from
 "lucide-react";
 import { toast } from "sonner";
 import { useCustomers } from "@/hooks/useCustomers";
