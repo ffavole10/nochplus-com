@@ -21,6 +21,7 @@ import { PartnerManagement } from "@/components/settings/PartnerManagement";
 import { DataManagement, DuplicateTicketCleanup } from "@/components/settings/DataManagement";
 import { RateCardsTab } from "@/components/settings/RateCardsTab";
 import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
+import { AnalyticsTab } from "@/components/settings/AnalyticsTab";
 import { QuoteRulesTab } from "@/components/settings/QuoteRulesTab";
 import { CustomerOverridesTab } from "@/components/settings/CustomerOverridesTab";
 import { CustomerRateSheetsTab } from "@/components/settings/CustomerRateSheetsTab";
@@ -79,7 +80,7 @@ const ROLE_ICONS: Record<string, string> = {
 
 const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner", "technician"];
 
-type SettingsTab = "neural-os" | "quoting" | "team-access" | "integrations" | "campaigns" | "data";
+type SettingsTab = "neural-os" | "quoting" | "team-access" | "integrations" | "campaigns" | "data" | "platform-analytics";
 
 const TABS: { value: SettingsTab; label: string; tooltip?: string }[] = [
   { value: "neural-os", label: "Neural OS" },
@@ -88,6 +89,7 @@ const TABS: { value: SettingsTab; label: string; tooltip?: string }[] = [
   { value: "integrations", label: "Integrations" },
   { value: "campaigns", label: "Campaigns (admin)" },
   { value: "data", label: "Data Tools" },
+  { value: "platform-analytics", label: "Platform Analytics" },
 ];
 
 const DEFAULT_ACCESS_BY_ROLE: Record<string, Record<SectionKey, boolean>> = {
@@ -140,7 +142,7 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get("tab") as SettingsTab | null;
-    const valid: SettingsTab[] = ["neural-os", "quoting", "team-access", "integrations", "campaigns", "data"];
+    const valid: SettingsTab[] = ["neural-os", "quoting", "team-access", "integrations", "campaigns", "data", "platform-analytics"];
     return t && valid.includes(t) ? t : "neural-os";
   });
   const [users, setUsers] = useState<UserWithRole[]>([]);
@@ -344,6 +346,7 @@ const Settings = () => {
           </div>
         )}
         {activeTab === "integrations" && <IntegrationsTab />}
+        {activeTab === "platform-analytics" && <AnalyticsTab />}
         {activeTab === "quoting" && <QuotingAndRatesSection />}
         {activeTab === "team-access" && (
           <>
