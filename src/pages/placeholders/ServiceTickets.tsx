@@ -595,22 +595,15 @@ export default function ServiceTickets() {
                     />
                   )}
 
-                  {/* Inline Review Panel for standalone tickets */}
-                  {!isParent && ticket.status === "pending_review" && expandedTicketId === ticket.id && (
-                    <TicketReviewPanel
-                      ticket={ticket}
-                      onApprove={handleApproveTicket}
-                      onReject={handleRejectTicket}
-                      onUpdate={handleUpdateTicket}
-                      onCollapse={() => setExpandedTicketId(null)}
-                    />
-                  )}
-                  {/* Inline Detail Panel for standalone tickets */}
-                  {!isParent && ticket.status !== "pending_review" && expandedTicketId === ticket.id && (
-                    <TicketDetailPanel
+                  {/* Workflow expansion for standalone tickets */}
+                  {!isParent && expandedTicketId === ticket.id && (
+                    <WorkflowExpansion
                       key={`${ticket.id}-${postApproveTab[ticket.id] || "charger"}`}
                       ticket={ticket}
                       onCollapse={() => setExpandedTicketId(null)}
+                      onApprove={handleApproveTicket}
+                      onReject={handleRejectTicket}
+                      onUpdate={handleUpdateTicket}
                       defaultTab={postApproveTab[ticket.id] || "charger"}
                     />
                   )}
