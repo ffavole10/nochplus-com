@@ -31,6 +31,7 @@ import {
   SourceSubmissionPanel,
   RelatedEstimatePanel,
 } from "@/components/lifecycle/LinkedEntityPanels";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 interface TicketDetailPanelProps {
   ticket: ServiceTicket;
@@ -136,7 +137,11 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
       </div>
 
       {/* Lifecycle chain */}
-      <LifecycleChain stages={lifecycleStages} title="Ticket lifecycle" />
+      <ErrorBoundary>
+        <div className="overflow-x-auto">
+          <LifecycleChain stages={lifecycleStages} title="Ticket lifecycle" />
+        </div>
+      </ErrorBoundary>
 
 
       <div className="flex items-center gap-2">
@@ -418,11 +423,13 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
       </Tabs>
 
       {/* Cross-entity linked panels */}
-      <div className="space-y-3">
-        <RelatedWorkOrdersPanel workOrders={relations.workOrders} />
-        <SourceSubmissionPanel submission={relations.submission} />
-        <RelatedEstimatePanel estimates={relations.estimates} />
-      </div>
+      <ErrorBoundary>
+        <div className="space-y-3">
+          <RelatedWorkOrdersPanel workOrders={relations.workOrders} />
+          <SourceSubmissionPanel submission={relations.submission} />
+          <RelatedEstimatePanel estimates={relations.estimates} />
+        </div>
+      </ErrorBoundary>
     </div>
   );
 }
