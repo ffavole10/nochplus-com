@@ -26,6 +26,7 @@ import { CustomerOverridesTab } from "@/components/settings/CustomerOverridesTab
 import { CustomerRateSheetsTab } from "@/components/settings/CustomerRateSheetsTab";
 import { QuoteFlowDiagram } from "@/components/settings/QuoteFlowDiagram";
 import { AccessControlTab } from "@/components/settings/AccessControlTab";
+import { NeuralOSTab } from "@/components/settings/NeuralOSTab";
 import { Switch } from "@/components/ui/switch";
 import { SECTION_KEYS, SECTION_LABELS, type SectionKey } from "@/hooks/useSectionAccess";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -78,9 +79,10 @@ const ROLE_ICONS: Record<string, string> = {
 
 const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner", "technician"];
 
-type SettingsTab = "campaigns" | "data" | "partners" | "users" | "access" | "quoting" | "analytics";
+type SettingsTab = "neural-os" | "campaigns" | "data" | "partners" | "users" | "access" | "quoting" | "analytics";
 
 const TABS: { value: SettingsTab; label: string }[] = [
+  { value: "neural-os", label: "Neural OS" },
   { value: "campaigns", label: "Campaigns" },
   { value: "data", label: "Data Management" },
   { value: "partners", label: "Partners" },
@@ -137,7 +139,7 @@ const Settings = () => {
   usePageTitle('Settings');
   const navigate = useNavigate();
   const { session } = useAuth();
-  const [activeTab, setActiveTab] = useState<SettingsTab>("campaigns");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("neural-os");
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -324,6 +326,7 @@ const Settings = () => {
       </div>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
+        {activeTab === "neural-os" && <NeuralOSTab />}
         {activeTab === "campaigns" && <CampaignManagement />}
         {activeTab === "data" && (
           <div className="space-y-6">
