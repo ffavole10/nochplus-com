@@ -67,34 +67,32 @@ export function PlatformSidebar() {
     const isActive = location.pathname.startsWith(to);
     return (
       <div>
-        <div
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          aria-label={`${open ? "Collapse" : "Expand"} ${label}`}
           className={cn(
-            "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all border",
+            "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all border cursor-pointer text-left",
             isActive
-              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+              ? "bg-primary text-primary-foreground border-primary shadow-sm hover:bg-primary/90"
               : "bg-sidebar-accent/30 text-sidebar-foreground/90 border-sidebar-border/40 hover:bg-sidebar-accent/60"
           )}
         >
-          <button
-            type="button"
-            onClick={() => navigate(to)}
-            className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
-          >
+          <span className="flex items-center gap-2.5 min-w-0 flex-1">
             <Icon className={cn("h-4 w-4 shrink-0", isActive && "text-primary-foreground")} />
             <span className="truncate">{label}</span>
-          </button>
-          <button
-            type="button"
-            onClick={onToggle}
+          </span>
+          <span
             className={cn(
-              "text-xs font-mono pl-2",
+              "text-xs font-mono pl-2 shrink-0",
               isActive ? "text-primary-foreground" : "text-sidebar-foreground/60"
             )}
-            aria-label={open ? "Collapse" : "Expand"}
+            aria-hidden="true"
           >
             {open ? "−" : "+"}
-          </button>
-        </div>
+          </span>
+        </button>
         {open && children && (
           <div className="pl-1 pt-1">
             <SidebarMenu className="px-1">{children}</SidebarMenu>
