@@ -346,18 +346,18 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
             <ShieldCheck className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Access Control</h1>
+            <h1 className="text-2xl font-bold text-foreground">Section Permissions</h1>
             <p className="text-sm text-muted-foreground">
               Control which platform sections each user can see and access.
             </p>
           </div>
         </div>
 
-        {/* Section overview cards */}
+        {/* Section overview cards — new IA */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {SECTION_KEYS.map((section) => {
-            const Icon = SECTION_ICONS[section];
-            const sUsers = sectionUsers(section);
+          {NEW_SECTION_KEYS.map((section) => {
+            const Icon = NEW_SECTION_ICONS[section];
+            const sUsers = newSectionUsers(section);
             return (
               <Card key={section} className="border-border/60">
                 <CardContent className="p-4 space-y-3">
@@ -367,7 +367,7 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-semibold text-foreground truncate">
-                        {SECTION_LABELS[section]}
+                        {NEW_SECTION_LABELS[section]}
                       </div>
                       <div className="text-xs text-muted-foreground">{sUsers.length} users</div>
                     </div>
