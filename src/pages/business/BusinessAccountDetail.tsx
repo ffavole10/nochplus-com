@@ -123,7 +123,23 @@ export default function BusinessAccountDetail() {
           <TabsTrigger value="files" className="gap-1.5"><FolderOpen className="h-3.5 w-3.5" />Files</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-6">
+        <TabsContent value="overview" className="mt-6 space-y-6">
+          <section className="space-y-3">
+            <div>
+              <h2 className="text-base font-bold text-foreground">Reliability for {account.company}</h2>
+              <p className="text-xs text-muted-foreground">How this account's fleet is performing.</p>
+            </div>
+            <ReliabilityKpiRow
+              scopedTickets={accountTickets}
+              scope="account"
+              size="compact"
+              neviAlert={
+                /nevi|federal/i.test(account.notes || "") ||
+                /nevi|federal/i.test(account.company || "")
+              }
+            />
+          </section>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card><CardContent className="p-4 text-sm space-y-2">
               <p className="font-semibold">Contact</p>
