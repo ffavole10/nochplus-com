@@ -42,7 +42,7 @@ function RoiCard({
           {value}
         </div>
         <p className="text-xs text-muted-foreground">{sub}</p>
-        {neuralLayer && !building && (
+        {neuralLayer && (
           <Badge
             variant="outline"
             className="text-[10px] font-normal lowercase bg-teal-500/5 text-teal-600 border-teal-500/20 gap-1"
