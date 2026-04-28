@@ -409,7 +409,13 @@ export function PlatformSidebar() {
           to="/knowledge"
           open={newSectionsOpen.knowledge}
           onToggle={() => toggleNewSection("knowledge")}
-        />
+        >
+          <NavItem item={{ title: "SWI Library", url: "/knowledge/swi-library", icon: BookText }} />
+          <NavItem item={{ title: "Parts Catalog", url: "/knowledge/parts-catalog", icon: PackageOpen }} />
+          <NavItem item={{ title: "Report Templates", url: "/knowledge/report-templates", icon: ClipboardList }} />
+          <NavItem item={{ title: "Regulatory", url: "/knowledge/regulatory", icon: ShieldCheck }} />
+          <NavItem item={{ title: "External Sources", url: "/knowledge/external-sources", icon: Globe }} />
+        </NewSectionHeader>
 
         {/* Visual divider between new IA and legacy sections */}
         <div className="my-3 flex items-center gap-2 px-1">
