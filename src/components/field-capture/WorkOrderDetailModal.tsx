@@ -441,6 +441,17 @@ export default function WorkOrderDetailModal({
 
             <ScrollArea className="flex-1 px-5 py-4">
               <TabsContent value="details" className="mt-0 space-y-5">
+                {/* Linked entities */}
+                <div className="space-y-3">
+                  <ParentTicketPanel ticket={woRelations.parentTicket} />
+                  <FieldReportPanel
+                    workOrderId={workOrder.id}
+                    status={workOrder.status}
+                    submittedBy={techLabel || undefined}
+                    submittedAt={workOrder.departure_timestamp || undefined}
+                  />
+                </div>
+
                 <DetailSection title="Client" icon={User}>
                   <div className="text-sm">{workOrder.client_name}</div>
                 </DetailSection>
