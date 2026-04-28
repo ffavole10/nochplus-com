@@ -552,26 +552,23 @@ export default function ServiceTickets() {
                           <Users className="h-3.5 w-3.5" />
                           {expandedTicketId === ticket.id ? "Collapse" : "View Chargers"}
                         </Button>
-                      ) : ticket.status === "pending_review" ? (
-                        <Button
-                          size="sm"
-                          className="gap-1.5 text-xs"
-                          onClick={() => handleViewDetails(ticket)}
-                        >
-                          <Brain className="h-3.5 w-3.5" />
-                          Review
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1.5 text-xs"
-                          onClick={() => handleViewDetails(ticket)}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          View Details
-                        </Button>
-                      )}
+                      ) : (() => {
+                        const snap = inferWorkflowSnapshot({ ticket });
+                        const label = buttonLabelForTicket(snap, ticket);
+                        const isReview = label === "Review";
+                        const ButtonIcon = isReview ? Brain : Eye;
+                        return (
+                          <Button
+                            size="sm"
+                            variant={isReview ? "default" : "outline"}
+                            className="gap-1.5 text-xs"
+                            onClick={() => handleViewDetails(ticket)}
+                          >
+                            <ButtonIcon className="h-3.5 w-3.5" />
+                            {expandedTicketId === ticket.id ? "Collapse" : label}
+                          </Button>
+                        );
+                      })()}
                     </div>
                   </div>
 
