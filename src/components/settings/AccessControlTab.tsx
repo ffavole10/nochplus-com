@@ -10,11 +10,43 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
-import { Lock, Crosshair, Ticket, Diamond, Handshake, Zap, History, ShieldCheck, TrendingUp, Wrench } from "lucide-react";
+import { Lock, Crosshair, Ticket, Diamond, Handshake, Zap, History, ShieldCheck, TrendingUp, Wrench, Target, Workflow, Briefcase, BookOpen, Settings as SettingsIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { SECTION_KEYS, SECTION_LABELS, type SectionKey } from "@/hooks/useSectionAccess";
 
+// New IA columns rendered in the matrix and overview cards.
+type NewSectionKey = "command_center" | "operations" | "business" | "knowledge" | "settings";
+
+const NEW_SECTION_KEYS: NewSectionKey[] = ["command_center", "operations", "business", "knowledge", "settings"];
+
+const NEW_SECTION_LABELS: Record<NewSectionKey, string> = {
+  command_center: "Command Center",
+  operations: "Operations",
+  business: "Business",
+  knowledge: "Knowledge",
+  settings: "Settings",
+};
+
+const NEW_SECTION_ICONS: Record<NewSectionKey, React.ElementType> = {
+  command_center: Target,
+  operations: Workflow,
+  business: Briefcase,
+  knowledge: BookOpen,
+  settings: SettingsIcon,
+};
+
+// Map a new section to the set of LEGACY section_keys that grant it (logical equivalence).
+// If a user had access to ANY of the listed legacy sections, they get the new section.
+const NEW_TO_LEGACY: Record<NewSectionKey, SectionKey[]> = {
+  command_center: [], // no legacy mapping — only super_admins by default
+  operations: ["campaigns", "service_desk", "field_capture"],
+  business: ["noch_plus", "partners", "growth"],
+  knowledge: ["service_desk"], // SWI Library + Parts Catalog originated in Service Desk
+  settings: ["autoheal"], // AutoHeal became Settings → Neural OS
+};
+
+// Keep legacy icon map for the audit log fallback rendering.
 const SECTION_ICONS: Record<SectionKey, React.ElementType> = {
   campaigns: Crosshair,
   service_desk: Ticket,
