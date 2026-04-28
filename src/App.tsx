@@ -212,52 +212,83 @@ const App = () => (
             <Route path="/campaigns/:campaignId/price" element={<Navigate to="../cost" replace />} />
             <Route path="/campaigns/:campaignId/launch" element={<Navigate to="../reports" replace />} />
 
-            {/* Legacy campaign routes */}
-            <Route path="/dashboard" element={<Index />} />
-            <Route path="/dataset" element={<Dataset />} />
-            <Route path="/issues" element={<IssuesQueue />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/field-reports" element={<FieldReports />} />
+            {/* ─── Legacy redirects → new IA ─── */}
+            {/* Campaigns legacy */}
+            <Route path="/dashboard" element={<Navigate to="/operations/campaigns" replace />} />
+            <Route path="/campaigns/dashboard" element={<Navigate to="/operations/campaigns" replace />} />
+            <Route path="/dataset" element={<Navigate to="/operations/campaigns?tab=dataset" replace />} />
+            <Route path="/campaigns/dataset" element={<Navigate to="/operations/campaigns?tab=dataset" replace />} />
+            <Route path="/issues" element={<Navigate to="/operations/campaigns?tab=flagged" replace />} />
+            <Route path="/campaigns/flagged" element={<Navigate to="/operations/campaigns?tab=flagged" replace />} />
+            <Route path="/schedule" element={<Navigate to="/operations/campaigns?tab=schedule" replace />} />
+            <Route path="/campaigns/schedule" element={<Navigate to="/operations/campaigns?tab=schedule" replace />} />
+            <Route path="/field-reports" element={<Navigate to="/operations/campaigns?tab=field-reports" replace />} />
+            <Route path="/campaigns/field-reports" element={<Navigate to="/operations/campaigns?tab=field-reports" replace />} />
 
-            {/* Service Desk section */}
-            <Route path="/service-desk/tickets" element={<ServiceTickets />} />
-            <Route path="/noch-plus/submissions" element={<Submissions />} />
-            <Route path="/service-desk/estimates" element={<Estimates />} />
-            <Route path="/service-desk/customers" element={<Customers />} />
+            {/* Service Desk legacy */}
+            <Route path="/service-desk/tickets" element={<Navigate to="/operations/tickets" replace />} />
+            <Route path="/service-desk/estimates" element={<Navigate to="/operations/estimates" replace />} />
+            <Route path="/service-desk/customers" element={<Navigate to="/business/accounts?filter=customers" replace />} />
+            <Route path="/service-desk/locations" element={<Navigate to="/operations/team-performance?view=map" replace />} />
+            <Route path="/service-desk/swi-library" element={<Navigate to="/knowledge/swi-library" replace />} />
+            <Route path="/service-desk/parts-inventory" element={<Navigate to="/operations/parts-inventory" replace />} />
+            <Route path="/service-desk/parts-catalog" element={<Navigate to="/knowledge/parts-catalog" replace />} />
 
-            {/* Noch+ section */}
-            <Route path="/noch-plus/dashboard" element={<NochPlusDashboard />} />
-            <Route path="/noch-plus/members" element={<NochPlusMembers />} />
-            <Route path="/noch-plus/chargers" element={<NochPlusChargers />} />
-            <Route path="/noch-plus/assessments" element={<NochPlusAssessments />} />
-            <Route path="/noch-plus/monitoring" element={<NochPlusMonitoring />} />
-            <Route path="/noch-plus/partnership-hub" element={<PartnershipHub />} />
+            {/* NOCH+ legacy */}
+            <Route path="/nochplus/mission-control" element={<Navigate to="/command-center/mission-control" replace />} />
+            <Route path="/noch-plus/monitoring" element={<Navigate to="/command-center/mission-control" replace />} />
+            <Route path="/nochplus/partnership-hub" element={<Navigate to="/business/membership" replace />} />
+            <Route path="/noch-plus/partnership-hub" element={<Navigate to="/business/membership" replace />} />
+            <Route path="/nochplus/partnership-hub/plan-tiers" element={<Navigate to="/business/membership?tab=plan-tiers" replace />} />
+            <Route path="/nochplus/partnership-hub/demo-invoices" element={<Navigate to="/business/membership?tab=demo-invoices" replace />} />
+            <Route path="/nochplus/partnership-hub/plan-builder" element={<Navigate to="/business/membership?tab=plan-builder" replace />} />
+            <Route path="/nochplus/partnership-hub/partner-plan" element={<Navigate to="/business/membership?tab=partner-plan" replace />} />
+            <Route path="/nochplus/partnership-hub/knowledge-base" element={<Navigate to="/business/membership?tab=knowledge-base" replace />} />
+            <Route path="/nochplus/dashboard" element={<Navigate to="/business/membership" replace />} />
+            <Route path="/noch-plus/dashboard" element={<Navigate to="/business/membership" replace />} />
+            <Route path="/nochplus/submissions" element={<Navigate to="/business/submissions" replace />} />
+            <Route path="/noch-plus/submissions" element={<Navigate to="/business/submissions" replace />} />
+            <Route path="/nochplus/assessments" element={<Navigate to="/business/submissions?tab=assessments" replace />} />
+            <Route path="/noch-plus/assessments" element={<Navigate to="/business/submissions?tab=assessments" replace />} />
+            <Route path="/nochplus/members" element={<Navigate to="/business/membership" replace />} />
+            <Route path="/noch-plus/members" element={<Navigate to="/business/membership" replace />} />
+            <Route path="/nochplus/chargers" element={<Navigate to="/command-center/mission-control?view=list" replace />} />
+            <Route path="/noch-plus/chargers" element={<Navigate to="/command-center/mission-control?view=list" replace />} />
 
-            {/* Partners section */}
-            <Route path="/partners" element={<Partners />} />
-            <Route path="/partners/:partnerId" element={<PartnerProfile />} />
-
-            {/* Growth section */}
-            <Route path="/growth" element={<Navigate to="/growth/accounts" replace />} />
-            <Route path="/growth/accounts" element={<GrowthAccounts />} />
-            <Route path="/growth/pipeline" element={<GrowthPipeline />} />
+            {/* Growth legacy */}
+            <Route path="/growth" element={<Navigate to="/business/accounts?view=growth" replace />} />
+            <Route path="/growth/accounts" element={<Navigate to="/business/accounts?view=growth" replace />} />
+            <Route path="/growth/pipeline" element={<Navigate to="/business/pipeline" replace />} />
             <Route path="/growth/deals/:dealId" element={<GrowthDealDetail />} />
 
-            {/* AutoHeal section */}
-            <Route path="/autoheal/ai-agent" element={<AIAgent />} />
-            <Route path="/autoheal/deep-learning" element={<DeepLearning />} />
-            <Route path="/autoheal/configuration" element={<AutoHealConfig />} />
-            <Route path="/autoheal/performance" element={<Performance />} />
-            <Route path="/autoheal/swi-library" element={<SWILibrary />} />
-            <Route path="/autoheal/parts" element={<Parts />} />
-            <Route path="/autoheal/parts-catalog" element={<PartsCatalog />} />
-            <Route path="/autoheal/locations" element={<Locations />} />
+            {/* Partners legacy */}
+            <Route path="/partners" element={<Navigate to="/business/accounts?filter=partners" replace />} />
+            <Route path="/partners/all-partners" element={<Navigate to="/business/accounts?filter=partners" replace />} />
+            <Route path="/partners/:partnerId" element={<PartnerProfile />} />
 
-            {/* Field Capture (admin-only views inside main shell) */}
-            <Route path="/field-capture/admin/create-job" element={<FieldCaptureAdminGuard><CreateTestJob /></FieldCaptureAdminGuard>} />
-            <Route path="/field-capture/admin/work-orders" element={<FieldCaptureAdminGuard><AllWorkOrders /></FieldCaptureAdminGuard>} />
-            <Route path="/field-capture/admin/templates" element={<FieldCaptureAdminGuard><WorkTemplates /></FieldCaptureAdminGuard>} />
-            <Route path="/field-capture/admin/performance" element={<FieldCaptureAdminGuard><TeamPerformance /></FieldCaptureAdminGuard>} />
+            {/* AutoHeal legacy → Neural OS in Settings */}
+            <Route path="/autoheal" element={<Navigate to="/settings?tab=neural-os" replace />} />
+            <Route path="/autoheal/ai-agent" element={<Navigate to="/settings?tab=neural-os&layer=reasoning" replace />} />
+            <Route path="/autoheal/deep-learning" element={<Navigate to="/settings?tab=neural-os&layer=learning" replace />} />
+            <Route path="/autoheal/configuration" element={<Navigate to="/settings?tab=neural-os&layer=governance" replace />} />
+            <Route path="/autoheal/performance" element={<Navigate to="/settings?tab=neural-os&layer=performance" replace />} />
+            <Route path="/autoheal/swi-library" element={<Navigate to="/knowledge/swi-library" replace />} />
+            <Route path="/autoheal/parts" element={<Navigate to="/operations/parts-inventory" replace />} />
+            <Route path="/autoheal/parts-catalog" element={<Navigate to="/knowledge/parts-catalog" replace />} />
+            <Route path="/autoheal/locations" element={<Navigate to="/operations/team-performance?view=map" replace />} />
+
+            {/* Field Capture legacy admin views */}
+            <Route path="/field-capture/all-work-orders" element={<Navigate to="/operations/work-orders" replace />} />
+            <Route path="/field-capture/create-work-order" element={<Navigate to="/operations/work-orders?action=create" replace />} />
+            <Route path="/field-capture/work-templates" element={<Navigate to="/knowledge/report-templates" replace />} />
+            <Route path="/field-capture/team-performance" element={<Navigate to="/operations/team-performance?view=scorecard" replace />} />
+            <Route path="/field-capture/admin/create-job" element={<Navigate to="/operations/work-orders?action=create" replace />} />
+            <Route path="/field-capture/admin/work-orders" element={<Navigate to="/operations/work-orders" replace />} />
+            <Route path="/field-capture/admin/templates" element={<Navigate to="/knowledge/report-templates" replace />} />
+            <Route path="/field-capture/admin/performance" element={<Navigate to="/operations/team-performance?view=scorecard" replace />} />
+
+            {/* Home legacy */}
+            <Route path="/home" element={<Navigate to="/" replace />} />
 
             {/* Settings */}
             <Route path="/settings" element={<Settings />} />
@@ -275,10 +306,10 @@ const App = () => (
           </Route>
 
           {/* Legacy redirects */}
-          <Route path="/tickets" element={<Navigate to="/issues" replace />} />
-          <Route path="/campaigns/reports" element={<Navigate to="/field-reports" replace />} />
-          <Route path="/estimates" element={<Navigate to="/service-desk/estimates" replace />} />
-          <Route path="/missioncontrol" element={<Navigate to="/issues" replace />} />
+          <Route path="/tickets" element={<Navigate to="/operations/tickets" replace />} />
+          <Route path="/campaigns/reports" element={<Navigate to="/operations/campaigns?tab=field-reports" replace />} />
+          <Route path="/estimates" element={<Navigate to="/operations/estimates" replace />} />
+          <Route path="/missioncontrol" element={<Navigate to="/command-center/mission-control" replace />} />
           <Route path="/estimate-status" element={<EstimateStatus />} />
           {/* Public Noch+ submission pages — "/" is the main landing */}
           <Route path="/" element={<SubmitAssessment />} />
