@@ -51,12 +51,13 @@ const STATUS_LABEL: Record<Status, string> = {
   "coming-soon": "Coming Soon",
 };
 
-function StatusPill({ status }: { status: Status }) {
+function StatusPill({ status, label }: { status: Status; label?: string }) {
+  const text = label || STATUS_LABEL[status];
   if (status === "connected") {
     return (
       <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 gap-1">
         <CheckCircle2 className="h-3 w-3" />
-        {STATUS_LABEL[status]}
+        {text}
       </Badge>
     );
   }
@@ -64,13 +65,13 @@ function StatusPill({ status }: { status: Status }) {
     return (
       <Badge className="bg-muted text-muted-foreground border-border gap-1">
         <Clock className="h-3 w-3" />
-        {STATUS_LABEL[status]}
+        {text}
       </Badge>
     );
   }
   return (
     <Badge variant="outline" className="text-muted-foreground">
-      {STATUS_LABEL[status]}
+      {text}
     </Badge>
   );
 }
@@ -85,7 +86,15 @@ function IntegrationCard({ item }: { item: Integration }) {
           <div className={`h-12 w-12 rounded-xl ${item.color} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
             {item.initials}
           </div>
-          <StatusPill status={item.status} />
+          <div className="flex flex-col items-end gap-1">
+            <StatusPill status={item.status} label={item.statusLabel} />
+            {item.subStatus && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5">
+                <AlertCircle className="h-2.5 w-2.5" />
+                {item.subStatus}
+              </span>
+            )}
+          </div>
         </div>
         <div>
           <div className="flex items-center gap-2">
@@ -99,11 +108,11 @@ function IntegrationCard({ item }: { item: Integration }) {
         {item.status === "connected" && (
           <div className="flex items-center gap-4 text-xs text-muted-foreground border-t border-border/50 pt-3">
             <div>
-              <p className="text-[10px] uppercase tracking-wider">Last sync</p>
+              <p className="text-[10px] uppercase tracking-wider">{item.lastSyncLabel || "Last sync"}</p>
               <p className="font-medium text-foreground">{item.lastSync}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wider">Connectors</p>
+              <p className="text-[10px] uppercase tracking-wider">{item.connectorLabel || "Connectors"}</p>
               <p className="font-medium text-foreground">{item.connectorCount?.toLocaleString()}</p>
             </div>
           </div>
