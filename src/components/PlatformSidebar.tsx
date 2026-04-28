@@ -195,9 +195,9 @@ export function PlatformSidebar() {
   { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: estimateCount },
   { title: "Customers", url: "/service-desk/customers", icon: Users },
   { title: "Locations", url: "/autoheal/locations", icon: MapPinned },
-  { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen },
+  { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen, tooltip: "Moved to Knowledge → SWI Library" },
   { title: "Parts Inventory", url: "/autoheal/parts", icon: Package },
-  { title: "Parts Catalog", url: "/autoheal/parts-catalog", icon: BookOpen }];
+  { title: "Parts Catalog", url: "/autoheal/parts-catalog", icon: BookOpen, tooltip: "Moved to Knowledge → Parts Catalog" }];
 
   const nochPlusPages = [
   { title: "Mission Control", url: "/noch-plus/monitoring", icon: BarChart3 },
