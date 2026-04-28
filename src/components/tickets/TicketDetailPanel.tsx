@@ -416,6 +416,13 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Cross-entity linked panels */}
+      <div className="space-y-3">
+        <RelatedWorkOrdersPanel workOrders={relations.workOrders} />
+        <SourceSubmissionPanel submission={relations.submission} />
+        <RelatedEstimatePanel estimates={relations.estimates} />
+      </div>
     </div>
   );
 }
