@@ -1,4 +1,4 @@
-import { Plug, CheckCircle2, Clock, ExternalLink } from "lucide-react";
+import { Plug, CheckCircle2, Clock, ExternalLink, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,33 @@ interface Integration {
   name: string;
   category: "CMS" | "OEM" | "Protocol";
   status: Status;
+  statusLabel?: string; // optional override of pill text
+  subStatus?: string; // additional in-progress note
   lastSync?: string;
+  lastSyncLabel?: string;
   connectorCount?: number;
+  connectorLabel?: string;
   description: string;
   initials: string;
   color: string;
 }
 
 const INTEGRATIONS: Integration[] = [
-  { id: "chargepoint", name: "ChargePoint", category: "CMS", status: "connected", lastSync: "2 minutes ago", connectorCount: 421, description: "Primary CMS integration via OCPP 1.6J.", initials: "CP", color: "bg-emerald-500" },
+  {
+    id: "chargepoint",
+    name: "ChargePoint",
+    category: "CMS",
+    status: "connected",
+    statusLabel: "Connected · Portal access",
+    subStatus: "API integration: Pilot with CARB",
+    lastSync: "—",
+    lastSyncLabel: "Last dataset upload",
+    connectorCount: 421,
+    connectorLabel: "Connectors managed",
+    description: "Portal-based CMS integration. Live API integration in pilot with CARB chargers.",
+    initials: "CP",
+    color: "bg-emerald-500",
+  },
   { id: "tesla", name: "Tesla", category: "OEM", status: "available", description: "Connect Tesla Wall Connectors and Superchargers.", initials: "T", color: "bg-red-500" },
   { id: "evconnect", name: "EV Connect", category: "CMS", status: "available", description: "Multi-network management and roaming.", initials: "EV", color: "bg-blue-500" },
   { id: "chargelab", name: "ChargeLab", category: "CMS", status: "available", description: "OCPP-native white-label charging platform.", initials: "CL", color: "bg-purple-500" },
