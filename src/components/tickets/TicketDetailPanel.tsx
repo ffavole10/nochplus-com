@@ -72,6 +72,19 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
   const updateTicket = useServiceTicketsStore(s => s.updateTicket);
   const progressPercent = ((ticket.currentStep - 1) / 10) * 100;
 
+  // Cross-entity relations + lifecycle chain
+  const relations = useTicketRelations({
+    ticketDbId: ticket.id,
+    ticketTextId: ticket.ticketId,
+    siteName: ticket.customer?.company || null,
+  });
+  const lifecycleStages = buildTicketLifecycleChain({
+    ticket,
+    submission: relations.submission,
+    estimates: relations.estimates,
+    workOrders: relations.workOrders,
+  });
+
   const handleRerunAssessment = async () => {
     if (isRerunning) return;
     setIsRerunning(true);
