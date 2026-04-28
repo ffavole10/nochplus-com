@@ -268,8 +268,9 @@ export function PlatformSidebar() {
     label,
     icon: Icon,
     to,
-  }: { label: string; icon: React.ElementType; to: string }) => {
-    const [open, setOpen] = useState(true);
+    open,
+    onToggle,
+  }: { label: string; icon: React.ElementType; to: string; open: boolean; onToggle: () => void }) => {
     const isActive = location.pathname.startsWith(to);
     return (
       <div>
@@ -291,7 +292,7 @@ export function PlatformSidebar() {
           </button>
           <button
             type="button"
-            onClick={() => setOpen((p) => !p)}
+            onClick={onToggle}
             className={cn(
               "text-xs font-mono pl-2",
               isActive ? "text-primary-foreground" : "text-sidebar-foreground/60"
