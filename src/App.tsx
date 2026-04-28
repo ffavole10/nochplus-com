@@ -62,6 +62,14 @@ import KnowledgeReportTemplates from "./pages/knowledge/KnowledgeReportTemplates
 import KnowledgeRegulatory from "./pages/knowledge/KnowledgeRegulatory";
 import KnowledgeExternalSources from "./pages/knowledge/KnowledgeExternalSources";
 
+// Operations section pages (Batch 4)
+import OperationsCampaigns from "./pages/operations/OperationsCampaigns";
+import OperationsTickets from "./pages/operations/OperationsTickets";
+import OperationsWorkOrders from "./pages/operations/OperationsWorkOrders";
+import OperationsEstimates from "./pages/operations/OperationsEstimates";
+import OperationsPartsInventory from "./pages/operations/OperationsPartsInventory";
+import OperationsTeamPerformance from "./pages/operations/OperationsTeamPerformance";
+
 // Campaign pages — new tab structure
 import CampaignList from "./pages/campaigns/CampaignList";
 import CampaignOverview from "./pages/campaigns/CampaignOverview";
@@ -157,7 +165,14 @@ const App = () => (
             {/* New IA top-level placeholders (Batch 1) */}
             <Route path="/command-center" element={<CommandCenter />} />
             <Route path="/command-center/mission-control" element={<MissionControlHome />} />
-            <Route path="/operations" element={<Operations />} />
+            <Route path="/operations" element={<Navigate to="/operations/campaigns" replace />} />
+            <Route path="/operations/campaigns" element={<OperationsCampaigns />} />
+            <Route path="/operations/campaigns/:tab" element={<OperationsCampaigns />} />
+            <Route path="/operations/tickets" element={<OperationsTickets />} />
+            <Route path="/operations/work-orders" element={<OperationsWorkOrders />} />
+            <Route path="/operations/estimates" element={<OperationsEstimates />} />
+            <Route path="/operations/parts-inventory" element={<OperationsPartsInventory />} />
+            <Route path="/operations/team-performance" element={<OperationsTeamPerformance />} />
             <Route path="/business" element={<Business />} />
             <Route path="/knowledge" element={<Knowledge />} />
             <Route path="/knowledge/swi-library" element={<KnowledgeSwiLibrary />} />

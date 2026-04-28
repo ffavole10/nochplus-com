@@ -8,7 +8,7 @@ import {
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned, Building2, Handshake,
   Brain, Sliders, BarChart3, List, Plus, LayoutGrid, Eye, FileText,
   TrendingUp, Kanban, Target, Workflow, Briefcase, BookText, PackageOpen,
-  ClipboardList, ShieldCheck, Globe } from
+  ClipboardList, ShieldCheck, Globe, Wrench, Boxes, UserCheck } from
 "lucide-react";
 import { toast } from "sonner";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -81,11 +81,11 @@ function getActiveSection(pathname: string): SectionKey {
 }
 
 const CAMPAIGN_PAGES = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Dataset", url: "/dataset", icon: Database },
-  { title: "Flagged", url: "/issues", icon: SearchIcon },
-  { title: "Schedule", url: "/schedule", icon: CalendarDays },
-  { title: "Field Reports", url: "/field-reports", icon: FileText },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, tooltip: "Moved to Operations → Campaigns" },
+  { title: "Dataset", url: "/dataset", icon: Database, tooltip: "Moved to Operations → Campaigns" },
+  { title: "Flagged", url: "/issues", icon: SearchIcon, tooltip: "Moved to Operations → Campaigns" },
+  { title: "Schedule", url: "/schedule", icon: CalendarDays, tooltip: "Moved to Operations → Campaigns" },
+  { title: "Field Reports", url: "/field-reports", icon: FileText, tooltip: "Moved to Operations → Campaigns" },
 ];
 
 export function PlatformSidebar() {
@@ -191,12 +191,12 @@ export function PlatformSidebar() {
   const estimateCount = allEstimates.length;
 
   const serviceDeskPages = [
-  { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: totalTicketCount },
-  { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: estimateCount },
+  { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: totalTicketCount, tooltip: "Moved to Operations → Tickets" },
+  { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: estimateCount, tooltip: "Moved to Operations → Estimates" },
   { title: "Customers", url: "/service-desk/customers", icon: Users },
-  { title: "Locations", url: "/autoheal/locations", icon: MapPinned },
+  { title: "Locations", url: "/autoheal/locations", icon: MapPinned, tooltip: "Moved to Operations → Team Performance (Map view)" },
   { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen, tooltip: "Moved to Knowledge → SWI Library" },
-  { title: "Parts Inventory", url: "/autoheal/parts", icon: Package },
+  { title: "Parts Inventory", url: "/autoheal/parts", icon: Package, tooltip: "Moved to Operations → Parts Inventory" },
   { title: "Parts Catalog", url: "/autoheal/parts-catalog", icon: BookOpen, tooltip: "Moved to Knowledge → Parts Catalog" }];
 
   const nochPlusPages = [
@@ -395,7 +395,14 @@ export function PlatformSidebar() {
           to="/operations"
           open={newSectionsOpen.operations}
           onToggle={() => toggleNewSection("operations")}
-        />
+        >
+          <NavItem item={{ title: "Campaigns", url: "/operations/campaigns", icon: Target }} />
+          <NavItem item={{ title: "Tickets", url: "/operations/tickets", icon: Ticket, badge: totalTicketCount }} />
+          <NavItem item={{ title: "Work Orders", url: "/operations/work-orders", icon: Wrench }} />
+          <NavItem item={{ title: "Estimates", url: "/operations/estimates", icon: DollarSign, badge: estimateCount }} />
+          <NavItem item={{ title: "Parts Inventory", url: "/operations/parts-inventory", icon: Boxes }} />
+          <NavItem item={{ title: "Team Performance", url: "/operations/team-performance", icon: UserCheck }} />
+        </NewSectionHeader>
         <NewSectionHeader
           label="Business"
           icon={Briefcase}
@@ -602,10 +609,10 @@ export function PlatformSidebar() {
               </span>
             </div>
             <SidebarMenu className="px-1">
-              <NavItem item={{ title: "All Work Orders", url: "/field-capture/admin/work-orders", icon: List }} />
-              <NavItem item={{ title: "Create Work Order", url: "/field-capture/admin/create-job", icon: Plus }} />
+              <NavItem item={{ title: "All Work Orders", url: "/field-capture/admin/work-orders", icon: List, tooltip: "Moved to Operations → Work Orders" }} />
+              <NavItem item={{ title: "Create Work Order", url: "/field-capture/admin/create-job", icon: Plus, tooltip: "Now a button on Operations → Work Orders" }} />
               <NavItem item={{ title: "Work Templates", url: "/field-capture/admin/templates", icon: FileText, tooltip: "Moved to Knowledge → Report Templates" }} />
-              <NavItem item={{ title: "Team Performance", url: "/field-capture/admin/performance", icon: TrendingUp }} />
+              <NavItem item={{ title: "Team Performance", url: "/field-capture/admin/performance", icon: TrendingUp, tooltip: "Moved to Operations → Team Performance (Scorecard view)" }} />
             </SidebarMenu>
           </div>
         )}
