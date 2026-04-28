@@ -702,9 +702,12 @@ export function PlatformSidebar() {
             <SidebarMenuButton asChild>
               <a
                 href="/"
-                className="flex items-center gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
+                className="flex items-center gap-2 text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
                 <Home className="mr-2 h-4 w-4" />
                 <span>Home</span>
+                <span className="ml-auto px-1.5 py-0 rounded-full text-[8px] font-semibold tracking-wider border border-sidebar-foreground/20 text-sidebar-foreground/50">
+                  LEGACY
+                </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
