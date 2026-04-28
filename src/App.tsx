@@ -306,10 +306,10 @@ const App = () => (
           </Route>
 
           {/* Legacy redirects */}
-          <Route path="/tickets" element={<Navigate to="/issues" replace />} />
-          <Route path="/campaigns/reports" element={<Navigate to="/field-reports" replace />} />
-          <Route path="/estimates" element={<Navigate to="/service-desk/estimates" replace />} />
-          <Route path="/missioncontrol" element={<Navigate to="/issues" replace />} />
+          <Route path="/tickets" element={<Navigate to="/operations/tickets" replace />} />
+          <Route path="/campaigns/reports" element={<Navigate to="/operations/campaigns?tab=field-reports" replace />} />
+          <Route path="/estimates" element={<Navigate to="/operations/estimates" replace />} />
+          <Route path="/missioncontrol" element={<Navigate to="/command-center/mission-control" replace />} />
           <Route path="/estimate-status" element={<EstimateStatus />} />
           {/* Public Noch+ submission pages — "/" is the main landing */}
           <Route path="/" element={<SubmitAssessment />} />
