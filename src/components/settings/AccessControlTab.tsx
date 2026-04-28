@@ -571,6 +571,11 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                       <strong>{a.actor_name || "Admin"}</strong> {a.action}{" "}
                       <strong>{a.target_name || "a user"}</strong>{" "}
                       access to <strong>{SECTION_LABELS[a.section_key as SectionKey] || a.section_key}</strong>
+                      {SECTION_LABELS[a.section_key as SectionKey] && (
+                        <span className="ml-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                          (legacy)
+                        </span>
+                      )}
                     </span>
                     <span className="text-xs text-muted-foreground ml-auto">
                       {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
