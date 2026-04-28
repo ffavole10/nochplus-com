@@ -202,19 +202,19 @@ export function PlatformSidebar() {
 
   const nochPlusPages = [
   { title: "Mission Control", url: "/noch-plus/monitoring", icon: BarChart3 },
-  { title: "Partnership Hub", url: "/noch-plus/partnership-hub", icon: Handshake },
-  { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard },
-  { title: "Submissions", url: "/noch-plus/submissions", icon: FileCheck },
-  { title: "Assessments", url: "/noch-plus/assessments", icon: FolderOpen },
-  { title: "Members", url: "/noch-plus/members", icon: Users },
+  { title: "Partnership Hub", url: "/noch-plus/partnership-hub", icon: Handshake, tooltip: "Moved to Business → Membership" },
+  { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard, tooltip: "Moved to Business → Membership → Active Members" },
+  { title: "Submissions", url: "/noch-plus/submissions", icon: FileCheck, tooltip: "Moved to Business → Submissions" },
+  { title: "Assessments", url: "/noch-plus/assessments", icon: FolderOpen, tooltip: "Moved to Business → Submissions → Assessments tab" },
+  { title: "Members", url: "/noch-plus/members", icon: Users, tooltip: "Moved to Business → Membership → Active Members" },
   { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
 
   const growthPages = [
-  { title: "Accounts", url: "/growth/accounts", icon: Building2 },
-  { title: "Pipeline", url: "/growth/pipeline", icon: Kanban }];
+  { title: "Accounts", url: "/growth/accounts", icon: Building2, tooltip: "Moved to Business → Accounts (Growth view)" },
+  { title: "Pipeline", url: "/growth/pipeline", icon: Kanban, tooltip: "Moved to Business → Pipeline" }];
 
   const partnersPages = [
-  { title: "All Partners", url: "/partners", icon: Building2 }];
+  { title: "All Partners", url: "/partners", icon: Building2, tooltip: "Moved to Business → Accounts (Partner filter)" }];
 
   const autohealPages = [
   { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
