@@ -10,11 +10,43 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
-import { Lock, Crosshair, Ticket, Diamond, Handshake, Zap, History, ShieldCheck, TrendingUp, Wrench } from "lucide-react";
+import { Lock, Crosshair, Ticket, Diamond, Handshake, Zap, History, ShieldCheck, TrendingUp, Wrench, Target, Workflow, Briefcase, BookOpen, Settings as SettingsIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { SECTION_KEYS, SECTION_LABELS, type SectionKey } from "@/hooks/useSectionAccess";
 
+// New IA columns rendered in the matrix and overview cards.
+type NewSectionKey = "command_center" | "operations" | "business" | "knowledge" | "settings";
+
+const NEW_SECTION_KEYS: NewSectionKey[] = ["command_center", "operations", "business", "knowledge", "settings"];
+
+const NEW_SECTION_LABELS: Record<NewSectionKey, string> = {
+  command_center: "Command Center",
+  operations: "Operations",
+  business: "Business",
+  knowledge: "Knowledge",
+  settings: "Settings",
+};
+
+const NEW_SECTION_ICONS: Record<NewSectionKey, React.ElementType> = {
+  command_center: Target,
+  operations: Workflow,
+  business: Briefcase,
+  knowledge: BookOpen,
+  settings: SettingsIcon,
+};
+
+// Map a new section to the set of LEGACY section_keys that grant it (logical equivalence).
+// If a user had access to ANY of the listed legacy sections, they get the new section.
+const NEW_TO_LEGACY: Record<NewSectionKey, SectionKey[]> = {
+  command_center: [], // no legacy mapping — only super_admins by default
+  operations: ["campaigns", "service_desk", "field_capture"],
+  business: ["noch_plus", "partners", "growth"],
+  knowledge: ["service_desk"], // SWI Library + Parts Catalog originated in Service Desk
+  settings: ["autoheal"], // AutoHeal became Settings → Neural OS
+};
+
+// Keep legacy icon map for the audit log fallback rendering.
 const SECTION_ICONS: Record<SectionKey, React.ElementType> = {
   campaigns: Crosshair,
   service_desk: Ticket,
@@ -114,6 +146,64 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
 
   const sectionUsers = (section: SectionKey) =>
     users.filter((u) => hasAccess(u.user_id, section));
+
+  // New IA helpers — derive new-section access from legacy section_access map (conservative OR).
+  const hasNewAccess = (userId: string, section: NewSectionKey) => {
+    if (superAdminIds.has(userId)) return true;
+    if (technicianIds.has(userId)) return section === "operations"; // techs get Operations only
+    const legacyKeys = NEW_TO_LEGACY[section];
+    if (legacyKeys.length === 0) return false;
+    return legacyKeys.some((k) => accessMap[userId]?.[k] === true);
+  };
+
+  const newSectionUsers = (section: NewSectionKey) =>
+    users.filter((u) => hasNewAccess(u.user_id, section));
+
+  const setNewAccess = async (target: UserRow, section: NewSectionKey, value: boolean) => {
+    if (superAdminIds.has(target.user_id)) return;
+    if (technicianIds.has(target.user_id)) return;
+    const legacyKeys = NEW_TO_LEGACY[section];
+    if (legacyKeys.length === 0) {
+      toast.info(`${NEW_SECTION_LABELS[section]} access is reserved for super admins.`);
+      return;
+    }
+    // Optimistic: write all underlying legacy keys to `value`.
+    setAccessRows((prev) => {
+      const others = prev.filter(
+        (r) => !(r.user_id === target.user_id && legacyKeys.includes(r.section_key)),
+      );
+      const next = legacyKeys.map((k) => ({
+        user_id: target.user_id,
+        section_key: k,
+        has_access: value,
+      }));
+      return [...others, ...next];
+    });
+    const rows = legacyKeys.map((k) => ({
+      user_id: target.user_id,
+      section_key: k,
+      has_access: value,
+      granted_by: session?.user?.id,
+    }));
+    const { error } = await supabase
+      .from("user_section_access")
+      .upsert(rows, { onConflict: "user_id,section_key" });
+    if (error) {
+      toast.error(`Failed: ${error.message}`);
+      loadAll();
+      return;
+    }
+    await Promise.all(legacyKeys.map((k) => writeAudit(target, k, value)));
+    toast.success(
+      `Updated ${NEW_SECTION_LABELS[section]} access for ${target.display_name || target.email}: ${value ? "enabled" : "disabled"}`,
+    );
+    const { data: a } = await supabase
+      .from("access_audit_log")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setAudit((a as AuditRow[]) || []);
+  };
 
   const writeAudit = async (target: UserRow, section: SectionKey, granted: boolean) => {
     await supabase.from("access_audit_log").insert({
@@ -256,18 +346,18 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
             <ShieldCheck className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Access Control</h1>
+            <h1 className="text-2xl font-bold text-foreground">Section Permissions</h1>
             <p className="text-sm text-muted-foreground">
               Control which platform sections each user can see and access.
             </p>
           </div>
         </div>
 
-        {/* Section overview cards */}
+        {/* Section overview cards — new IA */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {SECTION_KEYS.map((section) => {
-            const Icon = SECTION_ICONS[section];
-            const sUsers = sectionUsers(section);
+          {NEW_SECTION_KEYS.map((section) => {
+            const Icon = NEW_SECTION_ICONS[section];
+            const sUsers = newSectionUsers(section);
             return (
               <Card key={section} className="border-border/60">
                 <CardContent className="p-4 space-y-3">
@@ -277,7 +367,7 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-semibold text-foreground truncate">
-                        {SECTION_LABELS[section]}
+                        {NEW_SECTION_LABELS[section]}
                       </div>
                       <div className="text-xs text-muted-foreground">{sUsers.length} users</div>
                     </div>
@@ -377,8 +467,8 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                   <thead>
                     <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wider">
                       <th className="text-left font-medium py-2 pr-4">User</th>
-                      {SECTION_KEYS.map((s) => (
-                        <th key={s} className="text-center font-medium py-2 px-3">{SECTION_LABELS[s]}</th>
+                      {NEW_SECTION_KEYS.map((s) => (
+                        <th key={s} className="text-center font-medium py-2 px-3">{NEW_SECTION_LABELS[s]}</th>
                       ))}
                     </tr>
                   </thead>
@@ -408,16 +498,19 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                               </div>
                             </div>
                           </td>
-                          {SECTION_KEYS.map((s) => {
-                            const checked = hasAccess(u.user_id, s);
-                            const locked = isLocked(u.user_id, s);
+                          {NEW_SECTION_KEYS.map((s) => {
+                            const checked = hasNewAccess(u.user_id, s);
+                            const reservedForSuper = NEW_TO_LEGACY[s].length === 0;
+                            const locked = isSuper || isTech || reservedForSuper;
                             const tooltip = isSuper
                               ? "Super admins have full access"
                               : isTech
-                                ? s === "field_capture"
-                                  ? "Technicians always have Field Capture access"
-                                  : "Technicians are restricted to Field Capture only"
-                                : "";
+                                ? s === "operations"
+                                  ? "Technicians always have Operations access (Field Capture)"
+                                  : "Technicians are restricted to Operations only"
+                                : reservedForSuper
+                                  ? "Command Center is reserved for super admins"
+                                  : "";
                             return (
                               <td key={s} className="text-center py-3 px-3">
                                 {locked ? (
@@ -433,7 +526,7 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                                 ) : (
                                   <Switch
                                     checked={checked}
-                                    onCheckedChange={(v) => setSingleAccess(u, s, v)}
+                                    onCheckedChange={(v) => setNewAccess(u, s, v)}
                                   />
                                 )}
                               </td>
@@ -478,6 +571,11 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                       <strong>{a.actor_name || "Admin"}</strong> {a.action}{" "}
                       <strong>{a.target_name || "a user"}</strong>{" "}
                       access to <strong>{SECTION_LABELS[a.section_key as SectionKey] || a.section_key}</strong>
+                      {SECTION_LABELS[a.section_key as SectionKey] && (
+                        <span className="ml-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                          (legacy)
+                        </span>
+                      )}
                     </span>
                     <span className="text-xs text-muted-foreground ml-auto">
                       {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}

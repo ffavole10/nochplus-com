@@ -55,7 +55,7 @@ import Business from "./pages/placeholders/Business";
 import Knowledge from "./pages/placeholders/Knowledge";
 import MissionControlHome from "./pages/placeholders/MissionControlHome";
 import CommandCenterMissionControl from "./pages/command-center/CommandCenterMissionControl";
-import CommandCenterPlatformAnalytics from "./pages/command-center/CommandCenterPlatformAnalytics";
+import CommandCenterAnalytics from "./pages/command-center/CommandCenterAnalytics";
 
 // Knowledge section pages (Batch 3)
 import KnowledgeSwiLibrary from "./pages/knowledge/KnowledgeSwiLibrary";
@@ -174,7 +174,8 @@ const App = () => (
             {/* Command Center */}
             <Route path="/command-center" element={<Navigate to="/command-center/mission-control" replace />} />
             <Route path="/command-center/mission-control" element={<CommandCenterMissionControl />} />
-            <Route path="/command-center/platform-analytics" element={<CommandCenterPlatformAnalytics />} />
+            <Route path="/command-center/analytics" element={<CommandCenterAnalytics />} />
+            <Route path="/command-center/platform-analytics" element={<Navigate to="/settings?tab=platform-analytics" replace />} />
             <Route path="/operations" element={<Navigate to="/operations/campaigns" replace />} />
             <Route path="/operations/campaigns" element={<OperationsCampaigns />} />
             <Route path="/operations/campaigns/:tab" element={<OperationsCampaigns />} />
