@@ -81,11 +81,11 @@ const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner",
 
 type SettingsTab = "neural-os" | "campaigns" | "data" | "partners" | "users" | "access" | "quoting" | "analytics";
 
-const TABS: { value: SettingsTab; label: string }[] = [
+const TABS: { value: SettingsTab; label: string; tooltip?: string }[] = [
   { value: "neural-os", label: "Neural OS" },
   { value: "campaigns", label: "Campaigns" },
   { value: "data", label: "Data Management" },
-  { value: "partners", label: "Partners" },
+  { value: "partners", label: "Partners", tooltip: "Moved to Business → Accounts (Partner filter)" },
   { value: "quoting", label: "Quoting & Rates" },
   { value: "users", label: "Users" },
   { value: "access", label: "Access Control" },
@@ -312,13 +312,19 @@ const Settings = () => {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                title={tab.tooltip}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5 ${
                   activeTab === tab.value
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 {tab.label}
+                {tab.tooltip && (
+                  <span className="px-1 py-0 rounded text-[8px] font-semibold tracking-wider border border-current/30 opacity-70">
+                    MOVED
+                  </span>
+                )}
               </button>
             ))}
           </div>

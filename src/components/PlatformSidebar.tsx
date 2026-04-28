@@ -8,7 +8,8 @@ import {
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned, Building2, Handshake,
   Brain, Sliders, BarChart3, List, Plus, LayoutGrid, Eye, FileText,
   TrendingUp, Kanban, Target, Workflow, Briefcase, BookText, PackageOpen,
-  ClipboardList, ShieldCheck, Globe, Wrench, Boxes, UserCheck } from
+  ClipboardList, ShieldCheck, Globe, Wrench, Boxes, UserCheck,
+  BadgeCheck, Inbox } from
 "lucide-react";
 import { toast } from "sonner";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -193,7 +194,7 @@ export function PlatformSidebar() {
   const serviceDeskPages = [
   { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: totalTicketCount, tooltip: "Moved to Operations → Tickets" },
   { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: estimateCount, tooltip: "Moved to Operations → Estimates" },
-  { title: "Customers", url: "/service-desk/customers", icon: Users },
+  { title: "Customers", url: "/service-desk/customers", icon: Users, tooltip: "Moved to Business → Accounts (Customer filter)" },
   { title: "Locations", url: "/autoheal/locations", icon: MapPinned, tooltip: "Moved to Operations → Team Performance (Map view)" },
   { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen, tooltip: "Moved to Knowledge → SWI Library" },
   { title: "Parts Inventory", url: "/autoheal/parts", icon: Package, tooltip: "Moved to Operations → Parts Inventory" },
@@ -201,19 +202,19 @@ export function PlatformSidebar() {
 
   const nochPlusPages = [
   { title: "Mission Control", url: "/noch-plus/monitoring", icon: BarChart3 },
-  { title: "Partnership Hub", url: "/noch-plus/partnership-hub", icon: Handshake },
-  { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard },
-  { title: "Submissions", url: "/noch-plus/submissions", icon: FileCheck },
-  { title: "Assessments", url: "/noch-plus/assessments", icon: FolderOpen },
-  { title: "Members", url: "/noch-plus/members", icon: Users },
+  { title: "Partnership Hub", url: "/noch-plus/partnership-hub", icon: Handshake, tooltip: "Moved to Business → Membership" },
+  { title: "Dashboard", url: "/noch-plus/dashboard", icon: LayoutDashboard, tooltip: "Moved to Business → Membership → Active Members" },
+  { title: "Submissions", url: "/noch-plus/submissions", icon: FileCheck, tooltip: "Moved to Business → Submissions" },
+  { title: "Assessments", url: "/noch-plus/assessments", icon: FolderOpen, tooltip: "Moved to Business → Submissions → Assessments tab" },
+  { title: "Members", url: "/noch-plus/members", icon: Users, tooltip: "Moved to Business → Membership → Active Members" },
   { title: "Chargers", url: "/noch-plus/chargers", icon: HardDrive }];
 
   const growthPages = [
-  { title: "Accounts", url: "/growth/accounts", icon: Building2 },
-  { title: "Pipeline", url: "/growth/pipeline", icon: Kanban }];
+  { title: "Accounts", url: "/growth/accounts", icon: Building2, tooltip: "Moved to Business → Accounts (Growth view)" },
+  { title: "Pipeline", url: "/growth/pipeline", icon: Kanban, tooltip: "Moved to Business → Pipeline" }];
 
   const partnersPages = [
-  { title: "All Partners", url: "/partners", icon: Building2 }];
+  { title: "All Partners", url: "/partners", icon: Building2, tooltip: "Moved to Business → Accounts (Partner filter)" }];
 
   const autohealPages = [
   { title: "AI Agent", url: "/autoheal/ai-agent", icon: Bot },
@@ -409,7 +410,12 @@ export function PlatformSidebar() {
           to="/business"
           open={newSectionsOpen.business}
           onToggle={() => toggleNewSection("business")}
-        />
+        >
+          <NavItem item={{ title: "Accounts", url: "/business/accounts", icon: Building2 }} />
+          <NavItem item={{ title: "Pipeline", url: "/business/pipeline", icon: TrendingUp }} />
+          <NavItem item={{ title: "Membership", url: "/business/membership", icon: BadgeCheck }} />
+          <NavItem item={{ title: "Submissions", url: "/business/submissions", icon: Inbox }} />
+        </NewSectionHeader>
         <NewSectionHeader
           label="Knowledge"
           icon={BookOpen}
