@@ -48,6 +48,13 @@ import Partners from "./pages/Partners";
 import PartnerProfile from "./pages/PartnerProfile";
 import PartnershipHub from "./pages/PartnershipHub";
 
+// New IA placeholder pages (Batch 1)
+import CommandCenter from "./pages/placeholders/CommandCenter";
+import Operations from "./pages/placeholders/Operations";
+import Business from "./pages/placeholders/Business";
+import Knowledge from "./pages/placeholders/Knowledge";
+import MissionControlHome from "./pages/placeholders/MissionControlHome";
+
 // Campaign pages — new tab structure
 import CampaignList from "./pages/campaigns/CampaignList";
 import CampaignOverview from "./pages/campaigns/CampaignOverview";
@@ -140,6 +147,13 @@ const App = () => (
           <Route path="/field" element={<FieldLogin />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
+            {/* New IA top-level placeholders (Batch 1) */}
+            <Route path="/command-center" element={<CommandCenter />} />
+            <Route path="/command-center/mission-control" element={<MissionControlHome />} />
+            <Route path="/operations" element={<Operations />} />
+            <Route path="/business" element={<Business />} />
+            <Route path="/knowledge" element={<Knowledge />} />
+
             {/* Campaign HQ and tab routes */}
             <Route path="/campaigns" element={<CampaignList />} />
             <Route path="/campaigns/:campaignId/overview" element={<CampaignOverview />} />

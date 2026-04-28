@@ -7,7 +7,7 @@ import {
   Users, HardDrive, Diamond, FolderOpen, Minus, Package,
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned, Building2, Handshake,
   Brain, Sliders, BarChart3, List, Plus, LayoutGrid, Eye, FileText,
-  TrendingUp, Kanban } from
+  TrendingUp, Kanban, Target, Workflow, Briefcase } from
 "lucide-react";
 import { toast } from "sonner";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -111,6 +111,14 @@ export function PlatformSidebar() {
   const [swiOpen, setSwiOpen] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
   const [newPartnerOpen, setNewPartnerOpen] = useState(false);
+  const [newSectionsOpen, setNewSectionsOpen] = useState({
+    "command-center": true,
+    operations: true,
+    business: true,
+    knowledge: true,
+  });
+  const toggleNewSection = (key: keyof typeof newSectionsOpen) =>
+    setNewSectionsOpen((p) => ({ ...p, [key]: !p[key] }));
 
   // Data
   const { data: dbCustomers = [] } = useCustomers();
@@ -215,8 +223,9 @@ export function PlatformSidebar() {
   const SectionHeader = ({
     label,
     icon: Icon,
-    section
-  }: {label: React.ReactNode;icon: React.ElementType;section: SectionKey;}) => {
+    section,
+    legacy = false,
+  }: {label: React.ReactNode;icon: React.ElementType;section: SectionKey;legacy?: boolean;}) => {
     const isOpen = expandedSection === section;
     return (
       <button
@@ -226,11 +235,24 @@ export function PlatformSidebar() {
           "border",
           isOpen ?
           "bg-primary text-primary-foreground border-primary shadow-sm" :
-          "bg-sidebar-accent/30 text-sidebar-foreground/80 border-sidebar-border/40 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+          "bg-sidebar-accent/30 text-sidebar-foreground/80 border-sidebar-border/40 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+          legacy && !isOpen && "text-sidebar-foreground/50 opacity-80"
         )}>
-        <div className="flex items-center gap-2.5">
-          <Icon className={cn("h-4 w-4", isOpen && "text-primary-foreground")} />
-          <span>{label}</span>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Icon className={cn("h-4 w-4 shrink-0", isOpen && "text-primary-foreground")} />
+          <span className="truncate">{label}</span>
+          {legacy && (
+            <span
+              className={cn(
+                "ml-1 px-1.5 py-0 rounded-full text-[8px] font-semibold tracking-wider border",
+                isOpen
+                  ? "border-primary-foreground/40 text-primary-foreground/90"
+                  : "border-sidebar-foreground/20 text-sidebar-foreground/50"
+              )}
+            >
+              LEGACY
+            </span>
+          )}
         </div>
         <span className={cn(
           "text-xs font-mono",
@@ -240,6 +262,55 @@ export function PlatformSidebar() {
         </span>
       </button>);
   };
+
+  /* New IA top-level placeholder section header (Batch 1 — empty sections) */
+  const NewSectionHeader = ({
+    label,
+    icon: Icon,
+    to,
+    open,
+    onToggle,
+  }: { label: string; icon: React.ElementType; to: string; open: boolean; onToggle: () => void }) => {
+    const isActive = location.pathname.startsWith(to);
+    return (
+      <div>
+        <div
+          className={cn(
+            "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all border",
+            isActive
+              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+              : "bg-sidebar-accent/30 text-sidebar-foreground/90 border-sidebar-border/40 hover:bg-sidebar-accent/60"
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => navigate(to)}
+            className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
+          >
+            <Icon className={cn("h-4 w-4 shrink-0", isActive && "text-primary-foreground")} />
+            <span className="truncate">{label}</span>
+          </button>
+          <button
+            type="button"
+            onClick={onToggle}
+            className={cn(
+              "text-xs font-mono pl-2",
+              isActive ? "text-primary-foreground" : "text-sidebar-foreground/60"
+            )}
+            aria-label={open ? "Collapse" : "Expand"}
+          >
+            {open ? "−" : "+"}
+          </button>
+        </div>
+        {open && (
+          <div className="pl-3 pr-2 py-1.5 text-[10px] uppercase tracking-wider text-sidebar-foreground/40">
+            No items yet
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   const NavItem = ({
     item
@@ -277,15 +348,61 @@ export function PlatformSidebar() {
     <Sidebar side="left" collapsible="none" className="border-r border-border/50 relative h-screen sticky top-0">
       <SidebarHeader className="p-4">
         <div className="flex justify-start mb-2">
-          <img src={nochLogo} alt="Noch Power" className="w-[45%] h-auto brightness-0 invert" />
+          <button
+            type="button"
+            onClick={() => navigate("/command-center/mission-control")}
+            className="block hover:opacity-80 transition-opacity"
+            aria-label="Go to Mission Control"
+          >
+            <img src={nochLogo} alt="Noch Power" className="w-[45%] h-auto brightness-0 invert" />
+          </button>
         </div>
       </SidebarHeader>
 
       <SidebarContent className="custom-scrollbar px-2 py-2 space-y-1">
+        {/* ─── NEW IA: Top-level sections (Batch 1) ─── */}
+        <NewSectionHeader
+          label="Command Center"
+          icon={Target}
+          to="/command-center"
+          open={newSectionsOpen["command-center"]}
+          onToggle={() => toggleNewSection("command-center")}
+        />
+        <NewSectionHeader
+          label="Operations"
+          icon={Workflow}
+          to="/operations"
+          open={newSectionsOpen.operations}
+          onToggle={() => toggleNewSection("operations")}
+        />
+        <NewSectionHeader
+          label="Business"
+          icon={Briefcase}
+          to="/business"
+          open={newSectionsOpen.business}
+          onToggle={() => toggleNewSection("business")}
+        />
+        <NewSectionHeader
+          label="Knowledge"
+          icon={BookOpen}
+          to="/knowledge"
+          open={newSectionsOpen.knowledge}
+          onToggle={() => toggleNewSection("knowledge")}
+        />
+
+        {/* Visual divider between new IA and legacy sections */}
+        <div className="my-3 flex items-center gap-2 px-1">
+          <div className="h-px flex-1 bg-sidebar-border/60" />
+          <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-sidebar-foreground/40">
+            Legacy
+          </span>
+          <div className="h-px flex-1 bg-sidebar-border/60" />
+        </div>
+
         {/* ─── CAMPAIGNS SECTION ─── */}
         {canAccess("campaigns") && (
           <>
-            <SectionHeader label="CAMPAIGNS" icon={Crosshair} section="campaigns" />
+            <SectionHeader label="CAMPAIGNS" icon={Crosshair} section="campaigns" legacy />
             {expandedSection === "campaigns" &&
             <div className="space-y-2 pl-1">
                 {/* Customer/Partner dropdown */}
@@ -371,7 +488,7 @@ export function PlatformSidebar() {
         {/* ─── SERVICE DESK SECTION ─── */}
         {canAccess("service_desk") && (
           <>
-            <SectionHeader label="SERVICE DESK" icon={Ticket} section="service-desk" />
+            <SectionHeader label="SERVICE DESK" icon={Ticket} section="service-desk" legacy />
             {expandedSection === "service-desk" &&
             <div className="pl-1">
                 <SidebarMenu className="px-1">
@@ -387,7 +504,7 @@ export function PlatformSidebar() {
         {/* ─── NOCH+ PROGRAM SECTION ─── */}
         {canAccess("noch_plus") && (
           <>
-            <SectionHeader label="NOCH+" icon={Diamond} section="noch-plus" />
+            <SectionHeader label="NOCH+" icon={Diamond} section="noch-plus" legacy />
             {expandedSection === "noch-plus" &&
             <div className="pl-1">
                 <SidebarMenu className="px-1">
@@ -403,7 +520,7 @@ export function PlatformSidebar() {
         {/* ─── GROWTH SECTION ─── */}
         {canAccess("growth") && (
           <>
-            <SectionHeader label="GROWTH" icon={TrendingUp} section="growth" />
+            <SectionHeader label="GROWTH" icon={TrendingUp} section="growth" legacy />
             {expandedSection === "growth" &&
             <div className="pl-1">
                 <SidebarMenu className="px-1">
@@ -419,7 +536,7 @@ export function PlatformSidebar() {
         {/* ─── PARTNERS SECTION ─── */}
         {canAccess("partners") && (
           <>
-            <SectionHeader label="PARTNERS" icon={Handshake} section="partners" />
+            <SectionHeader label="PARTNERS" icon={Handshake} section="partners" legacy />
             {expandedSection === "partners" &&
             <div className="pl-1">
                 <SidebarMenu className="px-1">
@@ -435,7 +552,7 @@ export function PlatformSidebar() {
         {/* ─── AUTOHEAL SECTION ─── */}
         {canAccess("autoheal") && (
           <>
-            <SectionHeader label={<span>AUTOHEAL<sup className="text-[8px] align-super ml-0.5">TM</sup></span>} icon={Zap} section="autoheal" />
+            <SectionHeader label={<span>AUTOHEAL<sup className="text-[8px] align-super ml-0.5">TM</sup></span>} icon={Zap} section="autoheal" legacy />
             {expandedSection === "autoheal" &&
             <div className="pl-1">
                 <SidebarMenu className="px-1">
@@ -451,8 +568,11 @@ export function PlatformSidebar() {
         {/* ─── FIELD CAPTURE (admin only, requires section access) ─── */}
         {canAccess("field_capture") && (hasRole("super_admin") || hasRole("admin") || hasRole("manager") || hasRole("account_manager")) && (
           <div className="pt-2 mt-2 border-t border-sidebar-border">
-            <div className="px-3 py-2 text-xs font-bold tracking-wider uppercase text-sidebar-foreground/70">
-              Field Capture
+            <div className="px-3 py-2 text-xs font-bold tracking-wider uppercase text-sidebar-foreground/50 flex items-center gap-2">
+              <span>Field Capture</span>
+              <span className="px-1.5 py-0 rounded-full text-[8px] font-semibold tracking-wider border border-sidebar-foreground/20 text-sidebar-foreground/50">
+                LEGACY
+              </span>
             </div>
             <SidebarMenu className="px-1">
               <NavItem item={{ title: "All Work Orders", url: "/field-capture/admin/work-orders", icon: List }} />
@@ -582,9 +702,12 @@ export function PlatformSidebar() {
             <SidebarMenuButton asChild>
               <a
                 href="/"
-                className="flex items-center gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
+                className="flex items-center gap-2 text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
                 <Home className="mr-2 h-4 w-4" />
                 <span>Home</span>
+                <span className="ml-auto px-1.5 py-0 rounded-full text-[8px] font-semibold tracking-wider border border-sidebar-foreground/20 text-sidebar-foreground/50">
+                  LEGACY
+                </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
