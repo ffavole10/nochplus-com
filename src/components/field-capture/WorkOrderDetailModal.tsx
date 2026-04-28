@@ -54,6 +54,13 @@ import WorkOrderEditModal from "@/components/field-capture/WorkOrderEditModal";
 import ReassignTechnicianModal from "@/components/field-capture/ReassignTechnicianModal";
 import DeleteWorkOrderDialog from "@/components/field-capture/DeleteWorkOrderDialog";
 import SowViewerDialog from "@/components/field-capture/SowViewerDialog";
+import { useWorkOrderRelations } from "@/hooks/useEntityRelations";
+import { LifecycleChain } from "@/components/lifecycle/LifecycleChain";
+import { buildWorkOrderLifecycleChain } from "@/components/lifecycle/buildChain";
+import {
+  ParentTicketPanel,
+  FieldReportPanel,
+} from "@/components/lifecycle/LinkedEntityPanels";
 
 import {
   AlertDialog,
@@ -268,6 +275,18 @@ export default function WorkOrderDetailModal({
 
   /* ---------- render ---------- */
 
+  const woRelations = useWorkOrderRelations({
+    workOrderId: workOrder?.id || null,
+    siteName: workOrder?.site_name || null,
+    siteAddress: workOrder?.site_address || null,
+  });
+  const woLifecycleStages = workOrder
+    ? buildWorkOrderLifecycleChain({
+        workOrder,
+        parentTicket: woRelations.parentTicket,
+      })
+    : [];
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -317,6 +336,11 @@ export default function WorkOrderDetailModal({
             >
               <X className="h-4 w-4" />
             </Button>
+          </div>
+
+          {/* Lifecycle chain */}
+          <div className="border-b px-5 py-3 shrink-0">
+            <LifecycleChain stages={woLifecycleStages} title="Work order lifecycle" />
           </div>
 
           {/* Action bar */}
@@ -417,6 +441,17 @@ export default function WorkOrderDetailModal({
 
             <ScrollArea className="flex-1 px-5 py-4">
               <TabsContent value="details" className="mt-0 space-y-5">
+                {/* Linked entities */}
+                <div className="space-y-3">
+                  <ParentTicketPanel ticket={woRelations.parentTicket} />
+                  <FieldReportPanel
+                    workOrderId={workOrder.id}
+                    status={workOrder.status}
+                    submittedBy={techLabel || undefined}
+                    submittedAt={workOrder.departure_timestamp || undefined}
+                  />
+                </div>
+
                 <DetailSection title="Client" icon={User}>
                   <div className="text-sm">{workOrder.client_name}</div>
                 </DetailSection>

@@ -23,6 +23,14 @@ import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { toast } from "sonner";
 import { useTicketLifecycle, rpcRerunAssessment, canOverrideTicketLifecycle, formatAuditAction } from "@/hooks/useTicketLifecycle";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useTicketRelations } from "@/hooks/useEntityRelations";
+import { LifecycleChain } from "@/components/lifecycle/LifecycleChain";
+import { buildTicketLifecycleChain } from "@/components/lifecycle/buildChain";
+import {
+  RelatedWorkOrdersPanel,
+  SourceSubmissionPanel,
+  RelatedEstimatePanel,
+} from "@/components/lifecycle/LinkedEntityPanels";
 
 interface TicketDetailPanelProps {
   ticket: ServiceTicket;
@@ -63,6 +71,19 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
   const [rerunProgress, setRerunProgress] = useState("");
   const updateTicket = useServiceTicketsStore(s => s.updateTicket);
   const progressPercent = ((ticket.currentStep - 1) / 10) * 100;
+
+  // Cross-entity relations + lifecycle chain
+  const relations = useTicketRelations({
+    ticketDbId: ticket.id,
+    ticketTextId: ticket.ticketId,
+    siteName: ticket.customer?.company || null,
+  });
+  const lifecycleStages = buildTicketLifecycleChain({
+    ticket,
+    submission: relations.submission,
+    estimates: relations.estimates,
+    workOrders: relations.workOrders,
+  });
 
   const handleRerunAssessment = async () => {
     if (isRerunning) return;
@@ -114,7 +135,10 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
         </Button>
       </div>
 
-      {/* Progress bar */}
+      {/* Lifecycle chain */}
+      <LifecycleChain stages={lifecycleStages} title="Ticket lifecycle" />
+
+
       <div className="flex items-center gap-2">
         <span className="text-xs font-medium text-foreground">Step {ticket.currentStep} of 10</span>
         <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden max-w-xs">
@@ -392,6 +416,13 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Cross-entity linked panels */}
+      <div className="space-y-3">
+        <RelatedWorkOrdersPanel workOrders={relations.workOrders} />
+        <SourceSubmissionPanel submission={relations.submission} />
+        <RelatedEstimatePanel estimates={relations.estimates} />
+      </div>
     </div>
   );
 }
