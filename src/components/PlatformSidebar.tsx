@@ -329,17 +329,23 @@ export function PlatformSidebar() {
 
   const NavItem = ({
     item
-  }: {item: {title: string;url: string;icon: React.ElementType;badge?: number;};}) =>
+  }: {item: {title: string;url: string;icon: React.ElementType;badge?: number;tooltip?: string;};}) =>
   <SidebarMenuItem>
       <SidebarMenuButton asChild>
         <NavLink
         to={item.url}
         end={item.url === "/dashboard"}
+        title={item.tooltip}
         className="hover:bg-sidebar-accent/50 flex items-center justify-between"
         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
           <div className="flex items-center gap-2">
             <item.icon className="h-4 w-4" />
             <span>{item.title}</span>
+            {item.tooltip && (
+              <span className="ml-1 px-1 py-0 rounded text-[8px] font-semibold tracking-wider border border-sidebar-foreground/20 text-sidebar-foreground/50">
+                MOVED
+              </span>
+            )}
           </div>
           {item.badge !== undefined &&
         <span className="bg-sidebar-accent/80 text-sidebar-foreground text-xs font-medium px-1.5 py-0.5 rounded-full">
