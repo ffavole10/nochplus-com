@@ -191,12 +191,12 @@ export function PlatformSidebar() {
   const estimateCount = allEstimates.length;
 
   const serviceDeskPages = [
-  { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: totalTicketCount },
-  { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: estimateCount },
+  { title: "Tickets", url: "/service-desk/tickets", icon: Ticket, badge: totalTicketCount, tooltip: "Moved to Operations → Tickets" },
+  { title: "Estimates", url: "/service-desk/estimates", icon: DollarSign, badge: estimateCount, tooltip: "Moved to Operations → Estimates" },
   { title: "Customers", url: "/service-desk/customers", icon: Users },
-  { title: "Locations", url: "/autoheal/locations", icon: MapPinned },
+  { title: "Locations", url: "/autoheal/locations", icon: MapPinned, tooltip: "Moved to Operations → Team Performance (Map view)" },
   { title: "SWI Library", url: "/autoheal/swi-library", icon: BookOpen, tooltip: "Moved to Knowledge → SWI Library" },
-  { title: "Parts Inventory", url: "/autoheal/parts", icon: Package },
+  { title: "Parts Inventory", url: "/autoheal/parts", icon: Package, tooltip: "Moved to Operations → Parts Inventory" },
   { title: "Parts Catalog", url: "/autoheal/parts-catalog", icon: BookOpen, tooltip: "Moved to Knowledge → Parts Catalog" }];
 
   const nochPlusPages = [
