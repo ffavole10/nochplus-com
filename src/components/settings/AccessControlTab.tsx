@@ -498,16 +498,19 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                               </div>
                             </div>
                           </td>
-                          {SECTION_KEYS.map((s) => {
-                            const checked = hasAccess(u.user_id, s);
-                            const locked = isLocked(u.user_id, s);
+                          {NEW_SECTION_KEYS.map((s) => {
+                            const checked = hasNewAccess(u.user_id, s);
+                            const reservedForSuper = NEW_TO_LEGACY[s].length === 0;
+                            const locked = isSuper || isTech || reservedForSuper;
                             const tooltip = isSuper
                               ? "Super admins have full access"
                               : isTech
-                                ? s === "field_capture"
-                                  ? "Technicians always have Field Capture access"
-                                  : "Technicians are restricted to Field Capture only"
-                                : "";
+                                ? s === "operations"
+                                  ? "Technicians always have Operations access (Field Capture)"
+                                  : "Technicians are restricted to Operations only"
+                                : reservedForSuper
+                                  ? "Command Center is reserved for super admins"
+                                  : "";
                             return (
                               <td key={s} className="text-center py-3 px-3">
                                 {locked ? (
@@ -523,7 +526,7 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                                 ) : (
                                   <Switch
                                     checked={checked}
-                                    onCheckedChange={(v) => setSingleAccess(u, s, v)}
+                                    onCheckedChange={(v) => setNewAccess(u, s, v)}
                                   />
                                 )}
                               </td>
