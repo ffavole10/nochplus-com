@@ -129,6 +129,24 @@ const Index = () => {
         onCriticalClick={handleCriticalClick}
       />
 
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-base font-bold text-foreground">Reliability KPIs</h2>
+          <p className="text-xs text-muted-foreground">Performance scoped to this campaign.</p>
+        </div>
+        <ReliabilityKpiRow
+          scopedTickets={allTickets.filter(
+            (t) =>
+              !t.isParent &&
+              (t.metadata?.campaignId === selectedCampaignId ||
+                t.metadata?.campaignName === campaignData?.name ||
+                t.sourceCampaignName === campaignData?.name),
+          )}
+          scope="campaign"
+          size="compact"
+        />
+      </section>
+
       <div id="map-section">
         <ChargerMap
           chargers={filteredChargers}
