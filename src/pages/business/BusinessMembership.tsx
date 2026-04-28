@@ -12,6 +12,7 @@ import { DemoInvoicesTab } from "@/components/partnership-hub/DemoInvoicesTab";
 import NochPlusDashboard from "@/pages/placeholders/NochPlusDashboard";
 import NochPlusMembers from "@/pages/placeholders/NochPlusMembers";
 import { Card, CardContent } from "@/components/ui/card";
+import { MemberRoiSection } from "@/components/business/membership/MemberRoiSection";
 
 export default function BusinessMembership() {
   const [tab, setTab] = useState("active-members");
