@@ -42,6 +42,7 @@ export default function BusinessMembership() {
               <NochPlusDashboard />
             </CardContent>
           </Card>
+          <MemberRoiSection />
           <Card>
             <CardContent className="p-0">
               <NochPlusMembers />
