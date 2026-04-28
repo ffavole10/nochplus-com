@@ -60,6 +60,10 @@ export default function CommandCenterMissionControl() {
         </div>
       </div>
 
+      <div className="border-b border-border bg-card px-6 py-4">
+        <ReliabilityKpiRow scopedTickets={allTickets} scope="fleet" size="large" />
+      </div>
+
       <div className="flex-1 min-h-0 overflow-auto">
         {view === "map" ? <NochPlusMonitoring /> : <NochPlusChargers />}
       </div>
