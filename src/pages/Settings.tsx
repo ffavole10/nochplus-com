@@ -19,8 +19,8 @@ import { AvatarUpload } from "@/components/AvatarUpload";
 import { CampaignManagement } from "@/components/settings/CampaignManagement";
 import { PartnerManagement } from "@/components/settings/PartnerManagement";
 import { DataManagement, DuplicateTicketCleanup } from "@/components/settings/DataManagement";
-import { AnalyticsTab } from "@/components/settings/AnalyticsTab";
 import { RateCardsTab } from "@/components/settings/RateCardsTab";
+import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
 import { QuoteRulesTab } from "@/components/settings/QuoteRulesTab";
 import { CustomerOverridesTab } from "@/components/settings/CustomerOverridesTab";
 import { CustomerRateSheetsTab } from "@/components/settings/CustomerRateSheetsTab";
@@ -79,17 +79,15 @@ const ROLE_ICONS: Record<string, string> = {
 
 const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner", "technician"];
 
-type SettingsTab = "neural-os" | "campaigns" | "data" | "partners" | "users" | "access" | "quoting" | "analytics";
+type SettingsTab = "neural-os" | "quoting" | "team-access" | "integrations" | "campaigns" | "data";
 
 const TABS: { value: SettingsTab; label: string; tooltip?: string }[] = [
   { value: "neural-os", label: "Neural OS" },
-  { value: "campaigns", label: "Campaigns" },
-  { value: "data", label: "Data Management" },
-  { value: "partners", label: "Partners", tooltip: "Moved to Business → Accounts (Partner filter)" },
   { value: "quoting", label: "Quoting & Rates" },
-  { value: "users", label: "Users" },
-  { value: "access", label: "Access Control" },
-  { value: "analytics", label: "Analytics" },
+  { value: "team-access", label: "Team & Access" },
+  { value: "integrations", label: "Integrations" },
+  { value: "campaigns", label: "Campaigns (admin)" },
+  { value: "data", label: "Data Tools" },
 ];
 
 const DEFAULT_ACCESS_BY_ROLE: Record<string, Record<SectionKey, boolean>> = {
@@ -139,7 +137,12 @@ const Settings = () => {
   usePageTitle('Settings');
   const navigate = useNavigate();
   const { session } = useAuth();
-  const [activeTab, setActiveTab] = useState<SettingsTab>("neural-os");
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("tab") as SettingsTab | null;
+    const valid: SettingsTab[] = ["neural-os", "quoting", "team-access", "integrations", "campaigns", "data"];
+    return t && valid.includes(t) ? t : "neural-os";
+  });
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
