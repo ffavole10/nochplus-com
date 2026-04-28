@@ -12,6 +12,8 @@ import { CustomerLogo } from "@/components/CustomerLogo";
 import { TicketDetailPanel } from "@/components/tickets/TicketDetailPanel";
 import { TicketReviewPanel } from "@/components/tickets/TicketReviewPanel";
 import { ParentTicketDetail } from "@/components/tickets/ParentTicketDetail";
+import { WorkflowExpansion } from "@/components/tickets/workflow/WorkflowExpansion";
+import { inferWorkflowSnapshot, buttonLabelForTicket } from "@/lib/ticketWorkflow";
 
 import { ServiceTicket } from "@/types/serviceTicket";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
