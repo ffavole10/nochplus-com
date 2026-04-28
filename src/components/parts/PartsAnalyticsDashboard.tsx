@@ -457,7 +457,7 @@ export function PartsAnalyticsDashboard({ parts, movements, onFilterLowStock, on
         <Card className="hover:shadow-metric-hover transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">AutoHeal Accuracy</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Neural OS Accuracy</span>
               <Brain className="h-4 w-4 text-primary" />
             </div>
             <p className="text-2xl font-bold text-foreground">—</p>
@@ -476,7 +476,7 @@ export function PartsAnalyticsDashboard({ parts, movements, onFilterLowStock, on
             </div>
             <p className="text-2xl font-bold text-foreground">{analytics.aiAssessments} <span className="text-sm font-normal text-muted-foreground">parts</span></p>
             <div className="mt-2 pt-2 border-t border-border/50">
-              <p className="text-xs text-muted-foreground">Recommended by AutoHeal</p>
+              <p className="text-xs text-muted-foreground">Recommended by Neural OS</p>
             </div>
           </CardContent>
         </Card>

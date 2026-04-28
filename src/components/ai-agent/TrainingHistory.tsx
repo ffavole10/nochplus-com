@@ -122,7 +122,7 @@ export function TrainingHistory() {
       <div>
         <h2 className="text-lg font-bold text-foreground">Training History</h2>
         <p className="text-sm text-muted-foreground">
-          All field reports uploaded to train AutoHeal's diagnostic engine.
+          All field reports uploaded to train Neural OS's diagnostic engine.
         </p>
       </div>
 

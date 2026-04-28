@@ -133,7 +133,7 @@ export function MLSection() {
       <div>
         <h2 className="text-lg font-bold text-foreground">Machine Learning & Knowledge Base</h2>
         <p className="text-sm text-muted-foreground">
-          AutoHeal learns from every field report to improve accuracy over time. Upload field service reports to train the system.
+          Neural OS learns from every field report to improve accuracy over time. Upload field service reports to train the system.
         </p>
       </div>
 

@@ -222,11 +222,11 @@ export function ServiceTicketDetailModal({ ticket, open, onOpenChange }: Service
               <p className="text-sm text-muted-foreground leading-relaxed">{ticket.issue.description}</p>
             </div>
 
-            {/* AutoHeal Assessment */}
+            {/* Neural OS Assessment */}
             <div className="border-t pt-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" /> AutoHeal Assessment
+                  <CheckCircle className="h-4 w-4" /> Neural OS Assessment
                 </h4>
                 <Button
                   variant="outline"
@@ -492,7 +492,7 @@ function WorkflowStepDetail({ ticket, stepNumber }: { ticket: ServiceTicket; ste
           ) : (
             <>
               <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority} Risk</Badge>
-              <p className="text-xs text-muted-foreground">AutoHeal AI assessment completed. Issue analyzed and priority classified.</p>
+              <p className="text-xs text-muted-foreground">Neural OS AI assessment completed. Issue analyzed and priority classified.</p>
               <p className="text-xs text-muted-foreground">Recommendation: {ticket.issue.description.substring(0, 120)}...</p>
             </>
           )}

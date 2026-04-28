@@ -449,7 +449,7 @@ function WorkflowStepDetail({ ticket, stepNumber }: { ticket: ServiceTicket; ste
           ) : (
             <>
               <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority} Risk</Badge>
-              <p className="text-xs text-muted-foreground">AutoHeal AI assessment completed.</p>
+              <p className="text-xs text-muted-foreground">Neural OS AI assessment completed.</p>
             </>
           )}
         </div>

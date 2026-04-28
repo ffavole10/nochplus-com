@@ -47,7 +47,7 @@ export function RetryFallbackLogic({ value, onChange }: Props) {
       <div>
         <h2 className="text-lg font-bold text-foreground">Retry & Fallback Logic</h2>
         <p className="text-sm text-muted-foreground">
-          Define how AutoHeal handles failures, timeouts, and low-confidence results.
+          Define how Neural OS handles failures, timeouts, and low-confidence results.
         </p>
       </div>
 
@@ -171,7 +171,7 @@ export function RetryFallbackLogic({ value, onChange }: Props) {
             className="space-y-3"
           >
             {[
-              { value: "flag_review", label: "Flag ticket for manual review", desc: 'Adds "AutoHeal Failed" tag, notifies manager' },
+              { value: "flag_review", label: "Flag ticket for manual review", desc: 'Adds "Neural OS Failed" tag, notifies manager' },
               { value: "partial_save", label: "Create ticket with partial assessment", desc: "Save whatever data was collected" },
               { value: "skip_silent", label: "Skip silently", desc: "Log the failure, take no visible action" },
             ].map((opt) => (

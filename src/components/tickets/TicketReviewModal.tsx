@@ -180,7 +180,7 @@ export function TicketReviewModal({ ticket, open, onClose, onApprove, onReject }
               <Badge className={PRIORITY_STYLES[ticket.priority]}>{ticket.priority}</Badge>
               <Badge variant="outline">{SOURCE_LABELS[ticket.source]}</Badge>
             </div>
-            <DialogDescription>Review intake data and approve for AutoHeal assessment or reject.</DialogDescription>
+            <DialogDescription>Review intake data and approve for Neural OS assessment or reject.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 mt-2">
@@ -286,9 +286,9 @@ export function TicketReviewModal({ ticket, open, onClose, onApprove, onReject }
       <AlertDialog open={approveConfirmOpen} onOpenChange={setApproveConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Run AutoHeal Assessment?</AlertDialogTitle>
+            <AlertDialogTitle>Run Neural OS Assessment?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will trigger AutoHeal assessment using ticket data and BTC database. Continue?
+              This will trigger Neural OS assessment using ticket data and BTC database. Continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -304,7 +304,7 @@ export function TicketReviewModal({ ticket, open, onClose, onApprove, onReject }
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {error ? <XCircle className="h-5 w-5 text-critical" /> : <Brain className="h-5 w-5 text-primary animate-pulse" />}
-              {error ? "Assessment Failed" : "Running AutoHeal™ Assessment..."}
+              {error ? "Assessment Failed" : "Running Neural OS Assessment..."}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">

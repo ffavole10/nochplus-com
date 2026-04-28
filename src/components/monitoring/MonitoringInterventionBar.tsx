@@ -4,11 +4,11 @@ import { Brain } from "lucide-react";
 export function MonitoringInterventionBar() {
   return (
     <div className="flex items-stretch gap-0 rounded-lg overflow-hidden border border-border text-xs">
-      {/* AutoHeal Status */}
+      {/* Neural OS Status */}
       <div className="flex items-center gap-2 bg-[hsl(var(--foreground))] text-white px-4 py-2.5 min-w-[220px]">
         <Brain className="h-5 w-5 text-[#1B8A7A]" />
         <div>
-          <div className="font-bold">AutoHeal™</div>
+          <div className="font-bold">Neural OS</div>
           <div className="text-white/70">Resolve: 78.3% · 34 healed · 42s avg</div>
         </div>
       </div>

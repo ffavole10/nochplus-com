@@ -138,7 +138,7 @@ export function TokenCostControls({ value, onChange }: Props) {
                   >
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="pause" id="pause" />
-                      <Label htmlFor="pause" className="text-xs">Pause AutoHeal</Label>
+                      <Label htmlFor="pause" className="text-xs">Pause Neural OS</Label>
                     </div>
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="fallback" id="fallback-only" />
