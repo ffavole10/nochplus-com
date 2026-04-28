@@ -282,11 +282,6 @@ export default function WorkOrderDetailModal({
 
   /* ---------- render ---------- */
 
-  const woRelations = useWorkOrderRelations({
-    workOrderId: workOrder?.id || null,
-    siteName: workOrder?.site_name || null,
-    siteAddress: workOrder?.site_address || null,
-  });
   const woLifecycleStages = workOrder
     ? buildWorkOrderLifecycleChain({
         workOrder,
