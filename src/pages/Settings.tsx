@@ -346,9 +346,6 @@ const Settings = () => {
         {activeTab === "integrations" && <IntegrationsTab />}
         {activeTab === "quoting" && <QuotingAndRatesSection />}
         {activeTab === "team-access" && (
-          <></>
-        )}
-        {activeTab === "team-access" && (
           <>
             {/* Header */}
             <div className="flex items-start gap-4">
