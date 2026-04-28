@@ -67,6 +67,7 @@ export default function BusinessMembership() {
             roiInputs={hub.roiInputs}
             setRoiInputs={hub.setRoiInputs}
             summary={hub.summary}
+            onNavigate={(t) => setTab(t)}
           />
         </TabsContent>
 
@@ -80,6 +81,11 @@ export default function BusinessMembership() {
             sites={hub.sites}
             roiInputs={hub.roiInputs}
             summary={hub.summary}
+            onLoadPlan={(plan) => {
+              const data: any = (plan as any).plan_data || {};
+              hub.loadPlan({ partnerInfo: data.partnerInfo, sites: data.sites, roiInputs: data.roiInputs });
+              setTab("plan-builder");
+            }}
           />
         </TabsContent>
 
