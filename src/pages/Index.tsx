@@ -12,6 +12,8 @@ import { ReportLibrary } from "@/components/dashboard/ReportLibrary";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useChargerRecords, useCampaign } from "@/hooks/useCampaigns";
 import { Database } from "lucide-react";
+import { ReliabilityKpiRow } from "@/components/reliability/ReliabilityKpiRow";
+import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 
 const Index = () => {
   usePageTitle('Dashboard');
