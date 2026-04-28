@@ -54,6 +54,13 @@ import WorkOrderEditModal from "@/components/field-capture/WorkOrderEditModal";
 import ReassignTechnicianModal from "@/components/field-capture/ReassignTechnicianModal";
 import DeleteWorkOrderDialog from "@/components/field-capture/DeleteWorkOrderDialog";
 import SowViewerDialog from "@/components/field-capture/SowViewerDialog";
+import { useWorkOrderRelations } from "@/hooks/useEntityRelations";
+import { LifecycleChain } from "@/components/lifecycle/LifecycleChain";
+import { buildWorkOrderLifecycleChain } from "@/components/lifecycle/buildChain";
+import {
+  ParentTicketPanel,
+  FieldReportPanel,
+} from "@/components/lifecycle/LinkedEntityPanels";
 
 import {
   AlertDialog,
