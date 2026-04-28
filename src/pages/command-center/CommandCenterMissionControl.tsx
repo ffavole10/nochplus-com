@@ -11,6 +11,7 @@ import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 export default function CommandCenterMissionControl() {
   usePageTitle("Mission Control");
   const [view, setView] = useState<"map" | "list">("map");
+  const allTickets = useServiceTicketsStore((s) => s.tickets);
 
   return (
     <div className="flex flex-col h-full">
