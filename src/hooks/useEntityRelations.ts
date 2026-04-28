@@ -64,35 +64,26 @@ export function useTicketRelations(opts: {
     }
     setLoading(true);
     (async () => {
-      const tasks: Promise<any>[] = [];
-
       // Submission
-      if (submissionDbId) {
-        tasks.push(
-          supabase
+      const subRes = submissionDbId
+        ? await supabase
             .from("submissions")
             .select("id, submission_id, full_name, email, status, created_at")
             .eq("id", submissionDbId)
-            .maybeSingle(),
-        );
-      } else {
-        tasks.push(Promise.resolve({ data: null }));
-      }
+            .maybeSingle()
+        : { data: null };
 
       // Estimates
-      if (ticketTextId) {
-        tasks.push(
-          supabase
+      const estRes = ticketTextId
+        ? await supabase
             .from("estimates")
             .select("id, estimate_number, total, status, created_at")
             .eq("ticket_id", ticketTextId)
-            .order("created_at", { ascending: false }),
-        );
-      } else {
-        tasks.push(Promise.resolve({ data: [] }));
-      }
+            .order("created_at", { ascending: false })
+        : { data: [] };
 
       // Work Orders (soft match — site_name OR site_address exact)
+      let woRes: { data: any[] | null } = { data: [] };
       if (siteName || siteAddress) {
         let q = supabase
           .from("work_orders")
@@ -103,12 +94,9 @@ export function useTicketRelations(opts: {
         if (siteName) orParts.push(`site_name.eq.${siteName}`);
         if (siteAddress) orParts.push(`site_address.eq.${siteAddress}`);
         if (orParts.length) q = q.or(orParts.join(","));
-        tasks.push(q);
-      } else {
-        tasks.push(Promise.resolve({ data: [] }));
+        woRes = await q;
       }
 
-      const [subRes, estRes, woRes] = await Promise.all(tasks);
       if (cancelled) return;
 
       setSubmission((subRes?.data as RelatedSubmission) ?? null);
