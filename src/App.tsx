@@ -55,6 +55,13 @@ import Business from "./pages/placeholders/Business";
 import Knowledge from "./pages/placeholders/Knowledge";
 import MissionControlHome from "./pages/placeholders/MissionControlHome";
 
+// Knowledge section pages (Batch 3)
+import KnowledgeSwiLibrary from "./pages/knowledge/KnowledgeSwiLibrary";
+import KnowledgePartsCatalog from "./pages/knowledge/KnowledgePartsCatalog";
+import KnowledgeReportTemplates from "./pages/knowledge/KnowledgeReportTemplates";
+import KnowledgeRegulatory from "./pages/knowledge/KnowledgeRegulatory";
+import KnowledgeExternalSources from "./pages/knowledge/KnowledgeExternalSources";
+
 // Campaign pages — new tab structure
 import CampaignList from "./pages/campaigns/CampaignList";
 import CampaignOverview from "./pages/campaigns/CampaignOverview";
@@ -153,6 +160,11 @@ const App = () => (
             <Route path="/operations" element={<Operations />} />
             <Route path="/business" element={<Business />} />
             <Route path="/knowledge" element={<Knowledge />} />
+            <Route path="/knowledge/swi-library" element={<KnowledgeSwiLibrary />} />
+            <Route path="/knowledge/parts-catalog" element={<KnowledgePartsCatalog />} />
+            <Route path="/knowledge/report-templates" element={<KnowledgeReportTemplates />} />
+            <Route path="/knowledge/regulatory" element={<KnowledgeRegulatory />} />
+            <Route path="/knowledge/external-sources" element={<KnowledgeExternalSources />} />
 
             {/* Campaign HQ and tab routes */}
             <Route path="/campaigns" element={<CampaignList />} />
