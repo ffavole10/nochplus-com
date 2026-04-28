@@ -609,10 +609,10 @@ export function PlatformSidebar() {
               </span>
             </div>
             <SidebarMenu className="px-1">
-              <NavItem item={{ title: "All Work Orders", url: "/field-capture/admin/work-orders", icon: List }} />
-              <NavItem item={{ title: "Create Work Order", url: "/field-capture/admin/create-job", icon: Plus }} />
+              <NavItem item={{ title: "All Work Orders", url: "/field-capture/admin/work-orders", icon: List, tooltip: "Moved to Operations → Work Orders" }} />
+              <NavItem item={{ title: "Create Work Order", url: "/field-capture/admin/create-job", icon: Plus, tooltip: "Now a button on Operations → Work Orders" }} />
               <NavItem item={{ title: "Work Templates", url: "/field-capture/admin/templates", icon: FileText, tooltip: "Moved to Knowledge → Report Templates" }} />
-              <NavItem item={{ title: "Team Performance", url: "/field-capture/admin/performance", icon: TrendingUp }} />
+              <NavItem item={{ title: "Team Performance", url: "/field-capture/admin/performance", icon: TrendingUp, tooltip: "Moved to Operations → Team Performance (Scorecard view)" }} />
             </SidebarMenu>
           </div>
         )}
