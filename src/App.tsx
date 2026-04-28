@@ -54,6 +54,8 @@ import Operations from "./pages/placeholders/Operations";
 import Business from "./pages/placeholders/Business";
 import Knowledge from "./pages/placeholders/Knowledge";
 import MissionControlHome from "./pages/placeholders/MissionControlHome";
+import CommandCenterMissionControl from "./pages/command-center/CommandCenterMissionControl";
+import CommandCenterPlatformAnalytics from "./pages/command-center/CommandCenterPlatformAnalytics";
 
 // Knowledge section pages (Batch 3)
 import KnowledgeSwiLibrary from "./pages/knowledge/KnowledgeSwiLibrary";
@@ -169,9 +171,10 @@ const App = () => (
           <Route path="/field" element={<FieldLogin />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route element={<ProtectedRoute><MainPlatformLayout /></ProtectedRoute>}>
-            {/* New IA top-level placeholders (Batch 1) */}
-            <Route path="/command-center" element={<CommandCenter />} />
-            <Route path="/command-center/mission-control" element={<MissionControlHome />} />
+            {/* Command Center */}
+            <Route path="/command-center" element={<Navigate to="/command-center/mission-control" replace />} />
+            <Route path="/command-center/mission-control" element={<CommandCenterMissionControl />} />
+            <Route path="/command-center/platform-analytics" element={<CommandCenterPlatformAnalytics />} />
             <Route path="/operations" element={<Navigate to="/operations/campaigns" replace />} />
             <Route path="/operations/campaigns" element={<OperationsCampaigns />} />
             <Route path="/operations/campaigns/:tab" element={<OperationsCampaigns />} />

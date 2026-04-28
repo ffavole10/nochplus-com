@@ -9,7 +9,7 @@ import {
   Brain, Sliders, BarChart3, List, Plus, LayoutGrid, Eye, FileText,
   TrendingUp, Kanban, Target, Workflow, Briefcase, BookText, PackageOpen,
   ClipboardList, ShieldCheck, Globe, Wrench, Boxes, UserCheck,
-  BadgeCheck, Inbox } from
+  BadgeCheck, Inbox, Radar, LineChart } from
 "lucide-react";
 import { toast } from "sonner";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -389,7 +389,10 @@ export function PlatformSidebar() {
           to="/command-center"
           open={newSectionsOpen["command-center"]}
           onToggle={() => toggleNewSection("command-center")}
-        />
+        >
+          <NavItem item={{ title: "Mission Control", url: "/command-center/mission-control", icon: Radar }} />
+          <NavItem item={{ title: "Platform Analytics", url: "/command-center/platform-analytics", icon: LineChart }} />
+        </NewSectionHeader>
         <NewSectionHeader
           label="Operations"
           icon={Workflow}
