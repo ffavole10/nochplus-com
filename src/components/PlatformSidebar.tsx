@@ -395,7 +395,14 @@ export function PlatformSidebar() {
           to="/operations"
           open={newSectionsOpen.operations}
           onToggle={() => toggleNewSection("operations")}
-        />
+        >
+          <NavItem item={{ title: "Campaigns", url: "/operations/campaigns", icon: Target }} />
+          <NavItem item={{ title: "Tickets", url: "/operations/tickets", icon: Ticket, badge: totalTicketCount }} />
+          <NavItem item={{ title: "Work Orders", url: "/operations/work-orders", icon: Wrench }} />
+          <NavItem item={{ title: "Estimates", url: "/operations/estimates", icon: DollarSign, badge: estimateCount }} />
+          <NavItem item={{ title: "Parts Inventory", url: "/operations/parts-inventory", icon: Boxes }} />
+          <NavItem item={{ title: "Team Performance", url: "/operations/team-performance", icon: UserCheck }} />
+        </NewSectionHeader>
         <NewSectionHeader
           label="Business"
           icon={Briefcase}
