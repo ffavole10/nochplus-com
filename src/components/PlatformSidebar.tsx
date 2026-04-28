@@ -391,7 +391,7 @@ export function PlatformSidebar() {
           onToggle={() => toggleNewSection("command-center")}
         >
           <NavItem item={{ title: "Mission Control", url: "/command-center/mission-control", icon: Radar }} />
-          <NavItem item={{ title: "Platform Analytics", url: "/command-center/platform-analytics", icon: LineChart }} />
+          <NavItem item={{ title: "Analytics", url: "/command-center/analytics", icon: BarChart3 }} />
         </NewSectionHeader>
         <NewSectionHeader
           label="Operations"
