@@ -594,6 +594,15 @@ const Settings = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Access Matrix below User Management */}
+            <AccessControlTab users={users.map(u => ({
+              user_id: u.user_id,
+              email: u.email,
+              display_name: u.display_name,
+              avatar_url: u.avatar_url,
+              roles: u.roles || [],
+            }))} />
           </>
         )}
       </main>
