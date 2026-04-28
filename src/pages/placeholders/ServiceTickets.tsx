@@ -9,8 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TicketCreationModal, type TicketCreationData } from "@/components/tickets/TicketCreationModal";
 import { CustomerLogo } from "@/components/CustomerLogo";
-import { TicketDetailPanel } from "@/components/tickets/TicketDetailPanel";
-import { TicketReviewPanel } from "@/components/tickets/TicketReviewPanel";
 import { ParentTicketDetail } from "@/components/tickets/ParentTicketDetail";
 import { WorkflowExpansion } from "@/components/tickets/workflow/WorkflowExpansion";
 import { inferWorkflowSnapshot, buttonLabelForTicket } from "@/lib/ticketWorkflow";
