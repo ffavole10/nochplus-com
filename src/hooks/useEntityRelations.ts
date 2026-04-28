@@ -64,12 +64,23 @@ export function useTicketRelations(opts: {
     }
     setLoading(true);
     (async () => {
+      // Resolve submissionDbId from ticket row if not passed
+      let resolvedSubId = submissionDbId || null;
+      if (!resolvedSubId && ticketDbId) {
+        const { data: tRow } = await supabase
+          .from("service_tickets")
+          .select("submission_id")
+          .eq("id", ticketDbId)
+          .maybeSingle();
+        resolvedSubId = (tRow as any)?.submission_id ?? null;
+      }
+
       // Submission
-      const subRes = submissionDbId
+      const subRes = resolvedSubId
         ? await supabase
             .from("submissions")
             .select("id, submission_id, full_name, email, status, created_at")
-            .eq("id", submissionDbId)
+            .eq("id", resolvedSubId)
             .maybeSingle()
         : { data: null };
 
