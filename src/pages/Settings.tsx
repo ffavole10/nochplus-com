@@ -343,17 +343,12 @@ const Settings = () => {
             <DuplicateTicketCleanup />
           </div>
         )}
-        {activeTab === "partners" && <PartnerManagement />}
+        {activeTab === "integrations" && <IntegrationsTab />}
         {activeTab === "quoting" && <QuotingAndRatesSection />}
-        {activeTab === "analytics" && <AnalyticsTab />}
-        {activeTab === "access" && <AccessControlTab users={users.map(u => ({
-          user_id: u.user_id,
-          email: u.email,
-          display_name: u.display_name,
-          avatar_url: u.avatar_url,
-          roles: u.roles || [],
-        }))} />}
-        {activeTab === "users" && (
+        {activeTab === "team-access" && (
+          <></>
+        )}
+        {activeTab === "team-access" && (
           <>
             {/* Header */}
             <div className="flex items-start gap-4">
