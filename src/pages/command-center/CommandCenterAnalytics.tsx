@@ -164,7 +164,6 @@ export default function CommandCenterAnalytics() {
             value="Awaiting telemetry"
             pillText="Pilot · CARB integration in progress"
             pillTone="pilot"
-            benchmark="Industry: 71% · Tesla: 99.95% · Target: 95%+"
             muted
           />
           <KpiCard
