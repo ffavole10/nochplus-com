@@ -568,8 +568,11 @@ export function PlatformSidebar() {
         {/* ─── FIELD CAPTURE (admin only, requires section access) ─── */}
         {canAccess("field_capture") && (hasRole("super_admin") || hasRole("admin") || hasRole("manager") || hasRole("account_manager")) && (
           <div className="pt-2 mt-2 border-t border-sidebar-border">
-            <div className="px-3 py-2 text-xs font-bold tracking-wider uppercase text-sidebar-foreground/70">
-              Field Capture
+            <div className="px-3 py-2 text-xs font-bold tracking-wider uppercase text-sidebar-foreground/50 flex items-center gap-2">
+              <span>Field Capture</span>
+              <span className="px-1.5 py-0 rounded-full text-[8px] font-semibold tracking-wider border border-sidebar-foreground/20 text-sidebar-foreground/50">
+                LEGACY
+              </span>
             </div>
             <SidebarMenu className="px-1">
               <NavItem item={{ title: "All Work Orders", url: "/field-capture/admin/work-orders", icon: List }} />
