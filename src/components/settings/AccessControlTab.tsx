@@ -467,8 +467,8 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
                   <thead>
                     <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wider">
                       <th className="text-left font-medium py-2 pr-4">User</th>
-                      {SECTION_KEYS.map((s) => (
-                        <th key={s} className="text-center font-medium py-2 px-3">{SECTION_LABELS[s]}</th>
+                      {NEW_SECTION_KEYS.map((s) => (
+                        <th key={s} className="text-center font-medium py-2 px-3">{NEW_SECTION_LABELS[s]}</th>
                       ))}
                     </tr>
                   </thead>
