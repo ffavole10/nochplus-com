@@ -165,7 +165,14 @@ const App = () => (
             {/* New IA top-level placeholders (Batch 1) */}
             <Route path="/command-center" element={<CommandCenter />} />
             <Route path="/command-center/mission-control" element={<MissionControlHome />} />
-            <Route path="/operations" element={<Operations />} />
+            <Route path="/operations" element={<Navigate to="/operations/campaigns" replace />} />
+            <Route path="/operations/campaigns" element={<OperationsCampaigns />} />
+            <Route path="/operations/campaigns/:tab" element={<OperationsCampaigns />} />
+            <Route path="/operations/tickets" element={<OperationsTickets />} />
+            <Route path="/operations/work-orders" element={<OperationsWorkOrders />} />
+            <Route path="/operations/estimates" element={<OperationsEstimates />} />
+            <Route path="/operations/parts-inventory" element={<OperationsPartsInventory />} />
+            <Route path="/operations/team-performance" element={<OperationsTeamPerformance />} />
             <Route path="/business" element={<Business />} />
             <Route path="/knowledge" element={<Knowledge />} />
             <Route path="/knowledge/swi-library" element={<KnowledgeSwiLibrary />} />
