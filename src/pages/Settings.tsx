@@ -81,11 +81,11 @@ const ASSIGNABLE_ROLES = ["admin", "manager", "employee", "customer", "partner",
 
 type SettingsTab = "neural-os" | "campaigns" | "data" | "partners" | "users" | "access" | "quoting" | "analytics";
 
-const TABS: { value: SettingsTab; label: string }[] = [
+const TABS: { value: SettingsTab; label: string; tooltip?: string }[] = [
   { value: "neural-os", label: "Neural OS" },
   { value: "campaigns", label: "Campaigns" },
   { value: "data", label: "Data Management" },
-  { value: "partners", label: "Partners" },
+  { value: "partners", label: "Partners", tooltip: "Moved to Business → Accounts (Partner filter)" },
   { value: "quoting", label: "Quoting & Rates" },
   { value: "users", label: "Users" },
   { value: "access", label: "Access Control" },
