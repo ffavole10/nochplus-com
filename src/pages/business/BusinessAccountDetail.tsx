@@ -47,8 +47,8 @@ export default function BusinessAccountDetail() {
   );
   const accountDeals = useMemo(() => deals.filter((d) => d.partner_id === accountId), [deals, accountId]);
   const accountTickets = useMemo(
-    () => allTickets.filter((t) => !t.isParent && (t.companyId === accountId || t.customer === account?.company)),
-    [allTickets, accountId, account]
+    () => allTickets.filter((t) => !t.isParent && t.customer?.company === account?.company),
+    [allTickets, account]
   );
 
   const [tab, setTab] = useState("overview");
@@ -156,8 +156,8 @@ export default function BusinessAccountDetail() {
                 <tbody>
                   {accountTickets.slice(0, 50).map((t) => (
                     <tr key={t.id} className="border-b border-border/50">
-                      <td className="py-2 px-3 font-mono text-xs">{t.id}</td>
-                      <td className="py-2 px-3">{t.issueDescription || "—"}</td>
+                      <td className="py-2 px-3 font-mono text-xs">{t.ticketId}</td>
+                      <td className="py-2 px-3">{t.issue?.description || "—"}</td>
                       <td className="py-2 px-3"><Badge variant="outline">{t.status}</Badge></td>
                       <td className="py-2 px-3 text-xs text-muted-foreground">{t.createdAt ? format(new Date(t.createdAt), "MMM d, yyyy") : "—"}</td>
                     </tr>
@@ -218,7 +218,7 @@ export default function BusinessAccountDetail() {
                   {accountDeals.map((d) => (
                     <tr key={d.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer"
                         onClick={() => navigate(`/growth/deals/${d.id}`)}>
-                      <td className="py-2 px-3">{d.title}</td>
+                      <td className="py-2 px-3">{d.deal_name}</td>
                       <td className="py-2 px-3"><Badge variant="outline" className="text-xs">{d.stage}</Badge></td>
                       <td className="py-2 px-3 text-right">${Number(d.value || 0).toLocaleString()}</td>
                     </tr>
