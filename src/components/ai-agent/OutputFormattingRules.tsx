@@ -58,7 +58,7 @@ export function OutputFormattingRules({ value, onChange }: Props) {
       <div>
         <h2 className="text-lg font-bold text-foreground">Output Formatting Rules</h2>
         <p className="text-sm text-muted-foreground">
-          Standardize how AutoHeal structures its diagnostic output on every ticket.
+          Standardize how Neural OS structures its diagnostic output on every ticket.
         </p>
       </div>
 
@@ -70,7 +70,7 @@ export function OutputFormattingRules({ value, onChange }: Props) {
               <FileText className="h-4 w-4 text-primary" />
               <h3 className="text-sm font-semibold">Required Output Fields</h3>
             </div>
-            <p className="text-[10px] text-muted-foreground">AutoHeal must always populate these fields or flag the assessment incomplete.</p>
+            <p className="text-[10px] text-muted-foreground">Neural OS must always populate these fields or flag the assessment incomplete.</p>
             <div className="space-y-2.5">
               {Object.entries(FIELD_LABELS).map(([key, label]) => (
                 <div key={key} className="flex items-center justify-between">

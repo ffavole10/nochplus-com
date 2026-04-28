@@ -116,7 +116,7 @@ export function AssessmentReportTab({ ticket }: AssessmentReportTabProps) {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              The AutoHeal™ assessment report for {ticket.ticketId} will be attached as a PDF.
+              The Neural OS assessment report for {ticket.ticketId} will be attached as a PDF.
             </p>
             <div className="flex justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => setSendOpen(false)}>Cancel</Button>

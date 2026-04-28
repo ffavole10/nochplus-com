@@ -235,9 +235,9 @@ export function buildReportDataFromTicket(ticket: ServiceTicket): AssessmentRepo
     warrantyNotes: ticket.assessmentData?.warrantyNotes || [],
     dataSources: ticket.assessmentData?.dataSources || [
       "Customer submission",
-      "AutoHeal™ AI analysis",
+      "Neural OS AI analysis",
     ],
-    generatedBy: "AutoHeal™ AI Engine v2.1",
+    generatedBy: "Neural OS AI Engine v2.1",
     aiModel: "Claude Sonnet 4",
   };
 }

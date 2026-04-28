@@ -102,12 +102,12 @@ export function ScanFiltersPanel({
   return (
     <ScrollArea className="h-full">
       <div className="p-4 space-y-5">
-        {/* AutoHeal placeholder */}
+        {/* Neural OS placeholder */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="outline" className="w-full gap-2 opacity-60 cursor-not-allowed" disabled>
               <Sparkles className="h-4 w-4" />
-              Run AutoHeal™ Scan
+              Run Neural OS Scan
               <Badge variant="secondary" className="text-[9px] ml-auto">Coming Soon</Badge>
             </Button>
           </TooltipTrigger>

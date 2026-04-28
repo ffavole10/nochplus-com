@@ -47,7 +47,7 @@ export function DataQualitySection() {
       <div>
         <h2 className="text-lg font-bold text-foreground">Training Data Quality</h2>
         <p className="text-sm text-muted-foreground">
-          Quality of data used to train AutoHeal. Higher quality data produces more accurate diagnostics.
+          Quality of data used to train Neural OS. Higher quality data produces more accurate diagnostics.
         </p>
       </div>
 

@@ -29,7 +29,7 @@ export function MaxLiveActivity({ timeRange, customer }: Props) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Max — Live Activity</CardTitle>
-        <CardDescription>Real-time view of AutoHeal's autonomous diagnostic actions</CardDescription>
+        <CardDescription>Real-time view of Neural OS's autonomous diagnostic actions</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

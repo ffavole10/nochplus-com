@@ -38,14 +38,14 @@ const Performance = () => {
         <div className="border-t border-border pt-8">
           <div>
             <h2 className="text-lg font-bold text-foreground">Recent Activity</h2>
-            <p className="text-sm text-muted-foreground">Recent AutoHeal executions and outcomes.</p>
+            <p className="text-sm text-muted-foreground">Recent Neural OS executions and outcomes.</p>
           </div>
           <Card className="mt-4">
             <CardContent className="p-8">
               <div className="flex flex-col items-center justify-center text-center">
                 <Clock className="h-8 w-8 text-muted-foreground/40 mb-3" />
                 <p className="text-sm text-muted-foreground">
-                  Execution history will appear here after AutoHeal processes tickets
+                  Execution history will appear here after Neural OS processes tickets
                 </p>
               </div>
             </CardContent>

@@ -105,7 +105,7 @@ export function WebSearchSection() {
       <div>
         <h2 className="text-lg font-bold text-foreground">External Knowledge Sources</h2>
         <p className="text-sm text-muted-foreground">
-          Enable AutoHeal to search external sources for industry standards and documentation.
+          Enable Neural OS to search external sources for industry standards and documentation.
         </p>
       </div>
 
@@ -123,7 +123,7 @@ export function WebSearchSection() {
                 <Label htmlFor="web-search" className="text-xs">Enable</Label>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mb-2">Enable AutoHeal to search web for:</p>
+            <p className="text-xs text-muted-foreground mb-2">Enable Neural OS to search web for:</p>
             <div className="flex flex-wrap gap-2 mb-4">
               {["OSHA Standards", "NEC Codes", "UL Certifications", "OEM Bulletins", "Technical Whitepapers"].map((s) => (
                 <Badge key={s} variant="outline" className="text-xs">{s}</Badge>

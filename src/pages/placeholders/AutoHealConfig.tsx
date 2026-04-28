@@ -112,7 +112,7 @@ const AutoHealConfig = () => {
       toast.error("Failed to save configuration");
       console.error(error);
     } else {
-      toast.success("Configuration saved — changes apply to next AutoHeal execution");
+      toast.success("Configuration saved — changes apply to next Neural OS execution");
     }
   };
 

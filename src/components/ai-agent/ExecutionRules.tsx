@@ -65,7 +65,7 @@ export function ExecutionRules({ value, onChange }: Props) {
       <div>
         <h2 className="text-lg font-bold text-foreground">Agent Execution Rules</h2>
         <p className="text-sm text-muted-foreground">
-          Control which tickets AutoHeal processes and under what conditions.
+          Control which tickets Neural OS processes and under what conditions.
         </p>
       </div>
 
@@ -77,7 +77,7 @@ export function ExecutionRules({ value, onChange }: Props) {
               <ListChecks className="h-4 w-4 text-primary" />
               <h3 className="text-sm font-semibold">Trigger Conditions</h3>
             </div>
-            <p className="text-[10px] text-muted-foreground">AutoHeal only runs when ALL selected conditions are met.</p>
+            <p className="text-[10px] text-muted-foreground">Neural OS only runs when ALL selected conditions are met.</p>
             <div className="space-y-2.5">
               {Object.entries(TRIGGER_LABELS).map(([key, label]) => (
                 <div key={key} className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export function ExecutionRules({ value, onChange }: Props) {
               <Ban className="h-4 w-4 text-primary" />
               <h3 className="text-sm font-semibold">Exclusion Rules</h3>
             </div>
-            <p className="text-[10px] text-muted-foreground">Skip AutoHeal for these ticket types.</p>
+            <p className="text-[10px] text-muted-foreground">Skip Neural OS for these ticket types.</p>
             <div className="space-y-2.5">
               {Object.entries(EXCLUSION_LABELS).map(([key, label]) => (
                 <div key={key}>

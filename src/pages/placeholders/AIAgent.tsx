@@ -12,7 +12,7 @@ import { AgentTestModal } from "@/components/ai-agent/AgentTestModal";
 import { AgentEditModal } from "@/components/ai-agent/AgentEditModal";
 
 const AIAgent = () => {
-  usePageTitle('AutoHeal™');
+  usePageTitle('Neural OS');
   const [agents, setAgents] = useState<AgentPrompt[]>([]);
   const [loading, setLoading] = useState(true);
   const [testAgent, setTestAgent] = useState<AgentPrompt | null>(null);
@@ -121,7 +121,7 @@ const AIAgent = () => {
           <div className="flex gap-3 items-end">
             <img src={aiAgentAvatar} alt="AI Agent" className="w-[115px] h-[115px] rounded-xl object-cover shrink-0" loading="lazy" width={115} height={115} decoding="async" />
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Hi, I'm Max! | AutoHeal™</h1>
+              <h1 className="text-2xl font-bold text-foreground">Hi, I'm Max! | Neural OS</h1>
               <p className="text-sm text-muted-foreground mt-1">Manage AI prompts and templates for charging station analysis</p>
               <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
                 AI prompts define how different agents analyze incidents and generate responses. Each prompt uses Jinja2 templates and validates output against JSON schemas. Changes take effect immediately for new executions.
@@ -157,7 +157,7 @@ const AIAgent = () => {
             <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <div className="text-sm">
               <p className="text-blue-800 dark:text-blue-200 font-medium">
-                AutoHeal™ uses a multi-agent system to analyze service tickets, match SWIs, and generate professional assessments.
+                Neural OS uses a multi-agent system to analyze service tickets, match SWIs, and generate professional assessments.
               </p>
               <p className="text-blue-600 dark:text-blue-400 text-xs mt-1">
                 Note: The AI engine is powered by Noch Power. You can test and execute prompts directly from this page.

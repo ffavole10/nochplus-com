@@ -231,11 +231,11 @@ export function ChargerSchematicModal({ chargerId, onClose }: Props) {
               </div>
             </div>
 
-            {/* AutoHeal Assessment */}
+            {/* Neural OS Assessment */}
             <div className="rounded-md p-1.5 text-[10px] mt-1" style={{ background: 'rgba(27,138,122,0.12)', border: '1px solid rgba(27,138,122,0.25)' }}>
               <div className="flex items-center gap-1 mb-0.5">
                 <Brain className="h-3 w-3 text-[#1B8A7A]" />
-                <span className="font-bold text-[#1B8A7A] text-[9px]">AutoHeal™ Assessment</span>
+                <span className="font-bold text-[#1B8A7A] text-[9px]">Neural OS Assessment</span>
               </div>
               <div className="text-white/50 text-[9px]">{charger.maxNote}</div>
             </div>
