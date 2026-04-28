@@ -147,6 +147,64 @@ export function AccessControlTab({ users }: { users: UserRow[] }) {
   const sectionUsers = (section: SectionKey) =>
     users.filter((u) => hasAccess(u.user_id, section));
 
+  // New IA helpers — derive new-section access from legacy section_access map (conservative OR).
+  const hasNewAccess = (userId: string, section: NewSectionKey) => {
+    if (superAdminIds.has(userId)) return true;
+    if (technicianIds.has(userId)) return section === "operations"; // techs get Operations only
+    const legacyKeys = NEW_TO_LEGACY[section];
+    if (legacyKeys.length === 0) return false;
+    return legacyKeys.some((k) => accessMap[userId]?.[k] === true);
+  };
+
+  const newSectionUsers = (section: NewSectionKey) =>
+    users.filter((u) => hasNewAccess(u.user_id, section));
+
+  const setNewAccess = async (target: UserRow, section: NewSectionKey, value: boolean) => {
+    if (superAdminIds.has(target.user_id)) return;
+    if (technicianIds.has(target.user_id)) return;
+    const legacyKeys = NEW_TO_LEGACY[section];
+    if (legacyKeys.length === 0) {
+      toast.info(`${NEW_SECTION_LABELS[section]} access is reserved for super admins.`);
+      return;
+    }
+    // Optimistic: write all underlying legacy keys to `value`.
+    setAccessRows((prev) => {
+      const others = prev.filter(
+        (r) => !(r.user_id === target.user_id && legacyKeys.includes(r.section_key)),
+      );
+      const next = legacyKeys.map((k) => ({
+        user_id: target.user_id,
+        section_key: k,
+        has_access: value,
+      }));
+      return [...others, ...next];
+    });
+    const rows = legacyKeys.map((k) => ({
+      user_id: target.user_id,
+      section_key: k,
+      has_access: value,
+      granted_by: session?.user?.id,
+    }));
+    const { error } = await supabase
+      .from("user_section_access")
+      .upsert(rows, { onConflict: "user_id,section_key" });
+    if (error) {
+      toast.error(`Failed: ${error.message}`);
+      loadAll();
+      return;
+    }
+    await Promise.all(legacyKeys.map((k) => writeAudit(target, k, value)));
+    toast.success(
+      `Updated ${NEW_SECTION_LABELS[section]} access for ${target.display_name || target.email}: ${value ? "enabled" : "disabled"}`,
+    );
+    const { data: a } = await supabase
+      .from("access_audit_log")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setAudit((a as AuditRow[]) || []);
+  };
+
   const writeAudit = async (target: UserRow, section: SectionKey, granted: boolean) => {
     await supabase.from("access_audit_log").insert({
       actor_user_id: session?.user?.id,
