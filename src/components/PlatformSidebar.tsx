@@ -410,7 +410,12 @@ export function PlatformSidebar() {
           to="/business"
           open={newSectionsOpen.business}
           onToggle={() => toggleNewSection("business")}
-        />
+        >
+          <NavItem item={{ title: "Accounts", url: "/business/accounts", icon: Building2 }} />
+          <NavItem item={{ title: "Pipeline", url: "/business/pipeline", icon: TrendingUp }} />
+          <NavItem item={{ title: "Membership", url: "/business/membership", icon: BadgeCheck }} />
+          <NavItem item={{ title: "Submissions", url: "/business/submissions", icon: Inbox }} />
+        </NewSectionHeader>
         <NewSectionHeader
           label="Knowledge"
           icon={BookOpen}
