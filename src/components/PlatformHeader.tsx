@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { User, LogOut, Pencil, Check, X, Search, ChevronRight, FileText, Share2 } from "lucide-react";
+import { User, LogOut, Pencil, Check, X, Search, ChevronRight, FileText, Share2, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -271,6 +271,15 @@ export function PlatformHeader() {
               <span className="hidden md:inline">Generate Report</span>
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground"
+            title="View customer portal"
+            onClick={() => { window.location.href = "/"; }}
+          >
+            <Home className="w-4 h-4" />
+          </Button>
           <NotificationBell />
           <Avatar className="h-9 w-9 cursor-pointer">
             <AvatarImage src={avatarUrl || undefined} alt="Profile" />
