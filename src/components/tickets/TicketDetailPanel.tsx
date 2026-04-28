@@ -23,6 +23,14 @@ import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 import { toast } from "sonner";
 import { useTicketLifecycle, rpcRerunAssessment, canOverrideTicketLifecycle, formatAuditAction } from "@/hooks/useTicketLifecycle";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useTicketRelations } from "@/hooks/useEntityRelations";
+import { LifecycleChain } from "@/components/lifecycle/LifecycleChain";
+import { buildTicketLifecycleChain } from "@/components/lifecycle/buildChain";
+import {
+  RelatedWorkOrdersPanel,
+  SourceSubmissionPanel,
+  RelatedEstimatePanel,
+} from "@/components/lifecycle/LinkedEntityPanels";
 
 interface TicketDetailPanelProps {
   ticket: ServiceTicket;
