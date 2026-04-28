@@ -688,22 +688,15 @@ function ChildInlinePanel({
       </div>
 
       {/* Actual panel */}
-      {ticket.status === "pending_review" ? (
-        <TicketReviewPanel
-          ticket={ticket}
-          onApprove={onApprove}
-          onReject={onReject}
-          onUpdate={onUpdate}
-          onCollapse={onCollapse}
-        />
-      ) : (
-        <TicketDetailPanel
-          key={`${ticket.id}-${defaultTab || "charger"}`}
-          ticket={ticket}
-          onCollapse={onCollapse}
-          defaultTab={defaultTab || "charger"}
-        />
-      )}
+      <WorkflowExpansion
+        key={`${ticket.id}-${defaultTab || "charger"}`}
+        ticket={ticket}
+        onCollapse={onCollapse}
+        onApprove={onApprove}
+        onReject={onReject}
+        onUpdate={onUpdate}
+        defaultTab={defaultTab || "charger"}
+      />
     </div>
   );
 }
