@@ -488,7 +488,7 @@ export function PlatformSidebar() {
         {/* ─── SERVICE DESK SECTION ─── */}
         {canAccess("service_desk") && (
           <>
-            <SectionHeader label="SERVICE DESK" icon={Ticket} section="service-desk" />
+            <SectionHeader label="SERVICE DESK" icon={Ticket} section="service-desk" legacy />
             {expandedSection === "service-desk" &&
             <div className="pl-1">
                 <SidebarMenu className="px-1">
@@ -504,7 +504,7 @@ export function PlatformSidebar() {
         {/* ─── NOCH+ PROGRAM SECTION ─── */}
         {canAccess("noch_plus") && (
           <>
-            <SectionHeader label="NOCH+" icon={Diamond} section="noch-plus" />
+            <SectionHeader label="NOCH+" icon={Diamond} section="noch-plus" legacy />
             {expandedSection === "noch-plus" &&
             <div className="pl-1">
                 <SidebarMenu className="px-1">
@@ -520,7 +520,7 @@ export function PlatformSidebar() {
         {/* ─── GROWTH SECTION ─── */}
         {canAccess("growth") && (
           <>
-            <SectionHeader label="GROWTH" icon={TrendingUp} section="growth" />
+            <SectionHeader label="GROWTH" icon={TrendingUp} section="growth" legacy />
             {expandedSection === "growth" &&
             <div className="pl-1">
                 <SidebarMenu className="px-1">
@@ -536,7 +536,7 @@ export function PlatformSidebar() {
         {/* ─── PARTNERS SECTION ─── */}
         {canAccess("partners") && (
           <>
-            <SectionHeader label="PARTNERS" icon={Handshake} section="partners" />
+            <SectionHeader label="PARTNERS" icon={Handshake} section="partners" legacy />
             {expandedSection === "partners" &&
             <div className="pl-1">
                 <SidebarMenu className="px-1">
@@ -552,7 +552,7 @@ export function PlatformSidebar() {
         {/* ─── AUTOHEAL SECTION ─── */}
         {canAccess("autoheal") && (
           <>
-            <SectionHeader label={<span>AUTOHEAL<sup className="text-[8px] align-super ml-0.5">TM</sup></span>} icon={Zap} section="autoheal" />
+            <SectionHeader label={<span>AUTOHEAL<sup className="text-[8px] align-super ml-0.5">TM</sup></span>} icon={Zap} section="autoheal" legacy />
             {expandedSection === "autoheal" &&
             <div className="pl-1">
                 <SidebarMenu className="px-1">
