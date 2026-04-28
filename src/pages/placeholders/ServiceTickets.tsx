@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TicketCreationModal, type TicketCreationData } from "@/components/tickets/TicketCreationModal";
 import { CustomerLogo } from "@/components/CustomerLogo";
-import { TicketDetailPanel } from "@/components/tickets/TicketDetailPanel";
-import { TicketReviewPanel } from "@/components/tickets/TicketReviewPanel";
 import { ParentTicketDetail } from "@/components/tickets/ParentTicketDetail";
+import { WorkflowExpansion } from "@/components/tickets/workflow/WorkflowExpansion";
+import { inferWorkflowSnapshot, buttonLabelForTicket } from "@/lib/ticketWorkflow";
 
 import { ServiceTicket } from "@/types/serviceTicket";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
@@ -550,26 +550,23 @@ export default function ServiceTickets() {
                           <Users className="h-3.5 w-3.5" />
                           {expandedTicketId === ticket.id ? "Collapse" : "View Chargers"}
                         </Button>
-                      ) : ticket.status === "pending_review" ? (
-                        <Button
-                          size="sm"
-                          className="gap-1.5 text-xs"
-                          onClick={() => handleViewDetails(ticket)}
-                        >
-                          <Brain className="h-3.5 w-3.5" />
-                          Review
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1.5 text-xs"
-                          onClick={() => handleViewDetails(ticket)}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          View Details
-                        </Button>
-                      )}
+                      ) : (() => {
+                        const snap = inferWorkflowSnapshot({ ticket });
+                        const label = buttonLabelForTicket(snap, ticket);
+                        const isReview = label === "Review";
+                        const ButtonIcon = isReview ? Brain : Eye;
+                        return (
+                          <Button
+                            size="sm"
+                            variant={isReview ? "default" : "outline"}
+                            className="gap-1.5 text-xs"
+                            onClick={() => handleViewDetails(ticket)}
+                          >
+                            <ButtonIcon className="h-3.5 w-3.5" />
+                            {expandedTicketId === ticket.id ? "Collapse" : label}
+                          </Button>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -596,22 +593,15 @@ export default function ServiceTickets() {
                     />
                   )}
 
-                  {/* Inline Review Panel for standalone tickets */}
-                  {!isParent && ticket.status === "pending_review" && expandedTicketId === ticket.id && (
-                    <TicketReviewPanel
-                      ticket={ticket}
-                      onApprove={handleApproveTicket}
-                      onReject={handleRejectTicket}
-                      onUpdate={handleUpdateTicket}
-                      onCollapse={() => setExpandedTicketId(null)}
-                    />
-                  )}
-                  {/* Inline Detail Panel for standalone tickets */}
-                  {!isParent && ticket.status !== "pending_review" && expandedTicketId === ticket.id && (
-                    <TicketDetailPanel
+                  {/* Workflow expansion for standalone tickets */}
+                  {!isParent && expandedTicketId === ticket.id && (
+                    <WorkflowExpansion
                       key={`${ticket.id}-${postApproveTab[ticket.id] || "charger"}`}
                       ticket={ticket}
                       onCollapse={() => setExpandedTicketId(null)}
+                      onApprove={handleApproveTicket}
+                      onReject={handleRejectTicket}
+                      onUpdate={handleUpdateTicket}
                       defaultTab={postApproveTab[ticket.id] || "charger"}
                     />
                   )}
@@ -696,22 +686,15 @@ function ChildInlinePanel({
       </div>
 
       {/* Actual panel */}
-      {ticket.status === "pending_review" ? (
-        <TicketReviewPanel
-          ticket={ticket}
-          onApprove={onApprove}
-          onReject={onReject}
-          onUpdate={onUpdate}
-          onCollapse={onCollapse}
-        />
-      ) : (
-        <TicketDetailPanel
-          key={`${ticket.id}-${defaultTab || "charger"}`}
-          ticket={ticket}
-          onCollapse={onCollapse}
-          defaultTab={defaultTab || "charger"}
-        />
-      )}
+      <WorkflowExpansion
+        key={`${ticket.id}-${defaultTab || "charger"}`}
+        ticket={ticket}
+        onCollapse={onCollapse}
+        onApprove={onApprove}
+        onReject={onReject}
+        onUpdate={onUpdate}
+        defaultTab={defaultTab || "charger"}
+      />
     </div>
   );
 }
