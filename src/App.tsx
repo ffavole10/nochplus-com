@@ -62,6 +62,14 @@ import KnowledgeReportTemplates from "./pages/knowledge/KnowledgeReportTemplates
 import KnowledgeRegulatory from "./pages/knowledge/KnowledgeRegulatory";
 import KnowledgeExternalSources from "./pages/knowledge/KnowledgeExternalSources";
 
+// Operations section pages (Batch 4)
+import OperationsCampaigns from "./pages/operations/OperationsCampaigns";
+import OperationsTickets from "./pages/operations/OperationsTickets";
+import OperationsWorkOrders from "./pages/operations/OperationsWorkOrders";
+import OperationsEstimates from "./pages/operations/OperationsEstimates";
+import OperationsPartsInventory from "./pages/operations/OperationsPartsInventory";
+import OperationsTeamPerformance from "./pages/operations/OperationsTeamPerformance";
+
 // Campaign pages — new tab structure
 import CampaignList from "./pages/campaigns/CampaignList";
 import CampaignOverview from "./pages/campaigns/CampaignOverview";
