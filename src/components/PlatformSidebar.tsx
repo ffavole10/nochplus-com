@@ -8,7 +8,8 @@ import {
   Filter, Crosshair, Home, Bot, BookOpen, MapPinned, Building2, Handshake,
   Brain, Sliders, BarChart3, List, Plus, LayoutGrid, Eye, FileText,
   TrendingUp, Kanban, Target, Workflow, Briefcase, BookText, PackageOpen,
-  ClipboardList, ShieldCheck, Globe, Wrench, Boxes, UserCheck } from
+  ClipboardList, ShieldCheck, Globe, Wrench, Boxes, UserCheck,
+  BadgeCheck, Inbox } from
 "lucide-react";
 import { toast } from "sonner";
 import { useCustomers } from "@/hooks/useCustomers";
