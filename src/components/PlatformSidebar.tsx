@@ -264,14 +264,22 @@ export function PlatformSidebar() {
       </button>);
   };
 
-  /* New IA top-level placeholder section header (Batch 1 — empty sections) */
+  /* New IA top-level section header (supports child nav items) */
   const NewSectionHeader = ({
     label,
     icon: Icon,
     to,
     open,
     onToggle,
-  }: { label: string; icon: React.ElementType; to: string; open: boolean; onToggle: () => void }) => {
+    children,
+  }: {
+    label: string;
+    icon: React.ElementType;
+    to: string;
+    open: boolean;
+    onToggle: () => void;
+    children?: React.ReactNode;
+  }) => {
     const isActive = location.pathname.startsWith(to);
     return (
       <div>
@@ -304,9 +312,15 @@ export function PlatformSidebar() {
           </button>
         </div>
         {open && (
-          <div className="pl-3 pr-2 py-1.5 text-[10px] uppercase tracking-wider text-sidebar-foreground/40">
-            No items yet
-          </div>
+          children ? (
+            <div className="pl-1 pt-1">
+              <SidebarMenu className="px-1">{children}</SidebarMenu>
+            </div>
+          ) : (
+            <div className="pl-3 pr-2 py-1.5 text-[10px] uppercase tracking-wider text-sidebar-foreground/40">
+              No items yet
+            </div>
+          )
         )}
       </div>
     );
