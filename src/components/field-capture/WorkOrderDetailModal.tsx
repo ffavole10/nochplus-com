@@ -194,6 +194,13 @@ export default function WorkOrderDetailModal({
     return m;
   }, [photos]);
 
+  // Cross-entity relations (must be called unconditionally before any early return)
+  const woRelations = useWorkOrderRelations({
+    workOrderId: workOrder?.id || null,
+    siteName: workOrder?.site_name || null,
+    siteAddress: workOrder?.site_address || null,
+  });
+
   if (!workOrder) return null;
 
   const inProgress = workOrder.status === "in_progress";
