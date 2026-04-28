@@ -20,6 +20,7 @@ const Index = () => {
   const { selectedCampaignId, selectedCustomer } = useCampaignContext();
   const { data: campaignData } = useCampaign(selectedCampaignId || null);
   const { data: chargerRecords = [] } = useChargerRecords(selectedCampaignId || null);
+  const allTickets = useServiceTicketsStore((s) => s.tickets);
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [focusedLocation, setFocusedLocation] = useState<string | null>(null);
   const criticalRef = useRef<HTMLDivElement>(null);
