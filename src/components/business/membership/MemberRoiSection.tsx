@@ -110,6 +110,7 @@ export function MemberRoiSection() {
               ? `≈ $${dollarsSaved.toLocaleString()} saved`
               : "Tracking remote resolutions"
           }
+          neuralLayer="resolution layer"
           building={stats.truckRollsAvoided === 0}
         />
         <RoiCard
@@ -121,7 +122,7 @@ export function MemberRoiSection() {
               ? `Top members resolve ${stats.improvementPct.toFixed(0)}% faster than network avg`
               : "Awaiting comparable resolved-ticket sample"
           }
-          neuralLayer="learning from outcomes"
+          neuralLayer="reasoning layer"
           building={stats.improvementPct == null}
         />
         <RoiCard
@@ -135,8 +136,8 @@ export function MemberRoiSection() {
         <RoiCard
           icon={Plug}
           label="Chargers Under NOCH+ Mgmt"
-          value="Building baseline"
-          sub="— AC L2 · — DC Fast"
+          value="0 enrolled"
+          sub="0 AC L2 · 0 DC Fast"
           building
         />
       </div>
