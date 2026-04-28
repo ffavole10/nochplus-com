@@ -215,8 +215,9 @@ export function PlatformSidebar() {
   const SectionHeader = ({
     label,
     icon: Icon,
-    section
-  }: {label: React.ReactNode;icon: React.ElementType;section: SectionKey;}) => {
+    section,
+    legacy = false,
+  }: {label: React.ReactNode;icon: React.ElementType;section: SectionKey;legacy?: boolean;}) => {
     const isOpen = expandedSection === section;
     return (
       <button
@@ -226,11 +227,24 @@ export function PlatformSidebar() {
           "border",
           isOpen ?
           "bg-primary text-primary-foreground border-primary shadow-sm" :
-          "bg-sidebar-accent/30 text-sidebar-foreground/80 border-sidebar-border/40 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+          "bg-sidebar-accent/30 text-sidebar-foreground/80 border-sidebar-border/40 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+          legacy && !isOpen && "text-sidebar-foreground/50 opacity-80"
         )}>
-        <div className="flex items-center gap-2.5">
-          <Icon className={cn("h-4 w-4", isOpen && "text-primary-foreground")} />
-          <span>{label}</span>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Icon className={cn("h-4 w-4 shrink-0", isOpen && "text-primary-foreground")} />
+          <span className="truncate">{label}</span>
+          {legacy && (
+            <span
+              className={cn(
+                "ml-1 px-1.5 py-0 rounded-full text-[8px] font-semibold tracking-wider border",
+                isOpen
+                  ? "border-primary-foreground/40 text-primary-foreground/90"
+                  : "border-sidebar-foreground/20 text-sidebar-foreground/50"
+              )}
+            >
+              LEGACY
+            </span>
+          )}
         </div>
         <span className={cn(
           "text-xs font-mono",
@@ -240,6 +254,54 @@ export function PlatformSidebar() {
         </span>
       </button>);
   };
+
+  /* New IA top-level placeholder section header (Batch 1 — empty sections) */
+  const NewSectionHeader = ({
+    label,
+    icon: Icon,
+    to,
+  }: { label: string; icon: React.ElementType; to: string }) => {
+    const [open, setOpen] = useState(true);
+    const isActive = location.pathname.startsWith(to);
+    return (
+      <div>
+        <div
+          className={cn(
+            "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all border",
+            isActive
+              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+              : "bg-sidebar-accent/30 text-sidebar-foreground/90 border-sidebar-border/40 hover:bg-sidebar-accent/60"
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => navigate(to)}
+            className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
+          >
+            <Icon className={cn("h-4 w-4 shrink-0", isActive && "text-primary-foreground")} />
+            <span className="truncate">{label}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setOpen((p) => !p)}
+            className={cn(
+              "text-xs font-mono pl-2",
+              isActive ? "text-primary-foreground" : "text-sidebar-foreground/60"
+            )}
+            aria-label={open ? "Collapse" : "Expand"}
+          >
+            {open ? "−" : "+"}
+          </button>
+        </div>
+        {open && (
+          <div className="pl-3 pr-2 py-1.5 text-[10px] uppercase tracking-wider text-sidebar-foreground/40">
+            No items yet
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   const NavItem = ({
     item
