@@ -348,15 +348,61 @@ export function PlatformSidebar() {
     <Sidebar side="left" collapsible="none" className="border-r border-border/50 relative h-screen sticky top-0">
       <SidebarHeader className="p-4">
         <div className="flex justify-start mb-2">
-          <img src={nochLogo} alt="Noch Power" className="w-[45%] h-auto brightness-0 invert" />
+          <button
+            type="button"
+            onClick={() => navigate("/command-center/mission-control")}
+            className="block hover:opacity-80 transition-opacity"
+            aria-label="Go to Mission Control"
+          >
+            <img src={nochLogo} alt="Noch Power" className="w-[45%] h-auto brightness-0 invert" />
+          </button>
         </div>
       </SidebarHeader>
 
       <SidebarContent className="custom-scrollbar px-2 py-2 space-y-1">
+        {/* ─── NEW IA: Top-level sections (Batch 1) ─── */}
+        <NewSectionHeader
+          label="Command Center"
+          icon={Target}
+          to="/command-center"
+          open={newSectionsOpen["command-center"]}
+          onToggle={() => toggleNewSection("command-center")}
+        />
+        <NewSectionHeader
+          label="Operations"
+          icon={Workflow}
+          to="/operations"
+          open={newSectionsOpen.operations}
+          onToggle={() => toggleNewSection("operations")}
+        />
+        <NewSectionHeader
+          label="Business"
+          icon={Briefcase}
+          to="/business"
+          open={newSectionsOpen.business}
+          onToggle={() => toggleNewSection("business")}
+        />
+        <NewSectionHeader
+          label="Knowledge"
+          icon={BookOpen}
+          to="/knowledge"
+          open={newSectionsOpen.knowledge}
+          onToggle={() => toggleNewSection("knowledge")}
+        />
+
+        {/* Visual divider between new IA and legacy sections */}
+        <div className="my-3 flex items-center gap-2 px-1">
+          <div className="h-px flex-1 bg-sidebar-border/60" />
+          <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-sidebar-foreground/40">
+            Legacy
+          </span>
+          <div className="h-px flex-1 bg-sidebar-border/60" />
+        </div>
+
         {/* ─── CAMPAIGNS SECTION ─── */}
         {canAccess("campaigns") && (
           <>
-            <SectionHeader label="CAMPAIGNS" icon={Crosshair} section="campaigns" />
+            <SectionHeader label="CAMPAIGNS" icon={Crosshair} section="campaigns" legacy />
             {expandedSection === "campaigns" &&
             <div className="space-y-2 pl-1">
                 {/* Customer/Partner dropdown */}
