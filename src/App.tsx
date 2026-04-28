@@ -70,6 +70,13 @@ import OperationsEstimates from "./pages/operations/OperationsEstimates";
 import OperationsPartsInventory from "./pages/operations/OperationsPartsInventory";
 import OperationsTeamPerformance from "./pages/operations/OperationsTeamPerformance";
 
+// Business section pages (Batch 5)
+import BusinessAccounts from "./pages/business/BusinessAccounts";
+import BusinessAccountDetail from "./pages/business/BusinessAccountDetail";
+import BusinessPipeline from "./pages/business/BusinessPipeline";
+import BusinessMembership from "./pages/business/BusinessMembership";
+import BusinessSubmissions from "./pages/business/BusinessSubmissions";
+
 // Campaign pages — new tab structure
 import CampaignList from "./pages/campaigns/CampaignList";
 import CampaignOverview from "./pages/campaigns/CampaignOverview";
@@ -173,7 +180,12 @@ const App = () => (
             <Route path="/operations/estimates" element={<OperationsEstimates />} />
             <Route path="/operations/parts-inventory" element={<OperationsPartsInventory />} />
             <Route path="/operations/team-performance" element={<OperationsTeamPerformance />} />
-            <Route path="/business" element={<Business />} />
+            <Route path="/business" element={<Navigate to="/business/accounts" replace />} />
+            <Route path="/business/accounts" element={<BusinessAccounts />} />
+            <Route path="/business/accounts/:accountId" element={<BusinessAccountDetail />} />
+            <Route path="/business/pipeline" element={<BusinessPipeline />} />
+            <Route path="/business/membership" element={<BusinessMembership />} />
+            <Route path="/business/submissions" element={<BusinessSubmissions />} />
             <Route path="/knowledge" element={<Knowledge />} />
             <Route path="/knowledge/swi-library" element={<KnowledgeSwiLibrary />} />
             <Route path="/knowledge/parts-catalog" element={<KnowledgePartsCatalog />} />
