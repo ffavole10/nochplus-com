@@ -5,10 +5,13 @@ import { cn } from "@/lib/utils";
 import NochPlusMonitoring from "@/pages/NochPlusMonitoring";
 import NochPlusChargers from "@/pages/placeholders/NochPlusChargers";
 import { NeuralOsBadge } from "@/components/business/NeuralOsBadge";
+import { ReliabilityKpiRow } from "@/components/reliability/ReliabilityKpiRow";
+import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 
 export default function CommandCenterMissionControl() {
   usePageTitle("Mission Control");
   const [view, setView] = useState<"map" | "list">("map");
+  const allTickets = useServiceTicketsStore((s) => s.tickets);
 
   return (
     <div className="flex flex-col h-full">
@@ -55,6 +58,10 @@ export default function CommandCenterMissionControl() {
             List
           </button>
         </div>
+      </div>
+
+      <div className="border-b border-border bg-card px-6 py-4">
+        <ReliabilityKpiRow scopedTickets={allTickets} scope="fleet" size="large" />
       </div>
 
       <div className="flex-1 min-h-0 overflow-auto">

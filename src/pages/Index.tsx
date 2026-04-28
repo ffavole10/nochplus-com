@@ -12,12 +12,15 @@ import { ReportLibrary } from "@/components/dashboard/ReportLibrary";
 import { useCampaignContext } from "@/contexts/CampaignContext";
 import { useChargerRecords, useCampaign } from "@/hooks/useCampaigns";
 import { Database } from "lucide-react";
+import { ReliabilityKpiRow } from "@/components/reliability/ReliabilityKpiRow";
+import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
 
 const Index = () => {
   usePageTitle('Dashboard');
   const { selectedCampaignId, selectedCustomer } = useCampaignContext();
   const { data: campaignData } = useCampaign(selectedCampaignId || null);
   const { data: chargerRecords = [] } = useChargerRecords(selectedCampaignId || null);
+  const allTickets = useServiceTicketsStore((s) => s.tickets);
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [focusedLocation, setFocusedLocation] = useState<string | null>(null);
   const criticalRef = useRef<HTMLDivElement>(null);
@@ -125,6 +128,24 @@ const Index = () => {
         ticketStats={ticketStats}
         onCriticalClick={handleCriticalClick}
       />
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-base font-bold text-foreground">Reliability KPIs</h2>
+          <p className="text-xs text-muted-foreground">Performance scoped to this campaign.</p>
+        </div>
+        <ReliabilityKpiRow
+          scopedTickets={allTickets.filter(
+            (t) =>
+              !t.isParent &&
+              (t.metadata?.campaignId === selectedCampaignId ||
+                t.metadata?.campaignName === campaignData?.name ||
+                t.sourceCampaignName === campaignData?.name),
+          )}
+          scope="campaign"
+          size="compact"
+        />
+      </section>
 
       <div id="map-section">
         <ChargerMap
