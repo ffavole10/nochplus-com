@@ -338,6 +338,11 @@ export default function WorkOrderDetailModal({
             </Button>
           </div>
 
+          {/* Lifecycle chain */}
+          <div className="border-b px-5 py-3 shrink-0">
+            <LifecycleChain stages={woLifecycleStages} title="Work order lifecycle" />
+          </div>
+
           {/* Action bar */}
           <div className="border-b px-5 py-3 flex flex-wrap items-center gap-2 shrink-0 bg-muted/20">
             {(workOrder.status === "scheduled" || inProgress) && !isArchived && (
