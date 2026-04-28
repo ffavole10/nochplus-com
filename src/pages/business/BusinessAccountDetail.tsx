@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { ReliabilityKpiRow } from "@/components/reliability/ReliabilityKpiRow";
 import { format } from "date-fns";
 
 function Empty({ label }: { label: string }) {
