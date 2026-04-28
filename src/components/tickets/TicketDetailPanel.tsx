@@ -135,7 +135,10 @@ export function TicketDetailPanel({ ticket, onCollapse, defaultTab = "charger" }
         </Button>
       </div>
 
-      {/* Progress bar */}
+      {/* Lifecycle chain */}
+      <LifecycleChain stages={lifecycleStages} title="Ticket lifecycle" />
+
+
       <div className="flex items-center gap-2">
         <span className="text-xs font-medium text-foreground">Step {ticket.currentStep} of 10</span>
         <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden max-w-xs">
