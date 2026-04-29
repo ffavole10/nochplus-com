@@ -168,6 +168,8 @@ export interface Activity {
   updated_at: string;
 }
 
+export type ChargerRelationshipType = "owner" | "cpo" | "cms" | "oem" | "service_partner";
+
 export interface AccountOpsSnapshot {
   customer_id: string;
   charger_count: number;
@@ -176,6 +178,45 @@ export interface AccountOpsSnapshot {
   uptime_pct: number;
   truck_rolls_30d: number;
   estimated_monthly_savings: number;
+  relationship_types?: ChargerRelationshipType[];
+  relationship_count?: number;
+}
+
+export interface ChargerCustomerRelationship {
+  id: string;
+  charger_id: string;
+  customer_id: string;
+  relationship_type: ChargerRelationshipType;
+  is_primary: boolean;
+  notes: string | null;
+  created_at: string;
+}
+
+export const RELATIONSHIP_LABEL: Record<ChargerRelationshipType, string> = {
+  owner: "Owner",
+  cpo: "CPO",
+  cms: "CMS",
+  oem: "OEM",
+  service_partner: "Service Partner",
+};
+
+export function relationshipContext(
+  customerName: string,
+  types: ChargerRelationshipType[] | undefined,
+  chargerCount: number,
+  sitesCount: number,
+): string {
+  if (!types || types.length === 0 || chargerCount === 0) return "";
+  const verbs: Record<ChargerRelationshipType, string> = {
+    cms: `manages as CMS`,
+    cpo: `operates as CPO`,
+    oem: `manufactured`,
+    owner: `owns at Site Host locations`,
+    service_partner: `services`,
+  };
+  const primary = types[0];
+  return `Showing all ${chargerCount} chargers ${customerName} ${verbs[primary]}` +
+    (sitesCount > 0 ? ` across ${sitesCount} sites` : "");
 }
 
 export interface AgentOutput {
