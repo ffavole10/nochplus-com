@@ -94,6 +94,7 @@ export default function GrowthDealDetail() {
         notes: (deal as any).notes || "",
         competitor: (deal as any).competitor || "",
       });
+      setEconForm(economicsFromDeal(deal));
     }
   }, [deal]);
 
