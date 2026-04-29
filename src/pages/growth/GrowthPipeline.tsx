@@ -5,6 +5,8 @@ import { useDeals, useUpdateDealStage, useCreateDeal } from "@/hooks/useDeals";
 import { useCustomers, useCreateCustomer } from "@/hooks/useCustomers";
 import { useGrowthUsers, useGrowthUserMap } from "@/hooks/useGrowthUsers";
 import { useAccountOpsSnapshots } from "@/hooks/useAccountOpsSnapshot";
+import { useLatestScribeBriefs } from "@/hooks/useAgentOutputs";
+import { DealOpsBadge } from "@/components/business/DealOpsBadge";
 import { DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type Deal } from "@/types/growth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
@@ -44,6 +46,7 @@ export default function GrowthPipeline() {
   const { data: users = [] } = useGrowthUsers();
   const userMap = useGrowthUserMap();
   const { data: opsMap = {} } = useAccountOpsSnapshots();
+  const { data: briefMap = {} } = useLatestScribeBriefs();
   const updateStage = useUpdateDealStage();
   const createDeal = useCreateDeal();
   const createCustomer = useCreateCustomer();
@@ -342,7 +345,7 @@ export default function GrowthPipeline() {
                                 className={`p-3 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all group ${
                                   snap.isDragging ? "shadow-lg rotate-1" : ""
                                 }`}
-                                onClick={() => navigate(`/growth/deals/${deal.id}`)}
+                                onClick={() => navigate(`/business/pipeline/${deal.id}`)}
                               >
                                 <div className="flex items-start gap-2 mb-2">
                                   {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
@@ -361,13 +364,13 @@ export default function GrowthPipeline() {
                                 {deal.next_action && (
                                   <p className="text-xs text-foreground line-clamp-2 mb-2">{deal.next_action}</p>
                                 )}
-                                {/* Ops badge */}
-                                {ops && (ops.charger_count > 0 || ops.incidents_30d > 0) && (
-                                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground border-t border-border/50 pt-1.5">
-                                    <Zap className="h-3 w-3 text-primary" />
-                                    <span>{ops.charger_count} chargers · {ops.incidents_30d} incidents/30d</span>
-                                  </div>
-                                )}
+                                {/* Live Ops badge with hover preview */}
+                                <DealOpsBadge
+                                  ops={ops}
+                                  customerName={partner?.company || "Unknown"}
+                                  lastBriefAt={briefMap[deal.id]?.generated_at}
+                                  buyingSignal={briefMap[deal.id]?.buying_signal_flag}
+                                />
                                 {(deal.owner || (deal.owner_user_id && userMap[deal.owner_user_id])) && (
                                   <div className="mt-1.5 pt-1.5 border-t border-border/50">
                                     <span className="text-[10px] text-muted-foreground">
@@ -413,7 +416,7 @@ export default function GrowthPipeline() {
                   const ops = opsMap[d.partner_id];
                   const days = daysInStage(d);
                   return (
-                    <tr key={d.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/growth/deals/${d.id}`)}>
+                    <tr key={d.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/business/pipeline/${d.id}`)}>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
