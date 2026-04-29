@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BadgeCheck, Crown, Wrench, FileText, Receipt, BookOpen, Layers, Users } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BusinessPageHeader } from "@/components/business/BusinessPageHeader";
-import { LockedPlanTiersTab } from "@/components/business/membership/LockedPlanTiersTab";
+import { PlanTiersTab, type PlanBuilderPreset } from "@/components/partnership-hub/PlanTiersTab";
 import { NeuralOsBadge } from "@/components/business/NeuralOsBadge";
 import { usePartnershipHub } from "@/hooks/usePartnershipHub";
 import { PlanBuilderTab } from "@/components/partnership-hub/PlanBuilderTab";
@@ -51,7 +51,20 @@ export default function BusinessMembership() {
         </TabsContent>
 
         <TabsContent value="plan-tiers" className="mt-6">
-          <LockedPlanTiersTab />
+          <PlanTiersTab
+            onNavigate={(t, preset?: PlanBuilderPreset) => {
+              if (t === "plan-builder" && preset && hub.sites.length > 0) {
+                const first = hub.sites[0];
+                const updates: any = { tier: preset.tier };
+                if (first.l2Count === 0 && first.dcCount === 0) {
+                  if (preset.chargerType === "dc") updates.dcCount = 1;
+                  else updates.l2Count = 1;
+                }
+                hub.updateSite(first.id, updates);
+              }
+              setTab(t);
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="plan-builder" className="mt-6">

@@ -135,9 +135,21 @@ function renderCell(value: Cell) {
   return <span className="text-xs text-foreground">{value}</span>;
 }
 
+const TOGGLE_STORAGE_KEY = "nochplus.planTiers.chargerToggle";
+
 export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
-  const [toggle, setToggle] = useState<ChargerToggle>("ac");
+  const [toggle, setToggle] = useState<ChargerToggle>(() => {
+    if (typeof window === "undefined") return "ac";
+    const saved = window.sessionStorage.getItem(TOGGLE_STORAGE_KEY);
+    return saved === "dc" ? "dc" : "ac";
+  });
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(TOGGLE_STORAGE_KEY, toggle);
+    }
+  }, [toggle]);
 
   const corePrice = (tier: "essential" | "priority" | "elite") =>
     toggle === "ac" ? TIER_PRICING[tier].l2 : TIER_PRICING[tier].dc;
@@ -150,6 +162,13 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         <p className="text-sm text-muted-foreground mt-1">
           From free to fully custom — five plans designed for every stage of growth
         </p>
+      </div>
+
+      {/* Outcome fees notice */}
+      <div className="flex justify-end">
+        <Badge variant="outline" className="text-xs">
+          Outcome fees launch CY 2027 for Priority+ tiers
+        </Badge>
       </div>
 
       {/* Controls row: AC/DC toggle + Show features toggle, left-aligned */}
@@ -353,11 +372,12 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                 <div className="text-sm text-foreground">{row.name}</div>
                 {row.values.map((val, i) => {
                   const isPriorityCol = TIER_ORDER[i] === "priority";
+                  const isEnterpriseCol = TIER_ORDER[i] === "enterprise";
                   return (
                     <div
                       key={i}
                       className={`text-center text-sm flex items-center justify-center min-h-[1.5rem] ${
-                        isPriorityCol ? "bg-primary/5 -my-2.5 py-2.5" : ""
+                        isPriorityCol ? "bg-primary/5 -my-2.5 py-2.5" : isEnterpriseCol ? "bg-slate-900/5 dark:bg-slate-100/5 -my-2.5 py-2.5" : ""
                       }`}
                     >
                       {renderCell(val)}
