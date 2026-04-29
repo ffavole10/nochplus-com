@@ -15,6 +15,7 @@ import { LinkChargersModal } from "@/components/business/LinkChargersModal";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
+import { DealEconomicsFields, economicsFromDeal, economicsToPayload, type DealEconomicsForm } from "@/components/business/DealEconomicsFields";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
