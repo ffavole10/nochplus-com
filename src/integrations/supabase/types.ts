@@ -2159,6 +2159,7 @@ export type Database = {
           predicted_arr: number | null
           predicted_close_date: string | null
           probability: number
+          rate_per_connector: number | null
           recurring_model: Database["public"]["Enums"]["recurring_model"] | null
           stage: Database["public"]["Enums"]["deal_stage"]
           updated_at: string
@@ -2193,6 +2194,7 @@ export type Database = {
           predicted_arr?: number | null
           predicted_close_date?: string | null
           probability?: number
+          rate_per_connector?: number | null
           recurring_model?:
             | Database["public"]["Enums"]["recurring_model"]
             | null
@@ -2229,6 +2231,7 @@ export type Database = {
           predicted_arr?: number | null
           predicted_close_date?: string | null
           probability?: number
+          rate_per_connector?: number | null
           recurring_model?:
             | Database["public"]["Enums"]["recurring_model"]
             | null
