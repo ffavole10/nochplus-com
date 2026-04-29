@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { syncAllLineItemsToCatalog } from "@/utils/partsCatalogSync";
+import { NeuralLayerPill } from "@/components/business/NeuralLayerPill";
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground border-muted" },
