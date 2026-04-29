@@ -50,7 +50,7 @@ export function pathToSection(pathname: string): SectionKey | null {
 /** Returns the current user's section access map (super_admins always get full access). */
 export function useSectionAccess() {
   const { session } = useAuth();
-  const { hasRole, loading: roleLoading } = useUserRole();
+  const { role, loading: roleLoading } = useUserRole();
   const { isTechnician, loading: fieldRoleLoading } = useFieldCaptureRole();
   const [access, setAccess] = useState<Record<SectionKey, boolean> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,7 +60,7 @@ export function useSectionAccess() {
       setLoading(false);
       return;
     }
-    const isSuper = hasRole("super_admin");
+    const isSuper = role === "super_admin";
     if (isSuper) {
       const all = SECTION_KEYS.reduce((acc, k) => ({ ...acc, [k]: true }), {} as Record<SectionKey, boolean>);
       setAccess(all);
@@ -84,7 +84,7 @@ export function useSectionAccess() {
     }
     setAccess(map);
     setLoading(false);
-  }, [session?.user?.id, hasRole, isTechnician]);
+  }, [session?.user?.id, role, isTechnician]);
 
   useEffect(() => {
     if (!roleLoading && !fieldRoleLoading) load();
