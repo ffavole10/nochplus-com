@@ -82,11 +82,9 @@ export function MergeAccountModal({ open, onOpenChange, source }: Props) {
           </DialogHeader>
           <div className="space-y-3">
             <CustomerPicker
-              customers={candidates}
               value={targetId}
-              onSelect={(c) => setTargetId(c.id)}
+              onChange={(id) => setTargetId(id)}
               placeholder="Search for the account to merge into…"
-              hideCreateOption
             />
             {target && (
               <div className="rounded-md border border-border p-3 space-y-2">
