@@ -2,6 +2,36 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { AgentOutput } from "@/types/growth";
 
+export interface LatestBriefSummary {
+  generated_at: string;
+  buying_signal_flag?: "none" | "weak" | "moderate" | "strong";
+}
+
+export function useLatestScribeBriefs() {
+  return useQuery({
+    queryKey: ["agent_outputs", "latest_scribe", "all"],
+    queryFn: async (): Promise<Record<string, LatestBriefSummary>> => {
+      const { data, error } = await supabase
+        .from("agent_outputs" as any)
+        .select("deal_id, generated_at, content")
+        .eq("agent_name", "scribe")
+        .eq("output_type", "brief")
+        .order("generated_at", { ascending: false });
+      if (error) throw error;
+      const map: Record<string, LatestBriefSummary> = {};
+      ((data as any[]) || []).forEach((row) => {
+        if (!map[row.deal_id]) {
+          map[row.deal_id] = {
+            generated_at: row.generated_at,
+            buying_signal_flag: row.content?.buying_signal_flag,
+          };
+        }
+      });
+      return map;
+    },
+  });
+}
+
 export function useAgentOutputs(dealId?: string | null) {
   return useQuery({
     queryKey: ["agent_outputs", dealId || "none"],
