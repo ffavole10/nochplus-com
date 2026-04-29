@@ -64,9 +64,44 @@ export default function GrowthDealDetail() {
         next_action_date: deal.next_action_date || "",
         expected_close_date: deal.expected_close_date || "",
         owner_user_id: deal.owner_user_id || "",
+        owner: (deal as any).owner || "",
+        predicted_close_date: (deal as any).predicted_close_date || "",
+        predicted_arr: (deal as any).predicted_arr || "",
+        notes: (deal as any).notes || "",
       });
     }
   }, [deal]);
+
+  const handleStageSelect = (newStage: DealStage) => {
+    if (!deal) return;
+    if (newStage === deal.stage) return;
+    const err = validateStageTransition({ ...deal, ...form } as any, newStage);
+    if (err) { toast.error(err); return; }
+    setPendingStage(newStage);
+    setPendingLoss("");
+  };
+
+  const confirmStageChange = () => {
+    if (!deal || !pendingStage) return;
+    const extra: Record<string, any> = { last_activity_at: new Date().toISOString() };
+    if (pendingStage === "Closed Lost") {
+      if (!pendingLoss) { toast.error("Loss reason required."); return; }
+      extra.loss_reason = pendingLoss;
+    }
+    updateStage.mutate({
+      id: deal.id,
+      stage: pendingStage,
+      partner_id: deal.partner_id,
+      extra,
+    }, {
+      onSuccess: () => {
+        toast.success(`Moved to "${pendingStage}"`);
+        setForm((f: any) => ({ ...f, stage: pendingStage }));
+        setPendingStage(null);
+      },
+      onError: (e: any) => toast.error(e.message),
+    });
+  };
 
   const handleSave = () => {
     if (!deal) return;
@@ -74,13 +109,17 @@ export default function GrowthDealDetail() {
       id: deal.id,
       deal_name: form.deal_name,
       description: form.description || null,
-      stage: form.stage,
       value: Number(form.value) || 0,
       probability: Number(form.probability) || 0,
       next_action: form.next_action || null,
       next_action_date: form.next_action_date || null,
       expected_close_date: form.expected_close_date || null,
+      predicted_close_date: form.predicted_close_date || null,
+      predicted_arr: Number(form.predicted_arr) || 0,
+      owner: form.owner || null,
       owner_user_id: form.owner_user_id || null,
+      notes: form.notes || null,
+      last_activity_at: new Date().toISOString(),
     } as any, {
       onSuccess: () => toast.success("Deal updated"),
       onError: (e: any) => toast.error(e.message),
