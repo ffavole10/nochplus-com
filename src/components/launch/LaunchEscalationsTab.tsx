@@ -184,6 +184,24 @@ export function LaunchEscalationsTab({ escalations, campaignId, onCreateEscalati
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PromptDialog
+        open={!!resolveTarget}
+        onOpenChange={(o) => { if (!o) setResolveTarget(null); }}
+        title="Resolve escalation"
+        description={resolveTarget ? `Mark "${resolveTarget.issue_type}" as resolved.` : ""}
+        label="Resolution notes"
+        placeholder="What did you do to resolve this?"
+        confirmLabel="Mark resolved"
+        required
+        onConfirm={(notes) => {
+          if (resolveTarget) {
+            onUpdateEscalation({ id: resolveTarget.id, campaignId, status: "resolved", resolution_notes: notes });
+            toast.success("Escalation resolved");
+          }
+          setResolveTarget(null);
+        }}
+      />
     </div>
   );
 }
