@@ -135,9 +135,21 @@ function renderCell(value: Cell) {
   return <span className="text-xs text-foreground">{value}</span>;
 }
 
+const TOGGLE_STORAGE_KEY = "nochplus.planTiers.chargerToggle";
+
 export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
-  const [toggle, setToggle] = useState<ChargerToggle>("ac");
+  const [toggle, setToggle] = useState<ChargerToggle>(() => {
+    if (typeof window === "undefined") return "ac";
+    const saved = window.sessionStorage.getItem(TOGGLE_STORAGE_KEY);
+    return saved === "dc" ? "dc" : "ac";
+  });
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(TOGGLE_STORAGE_KEY, toggle);
+    }
+  }, [toggle]);
 
   const corePrice = (tier: "essential" | "priority" | "elite") =>
     toggle === "ac" ? TIER_PRICING[tier].l2 : TIER_PRICING[tier].dc;
