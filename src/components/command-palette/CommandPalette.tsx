@@ -622,6 +622,7 @@ async function runSearch(q: string): Promise<Result[]> {
         id: c.id,
         label: c.name,
         sublabel: [c.role, c.email].filter(Boolean).join(" · "),
+        parent_id: c.customer_id,
       }));
     })(),
   ];
