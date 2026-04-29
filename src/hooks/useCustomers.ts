@@ -90,23 +90,21 @@ export function useUpdateCustomer() {
 
 /** Inspect linked records before deciding hard vs soft delete. */
 export async function getAccountLinkCounts(customerId: string, companyName: string) {
-  const [tRes, dRes, woByPartner, woByName, eRes] = await Promise.all([
-    supabase.from("service_tickets").select("id", { count: "exact", head: true }).eq("company_id", customerId),
-    supabase.from("deals" as any).select("id", { count: "exact", head: true }).eq("partner_id", customerId),
-    supabase.from("work_orders").select("id", { count: "exact", head: true }).eq("partner_id", customerId),
-    supabase.from("work_orders").select("id", { count: "exact", head: true }).eq("client_name", companyName),
-    supabase.from("estimates").select("id", { count: "exact", head: true }).eq("company_id", customerId),
-  ]);
-  const ticketCount = tRes.count || 0;
-  const dealCount = dRes.count || 0;
-  const woCount = (woByPartner.count || 0) + (woByName.count || 0);
-  const estimateCount = eRes.count || 0;
+  const tRes = await supabase.from("service_tickets").select("id", { count: "exact", head: true }).eq("company_id", customerId);
+  const dRes = await supabase.from("deals" as any).select("id", { count: "exact", head: true }).eq("partner_id", customerId);
+  const woP = await supabase.from("work_orders").select("id", { count: "exact", head: true }).eq("partner_id", customerId);
+  const woN = await supabase.from("work_orders").select("id", { count: "exact", head: true }).eq("client_name", companyName);
+  const eRes = await supabase.from("estimates").select("id", { count: "exact", head: true }).eq("company_id", customerId);
+  const tickets = tRes.count || 0;
+  const deals = dRes.count || 0;
+  const workOrders = (woP.count || 0) + (woN.count || 0);
+  const estimates = eRes.count || 0;
   return {
-    tickets: ticketCount || 0,
-    deals: dealCount || 0,
-    workOrders: woCount || 0,
-    estimates: estimateCount || 0,
-    total: (ticketCount || 0) + (dealCount || 0) + (woCount || 0) + (estimateCount || 0),
+    tickets,
+    deals,
+    workOrders,
+    estimates,
+    total: tickets + deals + workOrders + estimates,
   };
 }
 
