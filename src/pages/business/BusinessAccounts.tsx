@@ -154,9 +154,14 @@ export default function BusinessAccounts() {
         subtitle="Every customer, partner, and prospect in the NOCH ecosystem."
         icon={Building2}
         actions={
-          <Button onClick={() => navigate("/partners?new=1")} className="gap-2">
-            <Plus className="h-4 w-4" /> Add Account
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate("/business/accounts/duplicates")} className="gap-2">
+              <AlertTriangle className="h-4 w-4" /> Review Duplicates
+            </Button>
+            <Button onClick={() => setCreateOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" /> Add Account
+            </Button>
+          </div>
         }
       />
 
