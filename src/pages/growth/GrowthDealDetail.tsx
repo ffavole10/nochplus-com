@@ -67,6 +67,7 @@ export default function GrowthDealDetail() {
   // Edit deal modal
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<any>({});
+  const [econForm, setEconForm] = useState<DealEconomicsForm>(economicsFromDeal(null));
 
   // Activity quick-add
   const [noteText, setNoteText] = useState("");
