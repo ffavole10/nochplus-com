@@ -439,7 +439,7 @@ export function EstimatesTab({ account }: { account: { id: string; company: stri
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("estimates")
         .select("*")
         .eq("company_id", account.id)
