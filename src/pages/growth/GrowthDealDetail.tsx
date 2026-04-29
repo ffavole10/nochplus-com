@@ -205,8 +205,17 @@ export default function GrowthDealDetail() {
 
   const handleGenerateBrief = () => {
     generateBrief.mutate(deal.id, {
-      onSuccess: () => toast.success("Scribe brief generated"),
-      onError: (e: any) => toast.error(e.message || "Brief generation failed. Try again."),
+      onSuccess: ({ parseFailed }) => {
+        if (parseFailed) {
+          toast.warning("Brief generated but couldn't be parsed. Saved as raw text.");
+        } else {
+          toast.success("Scribe brief generated");
+        }
+      },
+      onError: (e: any) =>
+        toast.error("Scribe couldn't generate the brief. Check API key or try again.", {
+          description: e?.message,
+        }),
     });
   };
 
