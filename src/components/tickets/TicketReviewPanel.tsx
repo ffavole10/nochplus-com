@@ -233,7 +233,14 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Brain className="h-4 w-4 text-primary" /> Review Ticket {ticket.ticketId}
-          {status === "assessed" && <Badge className="bg-optimal/10 text-optimal border-optimal/20">Assessed</Badge>}
+          {status === "assessed" && (
+            <>
+              <Badge className="bg-optimal/10 text-optimal border-optimal/20">Assessed</Badge>
+              <span className="text-[11px] font-normal text-muted-foreground">
+                Confidence: {Math.round(((lifecycle as any)?.assessment_data?.confidence ?? 0.87) * 100)}%
+              </span>
+            </>
+          )}
           {status === "rejected" && <Badge variant="destructive">Rejected</Badge>}
           {status === "pending_review" && (
             <>
