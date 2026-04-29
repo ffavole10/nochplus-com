@@ -15,6 +15,17 @@ import { Badge } from "@/components/ui/badge";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { ReliabilityKpiRow } from "@/components/reliability/ReliabilityKpiRow";
+import {
+  TicketsTab,
+  WorkOrdersTab,
+  ChargersTab,
+  EstimatesTab,
+  InvoicesTab,
+  MembershipTab,
+  PipelineTab,
+  ContactsTab,
+  FilesTab,
+} from "@/components/business/account360/Tabs";
 import { format } from "date-fns";
 
 function Empty({ label }: { label: string }) {
