@@ -17,7 +17,8 @@ import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
-import { DealEconomicsFields, economicsFromDeal, economicsToPayload, type DealEconomicsForm } from "@/components/business/DealEconomicsFields";
+import { DealEconomicsFields, economicsFromDeal, economicsToPayload, dealTypeChangeClearsData, applyDealTypeChange, diffEconomicsForActivity, type DealEconomicsForm } from "@/components/business/DealEconomicsFields";
+import type { DealType } from "@/types/growth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,10 @@ export default function GrowthDealDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<any>({});
   const [econForm, setEconForm] = useState<DealEconomicsForm>(economicsFromDeal(null));
+  // Snapshot of econForm captured when the Edit modal opens — used to diff for activity log
+  const [econBaseline, setEconBaseline] = useState<DealEconomicsForm>(economicsFromDeal(null));
+  // Pending deal-type change awaiting confirmation (when switching would clear data)
+  const [pendingTypeChange, setPendingTypeChange] = useState<{ next: DealType; lostFields: string[] } | null>(null);
 
   // Activity quick-add
   const [noteText, setNoteText] = useState("");
@@ -98,8 +103,34 @@ export default function GrowthDealDetail() {
         competitor: (deal as any).competitor || "",
       });
       setEconForm(economicsFromDeal(deal));
+      setEconBaseline(economicsFromDeal(deal));
     }
   }, [deal]);
+
+  // Re-snapshot baseline whenever the modal opens, so diffs are scoped to a single edit session
+  useEffect(() => {
+    if (editOpen && deal) setEconBaseline(economicsFromDeal(deal));
+  }, [editOpen, deal]);
+
+  // Intercept econ changes so we can prompt before clearing data on Deal Type change
+  const handleEconChange = (next: DealEconomicsForm) => {
+    if (next.deal_type !== econForm.deal_type) {
+      const { clears, lostFields } = dealTypeChangeClearsData(econForm, next.deal_type);
+      if (clears) {
+        setPendingTypeChange({ next: next.deal_type, lostFields });
+        return; // Wait for user confirmation
+      }
+      setEconForm(applyDealTypeChange(econForm, next.deal_type));
+      return;
+    }
+    setEconForm(next);
+  };
+
+  const confirmTypeChange = () => {
+    if (!pendingTypeChange) return;
+    setEconForm(applyDealTypeChange(econForm, pendingTypeChange.next));
+    setPendingTypeChange(null);
+  };
 
   const latestScribe = useMemo<AgentOutput | undefined>(
     () => agentOutputs.find((o) => o.agent_name === "scribe" && o.output_type === "brief"),
@@ -162,6 +193,7 @@ export default function GrowthDealDetail() {
   };
 
   const handleSaveEdit = () => {
+    const econChanges = diffEconomicsForActivity(econBaseline, econForm);
     update.mutate(
       {
         id: deal.id,
@@ -179,8 +211,22 @@ export default function GrowthDealDetail() {
         ...economicsToPayload(econForm),
       } as any,
       {
-        onSuccess: () => { toast.success("Deal updated"); setEditOpen(false); },
-        onError: (e: any) => toast.error(e.message),
+        onSuccess: () => {
+          // Auto-log financial field changes to the activity timeline
+          if (econChanges.length > 0) {
+            const summary =
+              econChanges.length === 1
+                ? econChanges[0]
+                : `Financial details updated: ${econChanges.join("; ")}`;
+            createActivity.mutate(
+              { partner_id: deal.partner_id, deal_id: deal.id, type: "Other", summary } as any,
+            );
+          }
+          setEconBaseline(econForm);
+          toast.success("Deal updated");
+          setEditOpen(false);
+        },
+        onError: (e: any) => toast.error("Failed to update deal", { description: e?.message }),
       },
     );
   };
@@ -647,7 +693,7 @@ export default function GrowthDealDetail() {
               </div>
             </div>
 
-            <DealEconomicsFields value={econForm} onChange={setEconForm} />
+            <DealEconomicsFields value={econForm} onChange={handleEconChange} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
@@ -657,6 +703,22 @@ export default function GrowthDealDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm dialog when changing Deal Type would clear data */}
+      <ConfirmDialog
+        open={!!pendingTypeChange}
+        onOpenChange={(o) => { if (!o) setPendingTypeChange(null); }}
+        title="Change deal type?"
+        description={
+          pendingTypeChange
+            ? `Switching to "${pendingTypeChange.next}" will clear: ${pendingTypeChange.lostFields.join(", ")}. This cannot be undone in this edit session.`
+            : ""
+        }
+        confirmLabel="Change type & clear"
+        cancelLabel="Keep current"
+        variant="destructive"
+        onConfirm={confirmTypeChange}
+      />
     </div>
   );
 }

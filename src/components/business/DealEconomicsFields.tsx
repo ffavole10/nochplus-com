@@ -261,3 +261,105 @@ export function economicsToPayload(form: DealEconomicsForm) {
     value: econ.year1Revenue, // Year 1 revenue is the headline deal value
   };
 }
+
+/**
+ * Determine whether switching from one deal type to another would clear data
+ * the user has already entered (so we can prompt for confirmation).
+ */
+export function dealTypeChangeClearsData(
+  current: DealEconomicsForm,
+  nextType: DealType,
+): { clears: boolean; lostFields: string[] } {
+  if (current.deal_type === nextType) return { clears: false, lostFields: [] };
+  const wasRecurring = current.deal_type === "recurring" || current.deal_type === "hybrid";
+  const wasOneTime = current.deal_type === "one_time" || current.deal_type === "hybrid";
+  const willBeRecurring = nextType === "recurring" || nextType === "hybrid";
+  const willBeOneTime = nextType === "one_time" || nextType === "hybrid";
+
+  const lostFields: string[] = [];
+  if (wasRecurring && !willBeRecurring) {
+    if (Number(current.connector_count) > 0) lostFields.push("Connector count");
+    if (Number(current.monthly_rate) > 0) lostFields.push("Monthly rate");
+  }
+  if (wasOneTime && !willBeOneTime) {
+    if (Number(current.one_time_value) > 0) lostFields.push("One-time value");
+    if (current.one_time_description?.trim()) lostFields.push("One-time description");
+  }
+  return { clears: lostFields.length > 0, lostFields };
+}
+
+/**
+ * Apply a deal type change, clearing fields that no longer apply.
+ */
+export function applyDealTypeChange(form: DealEconomicsForm, nextType: DealType): DealEconomicsForm {
+  const willBeRecurring = nextType === "recurring" || nextType === "hybrid";
+  const willBeOneTime = nextType === "one_time" || nextType === "hybrid";
+  return {
+    ...form,
+    deal_type: nextType,
+    recurring_model: willBeRecurring ? form.recurring_model || "per_connector" : null,
+    connector_count: willBeRecurring ? form.connector_count : "",
+    monthly_rate: willBeRecurring ? form.monthly_rate : "",
+    one_time_value: willBeOneTime ? form.one_time_value : "",
+    one_time_description: willBeOneTime ? form.one_time_description : "",
+  };
+}
+
+/**
+ * Build a list of "X changed from A to B" strings comparing two economics forms
+ * plus their computed metrics. Used for activity-timeline logging.
+ */
+export function diffEconomicsForActivity(
+  before: DealEconomicsForm,
+  after: DealEconomicsForm,
+): string[] {
+  const fmtMoney = (n: number) => `$${Math.round(n).toLocaleString()}`;
+  const beforeEcon = computeDealEconomics({
+    deal_type: before.deal_type,
+    recurring_model: before.recurring_model,
+    connector_count: Number(before.connector_count) || 0,
+    monthly_rate: Number(before.monthly_rate) || 0,
+    contract_length_months: Number(before.contract_length_months) || 12,
+    one_time_value: Number(before.one_time_value) || 0,
+  });
+  const afterEcon = computeDealEconomics({
+    deal_type: after.deal_type,
+    recurring_model: after.recurring_model,
+    connector_count: Number(after.connector_count) || 0,
+    monthly_rate: Number(after.monthly_rate) || 0,
+    contract_length_months: Number(after.contract_length_months) || 12,
+    one_time_value: Number(after.one_time_value) || 0,
+  });
+  const changes: string[] = [];
+
+  if (before.deal_type !== after.deal_type) {
+    changes.push(`Deal type changed from ${before.deal_type} to ${after.deal_type}`);
+  }
+  if ((before.recurring_model || null) !== (after.recurring_model || null)) {
+    changes.push(`Recurring model changed from ${before.recurring_model ?? "—"} to ${after.recurring_model ?? "—"}`);
+  }
+  const numField = (label: string, b: any, a: any) => {
+    const bn = Number(b) || 0; const an = Number(a) || 0;
+    if (bn !== an) changes.push(`${label} changed from ${bn} to ${an}`);
+  };
+  numField("Connector count", before.connector_count, after.connector_count);
+  numField("Contract length (months)", before.contract_length_months, after.contract_length_months);
+
+  const moneyField = (label: string, b: number, a: number) => {
+    if (Math.round(b) !== Math.round(a)) {
+      changes.push(`${label} changed from ${fmtMoney(b)} to ${fmtMoney(a)}`);
+    }
+  };
+  moneyField("Monthly rate", Number(before.monthly_rate) || 0, Number(after.monthly_rate) || 0);
+  moneyField("One-time value", Number(before.one_time_value) || 0, Number(after.one_time_value) || 0);
+  moneyField("MRR", beforeEcon.mrr, afterEcon.mrr);
+  moneyField("ARR", beforeEcon.arr, afterEcon.arr);
+  moneyField("TCV", beforeEcon.tcv, afterEcon.tcv);
+  moneyField("Year 1 Revenue", beforeEcon.year1Revenue, afterEcon.year1Revenue);
+
+  if ((before.one_time_description || "").trim() !== (after.one_time_description || "").trim()) {
+    changes.push(`One-time description updated`);
+  }
+
+  return changes;
+}
