@@ -187,6 +187,7 @@ const App = () => (
             <Route path="/operations/team-performance" element={<OperationsTeamPerformance />} />
             <Route path="/business" element={<Navigate to="/business/accounts" replace />} />
             <Route path="/business/accounts" element={<BusinessAccounts />} />
+            <Route path="/business/accounts/duplicates" element={<BusinessAccountsDuplicates />} />
             <Route path="/business/accounts/:accountId" element={<BusinessAccountDetail />} />
             <Route path="/business/pipeline" element={<BusinessPipeline />} />
             <Route path="/business/pipeline/:dealId" element={<GrowthDealDetail />} />
