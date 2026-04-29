@@ -12,6 +12,8 @@ import {
   type ChargerRelationshipType,
 } from "@/types/growth";
 import { LinkChargersModal } from "@/components/business/LinkChargersModal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
@@ -52,6 +54,7 @@ export default function GrowthDealDetail() {
   const remove = useDeleteDeal();
   const createActivity = useCreateActivity();
   const updateStage = useUpdateDealStage();
+  const { confirm: confirmDialog, dialogProps: confirmDialogProps } = useConfirmDialog();
   const { data: ops } = useAccountOpsSnapshot(deal?.partner_id);
   const { data: agentOutputs = [] } = useAgentOutputs(dealId);
   const generateBrief = useGenerateScribeBrief();
@@ -182,10 +185,20 @@ export default function GrowthDealDetail() {
     );
   };
 
-  const handleDelete = () => {
-    if (!confirm(`Delete deal "${deal.deal_name}"? This cannot be undone.`)) return;
+  const handleDelete = async () => {
+    const ok = await confirmDialog({
+      title: "Delete deal?",
+      description: `Delete deal "${deal.deal_name}"? This cannot be undone. Any briefs, proposals, or activity history will be permanently removed.`,
+      confirmLabel: "Delete deal",
+      variant: "destructive",
+    });
+    if (!ok) return;
     remove.mutate({ id: deal.id }, {
-      onSuccess: () => { toast.success("Deal deleted"); navigate("/business/pipeline"); },
+      onSuccess: () => {
+        toast.success("Deal deleted", { description: `"${deal.deal_name}" has been removed.` });
+        navigate("/business/pipeline");
+      },
+      onError: (e: any) => toast.error("Failed to delete deal", { description: e?.message }),
     });
   };
 
@@ -225,6 +238,7 @@ export default function GrowthDealDetail() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <ConfirmDialog {...confirmDialogProps} />
       {/* ════════ Breadcrumb ════════ */}
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link to="/business/pipeline" className="hover:text-primary">Pipeline</Link>

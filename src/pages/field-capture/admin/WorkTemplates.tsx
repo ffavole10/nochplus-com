@@ -32,6 +32,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Pencil, Plus, Trash2, Check } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import {
   ISSUE_CATEGORY_LABELS,
   ROOT_CAUSE_LABELS,
@@ -59,6 +61,7 @@ export default function WorkTemplates() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Template> | null>(null);
+  const { confirm: confirmDialog, dialogProps: confirmDialogProps } = useConfirmDialog();
 
   async function load() {
     setLoading(true);
@@ -137,12 +140,18 @@ export default function WorkTemplates() {
   }
 
   async function remove(t: Template) {
-    if (!confirm("Delete this template? This cannot be undone.")) return;
+    const ok = await confirmDialog({
+      title: "Delete template?",
+      description: "Delete this template? This cannot be undone.",
+      confirmLabel: "Delete template",
+      variant: "destructive",
+    });
+    if (!ok) return;
     const { error } = await supabase
       .from("work_description_templates")
       .delete()
       .eq("id", t.id);
-    if (error) toast.error(error.message);
+    if (error) toast.error("Failed to delete template", { description: error.message });
     else {
       toast.success("Template deleted");
       load();
@@ -151,6 +160,7 @@ export default function WorkTemplates() {
 
   return (
     <div className="p-6 space-y-8">
+      <ConfirmDialog {...confirmDialogProps} />
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Work Description Templates</h1>

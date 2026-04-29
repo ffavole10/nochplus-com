@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Users, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { format } from "date-fns";
 
 interface Props {
@@ -32,6 +34,7 @@ export function StakeholdersTab({ partnerId }: Props) {
   const create = useCreateStakeholder();
   const update = useUpdateStakeholder();
   const remove = useDeleteStakeholder();
+  const { confirm: confirmDialog, dialogProps: confirmDialogProps } = useConfirmDialog();
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Stakeholder | null>(null);
@@ -85,15 +88,23 @@ export function StakeholdersTab({ partnerId }: Props) {
     }
   };
 
-  const handleDelete = (s: Stakeholder) => {
-    if (!confirm(`Delete ${s.name}?`)) return;
+  const handleDelete = async (s: Stakeholder) => {
+    const ok = await confirmDialog({
+      title: "Delete stakeholder?",
+      description: `Delete ${s.name}? This cannot be undone.`,
+      confirmLabel: "Delete",
+      variant: "destructive",
+    });
+    if (!ok) return;
     remove.mutate({ id: s.id, partner_id: partnerId }, {
-      onSuccess: () => toast.success("Stakeholder deleted"),
+      onSuccess: () => toast.success("Stakeholder deleted", { description: `${s.name} has been removed.` }),
+      onError: (e: any) => toast.error("Failed to delete stakeholder", { description: e?.message }),
     });
   };
 
   return (
     <Card>
+      <ConfirmDialog {...confirmDialogProps} />
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div>
           <h3 className="text-base font-semibold">Stakeholders</h3>

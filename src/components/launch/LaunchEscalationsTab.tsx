@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, AlertTriangle, ShieldAlert, Info } from "lucide-react";
 import { toast } from "sonner";
 import type { Escalation } from "@/hooks/useCampaignLaunch";
+import { PromptDialog } from "@/components/ui/prompt-dialog";
 
 interface Props {
   escalations: Escalation[];
@@ -36,6 +37,7 @@ export function LaunchEscalationsTab({ escalations, campaignId, onCreateEscalati
   const [formChargerId, setFormChargerId] = useState("");
   const [formIssueType, setFormIssueType] = useState("");
   const [formDescription, setFormDescription] = useState("");
+  const [resolveTarget, setResolveTarget] = useState<Escalation | null>(null);
 
   const open = escalations.filter(e => e.status === "open");
   const inProgress = escalations.filter(e => e.status === "in_progress");
@@ -101,12 +103,7 @@ export function LaunchEscalationsTab({ escalations, campaignId, onCreateEscalati
             )}
             {esc.status === "in_progress" && (
               <Button size="sm" variant="outline" className="text-xs h-7"
-                onClick={() => {
-                  const notes = prompt("Resolution notes:");
-                  if (notes !== null) {
-                    onUpdateEscalation({ id: esc.id, campaignId, status: "resolved", resolution_notes: notes });
-                  }
-                }}>
+                onClick={() => setResolveTarget(esc)}>
                 Resolve
               </Button>
             )}
@@ -187,6 +184,24 @@ export function LaunchEscalationsTab({ escalations, campaignId, onCreateEscalati
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PromptDialog
+        open={!!resolveTarget}
+        onOpenChange={(o) => { if (!o) setResolveTarget(null); }}
+        title="Resolve escalation"
+        description={resolveTarget ? `Mark "${resolveTarget.issue_type}" as resolved.` : ""}
+        label="Resolution notes"
+        placeholder="What did you do to resolve this?"
+        confirmLabel="Mark resolved"
+        required
+        onConfirm={(notes) => {
+          if (resolveTarget) {
+            onUpdateEscalation({ id: resolveTarget.id, campaignId, status: "resolved", resolution_notes: notes });
+            toast.success("Escalation resolved");
+          }
+          setResolveTarget(null);
+        }}
+      />
     </div>
   );
 }
