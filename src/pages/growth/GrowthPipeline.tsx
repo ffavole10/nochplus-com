@@ -177,37 +177,18 @@ export default function GrowthPipeline() {
 
   const resetForm = () => {
     setForm({
-      customer_id: "", new_company: "", new_contact: "", new_email: "", new_customer_type: "", new_customer_type_other: "", new_website: "",
+      customer_id: "",
       deal_name: "", stage: "Account Mapped", predicted_close_date: "", owner: "", next_action: "", notes: "",
     });
     setEconForm(emptyEconomics());
-    setCustomerMode("existing");
   };
 
   const handleAddDeal = async () => {
     if (!form.deal_name.trim()) { toast.error("Deal name required"); return; }
-    let customerId = form.customer_id;
+    if (!form.customer_id) { toast.error("Select or create a customer."); return; }
     try {
-      if (customerMode === "new") {
-        if (!form.new_company.trim() || !form.new_contact.trim() || !form.new_email.trim()) {
-          toast.error("New customer requires company, contact, and email."); return;
-        }
-        if (form.new_customer_type === "other" && !form.new_customer_type_other.trim()) {
-          toast.error("Specify the customer type."); return;
-        }
-        const created = await createCustomer.mutateAsync({
-          company: form.new_company.trim(),
-          contact_name: form.new_contact.trim(),
-          email: form.new_email.trim(),
-          customer_type: form.new_customer_type || null,
-          customer_type_other: form.new_customer_type === "other" ? form.new_customer_type_other.trim() : null,
-          website_url: form.new_website.trim() || "",
-        } as any);
-        customerId = created.id;
-      }
-      if (!customerId) { toast.error("Select or create a customer."); return; }
       await createDeal.mutateAsync({
-        partner_id: customerId,
+        partner_id: form.customer_id,
         deal_name: form.deal_name.trim(),
         stage: form.stage,
         predicted_close_date: form.predicted_close_date || null,
