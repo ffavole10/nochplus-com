@@ -68,7 +68,7 @@ export function TicketsTab({
         const s = search.toLowerCase();
         return (
           t.ticketId?.toLowerCase().includes(s) ||
-          t.customer?.siteName?.toLowerCase().includes(s) ||
+          (t.customer?.address || "").toLowerCase().includes(s) ||
           t.issue?.description?.toLowerCase().includes(s)
         );
       })
@@ -140,7 +140,7 @@ export function TicketsTab({
                     <TableCell className="font-mono text-xs">{t.ticketId}</TableCell>
                     <TableCell><Badge variant="outline" className="text-[10px]">{t.status}</Badge></TableCell>
                     <TableCell><Badge variant="outline" className="text-[10px]">{t.priority}</Badge></TableCell>
-                    <TableCell className="text-xs">{t.customer?.siteName || "—"}</TableCell>
+                    <TableCell className="text-xs">{t.customer?.address || "—"}</TableCell>
                     <TableCell className="text-xs text-muted-foreground capitalize">{t.source || "—"}</TableCell>
                     <TableCell className="text-xs">Step {t.currentStep || 1} of 10</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
@@ -315,6 +315,7 @@ export function WorkOrdersTab({ account }: { account: { id: string; company: str
           open={modalOpen}
           onOpenChange={setModalOpen}
           workOrder={selected as any}
+          onChanged={() => { /* refetch handled on next mount */ }}
         />
       )}
     </div>
