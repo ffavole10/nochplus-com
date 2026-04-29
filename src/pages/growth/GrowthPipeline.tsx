@@ -347,7 +347,10 @@ export default function GrowthPipeline() {
                                 <div className="flex items-start gap-2 mb-2">
                                   {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-muted-foreground truncate">{partner?.company || "Unknown"}</p>
+                                    <p className="text-xs font-medium text-muted-foreground truncate flex items-center gap-1.5">
+                                      <span className="truncate">{partner?.company || "Unknown"}</span>
+                                      <CustomerTypeBadge type={(partner as any)?.customer_type} typeOther={(partner as any)?.customer_type_other} />
+                                    </p>
                                     <p className="text-sm font-semibold truncate">{deal.deal_name}</p>
                                   </div>
                                 </div>
@@ -415,6 +418,7 @@ export default function GrowthPipeline() {
                         <div className="flex items-center gap-2">
                           {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
                           <span className="font-medium">{partner?.company || "—"}</span>
+                          <CustomerTypeBadge type={(partner as any)?.customer_type} typeOther={(partner as any)?.customer_type_other} />
                         </div>
                       </td>
                       <td className="py-3 px-4 font-medium">{d.deal_name}</td>
