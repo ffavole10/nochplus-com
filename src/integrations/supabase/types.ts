@@ -1883,6 +1883,8 @@ export type Database = {
           company: string
           contact_name: string
           created_at: string
+          customer_type: Database["public"]["Enums"]["customer_type"] | null
+          customer_type_other: string | null
           description: string | null
           email: string
           headquarters_address: string | null
@@ -1905,6 +1907,8 @@ export type Database = {
           company: string
           contact_name: string
           created_at?: string
+          customer_type?: Database["public"]["Enums"]["customer_type"] | null
+          customer_type_other?: string | null
           description?: string | null
           email: string
           headquarters_address?: string | null
@@ -1927,6 +1931,8 @@ export type Database = {
           company?: string
           contact_name?: string
           created_at?: string
+          customer_type?: Database["public"]["Enums"]["customer_type"] | null
+          customer_type_other?: string | null
           description?: string | null
           email?: string
           headquarters_address?: string | null
@@ -5782,6 +5788,13 @@ export type Database = {
         | "physical_damage"
         | "wear"
         | "unknown"
+      customer_type:
+        | "cpo"
+        | "cms"
+        | "oem"
+        | "site_host"
+        | "fleet_operator"
+        | "other"
       deal_stage:
         | "Account Mapped"
         | "Relationship Warmed"
@@ -6052,6 +6065,14 @@ export const Constants = {
         "physical_damage",
         "wear",
         "unknown",
+      ],
+      customer_type: [
+        "cpo",
+        "cms",
+        "oem",
+        "site_host",
+        "fleet_operator",
+        "other",
       ],
       deal_stage: [
         "Account Mapped",
