@@ -267,6 +267,7 @@ export function CommandPalette() {
               onUnpin={(p) => {
                 togglePin({ entity_type: p.entity_type, entity_id: p.entity_id, label: p.label });
                 setPins(getPins());
+                window.dispatchEvent(new Event("noch:pins-changed"));
               }}
             />
           ) : flat.length === 0 ? (
