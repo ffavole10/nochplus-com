@@ -25,8 +25,13 @@ export function PatternIntelligence({ timeRange, customer }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Pattern Intelligence</CardTitle>
-        <CardDescription>Emerging failure patterns detected across the connected fleet</CardDescription>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Pattern Intelligence</CardTitle>
+            <CardDescription>Emerging failure patterns detected across the connected fleet</CardDescription>
+          </div>
+          <NeuralLayerPill layer="reasoning" tooltip="Powered by Atlas agent · Environmental & Pattern Intelligence" />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
