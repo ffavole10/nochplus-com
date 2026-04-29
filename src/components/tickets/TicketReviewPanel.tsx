@@ -22,6 +22,7 @@ import {
   Image as ImageIcon, AlertTriangle, CheckCircle, Loader2, XCircle,
   Brain, Zap, Save, Plus, MessageSquare, Pencil, X, RefreshCw, Undo2, ShieldAlert,
 } from "lucide-react";
+import { NeuralLayerPill } from "@/components/business/NeuralLayerPill";
 
 interface TicketReviewPanelProps {
   ticket: ServiceTicket;
