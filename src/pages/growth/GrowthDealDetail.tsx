@@ -193,6 +193,7 @@ export default function GrowthDealDetail() {
   };
 
   const handleSaveEdit = () => {
+    const econChanges = diffEconomicsForActivity(econBaseline, econForm);
     update.mutate(
       {
         id: deal.id,
@@ -210,8 +211,22 @@ export default function GrowthDealDetail() {
         ...economicsToPayload(econForm),
       } as any,
       {
-        onSuccess: () => { toast.success("Deal updated"); setEditOpen(false); },
-        onError: (e: any) => toast.error(e.message),
+        onSuccess: () => {
+          // Auto-log financial field changes to the activity timeline
+          if (econChanges.length > 0) {
+            const summary =
+              econChanges.length === 1
+                ? econChanges[0]
+                : `Financial details updated: ${econChanges.join("; ")}`;
+            createActivity.mutate(
+              { partner_id: deal.partner_id, deal_id: deal.id, type: "Other", summary } as any,
+            );
+          }
+          setEconBaseline(econForm);
+          toast.success("Deal updated");
+          setEditOpen(false);
+        },
+        onError: (e: any) => toast.error("Failed to update deal", { description: e?.message }),
       },
     );
   };
@@ -678,7 +693,7 @@ export default function GrowthDealDetail() {
               </div>
             </div>
 
-            <DealEconomicsFields value={econForm} onChange={setEconForm} />
+            <DealEconomicsFields value={econForm} onChange={handleEconChange} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
