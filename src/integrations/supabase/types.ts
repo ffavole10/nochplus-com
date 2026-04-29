@@ -1452,6 +1452,58 @@ export type Database = {
           },
         ]
       }
+      charger_customer_relationships: {
+        Row: {
+          charger_id: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_primary: boolean
+          notes: string | null
+          relationship_type: Database["public"]["Enums"]["charger_relationship_type"]
+        }
+        Insert: {
+          charger_id: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_primary?: boolean
+          notes?: string | null
+          relationship_type: Database["public"]["Enums"]["charger_relationship_type"]
+        }
+        Update: {
+          charger_id?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_primary?: boolean
+          notes?: string | null
+          relationship_type?: Database["public"]["Enums"]["charger_relationship_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charger_customer_relationships_charger_id_fkey"
+            columns: ["charger_id"]
+            isOneToOne: false
+            referencedRelation: "charger_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charger_customer_relationships_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "charger_customer_relationships_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       charger_health_scores: {
         Row: {
           charger_id: string | null
@@ -5369,6 +5421,8 @@ export type Database = {
           customer_id: string | null
           estimated_monthly_savings: number | null
           incidents_30d: number | null
+          relationship_count: number | null
+          relationship_types: string[] | null
           sites_count: number | null
           truck_rolls_30d: number | null
           uptime_pct: number | null
@@ -5780,6 +5834,12 @@ export type Database = {
         | "partially_functional"
         | "non_operational_followup"
         | "requires_parts_ordered"
+      charger_relationship_type:
+        | "owner"
+        | "cpo"
+        | "cms"
+        | "oem"
+        | "service_partner"
       charger_root_cause:
         | "hardware_fault"
         | "firmware"
@@ -6056,6 +6116,13 @@ export const Constants = {
         "partially_functional",
         "non_operational_followup",
         "requires_parts_ordered",
+      ],
+      charger_relationship_type: [
+        "owner",
+        "cpo",
+        "cms",
+        "oem",
+        "service_partner",
       ],
       charger_root_cause: [
         "hardware_fault",
