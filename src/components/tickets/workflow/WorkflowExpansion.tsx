@@ -113,7 +113,7 @@ export function WorkflowExpansion({
       <StepStepper
         steps={snapshot.steps}
         viewedStep={viewedStep}
-        onSelectStep={setViewedStep}
+        onSelectStep={handleSelectStep}
       />
 
       {/* Step breadcrumb / nav */}
