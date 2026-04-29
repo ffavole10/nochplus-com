@@ -37,11 +37,17 @@ import {
   Download,
   CheckCircle2,
   Clock,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { TabHeader, TabEmpty, TabFooterLink, StatBox } from "./shared";
 import { ServiceTicket } from "@/types/serviceTicket";
-import { useContacts } from "@/hooks/useContacts";
+import { useContacts, useDeleteContact } from "@/hooks/useContacts";
 import { useDeals } from "@/hooks/useDeals";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ContactFormModal } from "@/components/business/ContactFormModal";
+import { toast } from "sonner";
 import WorkOrderDetailModal from "@/components/field-capture/WorkOrderDetailModal";
 
 /* ============================================================
