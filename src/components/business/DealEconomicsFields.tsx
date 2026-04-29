@@ -130,6 +130,27 @@ export function DealEconomicsFields({ value, onChange }: Props) {
                   <Label className="text-xs text-muted-foreground">Monthly Rate (auto)</Label>
                   <Input value={fmt(econ.mrr)} disabled className="bg-muted/40" />
                 </div>
+                <div className="space-y-1.5 col-span-2">
+                  <Label className="text-xs">Rate per connector ($)</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">$</span>
+                    <Input
+                      type="number"
+                      min={0.01}
+                      step={0.01}
+                      placeholder="15.00"
+                      value={value.rate_per_connector ?? ""}
+                      onChange={(e) => set({ rate_per_connector: e.target.value })}
+                      className={cn("pl-6 pr-28", ratePerConnectorInvalid && "border-destructive focus-visible:ring-destructive")}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs pointer-events-none">/connector/mo</span>
+                  </div>
+                  {ratePerConnectorInvalid ? (
+                    <p className="text-[11px] text-destructive">Rate must be greater than $0</p>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">Default is $15. Adjust for negotiated pricing.</p>
+                  )}
+                </div>
               </>
             ) : (
               <>
