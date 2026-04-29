@@ -22,6 +22,7 @@ import {
   inferWorkflowSnapshot,
   WorkflowStepStatus,
 } from "@/lib/ticketWorkflow";
+import { PinButton } from "@/components/command-palette/PinButton";
 
 interface WorkflowExpansionProps {
   ticket: ServiceTicket;
@@ -104,9 +105,17 @@ export function WorkflowExpansion({
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-foreground">{ticket.ticketId}</h3>
-        <Button size="sm" variant="ghost" onClick={onCollapse}>
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <PinButton
+            type="ticket"
+            id={ticket.id}
+            label={`${ticket.ticketId}${ticket.customer?.company ? ` · ${ticket.customer.company}` : ""}`}
+            variant="icon"
+          />
+          <Button size="sm" variant="ghost" onClick={onCollapse}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Stepper */}
