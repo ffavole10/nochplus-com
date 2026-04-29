@@ -23,12 +23,19 @@ export function useGenerateScribeBrief() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (dealId: string) => {
-      const { data, error } = await supabase.functions.invoke("pipeline-scribe-brief", {
+      // Prefer new structured-JSON function; fall back to legacy markdown function
+      let resp = await supabase.functions.invoke("generate-brief", {
         body: { deal_id: dealId },
       });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      return (data as any)?.output as AgentOutput;
+      if (resp.error || (resp.data as any)?.error) {
+        const fallback = await supabase.functions.invoke("pipeline-scribe-brief", {
+          body: { deal_id: dealId },
+        });
+        if (fallback.error) throw fallback.error;
+        if ((fallback.data as any)?.error) throw new Error((fallback.data as any).error);
+        return (fallback.data as any)?.output as AgentOutput;
+      }
+      return (resp.data as any)?.output as AgentOutput;
     },
     onSuccess: (out) => {
       qc.invalidateQueries({ queryKey: ["agent_outputs", out.deal_id] });
