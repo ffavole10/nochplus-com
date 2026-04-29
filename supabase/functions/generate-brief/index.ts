@@ -32,7 +32,17 @@ RULES:
 - Talking points must be sharp and tied to their ops reality, not generic value props.
 - Max 3 talking points. Max 3 risks. Max 3 open questions.
 - Buying signal flag: only mark "strong" or "moderate" if there's clear evidence in the data (incident spike, high charger count + recent stage progression, repeated activity). Default to "none" if uncertain.
+- Always reference the customer's role in the EV ecosystem (CPO, CMS, OEM, Site Host, Fleet Operator). Tailor talking points and risks to that role. A CMS provider has different pain than an OEM. Do not confuse the two.
+- If "relationship_context" indicates the customer is not yet linked to chargers in NOCH+, explicitly note: "Limited ops data — customer not yet linked to chargers in NOCH+ system. Brief based on deal context only." Set buying_signal_flag to "none".
 - Output JSON only. No prose outside the JSON.`;
+
+const ROLE_VERB: Record<string, string> = {
+  cms: "manages as CMS",
+  cpo: "operates as CPO",
+  oem: "manufactured",
+  owner: "owns at Site Host locations",
+  service_partner: "services",
+};
 
 interface Body { deal_id: string; }
 
@@ -75,6 +85,21 @@ Deno.serve(async (req: Request) => {
 
     const customer = (deal as any).customers || {};
 
+    // Build relationship_context string from snapshot.relationship_types
+    const types: string[] = (snapshot as any)?.relationship_types || [];
+    const chargerCount = (snapshot as any)?.charger_count ?? 0;
+    const sitesCount = (snapshot as any)?.sites_count ?? 0;
+    let relationshipContext: string;
+    if (!types.length || chargerCount === 0) {
+      relationshipContext = `${customer.company || "Customer"} is not yet linked to any chargers in the NOCH+ system.`;
+    } else {
+      const verb = ROLE_VERB[types[0]] || `is linked to via ${types[0]}`;
+      relationshipContext = `${customer.company || "Customer"} ${verb} ${chargerCount} chargers across ${sitesCount} sites.`;
+      if (types.length > 1) {
+        relationshipContext += ` Additional roles: ${types.slice(1).join(", ")}.`;
+      }
+    }
+
     const daysInStage = Math.max(0, Math.floor(
       (Date.now() - new Date((deal as any).last_activity_at || deal.updated_at).getTime()) / 86400000
     ));
@@ -85,6 +110,7 @@ Deno.serve(async (req: Request) => {
         domain: customer.website_url || "Not available",
         customer_type: customer.customer_type || customer.customer_type_other || "Not available",
         primary_contact: customer.contact_name || "Not available",
+        relationship_context: relationshipContext,
       },
       deal: {
         stage: deal.stage,
@@ -95,13 +121,14 @@ Deno.serve(async (req: Request) => {
         notes: (deal as any).notes || "Not available",
         days_in_stage: daysInStage,
       },
-      ops_snapshot: snapshot ? {
-        charger_count: snapshot.charger_count ?? 0,
-        sites_count: snapshot.sites_count ?? 0,
-        incidents_30d: snapshot.incidents_30d ?? 0,
-        uptime_pct_estimated: Number(snapshot.uptime_pct ?? 100),
-        truck_rolls_30d: snapshot.truck_rolls_30d ?? 0,
-        estimated_monthly_savings: Number(snapshot.estimated_monthly_savings ?? 0),
+      ops_snapshot: snapshot && chargerCount > 0 ? {
+        charger_count: chargerCount,
+        sites_count: sitesCount,
+        incidents_30d: (snapshot as any).incidents_30d ?? 0,
+        uptime_pct_estimated: Number((snapshot as any).uptime_pct ?? 100),
+        truck_rolls_30d: (snapshot as any).truck_rolls_30d ?? 0,
+        estimated_monthly_savings: Number((snapshot as any).estimated_monthly_savings ?? 0),
+        relationship_types: types,
       } : "Not available",
       recent_activity: (recentActivity || []).map((a: any) => ({
         timestamp: a.activity_date,
@@ -133,14 +160,16 @@ Deno.serve(async (req: Request) => {
     const claudeJson = await claudeResp.json();
     const raw = claudeJson?.content?.[0]?.text ?? "";
 
-    // Extract JSON object — tolerate code fences
+    // Try to extract JSON; if parse fails, save raw text as fallback
     let parsed: any = null;
+    let parseFailed = false;
     try {
       const match = raw.match(/\{[\s\S]*\}/);
       parsed = JSON.parse(match ? match[0] : raw);
     } catch (e) {
-      console.error("Failed to parse Scribe JSON:", raw);
-      throw new Error("Scribe returned invalid JSON");
+      console.error("Failed to parse Scribe JSON, saving raw:", raw);
+      parseFailed = true;
+      parsed = { raw_text: raw, parse_failed: true };
     }
 
     const { data: inserted, error: insErr } = await supabase
@@ -153,7 +182,7 @@ Deno.serve(async (req: Request) => {
       }).select().single();
     if (insErr) throw new Error(insErr.message);
 
-    return new Response(JSON.stringify({ output: inserted }), {
+    return new Response(JSON.stringify({ output: inserted, parse_failed: parseFailed }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
