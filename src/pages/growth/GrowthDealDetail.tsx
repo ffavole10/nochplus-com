@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useDeal, useUpdateDeal, useDeleteDeal, useUpdateDealStage } from "@/hooks/useDeals";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useGrowthUsers } from "@/hooks/useGrowthUsers";
 import { useActivities, useCreateActivity } from "@/hooks/useActivities";
 import { useAccountOpsSnapshot } from "@/hooks/useAccountOpsSnapshot";
 import { useAgentOutputs, useGenerateScribeBrief, useGeneratePlaceholderOutput } from "@/hooks/useAgentOutputs";
-import { DEAL_STAGES, DEAL_STAGE_COLORS, ACTIVITY_TYPES, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type ActivityType } from "@/types/growth";
+import {
+  DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS,
+  validateStageTransition, type DealStage, type AgentOutput,
+} from "@/types/growth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
@@ -18,12 +21,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Loader2, Save, Trash2, Plus, Phone, Mail, Calendar, Users as UsersIcon, MessageSquare, Brain, FileText, TrendingUp, Zap, AlertTriangle } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  ArrowLeft, Loader2, Trash2, Pencil, Zap, ExternalLink, Brain, FileText,
+  TrendingUp, AlertTriangle, Copy, Info, ChevronRight, Clock, Plus,
+} from "lucide-react";
 import { toast } from "sonner";
-import { format, differenceInDays } from "date-fns";
+import { format, formatDistanceToNow, differenceInDays } from "date-fns";
+import { cn } from "@/lib/utils";
 
-const TYPE_ICONS: Record<ActivityType, any> = {
-  Call: Phone, Email: Mail, Meeting: Calendar, LinkedIn: UsersIcon, InPerson: UsersIcon, Other: MessageSquare,
+const SIGNAL_BADGE: Record<string, string> = {
+  none: "bg-muted text-muted-foreground border-muted",
+  weak: "bg-amber-50 text-amber-700 border-amber-300",
+  moderate: "bg-orange-50 text-orange-700 border-orange-300",
+  strong: "bg-emerald-50 text-emerald-700 border-emerald-300",
 };
 
 export default function GrowthDealDetail() {
@@ -42,294 +54,475 @@ export default function GrowthDealDetail() {
   const generateBrief = useGenerateScribeBrief();
   const generatePlaceholder = useGeneratePlaceholderOutput();
 
-  const partner = customers.find(c => c.id === deal?.partner_id);
+  const partner = customers.find((c) => c.id === deal?.partner_id);
   usePageTitle(deal?.deal_name || "Deal");
-
-  const [form, setForm] = useState<any>({});
-  const [activityOpen, setActivityOpen] = useState(false);
-  const [actForm, setActForm] = useState<any>({ type: "Call", summary: "", outcome: "", next_step: "", next_step_date: "" });
 
   // Stage change confirm
   const [pendingStage, setPendingStage] = useState<DealStage | null>(null);
   const [pendingLoss, setPendingLoss] = useState<string>("");
+
+  // Edit deal modal
+  const [editOpen, setEditOpen] = useState(false);
+  const [form, setForm] = useState<any>({});
+
+  // Activity quick-add
+  const [noteText, setNoteText] = useState("");
+  const [activityLimit, setActivityLimit] = useState(10);
+
+  // Brief tab
+  const [briefTab, setBriefTab] = useState<"scribe" | "closer" | "forecaster">("scribe");
 
   useEffect(() => {
     if (deal) {
       setForm({
         deal_name: deal.deal_name,
         description: deal.description || "",
-        stage: deal.stage,
         value: deal.value,
-        probability: deal.probability,
         next_action: deal.next_action || "",
         next_action_date: deal.next_action_date || "",
-        expected_close_date: deal.expected_close_date || "",
         owner_user_id: deal.owner_user_id || "",
         owner: (deal as any).owner || "",
         predicted_close_date: (deal as any).predicted_close_date || "",
         predicted_arr: (deal as any).predicted_arr || "",
         notes: (deal as any).notes || "",
+        competitor: (deal as any).competitor || "",
       });
     }
   }, [deal]);
 
+  const latestScribe = useMemo<AgentOutput | undefined>(
+    () => agentOutputs.find((o) => o.agent_name === "scribe" && o.output_type === "brief"),
+    [agentOutputs],
+  );
+  const latestCloser = useMemo<AgentOutput | undefined>(
+    () => agentOutputs.find((o) => o.agent_name === "closer"),
+    [agentOutputs],
+  );
+  const latestForecast = useMemo<AgentOutput | undefined>(
+    () => agentOutputs.find((o) => o.agent_name === "forecaster"),
+    [agentOutputs],
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  if (!deal) {
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        Deal not found.
+        <div>
+          <Button variant="link" onClick={() => navigate("/business/pipeline")}>← Back to Pipeline</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const ownerLabel =
+    (deal as any).owner ||
+    (deal.owner_user_id ? users.find((u) => u.user_id === deal.owner_user_id)?.display_name : null) ||
+    "Unassigned";
+
   const handleStageSelect = (newStage: DealStage) => {
-    if (!deal) return;
     if (newStage === deal.stage) return;
-    const err = validateStageTransition({ ...deal, ...form } as any, newStage);
+    const err = validateStageTransition(deal as any, newStage);
     if (err) { toast.error(err); return; }
     setPendingStage(newStage);
     setPendingLoss("");
   };
 
   const confirmStageChange = () => {
-    if (!deal || !pendingStage) return;
+    if (!pendingStage) return;
     const extra: Record<string, any> = { last_activity_at: new Date().toISOString() };
     if (pendingStage === "Closed Lost") {
       if (!pendingLoss) { toast.error("Loss reason required."); return; }
       extra.loss_reason = pendingLoss;
     }
-    updateStage.mutate({
-      id: deal.id,
-      stage: pendingStage,
-      partner_id: deal.partner_id,
-      extra,
-    }, {
-      onSuccess: () => {
-        toast.success(`Moved to "${pendingStage}"`);
-        setForm((f: any) => ({ ...f, stage: pendingStage }));
-        setPendingStage(null);
+    updateStage.mutate(
+      { id: deal.id, stage: pendingStage, partner_id: deal.partner_id, extra },
+      {
+        onSuccess: () => { toast.success(`Moved to "${pendingStage}"`); setPendingStage(null); },
+        onError: (e: any) => toast.error(e.message),
       },
-      onError: (e: any) => toast.error(e.message),
-    });
+    );
   };
 
-  const handleSave = () => {
-    if (!deal) return;
-    update.mutate({
-      id: deal.id,
-      deal_name: form.deal_name,
-      description: form.description || null,
-      value: Number(form.value) || 0,
-      probability: Number(form.probability) || 0,
-      next_action: form.next_action || null,
-      next_action_date: form.next_action_date || null,
-      expected_close_date: form.expected_close_date || null,
-      predicted_close_date: form.predicted_close_date || null,
-      predicted_arr: Number(form.predicted_arr) || 0,
-      owner: form.owner || null,
-      owner_user_id: form.owner_user_id || null,
-      notes: form.notes || null,
-      last_activity_at: new Date().toISOString(),
-    } as any, {
-      onSuccess: () => toast.success("Deal updated"),
-      onError: (e: any) => toast.error(e.message),
-    });
+  const handleSaveEdit = () => {
+    update.mutate(
+      {
+        id: deal.id,
+        deal_name: form.deal_name,
+        description: form.description || null,
+        value: Number(form.value) || 0,
+        next_action: form.next_action || null,
+        next_action_date: form.next_action_date || null,
+        predicted_close_date: form.predicted_close_date || null,
+        expected_close_date: form.predicted_close_date || null,
+        predicted_arr: Number(form.predicted_arr) || 0,
+        owner: form.owner || null,
+        owner_user_id: form.owner_user_id || null,
+        notes: form.notes || null,
+        competitor: form.competitor || null,
+        last_activity_at: new Date().toISOString(),
+      } as any,
+      {
+        onSuccess: () => { toast.success("Deal updated"); setEditOpen(false); },
+        onError: (e: any) => toast.error(e.message),
+      },
+    );
   };
 
   const handleDelete = () => {
-    if (!deal) return;
     if (!confirm(`Delete deal "${deal.deal_name}"? This cannot be undone.`)) return;
     remove.mutate({ id: deal.id }, {
-      onSuccess: () => {
-        toast.success("Deal deleted");
-        navigate("/growth/pipeline");
-      },
+      onSuccess: () => { toast.success("Deal deleted"); navigate("/business/pipeline"); },
     });
   };
 
-  const handleLogActivity = () => {
-    if (!deal) return;
-    if (!actForm.summary.trim()) { toast.error("Summary required"); return; }
-    createActivity.mutate({
-      partner_id: deal.partner_id,
-      deal_id: deal.id,
-      type: actForm.type,
-      summary: actForm.summary,
-      outcome: actForm.outcome || null,
-      next_step: actForm.next_step || null,
-      next_step_date: actForm.next_step_date || null,
-    } as any, {
-      onSuccess: () => {
-        toast.success("Activity logged");
-        setActivityOpen(false);
-        setActForm({ type: "Call", summary: "", outcome: "", next_step: "", next_step_date: "" });
+  const handleAddNote = () => {
+    if (!noteText.trim()) { toast.error("Note cannot be empty."); return; }
+    createActivity.mutate(
+      { partner_id: deal.partner_id, deal_id: deal.id, type: "Other", summary: noteText.trim() } as any,
+      {
+        onSuccess: () => {
+          // Update last_activity_at on the deal
+          update.mutate({ id: deal.id, last_activity_at: new Date().toISOString() } as any);
+          toast.success("Note added");
+          setNoteText("");
+        },
+        onError: (e: any) => toast.error(e.message),
       },
-      onError: (e: any) => toast.error(e.message),
+    );
+  };
+
+  const handleGenerateBrief = () => {
+    generateBrief.mutate(deal.id, {
+      onSuccess: () => toast.success("Scribe brief generated"),
+      onError: (e: any) => toast.error(e.message || "Brief generation failed. Try again."),
     });
   };
 
-  if (isLoading) return <div className="flex items-center justify-center h-[60vh]"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
-  if (!deal) return <div className="p-6 text-center text-muted-foreground">Deal not found.<div><Button variant="link" onClick={() => navigate("/growth/pipeline")}>← Back to Pipeline</Button></div></div>;
-
-  const daysInStage = differenceInDays(new Date(), new Date(deal.updated_at));
+  const closerEnabled = deal.stage === "Proposal Out" || deal.stage === "In Negotiation" || deal.stage === "Closed Won";
 
   return (
-    <div className="p-6 space-y-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/growth/pipeline")}><ArrowLeft className="h-5 w-5" /></Button>
-        {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="lg" />}
-        <div className="flex-1 min-w-0">
-          <button onClick={() => partner && navigate(`/partners/${partner.id}`)} className="text-xs text-muted-foreground hover:text-primary hover:underline inline-flex items-center gap-1.5">
-            {partner?.company || "Unknown account"}
-            <CustomerTypeBadge type={(partner as any)?.customer_type} typeOther={(partner as any)?.customer_type_other} />
-          </button>
-          <h1 className="text-2xl font-bold">{deal.deal_name}</h1>
-        </div>
-        <Badge variant="outline" className={DEAL_STAGE_COLORS[deal.stage]}>{deal.stage}</Badge>
-        <Button variant="outline" size="sm" onClick={handleDelete} className="text-destructive hover:text-destructive">
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* ════════ Breadcrumb ════════ */}
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Link to="/business/pipeline" className="hover:text-primary">Pipeline</Link>
+        <ChevronRight className="h-3 w-3" />
+        <Link
+          to={partner ? `/business/accounts/${partner.id}` : "/business/accounts"}
+          className="hover:text-primary truncate max-w-[200px]"
+        >
+          {partner?.company || "Unknown account"}
+        </Link>
+        <ChevronRight className="h-3 w-3" />
+        <span className="truncate font-medium text-foreground">{deal.deal_name}</span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Edit Form */}
-        <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Deal Details</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5"><Label className="text-xs">Deal Name</Label><Input value={form.deal_name || ""} onChange={e => setForm({ ...form, deal_name: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Description</Label><Textarea rows={3} value={form.description || ""} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Stage</Label>
-                  <Select value={form.stage} onValueChange={v => handleStageSelect(v as DealStage)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{DEAL_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Owner</Label>
-                  <Select value={form.owner_user_id || "__none__"} onValueChange={v => setForm({ ...form, owner_user_id: v === "__none__" ? "" : v })}>
-                    <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">Unassigned</SelectItem>
-                      {users.map(u => <SelectItem key={u.user_id} value={u.user_id}>{u.display_name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5"><Label className="text-xs">Owner (text)</Label><Input value={form.owner || ""} onChange={e => setForm({ ...form, owner: e.target.value })} placeholder="e.g. Alex Rivera" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Value ($)</Label><Input type="number" value={form.value || ""} onChange={e => setForm({ ...form, value: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Predicted ARR ($)</Label><Input type="number" value={form.predicted_arr || ""} onChange={e => setForm({ ...form, predicted_arr: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Predicted Close</Label><Input type="date" value={form.predicted_close_date || ""} onChange={e => setForm({ ...form, predicted_close_date: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Expected Close</Label><Input type="date" value={form.expected_close_date || ""} onChange={e => setForm({ ...form, expected_close_date: e.target.value })} /></div>
+      {/* ════════ A. Header ════════ */}
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/business/pipeline")} className="shrink-0">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="lg" />}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl font-bold truncate">{partner?.company || "Unknown"}</h1>
+                <CustomerTypeBadge
+                  type={(partner as any)?.customer_type}
+                  typeOther={(partner as any)?.customer_type_other}
+                />
               </div>
-            </CardContent>
-          </Card>
+              <p className="text-sm text-muted-foreground mt-0.5">{deal.deal_name}</p>
+              <div className="flex items-center gap-4 mt-3 text-xs flex-wrap">
+                <Meta label="Value" value={`$${Number(deal.value || 0).toLocaleString()}`} accent="text-primary" />
+                <Meta
+                  label="Predicted Close"
+                  value={(deal as any).predicted_close_date
+                    ? format(new Date((deal as any).predicted_close_date), "MMM d, yyyy")
+                    : "—"}
+                />
+                <Meta label="Owner" value={ownerLabel} />
+                <Meta label="Days in stage" value={`${differenceInDays(new Date(), new Date((deal as any).last_activity_at || deal.updated_at))}d`} />
+              </div>
+            </div>
 
-          <Card>
-            <CardHeader><CardTitle className="text-base">Next Action</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5"><Label className="text-xs">Action</Label><Input value={form.next_action || ""} onChange={e => setForm({ ...form, next_action: e.target.value })} placeholder="e.g. Send proposal to champion" /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Date</Label><Input type="date" value={form.next_action_date || ""} onChange={e => setForm({ ...form, next_action_date: e.target.value })} /></div>
-            </CardContent>
-          </Card>
+            <div className="flex items-center gap-2 shrink-0">
+              <Select value={deal.stage} onValueChange={(v) => handleStageSelect(v as DealStage)}>
+                <SelectTrigger className={cn("w-44", DEAL_STAGE_COLORS[deal.stage])}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DEAL_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)} className="gap-1.5">
+                <Pencil className="h-3.5 w-3.5" />Edit Deal
+              </Button>
+              <Button variant="outline" size="icon" onClick={handleDelete} className="text-destructive hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Activity Feed</CardTitle>
-              <Button size="sm" onClick={() => setActivityOpen(true)} className="gap-1.5"><Plus className="h-3.5 w-3.5" />Log Activity</Button>
-            </CardHeader>
-            <CardContent>
-              {activities.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-6">No activity logged yet.</p>
+      {/* ════════ B. Live Ops Snapshot ════════ */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />Live Ops Snapshot
+            </CardTitle>
+            {partner && (
+              <Link
+                to={`/operations/tickets?customer=${encodeURIComponent(partner.company)}`}
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+              >
+                View customer in Operations <ExternalLink className="h-3 w-3" />
+              </Link>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {ops && ops.charger_count > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <OpsTile label="Chargers" value={String(ops.charger_count)} sub={`across ${ops.sites_count} sites`} />
+              <OpsTile
+                label="Incidents (30d)"
+                value={String(ops.incidents_30d)}
+                accent={incidentClass(ops.incidents_30d, ops.charger_count)}
+              />
+              <OpsTile label="Truck rolls (30d)" value={String(ops.truck_rolls_30d)} />
+              <OpsTile
+                label={
+                  <span className="inline-flex items-center gap-1">
+                    Uptime (estimated)
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-3 w-3 text-muted-foreground/60" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-[240px] text-xs z-[2000]">
+                          Estimated from service ticket data. Will update with OCPP telemetry.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </span>
+                }
+                value={`${Number(ops.uptime_pct ?? 100).toFixed(1)}%`}
+              />
+              <OpsTile
+                label="Est. NOCH+ savings"
+                value={`~$${Number(ops.estimated_monthly_savings || 0).toLocaleString()}/mo`}
+                accent="text-emerald-700"
+              />
+              <OpsTile label="Sites" value={String(ops.sites_count)} />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground italic py-2">
+              No ops data yet — this customer doesn't have chargers in the NOCH+ system.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ════════ C. Agent Intelligence ════════ */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Brain className="h-4 w-4 text-primary" />Agent Intelligence
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={briefTab} onValueChange={(v) => setBriefTab(v as any)}>
+            <TabsList>
+              <TabsTrigger value="scribe" className="gap-1.5"><FileText className="h-3.5 w-3.5" />Account Brief</TabsTrigger>
+              <TabsTrigger value="closer" className="gap-1.5"><FileText className="h-3.5 w-3.5" />Proposal Draft</TabsTrigger>
+              <TabsTrigger value="forecaster" className="gap-1.5"><TrendingUp className="h-3.5 w-3.5" />Forecast</TabsTrigger>
+            </TabsList>
+
+            {/* Scribe */}
+            <TabsContent value="scribe" className="mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Button onClick={handleGenerateBrief} disabled={generateBrief.isPending} className="gap-1.5">
+                  {generateBrief.isPending ? (
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin" />Scribe thinking...</>
+                  ) : latestScribe ? (
+                    <><FileText className="h-3.5 w-3.5" />Regenerate Brief</>
+                  ) : (
+                    <><FileText className="h-3.5 w-3.5" />Generate Brief</>
+                  )}
+                </Button>
+                {latestScribe && (
+                  <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    Generated {formatDistanceToNow(new Date(latestScribe.generated_at), { addSuffix: true })}
+                  </span>
+                )}
+              </div>
+              {latestScribe ? <ScribeBriefView output={latestScribe} /> : (
+                <p className="text-sm text-muted-foreground italic py-6 text-center border border-dashed rounded">
+                  No brief yet. Click "Generate Brief" to have Scribe analyze this account.
+                </p>
+              )}
+            </TabsContent>
+
+            {/* Closer */}
+            <TabsContent value="closer" className="mt-4">
+              {!closerEnabled ? (
+                <p className="text-sm text-muted-foreground italic py-6 text-center border border-dashed rounded">
+                  Available when deal reaches Proposal Out stage.
+                </p>
               ) : (
                 <div className="space-y-3">
-                  {activities.map(a => {
-                    const Icon = TYPE_ICONS[a.type];
-                    return (
-                      <div key={a.id} className="flex gap-3 pb-3 border-b border-border/50 last:border-0">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center"><Icon className="h-4 w-4 text-muted-foreground" /></div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium">{a.type}</span>
-                            <span className="text-xs text-muted-foreground">{format(new Date(a.activity_date), "MMM d, yyyy h:mm a")}</span>
-                          </div>
-                          <p className="text-sm mt-0.5">{a.summary}</p>
-                          {a.outcome && <p className="text-xs text-muted-foreground mt-1"><span className="font-medium">Outcome:</span> {a.outcome}</p>}
-                          {a.next_step && <p className="text-xs text-primary mt-1"><span className="font-medium">Next:</span> {a.next_step}{a.next_step_date && ` (${format(new Date(a.next_step_date), "MMM d")})`}</p>}
-                        </div>
+                  <div>
+                    <Button
+                      onClick={() => generatePlaceholder.mutate(
+                        { dealId: deal.id, agent: "closer" },
+                        { onSuccess: () => toast.success("Closer scaffolded — placeholder row inserted") },
+                      )}
+                      disabled={generatePlaceholder.isPending}
+                      className="gap-1.5"
+                    >
+                      {generatePlaceholder.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Generate Proposal Draft
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1.5">Coming soon — currently scaffolded only.</p>
+                  </div>
+                  {latestCloser && (
+                    <div className="text-xs p-3 rounded bg-muted/30 border">
+                      <div className="text-muted-foreground mb-1">
+                        Last placeholder: {format(new Date(latestCloser.generated_at), "MMM d, yyyy h:mm a")}
                       </div>
-                    );
-                  })}
+                      <p className="italic">{(latestCloser.content as any)?.markdown || "—"}</p>
+                    </div>
+                  )}
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
+            </TabsContent>
 
-        {/* Sidebar */}
-        <div className="space-y-4">
-          {/* Live Ops Snapshot */}
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><Zap className="h-4 w-4 text-primary" />Live Ops Snapshot</CardTitle></CardHeader>
-            <CardContent className="p-4 pt-0 space-y-2 text-xs">
-              {ops ? (
-                <>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Chargers</span><span className="font-semibold">{ops.charger_count}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Sites</span><span className="font-semibold">{ops.sites_count}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Incidents (30d)</span><span className="font-semibold">{ops.incidents_30d}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Uptime</span><span className="font-semibold">{Number(ops.uptime_pct).toFixed(1)}%</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Truck rolls (30d)</span><span className="font-semibold">{ops.truck_rolls_30d}</span></div>
-                  <div className="pt-2 border-t flex justify-between"><span className="text-muted-foreground">Est. monthly savings</span><span className="font-bold text-primary">${Number(ops.estimated_monthly_savings).toLocaleString()}</span></div>
-                </>
-              ) : (
-                <p className="text-muted-foreground text-center py-2">No ops data yet.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Agent Outputs */}
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><Brain className="h-4 w-4 text-primary" />Agent Outputs</CardTitle></CardHeader>
-            <CardContent className="p-4 pt-0 space-y-2">
-              <div className="flex flex-col gap-1.5">
-                <Button size="sm" variant="outline" className="justify-start gap-1.5" onClick={() => generateBrief.mutate(deal.id, { onSuccess: () => toast.success("Brief generated"), onError: (e: any) => toast.error(e.message) })} disabled={generateBrief.isPending}>
-                  {generateBrief.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileText className="h-3 w-3" />}
-                  Generate Brief (Scribe)
-                </Button>
-                {(deal.stage === "Proposal Out" || deal.stage === "In Negotiation" || deal.stage === "Closed Won") && (
-                  <Button size="sm" variant="outline" className="justify-start gap-1.5" onClick={() => generatePlaceholder.mutate({ dealId: deal.id, agent: "closer" }, { onSuccess: () => toast.success("Closer queued (placeholder)") })} disabled={generatePlaceholder.isPending}>
-                    <FileText className="h-3 w-3" />Generate Proposal Draft (Closer)
-                  </Button>
-                )}
-                <Button size="sm" variant="outline" className="justify-start gap-1.5" onClick={() => generatePlaceholder.mutate({ dealId: deal.id, agent: "forecaster" }, { onSuccess: () => toast.success("Forecast queued (placeholder)") })} disabled={generatePlaceholder.isPending}>
-                  <TrendingUp className="h-3 w-3" />Refresh Forecast
-                </Button>
+            {/* Forecaster */}
+            <TabsContent value="forecaster" className="mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                <ForecastTile label="Deal Health" value={(deal as any).deal_health || "—"} />
+                <ForecastTile
+                  label="Close Probability"
+                  value={(deal as any).model_close_probability != null
+                    ? `${(deal as any).model_close_probability}%`
+                    : "—"}
+                />
+                <ForecastTile label="Primary Risk" value={(deal as any).competitor || "—"} />
+                <ForecastTile label="Recommended" value={deal.next_action || "—"} />
               </div>
-              <div className="space-y-2 max-h-72 overflow-y-auto pt-2 border-t">
-                {agentOutputs.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-2">No agent outputs yet.</p>
-                ) : agentOutputs.map(o => (
-                  <div key={o.id} className="text-xs p-2 rounded bg-muted/30 border border-border/50">
-                    <div className="flex items-center justify-between mb-1">
-                      <Badge variant="outline" className="text-[10px] uppercase">{o.agent_name}</Badge>
-                      <span className="text-[10px] text-muted-foreground">{format(new Date(o.generated_at), "MMM d, h:mm a")}</span>
+              <Button
+                onClick={() => generatePlaceholder.mutate(
+                  { dealId: deal.id, agent: "forecaster" },
+                  { onSuccess: () => toast.success("Forecast scaffolded — placeholder row inserted") },
+                )}
+                disabled={generatePlaceholder.isPending}
+                className="gap-1.5"
+              >
+                {generatePlaceholder.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Refresh Forecast
+              </Button>
+              <p className="text-xs text-muted-foreground mt-1.5">Coming soon — currently scaffolded only.</p>
+              {latestForecast && (
+                <div className="text-xs p-3 rounded bg-muted/30 border mt-3">
+                  <div className="text-muted-foreground mb-1">
+                    Last placeholder: {format(new Date(latestForecast.generated_at), "MMM d, yyyy h:mm a")}
+                  </div>
+                  <p className="italic">{(latestForecast.content as any)?.markdown || "—"}</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* ════════ D. Activity Timeline ════════ */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Activity Timeline</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add a note about this deal..."
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAddNote(); }}
+              className="flex-1"
+            />
+            <Button onClick={handleAddNote} disabled={createActivity.isPending} className="gap-1.5">
+              {createActivity.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+              Add Note
+            </Button>
+          </div>
+
+          {activities.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6 italic">No activity logged yet.</p>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {activities.slice(0, activityLimit).map((a) => (
+                  <div key={a.id} className="flex gap-3 pb-3 border-b border-border/50 last:border-0">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center mt-0.5">
+                      <Brain className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <p className="whitespace-pre-wrap line-clamp-[12]">{(o.content as any)?.markdown || JSON.stringify(o.content)}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium">{a.type}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(a.activity_date), "MMM d, yyyy h:mm a")}
+                        </span>
+                      </div>
+                      <p className="text-sm mt-0.5 whitespace-pre-wrap">{a.summary}</p>
+                      {a.outcome && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          <span className="font-medium">Outcome:</span> {a.outcome}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+              {activities.length > activityLimit && (
+                <button
+                  onClick={() => setActivityLimit((n) => n + 10)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Load more ({activities.length - activityLimit} remaining)
+                </button>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
 
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="text-xs text-muted-foreground">Days in current stage</div>
-              <div className="text-2xl font-bold">{daysInStage}</div>
-              <div className="text-xs text-muted-foreground pt-2">Created</div>
-              <div className="text-sm font-medium">{format(new Date(deal.created_at), "MMM d, yyyy")}</div>
-            </CardContent>
-          </Card>
+      {/* ════════ E. Deal Meta ════════ */}
+      <Card>
+        <CardContent className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+          <Meta label="Predicted Close" value={(deal as any).predicted_close_date ? format(new Date((deal as any).predicted_close_date), "MMM d, yyyy") : "—"} />
+          <Meta label="Predicted ARR" value={`$${Number((deal as any).predicted_arr || 0).toLocaleString()}`} />
+          <Meta label="Created" value={format(new Date(deal.created_at), "MMM d, yyyy")} />
+          <Meta label="Last updated" value={format(new Date(deal.updated_at), "MMM d, yyyy h:mm a")} />
+          {deal.stage === "Closed Lost" && (deal as any).loss_reason && (
+            <Meta label="Loss Reason" value={LOSS_REASON_LABELS[(deal as any).loss_reason as keyof typeof LOSS_REASON_LABELS]} accent="text-rose-600" />
+          )}
+          {(deal as any).competitor && (
+            <Meta label="Competitor" value={(deal as any).competitor} />
+          )}
+        </CardContent>
+      </Card>
 
-          <Button onClick={handleSave} disabled={update.isPending} className="w-full gap-1.5">
-            {update.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Save Changes
-          </Button>
-        </div>
-      </div>
-
-      {/* Stage change confirm */}
+      {/* ════════ Stage change confirm dialog ════════ */}
       <Dialog open={!!pendingStage} onOpenChange={(o) => !o && setPendingStage(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Move deal to "{pendingStage}"?</DialogTitle></DialogHeader>
@@ -339,7 +532,7 @@ export default function GrowthDealDetail() {
               <Select value={pendingLoss} onValueChange={setPendingLoss}>
                 <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
                 <SelectContent>
-                  {LOSS_REASONS.map(r => <SelectItem key={r} value={r}>{LOSS_REASON_LABELS[r]}</SelectItem>)}
+                  {LOSS_REASONS.map((r) => <SelectItem key={r} value={r}>{LOSS_REASON_LABELS[r]}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -353,33 +546,188 @@ export default function GrowthDealDetail() {
         </DialogContent>
       </Dialog>
 
-      {/* Log Activity Modal */}
-      <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Log Activity</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Type</Label>
-              <Select value={actForm.type} onValueChange={v => setActForm({ ...actForm, type: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{ACTIVITY_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-              </Select>
+      {/* ════════ Edit Deal dialog ════════ */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit Deal</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5 col-span-2">
+              <Label className="text-xs">Deal Name</Label>
+              <Input value={form.deal_name || ""} onChange={(e) => setForm({ ...form, deal_name: e.target.value })} />
             </div>
-            <div className="space-y-1.5"><Label className="text-xs">Summary *</Label><Textarea rows={2} value={actForm.summary} onChange={e => setActForm({ ...actForm, summary: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label className="text-xs">Outcome</Label><Textarea rows={2} placeholder="What did you secure from this interaction?" value={actForm.outcome} onChange={e => setActForm({ ...actForm, outcome: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5"><Label className="text-xs">Next Step</Label><Input value={actForm.next_step} onChange={e => setActForm({ ...actForm, next_step: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Next Step Date</Label><Input type="date" value={actForm.next_step_date} onChange={e => setActForm({ ...actForm, next_step_date: e.target.value })} /></div>
+            <div className="space-y-1.5 col-span-2">
+              <Label className="text-xs">Description</Label>
+              <Textarea rows={2} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Value ($)</Label>
+              <Input type="number" value={form.value || ""} onChange={(e) => setForm({ ...form, value: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Predicted ARR ($)</Label>
+              <Input type="number" value={form.predicted_arr || ""} onChange={(e) => setForm({ ...form, predicted_arr: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Predicted Close Date</Label>
+              <Input type="date" value={form.predicted_close_date || ""} onChange={(e) => setForm({ ...form, predicted_close_date: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Owner</Label>
+              <Input value={form.owner || ""} onChange={(e) => setForm({ ...form, owner: e.target.value })} placeholder="e.g. Alex Rivera" />
+            </div>
+            <div className="space-y-1.5 col-span-2">
+              <Label className="text-xs">Next Action</Label>
+              <Input value={form.next_action || ""} onChange={(e) => setForm({ ...form, next_action: e.target.value })} />
+            </div>
+            <div className="space-y-1.5 col-span-2">
+              <Label className="text-xs">Competitor</Label>
+              <Input value={form.competitor || ""} onChange={(e) => setForm({ ...form, competitor: e.target.value })} />
+            </div>
+            <div className="space-y-1.5 col-span-2">
+              <Label className="text-xs">Notes</Label>
+              <Textarea rows={3} value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setActivityOpen(false)}>Cancel</Button>
-            <Button onClick={handleLogActivity} disabled={createActivity.isPending}>
-              {createActivity.isPending && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}Log Activity
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveEdit} disabled={update.isPending}>
+              {update.isPending && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}Save
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/* ════════════ Helpers ════════════ */
+
+function Meta({ label, value, accent = "" }: { label: string; value: string; accent?: string }) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">{label}</p>
+      <p className={cn("text-sm font-medium mt-0.5", accent)}>{value}</p>
+    </div>
+  );
+}
+
+function OpsTile({ label, value, sub, accent = "" }: { label: React.ReactNode; value: string; sub?: string; accent?: string }) {
+  return (
+    <div className="rounded-lg border p-3 bg-muted/20">
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">{label}</p>
+      <p className={cn("text-lg font-bold mt-1 tabular-nums", accent)}>{value}</p>
+      {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
+    </div>
+  );
+}
+
+function ForecastTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">{label}</p>
+      <p className="text-sm font-semibold mt-1 capitalize truncate" title={value}>{value}</p>
+    </div>
+  );
+}
+
+function incidentClass(incidents: number, chargers: number): string {
+  if (chargers <= 0) return "";
+  const ratio = incidents / chargers;
+  if (ratio < 0.3) return "text-emerald-600";
+  if (ratio <= 0.7) return "text-amber-600";
+  return "text-rose-600";
+}
+
+/* ════════════ Scribe Brief renderer ════════════ */
+
+function ScribeBriefView({ output }: { output: AgentOutput }) {
+  const c = output.content as any;
+  // Backward-compat: legacy briefs stored markdown
+  if (c?.markdown && !c?.headline) {
+    return (
+      <div className="prose prose-sm max-w-none whitespace-pre-wrap p-4 rounded bg-muted/20 border">
+        {c.markdown}
+      </div>
+    );
+  }
+
+  const signal = (c?.buying_signal_flag || "none") as keyof typeof SIGNAL_BADGE;
+
+  const copyAsText = () => {
+    const lines: string[] = [];
+    lines.push(c.headline || "");
+    if (signal !== "none") lines.push(`Buying signal: ${signal}${c.buying_signal_reason ? " — " + c.buying_signal_reason : ""}`);
+    if (c.ops_reality) lines.push("\nOps Reality:\n" + c.ops_reality);
+    if (c.where_we_stand) lines.push("\nWhere We Stand:\n" + c.where_we_stand);
+    if (c.open_questions?.length) lines.push("\nOpen Questions:\n" + c.open_questions.map((q: string) => `• ${q}`).join("\n"));
+    if (c.risks?.length) lines.push("\nRisks:\n" + c.risks.map((r: string) => `• ${r}`).join("\n"));
+    if (c.recommended_next_action) lines.push("\nRecommended Next Action:\n" + c.recommended_next_action);
+    if (c.talking_points?.length) lines.push("\nTalking Points:\n" + c.talking_points.map((t: string) => `• ${t}`).join("\n"));
+    navigator.clipboard.writeText(lines.join("\n")).then(() => toast.success("Copied to clipboard"));
+  };
+
+  return (
+    <div className="space-y-4 border rounded-lg p-5 bg-gradient-to-br from-muted/10 to-transparent">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1">
+          <p className="font-bold text-base leading-snug">{c.headline}</p>
+          {signal !== "none" && c.buying_signal_flag && (
+            <Badge variant="outline" className={cn("mt-2 capitalize", SIGNAL_BADGE[signal])}>
+              Buying signal: {signal}{c.buying_signal_reason ? ` — ${c.buying_signal_reason}` : ""}
+            </Badge>
+          )}
+        </div>
+        <Button variant="outline" size="sm" onClick={copyAsText} className="gap-1.5 shrink-0">
+          <Copy className="h-3 w-3" />Copy as text
+        </Button>
+      </div>
+
+      {c.ops_reality && (
+        <Section title="Ops Reality"><p className="text-sm">{c.ops_reality}</p></Section>
+      )}
+      {c.where_we_stand && (
+        <Section title="Where We Stand"><p className="text-sm">{c.where_we_stand}</p></Section>
+      )}
+      {c.open_questions?.length > 0 && (
+        <Section title="Open Questions">
+          <ul className="text-sm space-y-1 list-disc pl-5">
+            {c.open_questions.map((q: string, i: number) => <li key={i}>{q}</li>)}
+          </ul>
+        </Section>
+      )}
+      {c.risks?.length > 0 && (
+        <Section title="Risks" icon={<AlertTriangle className="h-3.5 w-3.5 text-rose-600" />}>
+          <ul className="text-sm space-y-1 list-disc pl-5 marker:text-rose-600">
+            {c.risks.map((r: string, i: number) => <li key={i}>{r}</li>)}
+          </ul>
+        </Section>
+      )}
+      {c.recommended_next_action && (
+        <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-3">
+          <p className="text-[10px] uppercase tracking-wide text-primary font-bold mb-1">
+            Recommended Next Action
+          </p>
+          <p className="text-sm font-medium">{c.recommended_next_action}</p>
+        </div>
+      )}
+      {c.talking_points?.length > 0 && (
+        <Section title="Talking Points">
+          <ul className="text-sm space-y-1 list-disc pl-5">
+            {c.talking_points.map((t: string, i: number) => <li key={i}>{t}</li>)}
+          </ul>
+        </Section>
+      )}
+    </div>
+  );
+}
+
+function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold mb-1.5 inline-flex items-center gap-1">
+        {icon}{title}
+      </p>
+      {children}
     </div>
   );
 }
