@@ -74,6 +74,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { PinButton } from "@/components/command-palette/PinButton";
 
 interface Props {
   workOrder: WorkOrder | null;
@@ -330,15 +331,22 @@ export default function WorkOrderDetailModal({
                 {new Date(workOrder.created_at).toLocaleDateString()}
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              aria-label="Close"
-              className="shrink-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1 shrink-0">
+              <PinButton
+                type="work_order"
+                id={workOrder.id}
+                label={`${workOrder.work_order_number || "WO"} · ${workOrder.site_name || ""}`.trim()}
+                variant="icon"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onOpenChange(false)}
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Lifecycle chain */}
