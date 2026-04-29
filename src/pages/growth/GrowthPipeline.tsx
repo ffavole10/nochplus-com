@@ -186,8 +186,9 @@ export default function GrowthPipeline() {
   const resetForm = () => {
     setForm({
       customer_id: "", new_company: "", new_contact: "", new_email: "", new_customer_type: "", new_customer_type_other: "", new_website: "",
-      deal_name: "", stage: "Account Mapped", value: "", predicted_close_date: "", predicted_arr: "", owner: "", next_action: "", notes: "",
+      deal_name: "", stage: "Account Mapped", predicted_close_date: "", owner: "", next_action: "", notes: "",
     });
+    setEconForm(emptyEconomics());
     setCustomerMode("existing");
   };
 
