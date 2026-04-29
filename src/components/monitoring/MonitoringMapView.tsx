@@ -54,6 +54,9 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
             </circle>
             <text x="40" y="42" textAnchor="middle" dominantBaseline="middle" fontSize="18" fontWeight="bold" fill="#E8760A">42</text>
           </svg>
+          <div className="mt-1.5">
+            <NeuralLayerPill layer="reasoning" tooltip="Computed by Atlas agent · Pattern intelligence layer" />
+          </div>
         </div>
 
         {/* Health Matrix */}
