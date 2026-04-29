@@ -101,7 +101,7 @@ export function DealEconomicsFields({ value, onChange }: Props) {
               <RadioGroupItem value="per_connector" id="rm-pc" />
               <div className="text-xs">
                 <div className="font-medium">Per-connector</div>
-                <div className="text-muted-foreground">${PER_CONNECTOR_RATE}/connector/mo</div>
+                <div className="text-muted-foreground">Custom rate per connector</div>
               </div>
             </label>
             <label className="flex items-center gap-2 rounded-md border p-2 cursor-pointer hover:bg-accent/40">
