@@ -218,14 +218,13 @@ export default function GrowthPipeline() {
         partner_id: customerId,
         deal_name: form.deal_name.trim(),
         stage: form.stage,
-        value: Number(form.value) || 0,
         predicted_close_date: form.predicted_close_date || null,
         expected_close_date: form.predicted_close_date || null,
-        predicted_arr: Number(form.predicted_arr) || 0,
         owner: form.owner.trim() || null,
         next_action: form.next_action.trim() || null,
         notes: form.notes.trim() || null,
         last_activity_at: new Date().toISOString(),
+        ...economicsToPayload(econForm),
       } as any);
       toast.success("Deal created");
       setAddOpen(false);
