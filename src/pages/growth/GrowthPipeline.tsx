@@ -578,13 +578,14 @@ export default function GrowthPipeline() {
                   <SelectContent>{DEAL_STAGES.filter(s => s !== "Closed Won" && s !== "Closed Lost").map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5"><Label className="text-xs">Deal Value ($)</Label><Input type="number" value={form.value} onChange={e => setForm({ ...form, value: e.target.value })} /></div>
               <div className="space-y-1.5"><Label className="text-xs">Predicted Close Date</Label><Input type="date" value={form.predicted_close_date} onChange={e => setForm({ ...form, predicted_close_date: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Predicted ARR ($)</Label><Input type="number" value={form.predicted_arr} onChange={e => setForm({ ...form, predicted_arr: e.target.value })} /></div>
               <div className="space-y-1.5 col-span-2"><Label className="text-xs">Owner</Label><Input value={form.owner} onChange={e => setForm({ ...form, owner: e.target.value })} placeholder="e.g. Alex Rivera" /></div>
               <div className="space-y-1.5 col-span-2"><Label className="text-xs">Next Action</Label><Input value={form.next_action} onChange={e => setForm({ ...form, next_action: e.target.value })} /></div>
               <div className="space-y-1.5 col-span-2"><Label className="text-xs">Notes</Label><Textarea rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
             </div>
+
+            <DealEconomicsFields value={econForm} onChange={setEconForm} />
+          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
