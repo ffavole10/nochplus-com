@@ -103,8 +103,8 @@ export function NeuralOsInvoiceModal({
 
   const customer = ticket.customer;
   const billToText = customer
-    ? [customer.contactName, customer.company].filter(Boolean).join(" — ")
-    : ticket.companyName || "—";
+    ? [customer.name, customer.company].filter(Boolean).join(" — ")
+    : "—";
 
   const persist = async (status: "draft" | "attached") => {
     setSaving(true);
