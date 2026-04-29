@@ -74,6 +74,7 @@ import OperationsTeamPerformance from "./pages/operations/OperationsTeamPerforma
 
 // Business section pages (Batch 5)
 import BusinessAccounts from "./pages/business/BusinessAccounts";
+import BusinessAccountsDuplicates from "./pages/business/BusinessAccountsDuplicates";
 import BusinessAccountDetail from "./pages/business/BusinessAccountDetail";
 import BusinessPipeline from "./pages/business/BusinessPipeline";
 import BusinessMembership from "./pages/business/BusinessMembership";
@@ -186,6 +187,7 @@ const App = () => (
             <Route path="/operations/team-performance" element={<OperationsTeamPerformance />} />
             <Route path="/business" element={<Navigate to="/business/accounts" replace />} />
             <Route path="/business/accounts" element={<BusinessAccounts />} />
+            <Route path="/business/accounts/duplicates" element={<BusinessAccountsDuplicates />} />
             <Route path="/business/accounts/:accountId" element={<BusinessAccountDetail />} />
             <Route path="/business/pipeline" element={<BusinessPipeline />} />
             <Route path="/business/pipeline/:dealId" element={<GrowthDealDetail />} />

@@ -2,16 +2,17 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { useDeals, useUpdateDealStage, useCreateDeal } from "@/hooks/useDeals";
-import { useCustomers, useCreateCustomer } from "@/hooks/useCustomers";
+import { useCustomers } from "@/hooks/useCustomers";
 import { useGrowthUsers, useGrowthUserMap } from "@/hooks/useGrowthUsers";
 import { useAccountOpsSnapshots } from "@/hooks/useAccountOpsSnapshot";
 import { useLatestScribeBriefs } from "@/hooks/useAgentOutputs";
 import { DealOpsBadge } from "@/components/business/DealOpsBadge";
 import { DealEconomicsFields, emptyEconomics, economicsToPayload, type DealEconomicsForm } from "@/components/business/DealEconomicsFields";
+import { CustomerPicker } from "@/components/business/CustomerPicker";
 import { DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type Deal } from "@/types/growth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
-import { CustomerTypeBadge, CUSTOMER_TYPE_OPTIONS, type CustomerType } from "@/components/business/CustomerTypeBadge";
+import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { LayoutGrid, List, Search, TrendingUp, Loader2, Plus, Zap, AlertTriangle, Check, ChevronsUpDown } from "lucide-react";
-import { format, isPast, differenceInDays } from "date-fns";
+import { LayoutGrid, List, Search, TrendingUp, Loader2, Plus, AlertTriangle } from "lucide-react";
+import { differenceInDays } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +49,6 @@ export default function GrowthPipeline() {
   const { data: briefMap = {} } = useLatestScribeBriefs();
   const updateStage = useUpdateDealStage();
   const createDeal = useCreateDeal();
-  const createCustomer = useCreateCustomer();
 
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [search, setSearch] = useState("");
@@ -64,16 +62,8 @@ export default function GrowthPipeline() {
 
   // Add Deal dialog
   const [addOpen, setAddOpen] = useState(false);
-  const [customerMode, setCustomerMode] = useState<"existing" | "new">("existing");
-  const [customerPickerOpen, setCustomerPickerOpen] = useState(false);
   const [form, setForm] = useState({
     customer_id: "",
-    new_company: "",
-    new_contact: "",
-    new_email: "",
-    new_customer_type: "" as CustomerType | "",
-    new_customer_type_other: "",
-    new_website: "",
     deal_name: "",
     stage: "Account Mapped" as DealStage,
     predicted_close_date: "",
@@ -185,37 +175,18 @@ export default function GrowthPipeline() {
 
   const resetForm = () => {
     setForm({
-      customer_id: "", new_company: "", new_contact: "", new_email: "", new_customer_type: "", new_customer_type_other: "", new_website: "",
+      customer_id: "",
       deal_name: "", stage: "Account Mapped", predicted_close_date: "", owner: "", next_action: "", notes: "",
     });
     setEconForm(emptyEconomics());
-    setCustomerMode("existing");
   };
 
   const handleAddDeal = async () => {
     if (!form.deal_name.trim()) { toast.error("Deal name required"); return; }
-    let customerId = form.customer_id;
+    if (!form.customer_id) { toast.error("Select or create a customer."); return; }
     try {
-      if (customerMode === "new") {
-        if (!form.new_company.trim() || !form.new_contact.trim() || !form.new_email.trim()) {
-          toast.error("New customer requires company, contact, and email."); return;
-        }
-        if (form.new_customer_type === "other" && !form.new_customer_type_other.trim()) {
-          toast.error("Specify the customer type."); return;
-        }
-        const created = await createCustomer.mutateAsync({
-          company: form.new_company.trim(),
-          contact_name: form.new_contact.trim(),
-          email: form.new_email.trim(),
-          customer_type: form.new_customer_type || null,
-          customer_type_other: form.new_customer_type === "other" ? form.new_customer_type_other.trim() : null,
-          website_url: form.new_website.trim() || "",
-        } as any);
-        customerId = created.id;
-      }
-      if (!customerId) { toast.error("Select or create a customer."); return; }
       await createDeal.mutateAsync({
-        partner_id: customerId,
+        partner_id: form.customer_id,
         deal_name: form.deal_name.trim(),
         stage: form.stage,
         predicted_close_date: form.predicted_close_date || null,
@@ -486,86 +457,10 @@ export default function GrowthPipeline() {
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Customer *</Label>
-              <Tabs value={customerMode} onValueChange={(v) => setCustomerMode(v as any)}>
-                <TabsList className="h-8">
-                  <TabsTrigger value="existing" className="text-xs">Existing</TabsTrigger>
-                  <TabsTrigger value="new" className="text-xs">Create new</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              {customerMode === "existing" ? (
-                <Popover open={customerPickerOpen} onOpenChange={setCustomerPickerOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                      <span className="flex items-center gap-2 truncate">
-                        {form.customer_id ? (
-                          <>
-                            <span className="truncate">{customerMap[form.customer_id]?.company ?? "Select customer"}</span>
-                            <CustomerTypeBadge
-                              type={(customerMap[form.customer_id] as any)?.customer_type}
-                              typeOther={(customerMap[form.customer_id] as any)?.customer_type_other}
-                            />
-                          </>
-                        ) : "Select customer"}
-                      </span>
-                      <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[2100]" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search customers..." />
-                      <CommandList className="max-h-[300px]">
-                        <CommandEmpty>No customer found.</CommandEmpty>
-                        <CommandGroup>
-                          {[...customers].sort((a, b) => a.company.localeCompare(b.company)).map(c => {
-                            const domain = ((c as any).website_url || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
-                            return (
-                              <CommandItem
-                                key={c.id}
-                                value={`${c.company} ${domain}`}
-                                onSelect={() => { setForm({ ...form, customer_id: c.id }); setCustomerPickerOpen(false); }}
-                              >
-                                <Check className={cn("mr-2 h-4 w-4 shrink-0", form.customer_id === c.id ? "opacity-100" : "opacity-0")} />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <span className="truncate font-medium">{c.company}</span>
-                                    <CustomerTypeBadge
-                                      type={(c as any).customer_type}
-                                      typeOther={(c as any).customer_type_other}
-                                    />
-                                  </div>
-                                  {domain && <p className="text-[11px] text-muted-foreground truncate">{domain}</p>}
-                                </div>
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-muted/20">
-                  <div className="space-y-1"><Label className="text-[10px]">Company *</Label><Input value={form.new_company} onChange={e => setForm({ ...form, new_company: e.target.value })} /></div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Customer Type</Label>
-                    <Select value={form.new_customer_type || ""} onValueChange={(v) => setForm({ ...form, new_customer_type: v as CustomerType })}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder="Select type" /></SelectTrigger>
-                      <SelectContent className="z-[2100]">
-                        {CUSTOMER_TYPE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.full}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {form.new_customer_type === "other" && (
-                    <div className="space-y-1 col-span-2">
-                      <Label className="text-[10px]">Specify type *</Label>
-                      <Input value={form.new_customer_type_other} onChange={e => setForm({ ...form, new_customer_type_other: e.target.value })} placeholder="e.g. Utility, EPC, Reseller" />
-                    </div>
-                  )}
-                  <div className="space-y-1"><Label className="text-[10px]">Primary Contact *</Label><Input value={form.new_contact} onChange={e => setForm({ ...form, new_contact: e.target.value })} /></div>
-                  <div className="space-y-1"><Label className="text-[10px]">Email *</Label><Input type="email" value={form.new_email} onChange={e => setForm({ ...form, new_email: e.target.value })} /></div>
-                  <div className="space-y-1 col-span-2"><Label className="text-[10px]">Domain / Website</Label><Input placeholder="example.com" value={form.new_website} onChange={e => setForm({ ...form, new_website: e.target.value })} /></div>
-                </div>
-              )}
+              <CustomerPicker
+                value={form.customer_id || null}
+                onChange={(id) => setForm({ ...form, customer_id: id || "" })}
+              />
             </div>
 
             <div className="space-y-1.5"><Label className="text-xs">Deal Name *</Label><Input value={form.deal_name} onChange={e => setForm({ ...form, deal_name: e.target.value })} /></div>
@@ -588,8 +483,8 @@ export default function GrowthPipeline() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddDeal} disabled={createDeal.isPending || createCustomer.isPending}>
-              {(createDeal.isPending || createCustomer.isPending) && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}Create Deal
+            <Button onClick={handleAddDeal} disabled={createDeal.isPending}>
+              {createDeal.isPending && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}Create Deal
             </Button>
           </DialogFooter>
         </DialogContent>

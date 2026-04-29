@@ -1938,15 +1938,24 @@ export type Database = {
           customer_type: Database["public"]["Enums"]["customer_type"] | null
           customer_type_other: string | null
           description: string | null
+          domain: string | null
+          duplicate_confirmed_distinct_of: string[] | null
           email: string
           headquarters_address: string | null
+          hq_city: string | null
+          hq_region: string | null
           id: string
           industry: string | null
+          internal_notes: string | null
           last_service_date: string | null
           logo_url: string | null
           notes: string
           phone: string
           pricing_type: string
+          relationship_type:
+            | Database["public"]["Enums"]["account_relationship_type"]
+            | null
+          source: Database["public"]["Enums"]["account_source"] | null
           status: string
           ticket_count: number
           total_revenue: number
@@ -1962,15 +1971,24 @@ export type Database = {
           customer_type?: Database["public"]["Enums"]["customer_type"] | null
           customer_type_other?: string | null
           description?: string | null
+          domain?: string | null
+          duplicate_confirmed_distinct_of?: string[] | null
           email: string
           headquarters_address?: string | null
+          hq_city?: string | null
+          hq_region?: string | null
           id?: string
           industry?: string | null
+          internal_notes?: string | null
           last_service_date?: string | null
           logo_url?: string | null
           notes?: string
           phone?: string
           pricing_type?: string
+          relationship_type?:
+            | Database["public"]["Enums"]["account_relationship_type"]
+            | null
+          source?: Database["public"]["Enums"]["account_source"] | null
           status?: string
           ticket_count?: number
           total_revenue?: number
@@ -1986,15 +2004,24 @@ export type Database = {
           customer_type?: Database["public"]["Enums"]["customer_type"] | null
           customer_type_other?: string | null
           description?: string | null
+          domain?: string | null
+          duplicate_confirmed_distinct_of?: string[] | null
           email?: string
           headquarters_address?: string | null
+          hq_city?: string | null
+          hq_region?: string | null
           id?: string
           industry?: string | null
+          internal_notes?: string | null
           last_service_date?: string | null
           logo_url?: string | null
           notes?: string
           phone?: string
           pricing_type?: string
+          relationship_type?:
+            | Database["public"]["Enums"]["account_relationship_type"]
+            | null
+          source?: Database["public"]["Enums"]["account_source"] | null
           status?: string
           ticket_count?: number
           total_revenue?: number
@@ -5800,6 +5827,14 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
+      account_relationship_type: "partner" | "customer" | "prospect" | "both"
+      account_source:
+        | "inbound"
+        | "outbound"
+        | "referral"
+        | "conference"
+        | "investor_network"
+        | "other"
       achievement_type:
         | "first_job"
         | "ten_jobs"
@@ -6080,6 +6115,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_relationship_type: ["partner", "customer", "prospect", "both"],
+      account_source: [
+        "inbound",
+        "outbound",
+        "referral",
+        "conference",
+        "investor_network",
+        "other",
+      ],
       achievement_type: [
         "first_job",
         "ten_jobs",

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Users, Eye, Plus, Search } from "lucide-react";
+import { Building2, Users, Eye, Plus, Search, AlertTriangle } from "lucide-react";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useAllPartnerMeta } from "@/hooks/usePartnerMeta";
 import { useDeals } from "@/hooks/useDeals";
@@ -14,7 +14,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
 import { BusinessPageHeader } from "@/components/business/BusinessPageHeader";
+import { CreateAccountModal } from "@/components/business/CreateAccountModal";
 import { TIER_COLORS, MOTION_LABELS, type GrowthMotion } from "@/types/growth";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["OEM", "CSMS", "CPO", "Site Host", "Other"] as const;
@@ -36,6 +38,7 @@ export default function BusinessAccounts() {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
   const [view, setView] = useState<View>("operations");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const metaMap = useMemo(() => {
     const m: Record<string, typeof allMeta[number]> = {};
@@ -151,9 +154,14 @@ export default function BusinessAccounts() {
         subtitle="Every customer, partner, and prospect in the NOCH ecosystem."
         icon={Building2}
         actions={
-          <Button onClick={() => navigate("/partners?new=1")} className="gap-2">
-            <Plus className="h-4 w-4" /> Add Account
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate("/business/accounts/duplicates")} className="gap-2">
+              <AlertTriangle className="h-4 w-4" /> Review Duplicates
+            </Button>
+            <Button onClick={() => setCreateOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" /> Add Account
+            </Button>
+          </div>
         }
       />
 
@@ -366,6 +374,15 @@ export default function BusinessAccounts() {
           </CardContent>
         </Card>
       )}
+
+      <CreateAccountModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={(c) => {
+          toast.success(`Account "${c.company}" created`);
+          setCreateOpen(false);
+        }}
+      />
     </div>
   );
 }

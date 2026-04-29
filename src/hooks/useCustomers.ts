@@ -23,6 +23,13 @@ export type Customer = {
   categories: string[];
   customer_type: "cpo" | "cms" | "oem" | "site_host" | "fleet_operator" | "other" | null;
   customer_type_other: string | null;
+  domain: string | null;
+  hq_city: string | null;
+  hq_region: string | null;
+  source: "inbound" | "outbound" | "referral" | "conference" | "investor_network" | "other" | null;
+  relationship_type: "partner" | "customer" | "prospect" | "both" | null;
+  internal_notes: string | null;
+  duplicate_confirmed_distinct_of: string[] | null;
   created_at: string;
   updated_at: string;
 };
