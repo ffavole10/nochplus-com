@@ -372,11 +372,12 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
                 <div className="text-sm text-foreground">{row.name}</div>
                 {row.values.map((val, i) => {
                   const isPriorityCol = TIER_ORDER[i] === "priority";
+                  const isEnterpriseCol = TIER_ORDER[i] === "enterprise";
                   return (
                     <div
                       key={i}
                       className={`text-center text-sm flex items-center justify-center min-h-[1.5rem] ${
-                        isPriorityCol ? "bg-primary/5 -my-2.5 py-2.5" : ""
+                        isPriorityCol ? "bg-primary/5 -my-2.5 py-2.5" : isEnterpriseCol ? "bg-slate-900/5 dark:bg-slate-100/5 -my-2.5 py-2.5" : ""
                       }`}
                     >
                       {renderCell(val)}
