@@ -20,7 +20,7 @@ const STATE_DOT_CLASSES: Record<string, string> = {
     "bg-primary border-primary text-primary-foreground shadow-[0_0_0_4px_hsl(var(--primary)/0.18)] animate-pulse",
   completed: "bg-primary border-primary text-primary-foreground",
   locked:
-    "bg-muted border-border text-muted-foreground/50 cursor-not-allowed",
+    "bg-muted border-border text-muted-foreground/60",
   skipped:
     "bg-muted border-border text-muted-foreground",
   blocked:
@@ -66,14 +66,12 @@ export function StepStepper({ steps, viewedStep, onSelectStep }: StepStepperProp
                     aria-label={`Step ${s.def.number}: ${s.def.label} (${STATE_LABEL[s.state]})`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (isLocked) return;
                       onSelectStep(s.def.number);
                     }}
-                    disabled={isLocked}
                     className={cn(
-                      "relative flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold transition-all",
+                      "relative flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold transition-all cursor-pointer hover:scale-110",
                       dotCls,
-                      !isLocked && "hover:scale-110",
+                      isLocked && "hover:opacity-80",
                       isViewed && "ring-2 ring-foreground ring-offset-2 ring-offset-background",
                     )}
                   >
