@@ -39,13 +39,18 @@ export const ROW_B = CHARGER_IDS.filter(id => id.includes('-B'));
 
 export const SORTED_BY_CVS = [...CHARGER_IDS].sort((a, b) => CHARGERS[a].cvs - CHARGERS[b].cvs);
 
-export const KPI_CHIPS = [
+export const KPI_CHIPS: Array<{
+  label: string;
+  value: string;
+  color: string;
+  pillLayer?: "sensing" | "reasoning" | "resolution" | "dispatch" | "learning" | "governance";
+}> = [
   { label: 'Connected', value: '11/12', color: '#1B8A7A' },
   { label: 'Fleet Health', value: 'CVS 78.2', color: '#1B8A7A' },
   { label: 'Critical', value: '1', color: '#D93025' },
-  { label: 'Auto-Healed', value: '34 this week', color: '#1B8A7A' },
-  { label: 'Tickets Prevented', value: '12', color: '#1B8A7A' },
-  { label: 'Revenue Protected', value: '$8,400', color: '#22C55E' },
+  { label: 'Auto-Healed', value: '34 this week', color: '#1B8A7A', pillLayer: 'resolution' },
+  { label: 'Tickets Prevented', value: '12', color: '#1B8A7A', pillLayer: 'reasoning' },
+  { label: 'Revenue Protected', value: '$8,400', color: '#22C55E', pillLayer: 'learning' },
   { label: 'Env. Risk Zones', value: '3 Active', color: '#E8760A' },
   { label: 'Max Resolution', value: '78.3%', color: '#1B8A7A' },
   { label: 'Cascade Risks', value: '1 Active', color: '#D93025' },
