@@ -1,127 +1,154 @@
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ReasoningTab } from "./neural-os/ReasoningTab";
-import { LearningTab } from "./neural-os/LearningTab";
-import { GovernanceTab } from "./neural-os/GovernanceTab";
-import { PerformanceTab } from "./neural-os/PerformanceTab";
-import { ComingSoonTab } from "./neural-os/ComingSoonTab";
+import { LAYERS, type LayerDef } from "./neural-os/layerData";
+import { LayerDetailModal } from "./neural-os/LayerDetailModal";
 
-type NeuralTab =
-  | "sensing"
-  | "reasoning"
-  | "resolution"
-  | "dispatch"
-  | "learning"
-  | "governance"
-  | "performance";
-
-type TabDef = {
-  value: NeuralTab;
-  label: string;
-  group: "operating" | "foundation" | "metrics";
-};
-
-const TABS: TabDef[] = [
-  { value: "sensing", label: "Sensing", group: "operating" },
-  { value: "reasoning", label: "Reasoning", group: "operating" },
-  { value: "resolution", label: "Resolution", group: "operating" },
-  { value: "dispatch", label: "Dispatch", group: "operating" },
-  { value: "learning", label: "Learning", group: "operating" },
-  { value: "governance", label: "Governance", group: "foundation" },
-  { value: "performance", label: "Performance", group: "metrics" },
+const KPIS = [
+  { label: "Decisions Today", hint: "Autonomous Neural OS actions in last 24h" },
+  { label: "Avg Confidence", hint: "Average confidence score across all decisions" },
+  { label: "HITL Escalations", hint: "Decisions escalated to human approval" },
+  { label: "Resolution Rate (24h)", hint: "% resolved without human dispatch" },
 ];
 
-const GROUP_LABELS: Record<TabDef["group"], string> = {
-  operating: "Operating Layers",
-  foundation: "Foundation",
-  metrics: "Metrics",
-};
-
 export function NeuralOSTab() {
-  const [active, setActive] = useState<NeuralTab>("reasoning");
-
-  // Build column groupings with their tabs in order
-  const groups = (["operating", "foundation", "metrics"] as const).map((g) => ({
-    key: g,
-    label: GROUP_LABELS[g],
-    tabs: TABS.filter((t) => t.group === g),
-  }));
+  const [openLayer, setOpenLayer] = useState<LayerDef | null>(null);
+  const allHealthy = LAYERS.every((l) => l.status === "active");
+  const degradedCount = LAYERS.filter((l) => l.status === "degraded").length;
 
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">Neural OS</h1>
-        <p className="text-sm text-muted-foreground max-w-3xl">
-          The Reliability Operating System. Configure how NOCH Neural perceives, reasons, resolves,
-          dispatches, learns, and governs.
-        </p>
-      </div>
-
-      {/* Tab nav with grouping labels above */}
-      <div>
-        <div className="flex items-end gap-2 border-b border-border">
-          {groups.map((group, gi) => (
-            <div key={group.key} className="flex flex-col">
-              <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-muted-foreground/70 px-1 pb-1">
-                {group.label}
-              </span>
-              <div className="flex">
-                {group.tabs.map((tab) => {
-                  const isActive = active === tab.value;
-                  return (
-                    <button
-                      key={tab.value}
-                      onClick={() => setActive(tab.value)}
-                      className={cn(
-                        "px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
-                        isActive
-                          ? "border-primary text-primary"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {/* vertical group divider (skip after last) */}
-              {gi < groups.length - 1 && (
-                <span className="sr-only">divider</span>
-              )}
-            </div>
-          ))}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-foreground">Neural OS</h1>
+          <p className="text-sm text-muted-foreground max-w-3xl">
+            The agentic intelligence layer behind NOCH+. Six layers, six agents, one
+            closed-loop reliability system.
+          </p>
+        </div>
+        <div
+          className={cn(
+            "flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium whitespace-nowrap",
+            allHealthy
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+          )}
+        >
+          <span
+            className={cn(
+              "h-2 w-2 rounded-full animate-pulse",
+              allHealthy ? "bg-emerald-500" : "bg-amber-500",
+            )}
+          />
+          {allHealthy ? "All systems operational" : `${degradedCount} layer degraded`}
         </div>
       </div>
 
-      {/* Tab content */}
-      <div>
-        {active === "sensing" && (
-          <ComingSoonTab
-            title="Sensing Layer | Neural OS"
-            description="Configure how Neural OS perceives every charger across every connected source. Real-time anomaly detection."
-            emptyState="Sensing configuration coming soon. This layer will allow fine-tuning of telemetry sources, OCPP polling frequency, anomaly detection thresholds, alert routing, charger health scoring weights, and source priority when CMS APIs disagree."
-          />
-        )}
-        {active === "reasoning" && <ReasoningTab />}
-        {active === "resolution" && (
-          <ComingSoonTab
-            title="Resolution Layer | Neural OS"
-            description="The highest-leverage layer. Executes remote fixes — soft reset, firmware push, configuration changes — without dispatching a truck."
-            emptyState="Resolution configuration coming soon. This layer will manage the remote actions queue, execution policies per OEM, success/fail outcomes, and Truck Roll Reduction (TRR) metrics."
-          />
-        )}
-        {active === "dispatch" && (
-          <ComingSoonTab
-            title="Dispatch Layer | Neural OS"
-            description="Routes field work to certified technicians when remote fix isn't sufficient. AI-driven matching with confidence scores."
-            emptyState="Dispatch configuration coming soon. This layer will control auto-routing rules, technician matching logic (skills, proximity, certifications), confidence thresholds for auto-assignment, and override controls."
-          />
-        )}
-        {active === "learning" && <LearningTab />}
-        {active === "governance" && <GovernanceTab />}
-        {active === "performance" && <PerformanceTab />}
+      {/* Overview strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {KPIS.map((kpi) => (
+          <Card key={kpi.label} className="p-4 space-y-2">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold tracking-wider uppercase">
+                {kpi.label}
+              </span>
+            </div>
+            <div className="text-2xl font-bold text-foreground">—</div>
+            <Badge
+              variant="outline"
+              className="text-[10px] font-medium border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+            >
+              Awaiting telemetry · Pilot · CARB integration in progress
+            </Badge>
+          </Card>
+        ))}
       </div>
+
+      {/* Six layer panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {LAYERS.map((layer) => (
+          <LayerPanel key={layer.id} layer={layer} onOpen={() => setOpenLayer(layer)} />
+        ))}
+      </div>
+
+      <LayerDetailModal layer={openLayer} onClose={() => setOpenLayer(null)} />
     </div>
+  );
+}
+
+function LayerPanel({ layer, onOpen }: { layer: LayerDef; onOpen: () => void }) {
+  const Icon = layer.icon;
+  const statusColor =
+    layer.status === "active"
+      ? "bg-emerald-500"
+      : layer.status === "degraded"
+        ? "bg-amber-500"
+        : "bg-muted-foreground";
+
+  return (
+    <Card
+      onClick={onOpen}
+      className="p-5 cursor-pointer hover:border-teal-500/50 hover:shadow-md transition-all space-y-4"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg bg-teal-500/10 border border-teal-500/30 p-2">
+            <Icon className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+          </div>
+          <h3 className="text-lg font-bold text-foreground">{layer.name}</h3>
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+          <span className={cn("h-2 w-2 rounded-full", statusColor)} />
+          {layer.status}
+        </div>
+      </div>
+
+      {/* Description */}
+      <p className="text-xs text-muted-foreground leading-relaxed">{layer.description}</p>
+
+      {/* Agents */}
+      <div>
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+          Agents
+        </div>
+        {layer.agents.length === 0 ? (
+          <p className="text-xs text-muted-foreground italic">
+            Cross-cutting policy layer · no single named agent
+          </p>
+        ) : (
+          <ul className="space-y-1.5">
+            {layer.agents.map((a) => (
+              <li key={a.name} className="flex items-start gap-2 text-xs">
+                <Badge variant="outline" className="text-[10px] mt-0.5 shrink-0">
+                  {a.name}
+                </Badge>
+                <span className="text-muted-foreground flex-1">{a.role}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Recent activity */}
+      <div>
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+          Recent activity
+        </div>
+        <p className="text-xs text-muted-foreground italic">{layer.recentActivity}</p>
+      </div>
+
+      {/* Threshold */}
+      <div className="pt-2 border-t border-border">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+          Confidence threshold
+        </div>
+        <p className="text-xs text-foreground">{layer.confidenceThreshold}</p>
+      </div>
+    </Card>
   );
 }

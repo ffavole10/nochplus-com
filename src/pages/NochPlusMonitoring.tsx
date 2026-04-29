@@ -5,6 +5,7 @@ import { MonitoringAnalyticsView } from "@/components/monitoring/MonitoringAnaly
 import { ChargerSchematicModal } from "@/components/monitoring/ChargerSchematicModal";
 import { MonitoringInterventionBar } from "@/components/monitoring/MonitoringInterventionBar";
 import { KPI_CHIPS } from "@/components/monitoring/monitoringData";
+import { NeuralLayerPill } from "@/components/business/NeuralLayerPill";
 import { cn } from "@/lib/utils";
 
 const FILTERS = ['All', 'Critical', 'Warning', 'Healthy', 'Offline', 'Env. Risks'] as const;
@@ -50,6 +51,7 @@ export default function NochPlusMonitoring() {
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: kpi.color }} />
             <span className="text-muted-foreground">{kpi.label}</span>
             <span className="font-bold" style={{ color: kpi.color }}>{kpi.value}</span>
+            {kpi.pillLayer && <NeuralLayerPill layer={kpi.pillLayer} compact />}
           </div>
         ))}
       </div>
