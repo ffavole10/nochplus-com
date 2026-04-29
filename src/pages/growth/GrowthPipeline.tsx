@@ -7,6 +7,7 @@ import { useGrowthUsers, useGrowthUserMap } from "@/hooks/useGrowthUsers";
 import { useAccountOpsSnapshots } from "@/hooks/useAccountOpsSnapshot";
 import { useLatestScribeBriefs } from "@/hooks/useAgentOutputs";
 import { DealOpsBadge } from "@/components/business/DealOpsBadge";
+import { DealEconomicsFields, emptyEconomics, economicsToPayload, type DealEconomicsForm } from "@/components/business/DealEconomicsFields";
 import { DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type Deal } from "@/types/growth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
