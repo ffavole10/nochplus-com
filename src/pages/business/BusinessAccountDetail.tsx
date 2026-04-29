@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Building2, Ticket, Wrench, HardDrive, DollarSign, Receipt, BadgeCheck, GitBranch, Users, FolderOpen } from "lucide-react";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useContacts } from "@/hooks/useContacts";
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { ReliabilityKpiRow } from "@/components/reliability/ReliabilityKpiRow";
+import { PinButton } from "@/components/command-palette/PinButton";
 import {
   TicketsTab,
   WorkOrdersTab,
@@ -63,7 +64,17 @@ export default function BusinessAccountDetail() {
     [allTickets, account]
   );
 
-  const [tab, setTab] = useState("overview");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "overview";
+  const focusedContactId = searchParams.get("contact");
+  const [tab, setTab] = useState(initialTab);
+
+  // React to tab query changes (e.g. when user re-navigates from ⌘K palette).
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t && t !== tab) setTab(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   if (isLoading) {
     return (
@@ -93,6 +104,9 @@ export default function BusinessAccountDetail() {
         <Button variant="ghost" size="sm" onClick={() => navigate(`/partners/${accountId}`)} className="text-xs text-muted-foreground">
           Open in legacy Partner Profile →
         </Button>
+        <div className="ml-auto">
+          <PinButton type="account" id={account.id} label={account.company} />
+        </div>
       </div>
 
       {/* Header */}
@@ -202,7 +216,7 @@ export default function BusinessAccountDetail() {
         </TabsContent>
 
         <TabsContent value="contacts" className="mt-6">
-          <ContactsTab account={account} />
+          <ContactsTab account={account} focusedContactId={focusedContactId} />
         </TabsContent>
 
         <TabsContent value="files" className="mt-6">

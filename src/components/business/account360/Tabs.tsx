@@ -826,8 +826,26 @@ export function PipelineTab({ account }: { account: { id: string; company: strin
 /* ============================================================
    CONTACTS TAB
 ============================================================ */
-export function ContactsTab({ account }: { account: { id: string; company: string } }) {
+export function ContactsTab({
+  account,
+  focusedContactId,
+}: {
+  account: { id: string; company: string };
+  focusedContactId?: string | null;
+}) {
   const { data: contacts = [] } = useContacts(account.id);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
+  // Scroll the focused contact into view + apply a temporary highlight pulse.
+  useEffect(() => {
+    if (!focusedContactId || contacts.length === 0) return;
+    const el = document.getElementById(`contact-card-${focusedContactId}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(focusedContactId);
+    const t = setTimeout(() => setHighlightId(null), 2200);
+    return () => clearTimeout(t);
+  }, [focusedContactId, contacts.length]);
 
   const initials = (n: string) =>
     n.split(/\s+/).map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
@@ -844,32 +862,41 @@ export function ContactsTab({ account }: { account: { id: string; company: strin
         <TabEmpty label="No contacts yet. Add the first contact for this account." />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {contacts.map((c: any) => (
-            <Card key={c.id} className="cursor-pointer hover:border-primary/40">
-              <CardContent className="p-4 flex gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-xs flex-shrink-0">
-                  {initials(c.name || "?")}
-                </div>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className="font-semibold text-sm truncate">{c.name}</p>
-                    {c.is_primary && <Badge variant="outline" className="text-[9px]">primary</Badge>}
+          {contacts.map((c: any) => {
+            const isHighlighted = highlightId === c.id;
+            return (
+              <Card
+                key={c.id}
+                id={`contact-card-${c.id}`}
+                className={`cursor-pointer hover:border-primary/40 transition-all duration-300 ${
+                  isHighlighted ? "ring-2 ring-primary border-primary animate-pulse" : ""
+                }`}
+              >
+                <CardContent className="p-4 flex gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-xs flex-shrink-0">
+                    {initials(c.name || "?")}
                   </div>
-                  <p className="text-[11px] text-muted-foreground">{c.role || "—"}</p>
-                  {c.email && (
-                    <a href={`mailto:${c.email}`} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline">
-                      <Mail className="h-3 w-3" /> {c.email}
-                    </a>
-                  )}
-                  {c.phone && (
-                    <a href={`tel:${c.phone}`} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline block">
-                      <Phone className="h-3 w-3" /> {c.phone}
-                    </a>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-semibold text-sm truncate">{c.name}</p>
+                      {c.is_primary && <Badge variant="outline" className="text-[9px]">primary</Badge>}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">{c.role || "—"}</p>
+                    {c.email && (
+                      <a href={`mailto:${c.email}`} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline">
+                        <Mail className="h-3 w-3" /> {c.email}
+                      </a>
+                    )}
+                    {c.phone && (
+                      <a href={`tel:${c.phone}`} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline block">
+                        <Phone className="h-3 w-3" /> {c.phone}
+                      </a>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
