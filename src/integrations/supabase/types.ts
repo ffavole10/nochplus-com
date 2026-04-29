@@ -105,6 +105,13 @@ export type Database = {
             foreignKeyName: "activities_partner_id_fkey"
             columns: ["partner_id"]
             isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "activities_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -113,6 +120,44 @@ export type Database = {
             columns: ["stakeholder_id"]
             isOneToOne: false
             referencedRelation: "stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_outputs: {
+        Row: {
+          agent_name: string
+          content: Json
+          deal_id: string
+          generated_at: string
+          generated_by: string | null
+          id: string
+          output_type: string
+        }
+        Insert: {
+          agent_name: string
+          content?: Json
+          deal_id: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          output_type: string
+        }
+        Update: {
+          agent_name?: string
+          content?: Json
+          deal_id?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          output_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_outputs_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
             referencedColumns: ["id"]
           },
         ]
@@ -932,6 +977,13 @@ export type Database = {
             foreignKeyName: "campaign_plans_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "campaign_plans_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -1055,6 +1107,13 @@ export type Database = {
             foreignKeyName: "campaign_quotes_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "campaign_quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -1151,6 +1210,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campaigns"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_reports_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "campaign_reports_customer_id_fkey"
@@ -1370,6 +1436,13 @@ export type Database = {
           year?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "campaigns_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
           {
             foreignKeyName: "campaigns_customer_id_fkey"
             columns: ["customer_id"]
@@ -1682,6 +1755,13 @@ export type Database = {
             foreignKeyName: "contacts_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -1719,6 +1799,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "customer_rate_overrides_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
           {
             foreignKeyName: "customer_rate_overrides_customer_id_fkey"
             columns: ["customer_id"]
@@ -1773,6 +1860,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "customer_rate_sheets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
           {
             foreignKeyName: "customer_rate_sheets_customer_id_fkey"
             columns: ["customer_id"]
@@ -1886,51 +1980,94 @@ export type Database = {
       }
       deals: {
         Row: {
+          actual_arr: number | null
+          actual_close_date: string | null
+          competitor: string | null
           created_at: string
+          deal_health: string | null
           deal_name: string
           description: string | null
           expected_close_date: string | null
+          fit_score: number | null
           id: string
+          last_activity_at: string | null
+          loss_reason: string | null
+          model_close_probability: number | null
           next_action: string | null
           next_action_date: string | null
+          notes: string | null
+          owner: string | null
           owner_user_id: string | null
           partner_id: string
+          predicted_arr: number | null
+          predicted_close_date: string | null
           probability: number
           stage: Database["public"]["Enums"]["deal_stage"]
           updated_at: string
           value: number
         }
         Insert: {
+          actual_arr?: number | null
+          actual_close_date?: string | null
+          competitor?: string | null
           created_at?: string
+          deal_health?: string | null
           deal_name: string
           description?: string | null
           expected_close_date?: string | null
+          fit_score?: number | null
           id?: string
+          last_activity_at?: string | null
+          loss_reason?: string | null
+          model_close_probability?: number | null
           next_action?: string | null
           next_action_date?: string | null
+          notes?: string | null
+          owner?: string | null
           owner_user_id?: string | null
           partner_id: string
+          predicted_arr?: number | null
+          predicted_close_date?: string | null
           probability?: number
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           value?: number
         }
         Update: {
+          actual_arr?: number | null
+          actual_close_date?: string | null
+          competitor?: string | null
           created_at?: string
+          deal_health?: string | null
           deal_name?: string
           description?: string | null
           expected_close_date?: string | null
+          fit_score?: number | null
           id?: string
+          last_activity_at?: string | null
+          loss_reason?: string | null
+          model_close_probability?: number | null
           next_action?: string | null
           next_action_date?: string | null
+          notes?: string | null
+          owner?: string | null
           owner_user_id?: string | null
           partner_id?: string
+          predicted_arr?: number | null
+          predicted_close_date?: string | null
           probability?: number
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           value?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "deals_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
           {
             foreignKeyName: "deals_partner_id_fkey"
             columns: ["partner_id"]
@@ -2136,6 +2273,13 @@ export type Database = {
             foreignKeyName: "estimates_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "estimates_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -2185,6 +2329,13 @@ export type Database = {
           zip?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "locations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
           {
             foreignKeyName: "locations_customer_id_fkey"
             columns: ["customer_id"]
@@ -2548,6 +2699,13 @@ export type Database = {
             foreignKeyName: "noch_plus_submissions_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "noch_plus_submissions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -2640,6 +2798,13 @@ export type Database = {
           ticket_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ocpp_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
           {
             foreignKeyName: "ocpp_events_customer_id_fkey"
             columns: ["customer_id"]
@@ -2770,6 +2935,13 @@ export type Database = {
           white_space_notes?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "partners_meta_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: true
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
           {
             foreignKeyName: "partners_meta_partner_id_fkey"
             columns: ["partner_id"]
@@ -3359,6 +3531,13 @@ export type Database = {
             foreignKeyName: "rate_sheets_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "rate_sheets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -3858,6 +4037,13 @@ export type Database = {
             foreignKeyName: "service_tickets_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "service_tickets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -3929,6 +4115,13 @@ export type Database = {
             foreignKeyName: "site_contacts_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "site_contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -3988,6 +4181,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "stakeholders_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
           {
             foreignKeyName: "stakeholders_partner_id_fkey"
             columns: ["partner_id"]
@@ -5129,6 +5329,13 @@ export type Database = {
             foreignKeyName: "work_orders_partner_id_fkey"
             columns: ["partner_id"]
             isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "work_orders_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -5150,7 +5357,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      account_ops_snapshot: {
+        Row: {
+          charger_count: number | null
+          customer_id: string | null
+          estimated_monthly_savings: number | null
+          incidents_30d: number | null
+          sites_count: number | null
+          truck_rolls_30d: number | null
+          uptime_pct: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       approve_and_run_assessment: {
@@ -5572,6 +5790,11 @@ export type Database = {
         | "NOCH+ Introduced"
         | "Pilot / Contract Signed"
         | "Expanded & Recurring"
+        | "In Negotiation"
+        | "Closed Won"
+        | "Closed Lost"
+        | "Engaged"
+        | "Qualified"
       enterprise_inquiry_status: "new" | "contacted" | "qualified" | "closed"
       field_photo_type:
         | "before"
@@ -5838,6 +6061,11 @@ export const Constants = {
         "NOCH+ Introduced",
         "Pilot / Contract Signed",
         "Expanded & Recurring",
+        "In Negotiation",
+        "Closed Won",
+        "Closed Lost",
+        "Engaged",
+        "Qualified",
       ],
       enterprise_inquiry_status: ["new", "contacted", "qualified", "closed"],
       field_photo_type: [
