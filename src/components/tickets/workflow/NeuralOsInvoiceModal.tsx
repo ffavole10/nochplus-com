@@ -180,8 +180,8 @@ export function NeuralOsInvoiceModal({
             <div>
               <span className="text-muted-foreground">Ticket:</span>{" "}
               <span className="font-mono text-foreground">{ticket.ticketId}</span>
-              {ticket.subject && (
-                <span className="text-muted-foreground"> · {ticket.subject}</span>
+              {ticket.issue?.description && (
+                <span className="text-muted-foreground"> · {ticket.issue.description}</span>
               )}
             </div>
           </div>
