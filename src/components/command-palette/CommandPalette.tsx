@@ -38,6 +38,8 @@ interface Result {
   label: string;
   sublabel?: string;
   status?: string;
+  /** Optional parent account id (used for contacts → Account 360 routing). */
+  parent_id?: string;
 }
 
 const TYPE_META: Record<EntityType, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -90,7 +92,11 @@ function navigateForResult(navigate: (to: string) => void, r: Result) {
       navigate(`/business/membership?member=${r.id}`);
       break;
     case "contact":
-      navigate(`/business/accounts?contact=${r.id}#contacts`);
+      if (r.parent_id) {
+        navigate(`/business/accounts/${r.parent_id}?tab=contacts&contact=${r.id}`);
+      } else {
+        navigate(`/business/accounts?contact=${r.id}`);
+      }
       break;
   }
 }
