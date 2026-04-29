@@ -38,6 +38,7 @@ export default function BusinessAccounts() {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
   const [view, setView] = useState<View>("operations");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const metaMap = useMemo(() => {
     const m: Record<string, typeof allMeta[number]> = {};
