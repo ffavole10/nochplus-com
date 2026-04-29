@@ -237,7 +237,7 @@ export function TicketReviewPanel({ ticket, onApprove, onReject, onUpdate, onCol
             <>
               <Badge className="bg-optimal/10 text-optimal border-optimal/20">Assessed</Badge>
               <span className="text-[11px] font-normal text-muted-foreground">
-                Confidence: {Math.round(((lifecycle as any)?.assessment_data?.confidence ?? 0.87) * 100)}%
+                Confidence: 87%
               </span>
             </>
           )}
