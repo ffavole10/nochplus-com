@@ -191,7 +191,7 @@ export default function GrowthDealDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Stage</Label>
-                  <Select value={form.stage} onValueChange={v => setForm({ ...form, stage: v as DealStage })}>
+                  <Select value={form.stage} onValueChange={v => handleStageSelect(v as DealStage)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{DEAL_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
