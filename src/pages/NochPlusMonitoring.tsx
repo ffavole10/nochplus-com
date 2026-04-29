@@ -5,6 +5,7 @@ import { MonitoringAnalyticsView } from "@/components/monitoring/MonitoringAnaly
 import { ChargerSchematicModal } from "@/components/monitoring/ChargerSchematicModal";
 import { MonitoringInterventionBar } from "@/components/monitoring/MonitoringInterventionBar";
 import { KPI_CHIPS } from "@/components/monitoring/monitoringData";
+import { NeuralLayerPill } from "@/components/business/NeuralLayerPill";
 import { cn } from "@/lib/utils";
 
 const FILTERS = ['All', 'Critical', 'Warning', 'Healthy', 'Offline', 'Env. Risks'] as const;
