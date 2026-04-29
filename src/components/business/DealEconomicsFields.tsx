@@ -36,6 +36,13 @@ export function DealEconomicsFields({ value, onChange }: Props) {
   const isRecurring = value.deal_type === "recurring" || value.deal_type === "hybrid";
   const isOneTime = value.deal_type === "one_time" || value.deal_type === "hybrid";
 
+  const ratePerConnectorNum = Number(value.rate_per_connector);
+  const ratePerConnectorInvalid =
+    value.recurring_model === "per_connector" &&
+    value.rate_per_connector !== "" &&
+    value.rate_per_connector !== null &&
+    (!Number.isFinite(ratePerConnectorNum) || ratePerConnectorNum <= 0);
+
   const econ = computeDealEconomics({
     deal_type: value.deal_type,
     recurring_model: value.recurring_model,
@@ -43,6 +50,7 @@ export function DealEconomicsFields({ value, onChange }: Props) {
     monthly_rate: Number(value.monthly_rate) || 0,
     contract_length_months: Number(value.contract_length_months) || 12,
     one_time_value: Number(value.one_time_value) || 0,
+    rate_per_connector: ratePerConnectorNum > 0 ? ratePerConnectorNum : PER_CONNECTOR_RATE,
   });
 
   return (
