@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Users, Eye, Plus, Search } from "lucide-react";
+import { Building2, Users, Eye, Plus, Search, AlertTriangle } from "lucide-react";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useAllPartnerMeta } from "@/hooks/usePartnerMeta";
 import { useDeals } from "@/hooks/useDeals";
@@ -14,7 +14,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
 import { BusinessPageHeader } from "@/components/business/BusinessPageHeader";
+import { CreateAccountModal } from "@/components/business/CreateAccountModal";
 import { TIER_COLORS, MOTION_LABELS, type GrowthMotion } from "@/types/growth";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["OEM", "CSMS", "CPO", "Site Host", "Other"] as const;
