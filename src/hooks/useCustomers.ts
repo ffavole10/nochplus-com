@@ -90,12 +90,17 @@ export function useUpdateCustomer() {
 
 /** Inspect linked records before deciding hard vs soft delete. */
 export async function getAccountLinkCounts(customerId: string, companyName: string) {
-  const [{ count: ticketCount }, { count: dealCount }, { count: woCount }, { count: estimateCount }] = await Promise.all([
+  const [tRes, dRes, woByPartner, woByName, eRes] = await Promise.all([
     supabase.from("service_tickets").select("id", { count: "exact", head: true }).eq("company_id", customerId),
     supabase.from("deals" as any).select("id", { count: "exact", head: true }).eq("partner_id", customerId),
-    supabase.from("work_orders").select("id", { count: "exact", head: true }).or(`partner_id.eq.${customerId},client_name.eq.${companyName}`),
+    supabase.from("work_orders").select("id", { count: "exact", head: true }).eq("partner_id", customerId),
+    supabase.from("work_orders").select("id", { count: "exact", head: true }).eq("client_name", companyName),
     supabase.from("estimates").select("id", { count: "exact", head: true }).eq("company_id", customerId),
   ]);
+  const ticketCount = tRes.count || 0;
+  const dealCount = dRes.count || 0;
+  const woCount = (woByPartner.count || 0) + (woByName.count || 0);
+  const estimateCount = eRes.count || 0;
   return {
     tickets: ticketCount || 0,
     deals: dealCount || 0,
