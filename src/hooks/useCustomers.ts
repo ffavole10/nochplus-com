@@ -90,11 +90,11 @@ export function useUpdateCustomer() {
 
 /** Inspect linked records before deciding hard vs soft delete. */
 export async function getAccountLinkCounts(customerId: string, companyName: string) {
-  const tRes = await supabase.from("service_tickets").select("id", { count: "exact", head: true }).eq("company_id", customerId);
-  const dRes = await supabase.from("deals" as any).select("id", { count: "exact", head: true }).eq("partner_id", customerId);
-  const woP = await supabase.from("work_orders").select("id", { count: "exact", head: true }).eq("partner_id", customerId);
-  const woN = await supabase.from("work_orders").select("id", { count: "exact", head: true }).eq("client_name", companyName);
-  const eRes = await supabase.from("estimates").select("id", { count: "exact", head: true }).eq("company_id", customerId);
+  const tRes: any = await (supabase.from("service_tickets") as any).select("id", { count: "exact", head: true }).eq("company_id", customerId);
+  const dRes: any = await (supabase.from("deals" as any) as any).select("id", { count: "exact", head: true }).eq("partner_id", customerId);
+  const woP: any = await (supabase.from("work_orders") as any).select("id", { count: "exact", head: true }).eq("partner_id", customerId);
+  const woN: any = await (supabase.from("work_orders") as any).select("id", { count: "exact", head: true }).eq("client_name", companyName);
+  const eRes: any = await (supabase.from("estimates") as any).select("id", { count: "exact", head: true }).eq("company_id", customerId);
   const tickets = tRes.count || 0;
   const deals = dRes.count || 0;
   const workOrders = (woP.count || 0) + (woN.count || 0);
