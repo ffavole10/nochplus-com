@@ -47,6 +47,60 @@ export type Database = {
         }
         Relationships: []
       }
+      account_activity_log: {
+        Row: {
+          action: string
+          actor: string | null
+          actor_user_id: string | null
+          created_at: string
+          customer_id: string
+          field_changed: string | null
+          id: string
+          metadata: Json | null
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          customer_id: string
+          field_changed?: string | null
+          id?: string
+          metadata?: Json | null
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          customer_id?: string
+          field_changed?: string | null
+          id?: string
+          metadata?: Json | null
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_activity_log_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "account_activity_log_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activities: {
         Row: {
           activity_date: string
@@ -1770,36 +1824,45 @@ export type Database = {
       }
       contacts: {
         Row: {
+          contact_type: string | null
           created_at: string
           customer_id: string
           email: string
           id: string
           is_primary: boolean
           name: string
+          notes: string | null
           phone: string
           role: string | null
+          title: string | null
           updated_at: string
         }
         Insert: {
+          contact_type?: string | null
           created_at?: string
           customer_id: string
           email?: string
           id?: string
           is_primary?: boolean
           name: string
+          notes?: string | null
           phone?: string
           role?: string | null
+          title?: string | null
           updated_at?: string
         }
         Update: {
+          contact_type?: string | null
           created_at?: string
           customer_id?: string
           email?: string
           id?: string
           is_primary?: boolean
           name?: string
+          notes?: string | null
           phone?: string
           role?: string | null
+          title?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1937,6 +2000,7 @@ export type Database = {
           created_at: string
           customer_type: Database["public"]["Enums"]["customer_type"] | null
           customer_type_other: string | null
+          deleted_at: string | null
           description: string | null
           domain: string | null
           duplicate_confirmed_distinct_of: string[] | null
@@ -1970,6 +2034,7 @@ export type Database = {
           created_at?: string
           customer_type?: Database["public"]["Enums"]["customer_type"] | null
           customer_type_other?: string | null
+          deleted_at?: string | null
           description?: string | null
           domain?: string | null
           duplicate_confirmed_distinct_of?: string[] | null
@@ -2003,6 +2068,7 @@ export type Database = {
           created_at?: string
           customer_type?: Database["public"]["Enums"]["customer_type"] | null
           customer_type_other?: string | null
+          deleted_at?: string | null
           description?: string | null
           domain?: string | null
           duplicate_confirmed_distinct_of?: string[] | null

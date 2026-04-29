@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logAccountActivity } from "@/lib/accountActivity";
 
 export type Customer = {
   id: string;
@@ -30,18 +31,20 @@ export type Customer = {
   relationship_type: "partner" | "customer" | "prospect" | "both" | null;
   internal_notes: string | null;
   duplicate_confirmed_distinct_of: string[] | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };
 
-export function useCustomers() {
+/** By default, soft-deleted accounts are hidden. Pass `includeDeleted` to include them. */
+export function useCustomers(opts: { includeDeleted?: boolean } = {}) {
+  const { includeDeleted = false } = opts;
   return useQuery({
-    queryKey: ["customers"],
+    queryKey: ["customers", { includeDeleted }],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customers" as any)
-        .select("*")
-        .order("company");
+      let q = supabase.from("customers" as any).select("*").order("company");
+      if (!includeDeleted) q = q.is("deleted_at", null);
+      const { data, error } = await q;
       if (error) throw error;
       return (data || []) as unknown as Customer[];
     },
@@ -80,84 +83,73 @@ export function useUpdateCustomer() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customers"] });
-      toast.success("Customer updated");
     },
     onError: (e: any) => toast.error(e.message),
   });
 }
 
+/** Inspect linked records before deciding hard vs soft delete. */
+export async function getAccountLinkCounts(customerId: string, companyName: string) {
+  const tRes: any = await (supabase.from("service_tickets") as any).select("id", { count: "exact", head: true }).eq("company_id", customerId);
+  const dRes: any = await (supabase.from("deals" as any) as any).select("id", { count: "exact", head: true }).eq("partner_id", customerId);
+  const woP: any = await (supabase.from("work_orders") as any).select("id", { count: "exact", head: true }).eq("partner_id", customerId);
+  const woN: any = await (supabase.from("work_orders") as any).select("id", { count: "exact", head: true }).eq("client_name", companyName);
+  const eRes: any = await (supabase.from("estimates") as any).select("id", { count: "exact", head: true }).eq("company_id", customerId);
+  const tickets = tRes.count || 0;
+  const deals = dRes.count || 0;
+  const workOrders = (woP.count || 0) + (woN.count || 0);
+  const estimates = eRes.count || 0;
+  return {
+    tickets,
+    deals,
+    workOrders,
+    estimates,
+    total: tickets + deals + workOrders + estimates,
+  };
+}
+
+/** Soft delete: sets deleted_at = now() and status = inactive. Hard delete fallback only when called with mode='hard'. */
 export function useDeleteCustomer() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, mode = "soft", company }: { id: string; mode?: "soft" | "hard"; company?: string }) => {
+      if (mode === "soft") {
+        const { error } = await supabase
+          .from("customers" as any)
+          .update({ deleted_at: new Date().toISOString(), status: "inactive" } as any)
+          .eq("id", id);
+        if (error) throw error;
+        await logAccountActivity({ customer_id: id, action: "deleted", new_value: company || null });
+        return;
+      }
+      // Hard delete only used when account has zero linked records.
       // Get all locations for this customer
       const { data: locations } = await supabase
         .from("locations")
         .select("id")
         .eq("customer_id", id);
-      
+
       const locationIds = (locations || []).map((l: any) => l.id);
-      
+
       if (locationIds.length > 0) {
-        // Nullify foreign key references in noch_plus_submissions
-        await supabase
-          .from("noch_plus_submissions")
-          .update({ location_id: null } as any)
-          .in("location_id", locationIds);
-        
-        // Nullify foreign key references in service_tickets
-        await supabase
-          .from("service_tickets")
-          .update({ location_id: null } as any)
-          .in("location_id", locationIds);
-
-        // Nullify foreign key references in environmental_correlations
-        await supabase
-          .from("environmental_correlations")
-          .update({ location_id: null } as any)
-          .in("location_id", locationIds);
-
-        // Delete charger_locations
-        await supabase
-          .from("charger_locations")
-          .delete()
-          .in("location_id", locationIds);
-
-        // Delete locations
-        await supabase
-          .from("locations")
-          .delete()
-          .in("id", locationIds);
+        await supabase.from("noch_plus_submissions").update({ location_id: null } as any).in("location_id", locationIds);
+        await supabase.from("service_tickets").update({ location_id: null } as any).in("location_id", locationIds);
+        await supabase.from("environmental_correlations").update({ location_id: null } as any).in("location_id", locationIds);
+        await supabase.from("charger_locations").delete().in("location_id", locationIds);
+        await supabase.from("locations").delete().in("id", locationIds);
       }
 
-      // Nullify company_id references in noch_plus_submissions
-      await supabase
-        .from("noch_plus_submissions")
-        .update({ company_id: null } as any)
-        .eq("company_id", id);
+      await supabase.from("noch_plus_submissions").update({ company_id: null } as any).eq("company_id", id);
+      await supabase.from("service_tickets").update({ company_id: null } as any).eq("company_id", id);
+      await supabase.from("contacts").delete().eq("customer_id", id);
 
-      // Nullify company_id references in service_tickets
-      await supabase
-        .from("service_tickets")
-        .update({ company_id: null } as any)
-        .eq("company_id", id);
-
-      // Delete contacts
-      await supabase
-        .from("contacts")
-        .delete()
-        .eq("customer_id", id);
-
-      // Now delete the customer
-      const { error } = await supabase
-        .from("customers" as any)
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("customers" as any).delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["customers"] });
-      toast.success("Customer deleted");
+      qc.invalidateQueries({ queryKey: ["account-activity", vars.id] });
+      toast.success(vars.mode === "hard" ? "Account deleted" : "Account moved to trash");
     },
     onError: (e: any) => toast.error(e.message),
   });

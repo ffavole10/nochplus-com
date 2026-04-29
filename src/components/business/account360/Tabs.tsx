@@ -37,11 +37,17 @@ import {
   Download,
   CheckCircle2,
   Clock,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { TabHeader, TabEmpty, TabFooterLink, StatBox } from "./shared";
 import { ServiceTicket } from "@/types/serviceTicket";
-import { useContacts } from "@/hooks/useContacts";
+import { useContacts, useDeleteContact } from "@/hooks/useContacts";
 import { useDeals } from "@/hooks/useDeals";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ContactFormModal } from "@/components/business/ContactFormModal";
+import { toast } from "sonner";
 import WorkOrderDetailModal from "@/components/field-capture/WorkOrderDetailModal";
 
 /* ============================================================
@@ -834,7 +840,11 @@ export function ContactsTab({
   focusedContactId?: string | null;
 }) {
   const { data: contacts = [] } = useContacts(account.id);
+  const deleteContact = useDeleteContact();
+  const { confirm, dialogProps } = useConfirmDialog();
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
 
   // Scroll the focused contact into view + apply a temporary highlight pulse.
   useEffect(() => {
@@ -850,16 +860,41 @@ export function ContactsTab({
   const initials = (n: string) =>
     n.split(/\s+/).map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
 
+  const handleDelete = async (c: any) => {
+    if (c.is_primary && contacts.length > 1) {
+      toast.error("Mark another contact as primary before deleting this one.");
+      return;
+    }
+    const ok = await confirm({
+      title: "Remove contact?",
+      description: `Remove ${c.name} from ${account.company}?`,
+      confirmLabel: "Remove",
+      variant: "destructive",
+    });
+    if (!ok) return;
+    deleteContact.mutate({ id: c.id, customer_id: account.id, name: c.name });
+  };
+
+  const onAdd = () => { setEditing(null); setFormOpen(true); };
+  const onEdit = (c: any) => { setEditing(c); setFormOpen(true); };
+
   return (
     <div>
       <TabHeader
         title="Contacts"
         count={contacts.length}
         subhead={`People at ${account.company}`}
-        right={<Button size="sm" variant="outline" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Add contact</Button>}
+        right={
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={onAdd}>
+            <Plus className="h-3.5 w-3.5" /> Add contact
+          </Button>
+        }
       />
       {contacts.length === 0 ? (
-        <TabEmpty label="No contacts yet. Add the first contact for this account." />
+        <TabEmpty
+          label="No contacts yet for this account."
+          cta={<Button size="sm" onClick={onAdd} className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Add the first contact</Button>}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {contacts.map((c: any) => {
@@ -868,7 +903,7 @@ export function ContactsTab({
               <Card
                 key={c.id}
                 id={`contact-card-${c.id}`}
-                className={`cursor-pointer hover:border-primary/40 transition-all duration-300 ${
+                className={`hover:border-primary/40 transition-all duration-300 ${
                   isHighlighted ? "ring-2 ring-primary border-primary animate-pulse" : ""
                 }`}
               >
@@ -879,9 +914,12 @@ export function ContactsTab({
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-semibold text-sm truncate">{c.name}</p>
-                      {c.is_primary && <Badge variant="outline" className="text-[9px]">primary</Badge>}
+                      {c.is_primary && <Badge variant="default" className="text-[9px]">primary</Badge>}
+                      {c.contact_type && c.contact_type !== "other" && !c.is_primary && (
+                        <Badge variant="outline" className="text-[9px] capitalize">{String(c.contact_type).replace(/_/g, " ")}</Badge>
+                      )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground">{c.role || "—"}</p>
+                    {c.title && <p className="text-[11px] text-muted-foreground">{c.title}</p>}
                     {c.email && (
                       <a href={`mailto:${c.email}`} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline">
                         <Mail className="h-3 w-3" /> {c.email}
@@ -893,12 +931,28 @@ export function ContactsTab({
                       </a>
                     )}
                   </div>
+                  <div className="flex flex-col gap-1">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(c)} aria-label="Edit contact">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(c)} aria-label="Remove contact">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
       )}
+      <ContactFormModal
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        customerId={account.id}
+        contact={editing}
+        forcePrimary={contacts.length === 0 && !editing}
+      />
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }

@@ -208,7 +208,7 @@ export default function Partners() {
       confirmLabel: "Delete Partner",
     });
     if (!ok) return;
-    deleteCustomer.mutate(c.id);
+    deleteCustomer.mutate({ id: c.id, mode: "soft", company: c.company });
   };
 
   if (isLoading) {

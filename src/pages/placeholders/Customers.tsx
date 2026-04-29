@@ -641,7 +641,7 @@ export default function Customers() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
                 if (deleteConfirm) {
-                  deleteCustomer.mutate(deleteConfirm.id, {
+                  deleteCustomer.mutate({ id: deleteConfirm.id, mode: "soft", company: deleteConfirm.company }, {
                     onSuccess: () => {
                       setDeleteConfirm(null);
                       setDetailCustomer(null);
