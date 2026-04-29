@@ -156,6 +156,7 @@ export interface Deal {
   contract_length_months: number;
   one_time_value: number | null;
   one_time_description: string | null;
+  rate_per_connector: number | null;
 
   created_at: string;
   updated_at: string;
@@ -182,6 +183,7 @@ export function computeDealEconomics(input: {
   monthly_rate?: number | null;
   contract_length_months?: number | null;
   one_time_value?: number | null;
+  rate_per_connector?: number | null;
 }): DealEconomics {
   const months = Math.max(1, Number(input.contract_length_months || 12));
   const isRecurring = input.deal_type === "recurring" || input.deal_type === "hybrid";
@@ -190,7 +192,9 @@ export function computeDealEconomics(input: {
   let monthlyRate = 0;
   if (isRecurring) {
     if (input.recurring_model === "per_connector") {
-      monthlyRate = (Number(input.connector_count) || 0) * PER_CONNECTOR_RATE;
+      const rate = Number(input.rate_per_connector);
+      const effectiveRate = rate && rate > 0 ? rate : PER_CONNECTOR_RATE;
+      monthlyRate = (Number(input.connector_count) || 0) * effectiveRate;
     } else {
       monthlyRate = Number(input.monthly_rate) || 0;
     }

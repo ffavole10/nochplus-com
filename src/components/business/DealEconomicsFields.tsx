@@ -14,6 +14,7 @@ export interface DealEconomicsForm {
   contract_length_months: string | number;
   one_time_value: string | number | null;
   one_time_description: string;
+  rate_per_connector: string | number | null;
 }
 
 interface Props {
@@ -35,6 +36,13 @@ export function DealEconomicsFields({ value, onChange }: Props) {
   const isRecurring = value.deal_type === "recurring" || value.deal_type === "hybrid";
   const isOneTime = value.deal_type === "one_time" || value.deal_type === "hybrid";
 
+  const ratePerConnectorNum = Number(value.rate_per_connector);
+  const ratePerConnectorInvalid =
+    value.recurring_model === "per_connector" &&
+    value.rate_per_connector !== "" &&
+    value.rate_per_connector !== null &&
+    (!Number.isFinite(ratePerConnectorNum) || ratePerConnectorNum <= 0);
+
   const econ = computeDealEconomics({
     deal_type: value.deal_type,
     recurring_model: value.recurring_model,
@@ -42,6 +50,7 @@ export function DealEconomicsFields({ value, onChange }: Props) {
     monthly_rate: Number(value.monthly_rate) || 0,
     contract_length_months: Number(value.contract_length_months) || 12,
     one_time_value: Number(value.one_time_value) || 0,
+    rate_per_connector: ratePerConnectorNum > 0 ? ratePerConnectorNum : PER_CONNECTOR_RATE,
   });
 
   return (
@@ -92,7 +101,7 @@ export function DealEconomicsFields({ value, onChange }: Props) {
               <RadioGroupItem value="per_connector" id="rm-pc" />
               <div className="text-xs">
                 <div className="font-medium">Per-connector</div>
-                <div className="text-muted-foreground">${PER_CONNECTOR_RATE}/connector/mo</div>
+                <div className="text-muted-foreground">Custom rate per connector</div>
               </div>
             </label>
             <label className="flex items-center gap-2 rounded-md border p-2 cursor-pointer hover:bg-accent/40">
@@ -120,6 +129,27 @@ export function DealEconomicsFields({ value, onChange }: Props) {
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Monthly Rate (auto)</Label>
                   <Input value={fmt(econ.mrr)} disabled className="bg-muted/40" />
+                </div>
+                <div className="space-y-1.5 col-span-2">
+                  <Label className="text-xs">Rate per connector ($)</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">$</span>
+                    <Input
+                      type="number"
+                      min={0.01}
+                      step={0.01}
+                      placeholder="15.00"
+                      value={value.rate_per_connector ?? ""}
+                      onChange={(e) => set({ rate_per_connector: e.target.value })}
+                      className={cn("pl-6 pr-28", ratePerConnectorInvalid && "border-destructive focus-visible:ring-destructive")}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs pointer-events-none">/connector/mo</span>
+                  </div>
+                  {ratePerConnectorInvalid ? (
+                    <p className="text-[11px] text-destructive">Rate must be greater than $0</p>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">Default is $15. Adjust for negotiated pricing.</p>
+                  )}
                 </div>
               </>
             ) : (
@@ -222,6 +252,7 @@ export function emptyEconomics(): DealEconomicsForm {
     contract_length_months: 12,
     one_time_value: "",
     one_time_description: "",
+    rate_per_connector: PER_CONNECTOR_RATE,
   };
 }
 
@@ -234,10 +265,13 @@ export function economicsFromDeal(d: any): DealEconomicsForm {
     contract_length_months: d?.contract_length_months ?? 12,
     one_time_value: d?.one_time_value ?? "",
     one_time_description: d?.one_time_description ?? "",
+    rate_per_connector: d?.rate_per_connector ?? PER_CONNECTOR_RATE,
   };
 }
 
 export function economicsToPayload(form: DealEconomicsForm) {
+  const rateNum = Number(form.rate_per_connector);
+  const effectiveRate = rateNum > 0 ? rateNum : PER_CONNECTOR_RATE;
   const econ = computeDealEconomics({
     deal_type: form.deal_type,
     recurring_model: form.recurring_model,
@@ -245,17 +279,20 @@ export function economicsToPayload(form: DealEconomicsForm) {
     monthly_rate: Number(form.monthly_rate) || 0,
     contract_length_months: Number(form.contract_length_months) || 12,
     one_time_value: Number(form.one_time_value) || 0,
+    rate_per_connector: effectiveRate,
   });
   const isRecurring = form.deal_type === "recurring" || form.deal_type === "hybrid";
   const isOneTime = form.deal_type === "one_time" || form.deal_type === "hybrid";
+  const isPerConnector = isRecurring && form.recurring_model === "per_connector";
   return {
     deal_type: form.deal_type,
     recurring_model: isRecurring ? form.recurring_model : null,
-    connector_count: isRecurring && form.recurring_model === "per_connector" ? Number(form.connector_count) || 0 : null,
+    connector_count: isPerConnector ? Number(form.connector_count) || 0 : null,
     monthly_rate: isRecurring ? econ.monthlyRate : null,
     contract_length_months: Number(form.contract_length_months) || 12,
     one_time_value: isOneTime ? Number(form.one_time_value) || 0 : null,
     one_time_description: isOneTime ? form.one_time_description || null : null,
+    rate_per_connector: isPerConnector ? effectiveRate : null,
     // Auto-keep predicted_arr & value in sync
     predicted_arr: econ.arr,
     value: econ.year1Revenue, // Year 1 revenue is the headline deal value
@@ -300,6 +337,7 @@ export function applyDealTypeChange(form: DealEconomicsForm, nextType: DealType)
     recurring_model: willBeRecurring ? form.recurring_model || "per_connector" : null,
     connector_count: willBeRecurring ? form.connector_count : "",
     monthly_rate: willBeRecurring ? form.monthly_rate : "",
+    rate_per_connector: willBeRecurring ? form.rate_per_connector ?? PER_CONNECTOR_RATE : null,
     one_time_value: willBeOneTime ? form.one_time_value : "",
     one_time_description: willBeOneTime ? form.one_time_description : "",
   };
@@ -314,6 +352,8 @@ export function diffEconomicsForActivity(
   after: DealEconomicsForm,
 ): string[] {
   const fmtMoney = (n: number) => `$${Math.round(n).toLocaleString()}`;
+  const beforeRate = Number(before.rate_per_connector) > 0 ? Number(before.rate_per_connector) : PER_CONNECTOR_RATE;
+  const afterRate = Number(after.rate_per_connector) > 0 ? Number(after.rate_per_connector) : PER_CONNECTOR_RATE;
   const beforeEcon = computeDealEconomics({
     deal_type: before.deal_type,
     recurring_model: before.recurring_model,
@@ -321,6 +361,7 @@ export function diffEconomicsForActivity(
     monthly_rate: Number(before.monthly_rate) || 0,
     contract_length_months: Number(before.contract_length_months) || 12,
     one_time_value: Number(before.one_time_value) || 0,
+    rate_per_connector: beforeRate,
   });
   const afterEcon = computeDealEconomics({
     deal_type: after.deal_type,
@@ -329,6 +370,7 @@ export function diffEconomicsForActivity(
     monthly_rate: Number(after.monthly_rate) || 0,
     contract_length_months: Number(after.contract_length_months) || 12,
     one_time_value: Number(after.one_time_value) || 0,
+    rate_per_connector: afterRate,
   });
   const changes: string[] = [];
 
@@ -350,6 +392,9 @@ export function diffEconomicsForActivity(
       changes.push(`${label} changed from ${fmtMoney(b)} to ${fmtMoney(a)}`);
     }
   };
+  if (beforeRate !== afterRate) {
+    changes.push(`Rate per connector changed from $${beforeRate.toFixed(2)} to $${afterRate.toFixed(2)}`);
+  }
   moneyField("Monthly rate", Number(before.monthly_rate) || 0, Number(after.monthly_rate) || 0);
   moneyField("One-time value", Number(before.one_time_value) || 0, Number(after.one_time_value) || 0);
   moneyField("MRR", beforeEcon.mrr, afterEcon.mrr);
