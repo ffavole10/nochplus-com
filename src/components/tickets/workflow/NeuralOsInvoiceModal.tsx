@@ -61,7 +61,7 @@ export function NeuralOsInvoiceModal({
     // Labor
     const hours = (workOrder as any)?.actual_hours ?? 4;
     items.push({
-      description: `Labor — ${ticket.subject || "On-site service"}`,
+      description: `Labor — ${ticket.issue?.description || "On-site service"}`,
       quantity: hours,
       unit_price: DEFAULT_LABOR_RATE,
     });
