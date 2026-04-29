@@ -87,13 +87,10 @@ function detectDuplicateGroups(customers: Customer[]): DuplicateGroup[] {
 }
 
 async function mergeCustomers(primaryId: string, duplicateId: string) {
+  const sb = supabase as any;
   // Re-point all foreign keys
   for (const { table, column } of CUSTOMER_FK_TABLES) {
-    const { error } = await supabase
-      .from(table as any)
-      .update({ [column]: primaryId } as any)
-      .eq(column as any, duplicateId);
-    // ignore "no rows" or table-not-relevant errors silently
+    const { error } = await sb.from(table).update({ [column]: primaryId }).eq(column, duplicateId);
     if (error && !/relation .* does not exist|no rows/i.test(error.message)) {
       console.warn(`Merge warning on ${table}.${column}:`, error.message);
     }
