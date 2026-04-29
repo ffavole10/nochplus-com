@@ -258,18 +258,65 @@ export default function GrowthDealDetail() {
 
         {/* Sidebar */}
         <div className="space-y-4">
+          {/* Live Ops Snapshot */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><Zap className="h-4 w-4 text-primary" />Live Ops Snapshot</CardTitle></CardHeader>
+            <CardContent className="p-4 pt-0 space-y-2 text-xs">
+              {ops ? (
+                <>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Chargers</span><span className="font-semibold">{ops.charger_count}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Sites</span><span className="font-semibold">{ops.sites_count}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Incidents (30d)</span><span className="font-semibold">{ops.incidents_30d}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Uptime</span><span className="font-semibold">{Number(ops.uptime_pct).toFixed(1)}%</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Truck rolls (30d)</span><span className="font-semibold">{ops.truck_rolls_30d}</span></div>
+                  <div className="pt-2 border-t flex justify-between"><span className="text-muted-foreground">Est. monthly savings</span><span className="font-bold text-primary">${Number(ops.estimated_monthly_savings).toLocaleString()}</span></div>
+                </>
+              ) : (
+                <p className="text-muted-foreground text-center py-2">No ops data yet.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Agent Outputs */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><Brain className="h-4 w-4 text-primary" />Agent Outputs</CardTitle></CardHeader>
+            <CardContent className="p-4 pt-0 space-y-2">
+              <div className="flex flex-col gap-1.5">
+                <Button size="sm" variant="outline" className="justify-start gap-1.5" onClick={() => generateBrief.mutate(deal.id, { onSuccess: () => toast.success("Brief generated"), onError: (e: any) => toast.error(e.message) })} disabled={generateBrief.isPending}>
+                  {generateBrief.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileText className="h-3 w-3" />}
+                  Generate Brief (Scribe)
+                </Button>
+                {(deal.stage === "Proposal Out" || deal.stage === "In Negotiation" || deal.stage === "Closed Won") && (
+                  <Button size="sm" variant="outline" className="justify-start gap-1.5" onClick={() => generatePlaceholder.mutate({ dealId: deal.id, agent: "closer" }, { onSuccess: () => toast.success("Closer queued (placeholder)") })} disabled={generatePlaceholder.isPending}>
+                    <FileText className="h-3 w-3" />Generate Proposal Draft (Closer)
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" className="justify-start gap-1.5" onClick={() => generatePlaceholder.mutate({ dealId: deal.id, agent: "forecaster" }, { onSuccess: () => toast.success("Forecast queued (placeholder)") })} disabled={generatePlaceholder.isPending}>
+                  <TrendingUp className="h-3 w-3" />Refresh Forecast
+                </Button>
+              </div>
+              <div className="space-y-2 max-h-72 overflow-y-auto pt-2 border-t">
+                {agentOutputs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-2">No agent outputs yet.</p>
+                ) : agentOutputs.map(o => (
+                  <div key={o.id} className="text-xs p-2 rounded bg-muted/30 border border-border/50">
+                    <div className="flex items-center justify-between mb-1">
+                      <Badge variant="outline" className="text-[10px] uppercase">{o.agent_name}</Badge>
+                      <span className="text-[10px] text-muted-foreground">{format(new Date(o.generated_at), "MMM d, h:mm a")}</span>
+                    </div>
+                    <p className="whitespace-pre-wrap line-clamp-[12]">{(o.content as any)?.markdown || JSON.stringify(o.content)}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent className="p-4 space-y-2">
               <div className="text-xs text-muted-foreground">Days in current stage</div>
               <div className="text-2xl font-bold">{daysInStage}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="text-xs text-muted-foreground">Created</div>
+              <div className="text-xs text-muted-foreground pt-2">Created</div>
               <div className="text-sm font-medium">{format(new Date(deal.created_at), "MMM d, yyyy")}</div>
-              <div className="text-xs text-muted-foreground pt-2">Last Updated</div>
-              <div className="text-sm font-medium">{format(new Date(deal.updated_at), "MMM d, yyyy")}</div>
             </CardContent>
           </Card>
 
@@ -279,6 +326,30 @@ export default function GrowthDealDetail() {
           </Button>
         </div>
       </div>
+
+      {/* Stage change confirm */}
+      <Dialog open={!!pendingStage} onOpenChange={(o) => !o && setPendingStage(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Move deal to "{pendingStage}"?</DialogTitle></DialogHeader>
+          {pendingStage === "Closed Lost" && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">Loss Reason *</Label>
+              <Select value={pendingLoss} onValueChange={setPendingLoss}>
+                <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
+                <SelectContent>
+                  {LOSS_REASONS.map(r => <SelectItem key={r} value={r}>{LOSS_REASON_LABELS[r]}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingStage(null)}>Cancel</Button>
+            <Button onClick={confirmStageChange} disabled={updateStage.isPending}>
+              {updateStage.isPending && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Log Activity Modal */}
       <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
