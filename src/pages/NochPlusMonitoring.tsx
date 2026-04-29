@@ -51,6 +51,7 @@ export default function NochPlusMonitoring() {
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: kpi.color }} />
             <span className="text-muted-foreground">{kpi.label}</span>
             <span className="font-bold" style={{ color: kpi.color }}>{kpi.value}</span>
+            {kpi.pillLayer && <NeuralLayerPill layer={kpi.pillLayer} compact />}
           </div>
         ))}
       </div>
