@@ -206,8 +206,10 @@ export default function GrowthDealDetail() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1.5"><Label className="text-xs">Owner (text)</Label><Input value={form.owner || ""} onChange={e => setForm({ ...form, owner: e.target.value })} placeholder="e.g. Alex Rivera" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">Value ($)</Label><Input type="number" value={form.value || ""} onChange={e => setForm({ ...form, value: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Probability (%)</Label><Input type="number" min={0} max={100} value={form.probability || ""} onChange={e => setForm({ ...form, probability: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Predicted ARR ($)</Label><Input type="number" value={form.predicted_arr || ""} onChange={e => setForm({ ...form, predicted_arr: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Predicted Close</Label><Input type="date" value={form.predicted_close_date || ""} onChange={e => setForm({ ...form, predicted_close_date: e.target.value })} /></div>
                 <div className="space-y-1.5"><Label className="text-xs">Expected Close</Label><Input type="date" value={form.expected_close_date || ""} onChange={e => setForm({ ...form, expected_close_date: e.target.value })} /></div>
               </div>
             </CardContent>
