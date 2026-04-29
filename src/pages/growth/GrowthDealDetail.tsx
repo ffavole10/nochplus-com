@@ -9,6 +9,7 @@ import { useAgentOutputs, useGenerateScribeBrief, useGeneratePlaceholderOutput }
 import { DEAL_STAGES, DEAL_STAGE_COLORS, ACTIVITY_TYPES, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type ActivityType } from "@/types/growth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
+import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -169,8 +170,9 @@ export default function GrowthDealDetail() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/growth/pipeline")}><ArrowLeft className="h-5 w-5" /></Button>
         {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="lg" />}
         <div className="flex-1 min-w-0">
-          <button onClick={() => partner && navigate(`/partners/${partner.id}`)} className="text-xs text-muted-foreground hover:text-primary hover:underline">
+          <button onClick={() => partner && navigate(`/partners/${partner.id}`)} className="text-xs text-muted-foreground hover:text-primary hover:underline inline-flex items-center gap-1.5">
             {partner?.company || "Unknown account"}
+            <CustomerTypeBadge type={(partner as any)?.customer_type} typeOther={(partner as any)?.customer_type_other} />
           </button>
           <h1 className="text-2xl font-bold">{deal.deal_name}</h1>
         </div>

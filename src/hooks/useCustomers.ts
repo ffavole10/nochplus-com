@@ -21,6 +21,8 @@ export type Customer = {
   description: string | null;
   headquarters_address: string | null;
   categories: string[];
+  customer_type: "cpo" | "cms" | "oem" | "site_host" | "fleet_operator" | "other" | null;
+  customer_type_other: string | null;
   created_at: string;
   updated_at: string;
 };

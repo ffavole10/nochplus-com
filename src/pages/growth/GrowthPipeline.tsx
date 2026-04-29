@@ -8,6 +8,7 @@ import { useAccountOpsSnapshots } from "@/hooks/useAccountOpsSnapshot";
 import { DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type Deal } from "@/types/growth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
+import { CustomerTypeBadge, CUSTOMER_TYPE_OPTIONS, type CustomerType } from "@/components/business/CustomerTypeBadge";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,8 @@ export default function GrowthPipeline() {
     new_company: "",
     new_contact: "",
     new_email: "",
-    new_industry: "",
+    new_customer_type: "" as CustomerType | "",
+    new_customer_type_other: "",
     new_website: "",
     deal_name: "",
     stage: "Account Mapped" as DealStage,
@@ -180,7 +182,7 @@ export default function GrowthPipeline() {
 
   const resetForm = () => {
     setForm({
-      customer_id: "", new_company: "", new_contact: "", new_email: "", new_industry: "", new_website: "",
+      customer_id: "", new_company: "", new_contact: "", new_email: "", new_customer_type: "", new_customer_type_other: "", new_website: "",
       deal_name: "", stage: "Account Mapped", value: "", predicted_close_date: "", predicted_arr: "", owner: "", next_action: "", notes: "",
     });
     setCustomerMode("existing");
@@ -194,11 +196,15 @@ export default function GrowthPipeline() {
         if (!form.new_company.trim() || !form.new_contact.trim() || !form.new_email.trim()) {
           toast.error("New customer requires company, contact, and email."); return;
         }
+        if (form.new_customer_type === "other" && !form.new_customer_type_other.trim()) {
+          toast.error("Specify the customer type."); return;
+        }
         const created = await createCustomer.mutateAsync({
           company: form.new_company.trim(),
           contact_name: form.new_contact.trim(),
           email: form.new_email.trim(),
-          industry: form.new_industry.trim() || null,
+          customer_type: form.new_customer_type || null,
+          customer_type_other: form.new_customer_type === "other" ? form.new_customer_type_other.trim() : null,
           website_url: form.new_website.trim() || "",
         } as any);
         customerId = created.id;
@@ -341,7 +347,10 @@ export default function GrowthPipeline() {
                                 <div className="flex items-start gap-2 mb-2">
                                   {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-muted-foreground truncate">{partner?.company || "Unknown"}</p>
+                                    <p className="text-xs font-medium text-muted-foreground truncate flex items-center gap-1.5">
+                                      <span className="truncate">{partner?.company || "Unknown"}</span>
+                                      <CustomerTypeBadge type={(partner as any)?.customer_type} typeOther={(partner as any)?.customer_type_other} />
+                                    </p>
                                     <p className="text-sm font-semibold truncate">{deal.deal_name}</p>
                                   </div>
                                 </div>
@@ -409,6 +418,7 @@ export default function GrowthPipeline() {
                         <div className="flex items-center gap-2">
                           {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
                           <span className="font-medium">{partner?.company || "—"}</span>
+                          <CustomerTypeBadge type={(partner as any)?.customer_type} typeOther={(partner as any)?.customer_type_other} />
                         </div>
                       </td>
                       <td className="py-3 px-4 font-medium">{d.deal_name}</td>
@@ -483,26 +493,48 @@ export default function GrowthPipeline() {
                 <Popover open={customerPickerOpen} onOpenChange={setCustomerPickerOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                      {form.customer_id ? (customerMap[form.customer_id]?.company ?? "Select customer") : "Select customer"}
-                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                      <span className="flex items-center gap-2 truncate">
+                        {form.customer_id ? (
+                          <>
+                            <span className="truncate">{customerMap[form.customer_id]?.company ?? "Select customer"}</span>
+                            <CustomerTypeBadge
+                              type={(customerMap[form.customer_id] as any)?.customer_type}
+                              typeOther={(customerMap[form.customer_id] as any)?.customer_type_other}
+                            />
+                          </>
+                        ) : "Select customer"}
+                      </span>
+                      <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[2100]" align="start">
                     <Command>
                       <CommandInput placeholder="Search customers..." />
-                      <CommandList>
+                      <CommandList className="max-h-[300px]">
                         <CommandEmpty>No customer found.</CommandEmpty>
                         <CommandGroup>
-                          {customers.map(c => (
-                            <CommandItem
-                              key={c.id}
-                              value={c.company}
-                              onSelect={() => { setForm({ ...form, customer_id: c.id }); setCustomerPickerOpen(false); }}
-                            >
-                              <Check className={cn("mr-2 h-4 w-4", form.customer_id === c.id ? "opacity-100" : "opacity-0")} />
-                              {c.company}
-                            </CommandItem>
-                          ))}
+                          {[...customers].sort((a, b) => a.company.localeCompare(b.company)).map(c => {
+                            const domain = ((c as any).website_url || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+                            return (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.company} ${domain}`}
+                                onSelect={() => { setForm({ ...form, customer_id: c.id }); setCustomerPickerOpen(false); }}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4 shrink-0", form.customer_id === c.id ? "opacity-100" : "opacity-0")} />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="truncate font-medium">{c.company}</span>
+                                    <CustomerTypeBadge
+                                      type={(c as any).customer_type}
+                                      typeOther={(c as any).customer_type_other}
+                                    />
+                                  </div>
+                                  {domain && <p className="text-[11px] text-muted-foreground truncate">{domain}</p>}
+                                </div>
+                              </CommandItem>
+                            );
+                          })}
                         </CommandGroup>
                       </CommandList>
                     </Command>
@@ -511,7 +543,21 @@ export default function GrowthPipeline() {
               ) : (
                 <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-muted/20">
                   <div className="space-y-1"><Label className="text-[10px]">Company *</Label><Input value={form.new_company} onChange={e => setForm({ ...form, new_company: e.target.value })} /></div>
-                  <div className="space-y-1"><Label className="text-[10px]">Industry</Label><Input value={form.new_industry} onChange={e => setForm({ ...form, new_industry: e.target.value })} /></div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px]">Customer Type</Label>
+                    <Select value={form.new_customer_type || ""} onValueChange={(v) => setForm({ ...form, new_customer_type: v as CustomerType })}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Select type" /></SelectTrigger>
+                      <SelectContent className="z-[2100]">
+                        {CUSTOMER_TYPE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.full}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {form.new_customer_type === "other" && (
+                    <div className="space-y-1 col-span-2">
+                      <Label className="text-[10px]">Specify type *</Label>
+                      <Input value={form.new_customer_type_other} onChange={e => setForm({ ...form, new_customer_type_other: e.target.value })} placeholder="e.g. Utility, EPC, Reseller" />
+                    </div>
+                  )}
                   <div className="space-y-1"><Label className="text-[10px]">Primary Contact *</Label><Input value={form.new_contact} onChange={e => setForm({ ...form, new_contact: e.target.value })} /></div>
                   <div className="space-y-1"><Label className="text-[10px]">Email *</Label><Input type="email" value={form.new_email} onChange={e => setForm({ ...form, new_email: e.target.value })} /></div>
                   <div className="space-y-1 col-span-2"><Label className="text-[10px]">Domain / Website</Label><Input placeholder="example.com" value={form.new_website} onChange={e => setForm({ ...form, new_website: e.target.value })} /></div>

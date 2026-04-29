@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomerLogo } from "@/components/CustomerLogo";
+import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
 import { BusinessPageHeader } from "@/components/business/BusinessPageHeader";
 import { TIER_COLORS, MOTION_LABELS, type GrowthMotion } from "@/types/growth";
 import { cn } from "@/lib/utils";
@@ -294,8 +295,9 @@ export default function BusinessAccounts() {
                         <div className="flex items-center gap-3">
                           <CustomerLogo logoUrl={c.logo_url} companyName={c.company} size="sm" />
                           <div>
-                            <p className="font-medium text-foreground flex items-center gap-1.5">
+                            <p className="font-medium text-foreground flex items-center gap-1.5 flex-wrap">
                               {c.company}
+                              <CustomerTypeBadge type={(c as any).customer_type} typeOther={(c as any).customer_type_other} />
                               <span className="flex gap-1">
                                 {types.includes("customer") && (
                                   <Badge variant="outline" className="text-[9px] px-1 py-0 border-secondary/40 text-secondary">customer</Badge>
