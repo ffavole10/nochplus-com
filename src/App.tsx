@@ -74,6 +74,7 @@ import OperationsTeamPerformance from "./pages/operations/OperationsTeamPerforma
 
 // Business section pages (Batch 5)
 import BusinessAccounts from "./pages/business/BusinessAccounts";
+import BusinessAccountsDuplicates from "./pages/business/BusinessAccountsDuplicates";
 import BusinessAccountDetail from "./pages/business/BusinessAccountDetail";
 import BusinessPipeline from "./pages/business/BusinessPipeline";
 import BusinessMembership from "./pages/business/BusinessMembership";
