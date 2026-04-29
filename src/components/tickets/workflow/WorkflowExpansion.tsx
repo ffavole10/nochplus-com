@@ -183,12 +183,20 @@ export function WorkflowExpansion({
             </ErrorBoundary>
           )}
 
-          {/* Step foundation panel */}
-          <StepPanel
-            step={viewed}
-            estimates={relations.estimates}
-            workOrders={relations.workOrders}
-          />
+          {/* Step content: closeout uses the dual-path invoice panel */}
+          {viewed.def.id === "closeout" ? (
+            <ClosoutInvoicePanel
+              ticket={ticket}
+              step={viewed}
+              workOrders={relations.workOrders}
+            />
+          ) : (
+            <StepPanel
+              step={viewed}
+              estimates={relations.estimates}
+              workOrders={relations.workOrders}
+            />
+          )}
 
           {/* Linked panels (below step content) */}
           {showLifecycleAndPanels && (
