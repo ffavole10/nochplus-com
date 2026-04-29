@@ -16,6 +16,7 @@ import { chargerRecordToAssessment } from "@/lib/assessmentParser";
 import { getTicketPriorityStats } from "@/lib/ticketPriority";
 import { GenerateCampaignReportModal } from "@/components/reports/GenerateCampaignReportModal";
 import type { ReportSnapshot } from "@/lib/campaignReportPdf";
+import { CommandPaletteTrigger } from "@/components/command-palette/CommandPaletteTrigger";
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -258,6 +259,7 @@ export function PlatformHeader() {
               />
             </div>
           )}
+          <CommandPaletteTrigger />
           {isDashboard && (
             <Button
               size="sm"
