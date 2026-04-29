@@ -36,9 +36,17 @@ export function FleetMap({ filter, onSelectCharger }: FleetMapProps) {
 
   const isSiteView = zoomLevel >= 10;
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    setZoomLevel(z => Math.max(1, Math.min(15, z + (e.deltaY < 0 ? 1 : -1))));
+  // Attach wheel listener as non-passive so we can preventDefault page scroll while zooming the map.
+  // React's synthetic onWheel is passive by default and would log "Unable to preventDefault" warnings.
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setZoomLevel(z => Math.max(1, Math.min(15, z + (e.deltaY < 0 ? 1 : -1))));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
