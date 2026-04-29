@@ -35,6 +35,11 @@ export default function GrowthDealDetail() {
   const update = useUpdateDeal();
   const remove = useDeleteDeal();
   const createActivity = useCreateActivity();
+  const updateStage = useUpdateDealStage();
+  const { data: ops } = useAccountOpsSnapshot(deal?.partner_id);
+  const { data: agentOutputs = [] } = useAgentOutputs(dealId);
+  const generateBrief = useGenerateScribeBrief();
+  const generatePlaceholder = useGeneratePlaceholderOutput();
 
   const partner = customers.find(c => c.id === deal?.partner_id);
   usePageTitle(deal?.deal_name || "Deal");
@@ -42,6 +47,10 @@ export default function GrowthDealDetail() {
   const [form, setForm] = useState<any>({});
   const [activityOpen, setActivityOpen] = useState(false);
   const [actForm, setActForm] = useState<any>({ type: "Call", summary: "", outcome: "", next_step: "", next_step_date: "" });
+
+  // Stage change confirm
+  const [pendingStage, setPendingStage] = useState<DealStage | null>(null);
+  const [pendingLoss, setPendingLoss] = useState<string>("");
 
   useEffect(() => {
     if (deal) {
