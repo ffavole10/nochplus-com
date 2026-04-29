@@ -93,7 +93,7 @@ export function FleetMap({ filter, onSelectCharger }: FleetMapProps) {
           "w-full h-full bg-card rounded-lg border border-border transition-all duration-500 ease-in-out",
           isPanning ? "cursor-grabbing" : isSiteView ? "cursor-grab" : "cursor-default"
         )}
-        onWheel={handleWheel}
+        
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
