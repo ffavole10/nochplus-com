@@ -20,7 +20,7 @@ const STATE_DOT_CLASSES: Record<string, string> = {
     "bg-primary border-primary text-primary-foreground shadow-[0_0_0_4px_hsl(var(--primary)/0.18)] animate-pulse",
   completed: "bg-primary border-primary text-primary-foreground",
   locked:
-    "bg-muted border-border text-muted-foreground/50 cursor-not-allowed",
+    "bg-muted border-border text-muted-foreground/60",
   skipped:
     "bg-muted border-border text-muted-foreground",
   blocked:
