@@ -9,6 +9,7 @@ import { useAgentOutputs, useGenerateScribeBrief, useGeneratePlaceholderOutput }
 import { DEAL_STAGES, DEAL_STAGE_COLORS, ACTIVITY_TYPES, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type ActivityType } from "@/types/growth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
+import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
