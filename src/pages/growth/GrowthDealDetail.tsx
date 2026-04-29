@@ -8,8 +8,10 @@ import { useAccountOpsSnapshot } from "@/hooks/useAccountOpsSnapshot";
 import { useAgentOutputs, useGenerateScribeBrief, useGeneratePlaceholderOutput } from "@/hooks/useAgentOutputs";
 import {
   DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS,
-  validateStageTransition, type DealStage, type AgentOutput,
+  validateStageTransition, relationshipContext, type DealStage, type AgentOutput,
+  type ChargerRelationshipType,
 } from "@/types/growth";
+import { LinkChargersModal } from "@/components/business/LinkChargersModal";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
