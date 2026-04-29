@@ -586,7 +586,6 @@ export default function GrowthPipeline() {
 
             <DealEconomicsFields value={econForm} onChange={setEconForm} />
           </div>
-          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
             <Button onClick={handleAddDeal} disabled={createDeal.isPending || createCustomer.isPending}>
