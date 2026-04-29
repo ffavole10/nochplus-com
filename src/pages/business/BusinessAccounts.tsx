@@ -374,6 +374,15 @@ export default function BusinessAccounts() {
           </CardContent>
         </Card>
       )}
+
+      <CreateAccountModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={(c) => {
+          toast.success(`Account "${c.company}" created`);
+          setCreateOpen(false);
+        }}
+      />
     </div>
   );
 }
