@@ -691,6 +691,19 @@ function incidentClass(incidents: number, chargers: number): string {
 
 function ScribeBriefView({ output }: { output: AgentOutput }) {
   const c = output.content as any;
+  // Fallback: parse-failed brief saved as raw text
+  if (c?.parse_failed && c?.raw_text) {
+    return (
+      <div className="space-y-2">
+        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 inline-flex items-center gap-1.5">
+          <AlertTriangle className="h-3 w-3" /> Brief couldn't be parsed as structured JSON. Showing raw text.
+        </div>
+        <pre className="prose prose-sm max-w-none whitespace-pre-wrap p-4 rounded bg-muted/20 border text-xs">
+          {c.raw_text}
+        </pre>
+      </div>
+    );
+  }
   // Backward-compat: legacy briefs stored markdown
   if (c?.markdown && !c?.headline) {
     return (
