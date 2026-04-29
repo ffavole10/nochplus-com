@@ -15,6 +15,7 @@ import { LinkChargersModal } from "@/components/business/LinkChargersModal";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
+import { DealEconomicsFields, economicsFromDeal, economicsToPayload, type DealEconomicsForm } from "@/components/business/DealEconomicsFields";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +67,7 @@ export default function GrowthDealDetail() {
   // Edit deal modal
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<any>({});
+  const [econForm, setEconForm] = useState<DealEconomicsForm>(economicsFromDeal(null));
 
   // Activity quick-add
   const [noteText, setNoteText] = useState("");
@@ -92,6 +94,7 @@ export default function GrowthDealDetail() {
         notes: (deal as any).notes || "",
         competitor: (deal as any).competitor || "",
       });
+      setEconForm(economicsFromDeal(deal));
     }
   }, [deal]);
 
@@ -161,17 +164,16 @@ export default function GrowthDealDetail() {
         id: deal.id,
         deal_name: form.deal_name,
         description: form.description || null,
-        value: Number(form.value) || 0,
         next_action: form.next_action || null,
         next_action_date: form.next_action_date || null,
         predicted_close_date: form.predicted_close_date || null,
         expected_close_date: form.predicted_close_date || null,
-        predicted_arr: Number(form.predicted_arr) || 0,
         owner: form.owner || null,
         owner_user_id: form.owner_user_id || null,
         notes: form.notes || null,
         competitor: form.competitor || null,
         last_activity_at: new Date().toISOString(),
+        ...economicsToPayload(econForm),
       } as any,
       {
         onSuccess: () => { toast.success("Deal updated"); setEditOpen(false); },
@@ -599,43 +601,39 @@ export default function GrowthDealDetail() {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Edit Deal</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5 col-span-2">
-              <Label className="text-xs">Deal Name</Label>
-              <Input value={form.deal_name || ""} onChange={(e) => setForm({ ...form, deal_name: e.target.value })} />
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5 col-span-2">
+                <Label className="text-xs">Deal Name</Label>
+                <Input value={form.deal_name || ""} onChange={(e) => setForm({ ...form, deal_name: e.target.value })} />
+              </div>
+              <div className="space-y-1.5 col-span-2">
+                <Label className="text-xs">Description</Label>
+                <Textarea rows={2} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Predicted Close Date</Label>
+                <Input type="date" value={form.predicted_close_date || ""} onChange={(e) => setForm({ ...form, predicted_close_date: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Owner</Label>
+                <Input value={form.owner || ""} onChange={(e) => setForm({ ...form, owner: e.target.value })} placeholder="e.g. Alex Rivera" />
+              </div>
+              <div className="space-y-1.5 col-span-2">
+                <Label className="text-xs">Next Action</Label>
+                <Input value={form.next_action || ""} onChange={(e) => setForm({ ...form, next_action: e.target.value })} />
+              </div>
+              <div className="space-y-1.5 col-span-2">
+                <Label className="text-xs">Competitor</Label>
+                <Input value={form.competitor || ""} onChange={(e) => setForm({ ...form, competitor: e.target.value })} />
+              </div>
+              <div className="space-y-1.5 col-span-2">
+                <Label className="text-xs">Notes</Label>
+                <Textarea rows={3} value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              </div>
             </div>
-            <div className="space-y-1.5 col-span-2">
-              <Label className="text-xs">Description</Label>
-              <Textarea rows={2} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Value ($)</Label>
-              <Input type="number" value={form.value || ""} onChange={(e) => setForm({ ...form, value: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Predicted ARR ($)</Label>
-              <Input type="number" value={form.predicted_arr || ""} onChange={(e) => setForm({ ...form, predicted_arr: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Predicted Close Date</Label>
-              <Input type="date" value={form.predicted_close_date || ""} onChange={(e) => setForm({ ...form, predicted_close_date: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Owner</Label>
-              <Input value={form.owner || ""} onChange={(e) => setForm({ ...form, owner: e.target.value })} placeholder="e.g. Alex Rivera" />
-            </div>
-            <div className="space-y-1.5 col-span-2">
-              <Label className="text-xs">Next Action</Label>
-              <Input value={form.next_action || ""} onChange={(e) => setForm({ ...form, next_action: e.target.value })} />
-            </div>
-            <div className="space-y-1.5 col-span-2">
-              <Label className="text-xs">Competitor</Label>
-              <Input value={form.competitor || ""} onChange={(e) => setForm({ ...form, competitor: e.target.value })} />
-            </div>
-            <div className="space-y-1.5 col-span-2">
-              <Label className="text-xs">Notes</Label>
-              <Textarea rows={3} value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-            </div>
+
+            <DealEconomicsFields value={econForm} onChange={setEconForm} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>

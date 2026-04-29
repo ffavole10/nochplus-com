@@ -148,8 +148,59 @@ export interface Deal {
   competitor: string | null;
   notes: string | null;
 
+  // Deal type & financial breakdown
+  deal_type: DealType;
+  recurring_model: RecurringModel | null;
+  connector_count: number | null;
+  monthly_rate: number | null;
+  contract_length_months: number;
+  one_time_value: number | null;
+  one_time_description: string | null;
+
   created_at: string;
   updated_at: string;
+}
+
+export type DealType = "recurring" | "one_time" | "hybrid";
+export type RecurringModel = "per_connector" | "flat_monthly";
+
+export const PER_CONNECTOR_RATE = 15; // $15/connector/month
+
+export interface DealEconomics {
+  monthlyRate: number;
+  mrr: number;
+  arr: number;
+  tcv: number;
+  oneTime: number;
+  year1Revenue: number;
+}
+
+export function computeDealEconomics(input: {
+  deal_type: DealType;
+  recurring_model?: RecurringModel | null;
+  connector_count?: number | null;
+  monthly_rate?: number | null;
+  contract_length_months?: number | null;
+  one_time_value?: number | null;
+}): DealEconomics {
+  const months = Math.max(1, Number(input.contract_length_months || 12));
+  const isRecurring = input.deal_type === "recurring" || input.deal_type === "hybrid";
+  const isOneTime = input.deal_type === "one_time" || input.deal_type === "hybrid";
+
+  let monthlyRate = 0;
+  if (isRecurring) {
+    if (input.recurring_model === "per_connector") {
+      monthlyRate = (Number(input.connector_count) || 0) * PER_CONNECTOR_RATE;
+    } else {
+      monthlyRate = Number(input.monthly_rate) || 0;
+    }
+  }
+  const mrr = monthlyRate;
+  const arr = mrr * 12;
+  const tcv = mrr * months;
+  const oneTime = isOneTime ? Number(input.one_time_value) || 0 : 0;
+  const year1Revenue = arr + oneTime;
+  return { monthlyRate, mrr, arr, tcv, oneTime, year1Revenue };
 }
 
 export interface Activity {

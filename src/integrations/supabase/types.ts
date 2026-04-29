@@ -2041,9 +2041,12 @@ export type Database = {
           actual_arr: number | null
           actual_close_date: string | null
           competitor: string | null
+          connector_count: number | null
+          contract_length_months: number
           created_at: string
           deal_health: string | null
           deal_name: string
+          deal_type: Database["public"]["Enums"]["deal_type"]
           description: string | null
           expected_close_date: string | null
           fit_score: number | null
@@ -2051,15 +2054,19 @@ export type Database = {
           last_activity_at: string | null
           loss_reason: string | null
           model_close_probability: number | null
+          monthly_rate: number | null
           next_action: string | null
           next_action_date: string | null
           notes: string | null
+          one_time_description: string | null
+          one_time_value: number | null
           owner: string | null
           owner_user_id: string | null
           partner_id: string
           predicted_arr: number | null
           predicted_close_date: string | null
           probability: number
+          recurring_model: Database["public"]["Enums"]["recurring_model"] | null
           stage: Database["public"]["Enums"]["deal_stage"]
           updated_at: string
           value: number
@@ -2068,9 +2075,12 @@ export type Database = {
           actual_arr?: number | null
           actual_close_date?: string | null
           competitor?: string | null
+          connector_count?: number | null
+          contract_length_months?: number
           created_at?: string
           deal_health?: string | null
           deal_name: string
+          deal_type?: Database["public"]["Enums"]["deal_type"]
           description?: string | null
           expected_close_date?: string | null
           fit_score?: number | null
@@ -2078,15 +2088,21 @@ export type Database = {
           last_activity_at?: string | null
           loss_reason?: string | null
           model_close_probability?: number | null
+          monthly_rate?: number | null
           next_action?: string | null
           next_action_date?: string | null
           notes?: string | null
+          one_time_description?: string | null
+          one_time_value?: number | null
           owner?: string | null
           owner_user_id?: string | null
           partner_id: string
           predicted_arr?: number | null
           predicted_close_date?: string | null
           probability?: number
+          recurring_model?:
+            | Database["public"]["Enums"]["recurring_model"]
+            | null
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           value?: number
@@ -2095,9 +2111,12 @@ export type Database = {
           actual_arr?: number | null
           actual_close_date?: string | null
           competitor?: string | null
+          connector_count?: number | null
+          contract_length_months?: number
           created_at?: string
           deal_health?: string | null
           deal_name?: string
+          deal_type?: Database["public"]["Enums"]["deal_type"]
           description?: string | null
           expected_close_date?: string | null
           fit_score?: number | null
@@ -2105,15 +2124,21 @@ export type Database = {
           last_activity_at?: string | null
           loss_reason?: string | null
           model_close_probability?: number | null
+          monthly_rate?: number | null
           next_action?: string | null
           next_action_date?: string | null
           notes?: string | null
+          one_time_description?: string | null
+          one_time_value?: number | null
           owner?: string | null
           owner_user_id?: string | null
           partner_id?: string
           predicted_arr?: number | null
           predicted_close_date?: string | null
           probability?: number
+          recurring_model?:
+            | Database["public"]["Enums"]["recurring_model"]
+            | null
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           value?: number
@@ -5868,6 +5893,7 @@ export type Database = {
         | "Closed Lost"
         | "Engaged"
         | "Qualified"
+      deal_type: "recurring" | "one_time" | "hybrid"
       enterprise_inquiry_status: "new" | "contacted" | "qualified" | "closed"
       field_photo_type:
         | "before"
@@ -5900,6 +5926,7 @@ export type Database = {
         | "12+ months"
         | "Never"
       growth_tier: "A" | "B" | "C"
+      recurring_model: "per_connector" | "flat_monthly"
       relationship_status: "Cold" | "Warm" | "Hot" | "Champion"
       stakeholder_role:
         | "Decision Maker"
@@ -6155,6 +6182,7 @@ export const Constants = {
         "Engaged",
         "Qualified",
       ],
+      deal_type: ["recurring", "one_time", "hybrid"],
       enterprise_inquiry_status: ["new", "contacted", "qualified", "closed"],
       field_photo_type: [
         "before",
@@ -6191,6 +6219,7 @@ export const Constants = {
         "Never",
       ],
       growth_tier: ["A", "B", "C"],
+      recurring_model: ["per_connector", "flat_monthly"],
       relationship_status: ["Cold", "Warm", "Hot", "Champion"],
       stakeholder_role: [
         "Decision Maker",

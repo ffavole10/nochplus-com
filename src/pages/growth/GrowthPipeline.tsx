@@ -7,6 +7,7 @@ import { useGrowthUsers, useGrowthUserMap } from "@/hooks/useGrowthUsers";
 import { useAccountOpsSnapshots } from "@/hooks/useAccountOpsSnapshot";
 import { useLatestScribeBriefs } from "@/hooks/useAgentOutputs";
 import { DealOpsBadge } from "@/components/business/DealOpsBadge";
+import { DealEconomicsFields, emptyEconomics, economicsToPayload, type DealEconomicsForm } from "@/components/business/DealEconomicsFields";
 import { DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type Deal } from "@/types/growth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
@@ -75,13 +76,12 @@ export default function GrowthPipeline() {
     new_website: "",
     deal_name: "",
     stage: "Account Mapped" as DealStage,
-    value: "",
     predicted_close_date: "",
-    predicted_arr: "",
     owner: "",
     next_action: "",
     notes: "",
   });
+  const [econForm, setEconForm] = useState<DealEconomicsForm>(emptyEconomics());
 
   const customerMap = useMemo(() => {
     const m: Record<string, typeof customers[number]> = {};
@@ -186,8 +186,9 @@ export default function GrowthPipeline() {
   const resetForm = () => {
     setForm({
       customer_id: "", new_company: "", new_contact: "", new_email: "", new_customer_type: "", new_customer_type_other: "", new_website: "",
-      deal_name: "", stage: "Account Mapped", value: "", predicted_close_date: "", predicted_arr: "", owner: "", next_action: "", notes: "",
+      deal_name: "", stage: "Account Mapped", predicted_close_date: "", owner: "", next_action: "", notes: "",
     });
+    setEconForm(emptyEconomics());
     setCustomerMode("existing");
   };
 
@@ -217,14 +218,13 @@ export default function GrowthPipeline() {
         partner_id: customerId,
         deal_name: form.deal_name.trim(),
         stage: form.stage,
-        value: Number(form.value) || 0,
         predicted_close_date: form.predicted_close_date || null,
         expected_close_date: form.predicted_close_date || null,
-        predicted_arr: Number(form.predicted_arr) || 0,
         owner: form.owner.trim() || null,
         next_action: form.next_action.trim() || null,
         notes: form.notes.trim() || null,
         last_activity_at: new Date().toISOString(),
+        ...economicsToPayload(econForm),
       } as any);
       toast.success("Deal created");
       setAddOpen(false);
@@ -578,13 +578,13 @@ export default function GrowthPipeline() {
                   <SelectContent>{DEAL_STAGES.filter(s => s !== "Closed Won" && s !== "Closed Lost").map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5"><Label className="text-xs">Deal Value ($)</Label><Input type="number" value={form.value} onChange={e => setForm({ ...form, value: e.target.value })} /></div>
               <div className="space-y-1.5"><Label className="text-xs">Predicted Close Date</Label><Input type="date" value={form.predicted_close_date} onChange={e => setForm({ ...form, predicted_close_date: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Predicted ARR ($)</Label><Input type="number" value={form.predicted_arr} onChange={e => setForm({ ...form, predicted_arr: e.target.value })} /></div>
               <div className="space-y-1.5 col-span-2"><Label className="text-xs">Owner</Label><Input value={form.owner} onChange={e => setForm({ ...form, owner: e.target.value })} placeholder="e.g. Alex Rivera" /></div>
               <div className="space-y-1.5 col-span-2"><Label className="text-xs">Next Action</Label><Input value={form.next_action} onChange={e => setForm({ ...form, next_action: e.target.value })} /></div>
               <div className="space-y-1.5 col-span-2"><Label className="text-xs">Notes</Label><Textarea rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
             </div>
+
+            <DealEconomicsFields value={econForm} onChange={setEconForm} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
