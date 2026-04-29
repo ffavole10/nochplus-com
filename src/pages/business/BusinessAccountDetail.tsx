@@ -64,7 +64,17 @@ export default function BusinessAccountDetail() {
     [allTickets, account]
   );
 
-  const [tab, setTab] = useState("overview");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "overview";
+  const focusedContactId = searchParams.get("contact");
+  const [tab, setTab] = useState(initialTab);
+
+  // React to tab query changes (e.g. when user re-navigates from ⌘K palette).
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t && t !== tab) setTab(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   if (isLoading) {
     return (
