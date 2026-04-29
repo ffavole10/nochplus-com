@@ -703,6 +703,22 @@ export default function GrowthDealDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm dialog when changing Deal Type would clear data */}
+      <ConfirmDialog
+        open={!!pendingTypeChange}
+        onOpenChange={(o) => { if (!o) setPendingTypeChange(null); }}
+        title="Change deal type?"
+        description={
+          pendingTypeChange
+            ? `Switching to "${pendingTypeChange.next}" will clear: ${pendingTypeChange.lostFields.join(", ")}. This cannot be undone in this edit session.`
+            : ""
+        }
+        confirmLabel="Change type & clear"
+        cancelLabel="Keep current"
+        variant="destructive"
+        onConfirm={confirmTypeChange}
+      />
     </div>
   );
 }
