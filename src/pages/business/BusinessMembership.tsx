@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BadgeCheck, Crown, Wrench, FileText, Receipt, BookOpen, Layers, Users } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BusinessPageHeader } from "@/components/business/BusinessPageHeader";
-import { LockedPlanTiersTab } from "@/components/business/membership/LockedPlanTiersTab";
+import { PlanTiersTab, type PlanBuilderPreset } from "@/components/partnership-hub/PlanTiersTab";
 import { NeuralOsBadge } from "@/components/business/NeuralOsBadge";
 import { usePartnershipHub } from "@/hooks/usePartnershipHub";
 import { PlanBuilderTab } from "@/components/partnership-hub/PlanBuilderTab";
