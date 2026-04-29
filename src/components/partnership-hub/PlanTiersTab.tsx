@@ -164,6 +164,13 @@ export function PlanTiersTab({ onNavigate }: PlanTiersTabProps) {
         </p>
       </div>
 
+      {/* Outcome fees notice */}
+      <div className="flex justify-end">
+        <Badge variant="outline" className="text-xs">
+          Outcome fees launch CY 2027 for Priority+ tiers
+        </Badge>
+      </div>
+
       {/* Controls row: AC/DC toggle + Show features toggle, left-aligned */}
       <div className="flex flex-wrap items-center gap-6">
         <div className="inline-flex items-center rounded-full bg-muted p-1 gap-0.5">
