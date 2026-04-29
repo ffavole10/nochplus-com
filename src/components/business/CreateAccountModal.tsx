@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CUSTOMER_TYPE_OPTIONS, type CustomerType } from "@/components/business/CustomerTypeBadge";
-import { useCustomers, useCreateCustomer, type Customer } from "@/hooks/useCustomers";
-import { findAccountMatches, extractDomain, nameSimilarity } from "@/lib/accountSimilarity";
+import { useCustomers, useCreateCustomer, useUpdateCustomer, type Customer } from "@/hooks/useCustomers";
+import { findAccountMatches, extractDomain } from "@/lib/accountSimilarity";
+import { logAccountActivity, diffAccountFields } from "@/lib/accountActivity";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, Loader2, AlertTriangle, X } from "lucide-react";
@@ -31,16 +32,27 @@ const RELATIONSHIP_OPTIONS: { value: NonNullable<Customer["relationship_type"]>;
   { value: "both", label: "Both" },
 ];
 
+const PRICING_OPTIONS = [
+  { value: "rate_card", label: "Standard rate card" },
+  { value: "custom", label: "Custom contract" },
+  { value: "noch_plus", label: "NOCH+ subscription" },
+];
+
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   initialCompanyName?: string;
+  /** When provided, modal opens in EDIT mode pre-populated from this account. */
+  account?: Customer | null;
   onCreated?: (customer: Customer) => void;
+  onSaved?: (customer: Customer) => void;
 }
 
-export function CreateAccountModal({ open, onOpenChange, initialCompanyName = "", onCreated }: Props) {
+export function CreateAccountModal({ open, onOpenChange, initialCompanyName = "", account = null, onCreated, onSaved }: Props) {
+  const isEdit = !!account;
   const { data: existing = [] } = useCustomers();
   const createCustomer = useCreateCustomer();
+  const updateCustomer = useUpdateCustomer();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [company, setCompany] = useState("");
@@ -52,6 +64,7 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
   const [hqRegion, setHqRegion] = useState("");
   const [relationshipType, setRelationshipType] = useState<NonNullable<Customer["relationship_type"]>>("prospect");
   const [status, setStatus] = useState<"active" | "inactive">("active");
+  const [pricingType, setPricingType] = useState<string>("rate_card");
   const [contactName, setContactName] = useState("");
   const [contactTitle, setContactTitle] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -62,11 +75,31 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [autoLogo, setAutoLogo] = useState<string | null>(null);
+  const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   // Reset form when opened
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    if (account) {
+      setCompany(account.company || "");
+      setCustomerType((account.customer_type as any) || "");
+      setCustomerTypeOther(account.customer_type_other || "");
+      setDomain(account.domain || account.website_url || "");
+      setIndustry(account.industry || "");
+      setHqCity(account.hq_city || "");
+      setHqRegion(account.hq_region || "");
+      setRelationshipType(account.relationship_type || "prospect");
+      setStatus((account.status as any) || "active");
+      setPricingType(account.pricing_type || "rate_card");
+      setContactName(account.contact_name || "");
+      setContactTitle("");
+      setContactEmail(account.email || "");
+      setContactPhone(account.phone || "");
+      setInternalNotes(account.internal_notes || "");
+      setSource(account.source || "inbound");
+      setExistingLogoUrl(account.logo_url || null);
+    } else {
       setCompany(initialCompanyName);
       setCustomerType("");
       setCustomerTypeOther("");
@@ -76,17 +109,19 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
       setHqRegion("");
       setRelationshipType("prospect");
       setStatus("active");
+      setPricingType("rate_card");
       setContactName("");
       setContactTitle("");
       setContactEmail("");
       setContactPhone("");
       setInternalNotes("");
       setSource("inbound");
-      setLogoFile(null);
-      setLogoPreview(null);
-      setAutoLogo(null);
+      setExistingLogoUrl(null);
     }
-  }, [open, initialCompanyName]);
+    setLogoFile(null);
+    setLogoPreview(null);
+    setAutoLogo(null);
+  }, [open, account, initialCompanyName]);
 
   // Derive domain from email if user hasn't set it
   useEffect(() => {
@@ -96,25 +131,26 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
     }
   }, [contactEmail]); // eslint-disable-line
 
-  // Auto-fetch logo from domain
+  // Auto-fetch logo from domain (only when no existing/uploaded)
   useEffect(() => {
     const d = (domain || extractDomain(contactEmail) || "").trim();
-    if (!d || logoFile) {
+    if (!d || logoFile || existingLogoUrl) {
       setAutoLogo(null);
       return;
     }
     setAutoLogo(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=128`);
-  }, [domain, contactEmail, logoFile]);
+  }, [domain, contactEmail, logoFile, existingLogoUrl]);
 
-  // Real-time inline duplicate warning while typing company name
+  // Real-time inline duplicate warning while typing company name (skip self in edit mode)
   const inlineDuplicates = useMemo(() => {
     if (!company.trim() || company.trim().length < 2) return [];
-    const matches = findAccountMatches(company, existing, {
+    const pool = isEdit ? existing.filter((c) => c.id !== account?.id) : existing;
+    const matches = findAccountMatches(company, pool, {
       similarThreshold: 0.7,
       emailDomain: extractDomain(contactEmail) || domain || null,
     });
     return matches.slice(0, 3);
-  }, [company, existing, contactEmail, domain]);
+  }, [company, existing, contactEmail, domain, isEdit, account]);
 
   const handleFile = (file: File | null) => {
     if (!file) return;
@@ -129,6 +165,7 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
     setLogoFile(file);
     const url = URL.createObjectURL(file);
     setLogoPreview(url);
+    setExistingLogoUrl(null);
   };
 
   const handleSubmit = async () => {
@@ -139,12 +176,11 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
     if (!contactEmail.trim()) { toast.error("Primary contact email required"); return; }
 
     setUploading(true);
-    let uploadedLogoUrl: string | null = null;
+    let uploadedLogoUrl: string | null = existingLogoUrl;
     try {
-      // Upload logo if file provided
       if (logoFile) {
         const ext = logoFile.name.split(".").pop() || "png";
-        const path = `logos/new-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const path = `logos/${isEdit ? account!.id : "new"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const { error: upErr } = await supabase.storage.from("avatars").upload(path, logoFile, {
           cacheControl: "3600",
           upsert: false,
@@ -152,11 +188,11 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
         uploadedLogoUrl = pub.publicUrl;
-      } else if (autoLogo) {
+      } else if (!isEdit && autoLogo) {
         uploadedLogoUrl = autoLogo;
       }
 
-      const created = await createCustomer.mutateAsync({
+      const payload: any = {
         company: company.trim(),
         contact_name: contactName.trim(),
         email: contactEmail.trim(),
@@ -172,24 +208,52 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
         source,
         internal_notes: internalNotes.trim() || null,
         status,
+        pricing_type: pricingType,
         logo_url: uploadedLogoUrl,
-        notes: contactTitle.trim() ? `Primary contact title: ${contactTitle.trim()}` : "",
-      } as any);
+      };
 
-      onCreated?.(created);
+      if (isEdit && account) {
+        const before = account;
+        await updateCustomer.mutateAsync({ id: account.id, ...payload });
+        const changes = diffAccountFields(before, payload);
+        await Promise.all(
+          changes.map((c) =>
+            logAccountActivity({
+              customer_id: account.id,
+              action: c.field === "status" ? "status_changed" : "updated",
+              field_changed: c.field,
+              old_value: c.oldValue,
+              new_value: c.newValue,
+            }),
+          ),
+        );
+        toast.success(`Account ${company.trim()} updated`);
+        onSaved?.({ ...account, ...payload } as Customer);
+      } else {
+        const created = await createCustomer.mutateAsync(payload);
+        await logAccountActivity({
+          customer_id: created.id,
+          action: "created",
+          new_value: company.trim(),
+        });
+        onCreated?.(created);
+      }
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e?.message || "Failed to create account");
+      toast.error(e?.message || `Failed to ${isEdit ? "update" : "create"} account`);
     } finally {
       setUploading(false);
     }
   };
 
+  const submitting = uploading || createCustomer.isPending || updateCustomer.isPending;
+  const previewLogo = logoPreview || existingLogoUrl || autoLogo;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Account</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Account" : "Create Account"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5">
@@ -198,10 +262,8 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Visual Identity</h3>
             <div className="flex items-start gap-4">
               <div className="relative">
-                {logoPreview ? (
-                  <img src={logoPreview} alt="Logo preview" className="h-16 w-16 rounded-md object-contain bg-background border border-border" />
-                ) : autoLogo ? (
-                  <img src={autoLogo} alt="Auto logo" className="h-16 w-16 rounded-md object-contain bg-background border border-border" />
+                {previewLogo ? (
+                  <img src={previewLogo} alt="Logo preview" className="h-16 w-16 rounded-md object-contain bg-background border border-border" />
                 ) : (
                   <CustomerLogo logoUrl={null} companyName={company || "?"} size="lg" />
                 )}
@@ -225,10 +287,10 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
                   onChange={(e) => handleFile(e.target.files?.[0] || null)}
                 />
                 <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-1.5">
-                  <Upload className="h-3.5 w-3.5" /> Upload logo
+                  <Upload className="h-3.5 w-3.5" /> {existingLogoUrl ? "Replace logo" : "Upload logo"}
                 </Button>
                 <p className="text-[11px] text-muted-foreground">
-                  {autoLogo && !logoFile
+                  {!isEdit && autoLogo && !logoFile
                     ? "Auto-detected logo from domain — confirm or upload your own"
                     : "PNG, JPG, SVG, or WebP. Max 2MB."}
                 </p>
@@ -316,6 +378,16 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
                   <SelectContent className="z-[2100]">
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="prospect">Prospect</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Pricing Type</Label>
+                <Select value={pricingType} onValueChange={setPricingType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="z-[2100]">
+                    {PRICING_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -353,10 +425,10 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={uploading || createCustomer.isPending}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={uploading || createCustomer.isPending} className={cn("gap-1.5")}>
-            {(uploading || createCustomer.isPending) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Create Account
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={submitting} className={cn("gap-1.5")}>
+            {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {isEdit ? "Save Changes" : "Create Account"}
           </Button>
         </DialogFooter>
       </DialogContent>
