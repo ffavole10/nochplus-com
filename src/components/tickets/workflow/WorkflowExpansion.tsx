@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -16,6 +16,7 @@ import { TicketReviewPanel } from "@/components/tickets/TicketReviewPanel";
 import { TicketDetailPanel } from "@/components/tickets/TicketDetailPanel";
 import { StepStepper } from "./StepStepper";
 import { StepPanel } from "./StepPanel";
+import { ClosoutInvoicePanel } from "./ClosoutInvoicePanel";
 import {
   WORKFLOW_STEPS,
   inferWorkflowSnapshot,
