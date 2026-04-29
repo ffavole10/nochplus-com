@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useDeal, useUpdateDeal, useDeleteDeal } from "@/hooks/useDeals";
+import { useDeal, useUpdateDeal, useDeleteDeal, useUpdateDealStage } from "@/hooks/useDeals";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useGrowthUsers } from "@/hooks/useGrowthUsers";
 import { useActivities, useCreateActivity } from "@/hooks/useActivities";
-import { DEAL_STAGES, DEAL_STAGE_COLORS, ACTIVITY_TYPES, type DealStage, type ActivityType } from "@/types/growth";
+import { useAccountOpsSnapshot } from "@/hooks/useAccountOpsSnapshot";
+import { useAgentOutputs, useGenerateScribeBrief, useGeneratePlaceholderOutput } from "@/hooks/useAgentOutputs";
+import { DEAL_STAGES, DEAL_STAGE_COLORS, ACTIVITY_TYPES, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type ActivityType } from "@/types/growth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Loader2, Save, Trash2, Plus, Phone, Mail, Calendar, Users as UsersIcon, MessageSquare } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Trash2, Plus, Phone, Mail, Calendar, Users as UsersIcon, MessageSquare, Brain, FileText, TrendingUp, Zap, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 
