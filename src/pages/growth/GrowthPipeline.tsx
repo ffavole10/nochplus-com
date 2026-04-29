@@ -345,7 +345,7 @@ export default function GrowthPipeline() {
                                 className={`p-3 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all group ${
                                   snap.isDragging ? "shadow-lg rotate-1" : ""
                                 }`}
-                                onClick={() => navigate(`/growth/deals/${deal.id}`)}
+                                onClick={() => navigate(`/business/pipeline/${deal.id}`)}
                               >
                                 <div className="flex items-start gap-2 mb-2">
                                   {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
@@ -416,7 +416,7 @@ export default function GrowthPipeline() {
                   const ops = opsMap[d.partner_id];
                   const days = daysInStage(d);
                   return (
-                    <tr key={d.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/growth/deals/${d.id}`)}>
+                    <tr key={d.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/business/pipeline/${d.id}`)}>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
