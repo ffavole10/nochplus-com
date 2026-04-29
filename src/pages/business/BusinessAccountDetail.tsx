@@ -104,6 +104,9 @@ export default function BusinessAccountDetail() {
         <Button variant="ghost" size="sm" onClick={() => navigate(`/partners/${accountId}`)} className="text-xs text-muted-foreground">
           Open in legacy Partner Profile →
         </Button>
+        <div className="ml-auto">
+          <PinButton type="account" id={account.id} label={account.company} />
+        </div>
       </div>
 
       {/* Header */}
@@ -213,7 +216,7 @@ export default function BusinessAccountDetail() {
         </TabsContent>
 
         <TabsContent value="contacts" className="mt-6">
-          <ContactsTab account={account} />
+          <ContactsTab account={account} focusedContactId={focusedContactId} />
         </TabsContent>
 
         <TabsContent value="files" className="mt-6">
