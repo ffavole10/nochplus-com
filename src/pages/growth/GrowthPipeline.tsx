@@ -8,6 +8,7 @@ import { useAccountOpsSnapshots } from "@/hooks/useAccountOpsSnapshot";
 import { DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type Deal } from "@/types/growth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
+import { CustomerTypeBadge, CUSTOMER_TYPE_OPTIONS, type CustomerType } from "@/components/business/CustomerTypeBadge";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,8 @@ export default function GrowthPipeline() {
     new_company: "",
     new_contact: "",
     new_email: "",
-    new_industry: "",
+    new_customer_type: "" as CustomerType | "",
+    new_customer_type_other: "",
     new_website: "",
     deal_name: "",
     stage: "Account Mapped" as DealStage,
@@ -180,7 +182,7 @@ export default function GrowthPipeline() {
 
   const resetForm = () => {
     setForm({
-      customer_id: "", new_company: "", new_contact: "", new_email: "", new_industry: "", new_website: "",
+      customer_id: "", new_company: "", new_contact: "", new_email: "", new_customer_type: "", new_customer_type_other: "", new_website: "",
       deal_name: "", stage: "Account Mapped", value: "", predicted_close_date: "", predicted_arr: "", owner: "", next_action: "", notes: "",
     });
     setCustomerMode("existing");
@@ -194,11 +196,15 @@ export default function GrowthPipeline() {
         if (!form.new_company.trim() || !form.new_contact.trim() || !form.new_email.trim()) {
           toast.error("New customer requires company, contact, and email."); return;
         }
+        if (form.new_customer_type === "other" && !form.new_customer_type_other.trim()) {
+          toast.error("Specify the customer type."); return;
+        }
         const created = await createCustomer.mutateAsync({
           company: form.new_company.trim(),
           contact_name: form.new_contact.trim(),
           email: form.new_email.trim(),
-          industry: form.new_industry.trim() || null,
+          customer_type: form.new_customer_type || null,
+          customer_type_other: form.new_customer_type === "other" ? form.new_customer_type_other.trim() : null,
           website_url: form.new_website.trim() || "",
         } as any);
         customerId = created.id;
