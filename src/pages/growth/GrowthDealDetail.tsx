@@ -72,6 +72,10 @@ export default function GrowthDealDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<any>({});
   const [econForm, setEconForm] = useState<DealEconomicsForm>(economicsFromDeal(null));
+  // Snapshot of econForm captured when the Edit modal opens — used to diff for activity log
+  const [econBaseline, setEconBaseline] = useState<DealEconomicsForm>(economicsFromDeal(null));
+  // Pending deal-type change awaiting confirmation (when switching would clear data)
+  const [pendingTypeChange, setPendingTypeChange] = useState<{ next: DealType; lostFields: string[] } | null>(null);
 
   // Activity quick-add
   const [noteText, setNoteText] = useState("");
@@ -99,8 +103,34 @@ export default function GrowthDealDetail() {
         competitor: (deal as any).competitor || "",
       });
       setEconForm(economicsFromDeal(deal));
+      setEconBaseline(economicsFromDeal(deal));
     }
   }, [deal]);
+
+  // Re-snapshot baseline whenever the modal opens, so diffs are scoped to a single edit session
+  useEffect(() => {
+    if (editOpen && deal) setEconBaseline(economicsFromDeal(deal));
+  }, [editOpen, deal]);
+
+  // Intercept econ changes so we can prompt before clearing data on Deal Type change
+  const handleEconChange = (next: DealEconomicsForm) => {
+    if (next.deal_type !== econForm.deal_type) {
+      const { clears, lostFields } = dealTypeChangeClearsData(econForm, next.deal_type);
+      if (clears) {
+        setPendingTypeChange({ next: next.deal_type, lostFields });
+        return; // Wait for user confirmation
+      }
+      setEconForm(applyDealTypeChange(econForm, next.deal_type));
+      return;
+    }
+    setEconForm(next);
+  };
+
+  const confirmTypeChange = () => {
+    if (!pendingTypeChange) return;
+    setEconForm(applyDealTypeChange(econForm, pendingTypeChange.next));
+    setPendingTypeChange(null);
+  };
 
   const latestScribe = useMemo<AgentOutput | undefined>(
     () => agentOutputs.find((o) => o.agent_name === "scribe" && o.output_type === "brief"),
