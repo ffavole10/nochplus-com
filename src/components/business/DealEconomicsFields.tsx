@@ -337,6 +337,7 @@ export function applyDealTypeChange(form: DealEconomicsForm, nextType: DealType)
     recurring_model: willBeRecurring ? form.recurring_model || "per_connector" : null,
     connector_count: willBeRecurring ? form.connector_count : "",
     monthly_rate: willBeRecurring ? form.monthly_rate : "",
+    rate_per_connector: willBeRecurring ? form.rate_per_connector ?? PER_CONNECTOR_RATE : null,
     one_time_value: willBeOneTime ? form.one_time_value : "",
     one_time_description: willBeOneTime ? form.one_time_description : "",
   };
