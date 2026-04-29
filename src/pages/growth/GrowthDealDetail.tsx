@@ -282,9 +282,21 @@ export default function GrowthDealDetail() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Zap className="h-4 w-4 text-primary" />Live Ops Snapshot
-            </CardTitle>
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Zap className="h-4 w-4 text-primary" />Live Ops Snapshot
+              </CardTitle>
+              {ops && ops.charger_count > 0 && partner && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {relationshipContext(
+                    partner.company,
+                    ops.relationship_types as ChargerRelationshipType[] | undefined,
+                    ops.charger_count,
+                    ops.sites_count,
+                  ) || `Showing ${ops.charger_count} chargers across ${ops.sites_count} sites`}
+                </p>
+              )}
+            </div>
             {partner && (
               <Link
                 to={`/operations/tickets?customer=${encodeURIComponent(partner.company)}`}
@@ -331,12 +343,35 @@ export default function GrowthDealDetail() {
               <OpsTile label="Sites" value={String(ops.sites_count)} />
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground italic py-2">
-              No ops data yet — this customer doesn't have chargers in the NOCH+ system.
-            </p>
+            <div className="py-2 space-y-2">
+              <p className="text-sm text-muted-foreground italic">
+                No ops data yet — this customer isn't linked to any chargers in the NOCH+ system.
+              </p>
+              {partner && (
+                <Button size="sm" variant="outline" onClick={() => setLinkOpen(true)} className="gap-1.5">
+                  <Plus className="h-3.5 w-3.5" /> Link chargers to this customer
+                </Button>
+              )}
+            </div>
+          )}
+          {ops && ops.charger_count > 0 && partner && (
+            <div className="mt-3 pt-3 border-t">
+              <Button size="sm" variant="ghost" onClick={() => setLinkOpen(true)} className="gap-1.5 text-xs h-7">
+                <Plus className="h-3 w-3" /> Link more chargers
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
+
+      {partner && (
+        <LinkChargersModal
+          open={linkOpen}
+          onOpenChange={setLinkOpen}
+          customerId={partner.id}
+          customerName={partner.company}
+        />
+      )}
 
       {/* ════════ C. Agent Intelligence ════════ */}
       <Card>
