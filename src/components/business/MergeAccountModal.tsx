@@ -26,8 +26,7 @@ export function MergeAccountModal({ open, onOpenChange, source }: Props) {
   const qc = useQueryClient();
   const navigate = useNavigate();
 
-  const target = customers.find((c) => c.id === targetId) || null;
-  const candidates = customers.filter((c) => c.id !== source.id);
+  const target = customers.find((c) => c.id === targetId && c.id !== source.id) || null;
 
   const doMerge = async () => {
     if (!target) return;
