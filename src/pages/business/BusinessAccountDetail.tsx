@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Building2, Ticket, Wrench, HardDrive, DollarSign, Receipt, BadgeCheck, GitBranch, Users, FolderOpen } from "lucide-react";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useContacts } from "@/hooks/useContacts";
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { ReliabilityKpiRow } from "@/components/reliability/ReliabilityKpiRow";
+import { PinButton } from "@/components/command-palette/PinButton";
 import {
   TicketsTab,
   WorkOrdersTab,
