@@ -248,17 +248,6 @@ export function PlatformHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-          {!isSettingsPage && (
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search chargers..."
-                value={filters.search}
-                onChange={(e) => updateFilter("search", e.target.value)}
-                className="pl-8 h-9 w-[200px] text-sm"
-              />
-            </div>
-          )}
           <CommandPaletteTrigger />
           {isDashboard && (
             <Button
