@@ -352,6 +352,8 @@ export function diffEconomicsForActivity(
   after: DealEconomicsForm,
 ): string[] {
   const fmtMoney = (n: number) => `$${Math.round(n).toLocaleString()}`;
+  const beforeRate = Number(before.rate_per_connector) > 0 ? Number(before.rate_per_connector) : PER_CONNECTOR_RATE;
+  const afterRate = Number(after.rate_per_connector) > 0 ? Number(after.rate_per_connector) : PER_CONNECTOR_RATE;
   const beforeEcon = computeDealEconomics({
     deal_type: before.deal_type,
     recurring_model: before.recurring_model,
@@ -359,6 +361,7 @@ export function diffEconomicsForActivity(
     monthly_rate: Number(before.monthly_rate) || 0,
     contract_length_months: Number(before.contract_length_months) || 12,
     one_time_value: Number(before.one_time_value) || 0,
+    rate_per_connector: beforeRate,
   });
   const afterEcon = computeDealEconomics({
     deal_type: after.deal_type,
@@ -367,6 +370,7 @@ export function diffEconomicsForActivity(
     monthly_rate: Number(after.monthly_rate) || 0,
     contract_length_months: Number(after.contract_length_months) || 12,
     one_time_value: Number(after.one_time_value) || 0,
+    rate_per_connector: afterRate,
   });
   const changes: string[] = [];
 
@@ -388,6 +392,9 @@ export function diffEconomicsForActivity(
       changes.push(`${label} changed from ${fmtMoney(b)} to ${fmtMoney(a)}`);
     }
   };
+  if (beforeRate !== afterRate) {
+    changes.push(`Rate per connector changed from $${beforeRate.toFixed(2)} to $${afterRate.toFixed(2)}`);
+  }
   moneyField("Monthly rate", Number(before.monthly_rate) || 0, Number(after.monthly_rate) || 0);
   moneyField("One-time value", Number(before.one_time_value) || 0, Number(after.one_time_value) || 0);
   moneyField("MRR", beforeEcon.mrr, afterEcon.mrr);
