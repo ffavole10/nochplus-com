@@ -14,6 +14,7 @@ export interface DealEconomicsForm {
   contract_length_months: string | number;
   one_time_value: string | number | null;
   one_time_description: string;
+  rate_per_connector: string | number | null;
 }
 
 interface Props {
