@@ -4558,6 +4558,75 @@ export type Database = {
           },
         ]
       }
+      ticket_invoices: {
+        Row: {
+          bill_to: Json | null
+          confidence_score: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_date: string | null
+          invoice_number: string
+          line_items: Json | null
+          notes: string | null
+          pdf_path: string | null
+          source: string
+          source_label: string | null
+          status: string
+          subtotal: number | null
+          tax_amount: number | null
+          tax_rate: number | null
+          ticket_db_id: string | null
+          ticket_text_id: string
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          bill_to?: Json | null
+          confidence_score?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number: string
+          line_items?: Json | null
+          notes?: string | null
+          pdf_path?: string | null
+          source: string
+          source_label?: string | null
+          status?: string
+          subtotal?: number | null
+          tax_amount?: number | null
+          tax_rate?: number | null
+          ticket_db_id?: string | null
+          ticket_text_id: string
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bill_to?: Json | null
+          confidence_score?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string
+          line_items?: Json | null
+          notes?: string | null
+          pdf_path?: string | null
+          source?: string
+          source_label?: string | null
+          status?: string
+          subtotal?: number | null
+          tax_amount?: number | null
+          tax_rate?: number | null
+          ticket_db_id?: string | null
+          ticket_text_id?: string
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ticket_regulatory_context: {
         Row: {
           applicable_docs: string[] | null
