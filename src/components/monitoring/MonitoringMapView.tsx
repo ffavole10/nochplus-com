@@ -113,6 +113,7 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
                     <div className="text-muted-foreground text-[9px] truncate">{e.error}</div>
                   </div>
                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ color: severityColor(e.severity), background: `${severityColor(e.severity)}15` }}>{e.severity}</span>
+                  <NeuralLayerPill layer="sensing" compact tooltip="Detected by Sentinel agent" className="flex-shrink-0" />
                 </div>
               ))}
             </div>
@@ -121,7 +122,10 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
 
         {/* Pattern Intelligence */}
         <div className="bg-card/90 backdrop-blur-sm rounded-lg border border-border p-3 text-xs shadow-sm">
-          <div className="text-[10px] text-muted-foreground font-medium mb-1.5">Pattern Intelligence</div>
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="text-[10px] text-muted-foreground font-medium">Pattern Intelligence</div>
+            <NeuralLayerPill layer="reasoning" tooltip="Powered by Atlas agent · Environmental & Pattern Intelligence" />
+          </div>
           <div className="space-y-1.5">
             {ML_PATTERNS.map((p, i) => (
               <div key={i} className="text-[10px]">
