@@ -51,7 +51,6 @@ export default function GrowthPipeline() {
   const { data: briefMap = {} } = useLatestScribeBriefs();
   const updateStage = useUpdateDealStage();
   const createDeal = useCreateDeal();
-  const createCustomer = useCreateCustomer();
 
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [search, setSearch] = useState("");
@@ -65,16 +64,8 @@ export default function GrowthPipeline() {
 
   // Add Deal dialog
   const [addOpen, setAddOpen] = useState(false);
-  const [customerMode, setCustomerMode] = useState<"existing" | "new">("existing");
-  const [customerPickerOpen, setCustomerPickerOpen] = useState(false);
   const [form, setForm] = useState({
     customer_id: "",
-    new_company: "",
-    new_contact: "",
-    new_email: "",
-    new_customer_type: "" as CustomerType | "",
-    new_customer_type_other: "",
-    new_website: "",
     deal_name: "",
     stage: "Account Mapped" as DealStage,
     predicted_close_date: "",
