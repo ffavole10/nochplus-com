@@ -156,6 +156,7 @@ export interface Deal {
   contract_length_months: number;
   one_time_value: number | null;
   one_time_description: string | null;
+  rate_per_connector: number | null;
 
   created_at: string;
   updated_at: string;
