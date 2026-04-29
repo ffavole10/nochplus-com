@@ -57,28 +57,31 @@ export function WorkflowExpansion({
     [ticket, relations.estimates, relations.workOrders, relations.submission],
   );
 
-  // Default view = current active step's panel
+  // Default view = current active step's panel.
+  // Sync once after relations load so the initial currentStep is meaningful (not the
+  // pre-fetch default of 1).
   const [viewedStep, setViewedStep] = useState<number>(snapshot.currentStep);
+  const userInteractedRef = useRef(false);
+  useEffect(() => {
+    if (!userInteractedRef.current) {
+      setViewedStep(snapshot.currentStep);
+    }
+  }, [snapshot.currentStep]);
+
+  const handleSelectStep = (n: number) => {
+    userInteractedRef.current = true;
+    setViewedStep(n);
+  };
+
   const viewed: WorkflowStepStatus =
     snapshot.steps.find((s) => s.def.number === viewedStep) || snapshot.steps[0];
 
+  // Arrows step by 1 across the full 1..10 range (all steps are viewable).
   const goPrev = () => {
-    for (let n = viewedStep - 1; n >= 1; n--) {
-      const s = snapshot.steps.find((st) => st.def.number === n);
-      if (s && s.state !== "locked") {
-        setViewedStep(n);
-        return;
-      }
-    }
+    if (viewedStep > 1) handleSelectStep(viewedStep - 1);
   };
   const goNext = () => {
-    for (let n = viewedStep + 1; n <= 10; n++) {
-      const s = snapshot.steps.find((st) => st.def.number === n);
-      if (s && s.state !== "locked") {
-        setViewedStep(n);
-        return;
-      }
-    }
+    if (viewedStep < 10) handleSelectStep(viewedStep + 1);
   };
 
   const lifecycleStages = buildTicketLifecycleChain({
