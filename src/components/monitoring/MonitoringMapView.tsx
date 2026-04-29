@@ -106,14 +106,18 @@ export function MonitoringMapView({ filter, onSelectCharger }: Props) {
           <ScrollArea className="h-[180px]">
             <div className="space-y-1">
               {ERROR_FEED.map((e, i) => (
-                <div key={i} className="flex items-start gap-1.5 px-1 py-1 rounded border border-border/30">
-                  <span className="text-[9px] text-muted-foreground w-10 flex-shrink-0 mt-0.5">{e.time}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-mono text-[10px] truncate">{e.charger}</div>
-                    <div className="text-muted-foreground text-[9px] truncate">{e.error}</div>
+                <div key={i} className="px-1 py-1 rounded border border-border/30">
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-[9px] text-muted-foreground w-10 flex-shrink-0 mt-0.5">{e.time}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-mono text-[10px] truncate">{e.charger}</div>
+                      <div className="text-muted-foreground text-[9px] truncate">{e.error}</div>
+                    </div>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ color: severityColor(e.severity), background: `${severityColor(e.severity)}15` }}>{e.severity}</span>
                   </div>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ color: severityColor(e.severity), background: `${severityColor(e.severity)}15` }}>{e.severity}</span>
-                  <NeuralLayerPill layer="sensing" compact tooltip="Detected by Sentinel agent" className="flex-shrink-0" />
+                  <div className="mt-1 pl-[46px]">
+                    <NeuralLayerPill layer="sensing" tooltip="Detected by Sentinel agent" />
+                  </div>
                 </div>
               ))}
             </div>
