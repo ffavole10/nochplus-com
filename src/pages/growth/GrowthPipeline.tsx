@@ -76,13 +76,12 @@ export default function GrowthPipeline() {
     new_website: "",
     deal_name: "",
     stage: "Account Mapped" as DealStage,
-    value: "",
     predicted_close_date: "",
-    predicted_arr: "",
     owner: "",
     next_action: "",
     notes: "",
   });
+  const [econForm, setEconForm] = useState<DealEconomicsForm>(emptyEconomics());
 
   const customerMap = useMemo(() => {
     const m: Record<string, typeof customers[number]> = {};
