@@ -252,6 +252,7 @@ export function emptyEconomics(): DealEconomicsForm {
     contract_length_months: 12,
     one_time_value: "",
     one_time_description: "",
+    rate_per_connector: PER_CONNECTOR_RATE,
   };
 }
 
@@ -264,10 +265,13 @@ export function economicsFromDeal(d: any): DealEconomicsForm {
     contract_length_months: d?.contract_length_months ?? 12,
     one_time_value: d?.one_time_value ?? "",
     one_time_description: d?.one_time_description ?? "",
+    rate_per_connector: d?.rate_per_connector ?? PER_CONNECTOR_RATE,
   };
 }
 
 export function economicsToPayload(form: DealEconomicsForm) {
+  const rateNum = Number(form.rate_per_connector);
+  const effectiveRate = rateNum > 0 ? rateNum : PER_CONNECTOR_RATE;
   const econ = computeDealEconomics({
     deal_type: form.deal_type,
     recurring_model: form.recurring_model,
@@ -275,17 +279,20 @@ export function economicsToPayload(form: DealEconomicsForm) {
     monthly_rate: Number(form.monthly_rate) || 0,
     contract_length_months: Number(form.contract_length_months) || 12,
     one_time_value: Number(form.one_time_value) || 0,
+    rate_per_connector: effectiveRate,
   });
   const isRecurring = form.deal_type === "recurring" || form.deal_type === "hybrid";
   const isOneTime = form.deal_type === "one_time" || form.deal_type === "hybrid";
+  const isPerConnector = isRecurring && form.recurring_model === "per_connector";
   return {
     deal_type: form.deal_type,
     recurring_model: isRecurring ? form.recurring_model : null,
-    connector_count: isRecurring && form.recurring_model === "per_connector" ? Number(form.connector_count) || 0 : null,
+    connector_count: isPerConnector ? Number(form.connector_count) || 0 : null,
     monthly_rate: isRecurring ? econ.monthlyRate : null,
     contract_length_months: Number(form.contract_length_months) || 12,
     one_time_value: isOneTime ? Number(form.one_time_value) || 0 : null,
     one_time_description: isOneTime ? form.one_time_description || null : null,
+    rate_per_connector: isPerConnector ? effectiveRate : null,
     // Auto-keep predicted_arr & value in sync
     predicted_arr: econ.arr,
     value: econ.year1Revenue, // Year 1 revenue is the headline deal value
