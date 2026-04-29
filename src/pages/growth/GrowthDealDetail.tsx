@@ -74,6 +74,9 @@ export default function GrowthDealDetail() {
   // Brief tab
   const [briefTab, setBriefTab] = useState<"scribe" | "closer" | "forecaster">("scribe");
 
+  // Link chargers modal
+  const [linkOpen, setLinkOpen] = useState(false);
+
   useEffect(() => {
     if (deal) {
       setForm({
