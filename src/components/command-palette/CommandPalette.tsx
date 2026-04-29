@@ -200,6 +200,7 @@ export function CommandPalette() {
         return;
       }
       setPins(result.pins);
+      window.dispatchEvent(new Event("noch:pins-changed"));
     },
     [],
   );
