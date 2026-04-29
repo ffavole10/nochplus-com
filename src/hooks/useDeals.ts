@@ -75,8 +75,12 @@ export function useDeleteDeal() {
 export function useUpdateDealStage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, stage, note, partner_id }: { id: string; stage: DealStage; note?: string; partner_id: string }) => {
-      const { data, error } = await supabase.from("deals" as any).update({ stage } as any).eq("id", id).select().single();
+    mutationFn: async ({ id, stage, note, partner_id, extra }: { id: string; stage: DealStage; note?: string; partner_id: string; extra?: Record<string, any> }) => {
+      const update: any = { stage, ...(extra || {}) };
+      if (stage === "Closed Won" || stage === "Closed Lost") {
+        update.actual_close_date = new Date().toISOString().slice(0, 10);
+      }
+      const { data, error } = await supabase.from("deals" as any).update(update).eq("id", id).select().single();
       if (error) throw error;
       // Log stage change as activity if note provided
       if (note && note.trim()) {
