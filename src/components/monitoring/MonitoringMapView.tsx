@@ -3,6 +3,7 @@ import { CHARGERS, SORTED_BY_CVS, STATUS_COLORS, ERROR_FEED, ML_PATTERNS, MAX_ME
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { FleetMap } from "./FleetMap";
+import { NeuralLayerPill } from "@/components/business/NeuralLayerPill";
 
 interface Props {
   filter: string;
