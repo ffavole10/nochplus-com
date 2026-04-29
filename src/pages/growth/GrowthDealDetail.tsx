@@ -54,6 +54,7 @@ export default function GrowthDealDetail() {
   const remove = useDeleteDeal();
   const createActivity = useCreateActivity();
   const updateStage = useUpdateDealStage();
+  const { confirm: confirmDialog, dialogProps: confirmDialogProps } = useConfirmDialog();
   const { data: ops } = useAccountOpsSnapshot(deal?.partner_id);
   const { data: agentOutputs = [] } = useAgentOutputs(dealId);
   const generateBrief = useGenerateScribeBrief();
@@ -237,6 +238,7 @@ export default function GrowthDealDetail() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <ConfirmDialog {...confirmDialogProps} />
       {/* ════════ Breadcrumb ════════ */}
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link to="/business/pipeline" className="hover:text-primary">Pipeline</Link>
