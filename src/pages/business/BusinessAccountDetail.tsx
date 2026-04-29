@@ -163,113 +163,40 @@ export default function BusinessAccountDetail() {
         </TabsContent>
 
         <TabsContent value="tickets" className="mt-6">
-          {accountTickets.length === 0 ? <Empty label="No tickets for this account." /> : (
-            <Card><CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead><tr className="border-b text-left text-muted-foreground">
-                  <th className="py-2 px-3">ID</th><th className="py-2 px-3">Issue</th>
-                  <th className="py-2 px-3">Status</th><th className="py-2 px-3">Created</th>
-                </tr></thead>
-                <tbody>
-                  {accountTickets.slice(0, 50).map((t) => (
-                    <tr key={t.id} className="border-b border-border/50">
-                      <td className="py-2 px-3 font-mono text-xs">{t.ticketId}</td>
-                      <td className="py-2 px-3">{t.issue?.description || "—"}</td>
-                      <td className="py-2 px-3"><Badge variant="outline">{t.status}</Badge></td>
-                      <td className="py-2 px-3 text-xs text-muted-foreground">{t.createdAt ? format(new Date(t.createdAt), "MMM d, yyyy") : "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent></Card>
-          )}
+          <TicketsTab account={account} tickets={accountTickets} />
         </TabsContent>
 
-        <TabsContent value="work-orders" className="mt-6"><Empty label="Work orders for this account will appear here." /></TabsContent>
+        <TabsContent value="work-orders" className="mt-6">
+          <WorkOrdersTab account={account} />
+        </TabsContent>
 
-        <TabsContent value="chargers" className="mt-6"><Empty label="Charger fleet inventory will appear here." /></TabsContent>
+        <TabsContent value="chargers" className="mt-6">
+          <ChargersTab account={account} />
+        </TabsContent>
 
         <TabsContent value="estimates" className="mt-6">
-          {accountEstimates.length === 0 ? <Empty label="No estimates for this account." /> : (
-            <Card><CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead><tr className="border-b text-left text-muted-foreground">
-                  <th className="py-2 px-3">Estimate</th><th className="py-2 px-3">Status</th>
-                  <th className="py-2 px-3 text-right">Total</th>
-                </tr></thead>
-                <tbody>
-                  {accountEstimates.slice(0, 50).map((e: any) => (
-                    <tr key={e.id} className="border-b border-border/50">
-                      <td className="py-2 px-3 font-mono text-xs">{e.estimate_number}</td>
-                      <td className="py-2 px-3"><Badge variant="outline">{e.status}</Badge></td>
-                      <td className="py-2 px-3 text-right">${Number(e.total || 0).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent></Card>
-          )}
+          <EstimatesTab account={account} />
         </TabsContent>
 
-        <TabsContent value="invoices" className="mt-6"><Empty label="No data available yet." /></TabsContent>
+        <TabsContent value="invoices" className="mt-6">
+          <InvoicesTab account={account} tickets={accountTickets} />
+        </TabsContent>
 
         <TabsContent value="membership" className="mt-6">
-          {meta?.tier ? (
-            <Card><CardContent className="p-6 space-y-2 text-sm">
-              <p>Current tier: <Badge>{meta.tier}</Badge></p>
-              {meta.motion && <p>Motion: {meta.motion}</p>}
-              <p className="text-muted-foreground text-xs">ROI metrics and TRR/MTTR savings will appear here once member activity is tracked.</p>
-            </CardContent></Card>
-          ) : <Empty label="This account is not a NOCH+ member yet." />}
+          <MembershipTab account={account} />
         </TabsContent>
 
         <TabsContent value="pipeline" className="mt-6">
-          {accountDeals.length === 0 ? <Empty label="No open deals for this account." /> : (
-            <Card><CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead><tr className="border-b text-left text-muted-foreground">
-                  <th className="py-2 px-3">Deal</th><th className="py-2 px-3">Stage</th>
-                  <th className="py-2 px-3 text-right">Value</th>
-                </tr></thead>
-                <tbody>
-                  {accountDeals.map((d) => (
-                    <tr key={d.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer"
-                        onClick={() => navigate(`/growth/deals/${d.id}`)}>
-                      <td className="py-2 px-3">{d.deal_name}</td>
-                      <td className="py-2 px-3"><Badge variant="outline" className="text-xs">{d.stage}</Badge></td>
-                      <td className="py-2 px-3 text-right">${Number(d.value || 0).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent></Card>
-          )}
+          <PipelineTab account={account} />
         </TabsContent>
 
         <TabsContent value="contacts" className="mt-6">
-          {contacts.length === 0 ? <Empty label="No contacts on file." /> : (
-            <Card><CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead><tr className="border-b text-left text-muted-foreground">
-                  <th className="py-2 px-3">Name</th><th className="py-2 px-3">Role</th>
-                  <th className="py-2 px-3">Email</th><th className="py-2 px-3">Phone</th>
-                </tr></thead>
-                <tbody>
-                  {contacts.map((c: any) => (
-                    <tr key={c.id} className="border-b border-border/50">
-                      <td className="py-2 px-3 font-medium">{c.name}{c.is_primary && <Badge variant="outline" className="ml-2 text-[9px]">primary</Badge>}</td>
-                      <td className="py-2 px-3 text-muted-foreground">{c.role || "—"}</td>
-                      <td className="py-2 px-3">{c.email || "—"}</td>
-                      <td className="py-2 px-3">{c.phone || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent></Card>
-          )}
+          <ContactsTab account={account} />
         </TabsContent>
 
-        <TabsContent value="files" className="mt-6"><Empty label="No data available yet." /></TabsContent>
+        <TabsContent value="files" className="mt-6">
+          <FilesTab account={account} tickets={accountTickets} />
+        </TabsContent>
       </Tabs>
     </div>
   );
