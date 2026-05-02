@@ -96,6 +96,7 @@ export default function GrowthPipeline() {
     return deals.filter(d => {
       if (accountFilter !== "all" && d.partner_id !== accountFilter) return false;
       if (ownerFilter !== "all" && d.owner_user_id !== ownerFilter) return false;
+      if (focusOnly && !focusCustomerIds.has(d.partner_id)) return false;
       if (search) {
         const q = search.toLowerCase();
         const partner = customerMap[d.partner_id];
@@ -103,13 +104,21 @@ export default function GrowthPipeline() {
       }
       return true;
     });
-  }, [deals, accountFilter, ownerFilter, search, customerMap]);
+  }, [deals, accountFilter, ownerFilter, focusOnly, focusCustomerIds, search, customerMap]);
 
   const dealsByStage = useMemo(() => {
     const map: Record<DealStage, Deal[]> = Object.fromEntries(DEAL_STAGES.map(s => [s, [] as Deal[]])) as any;
     filtered.forEach(d => { map[d.stage]?.push(d); });
     return map;
   }, [filtered]);
+
+  const focusCountByStage = useMemo(() => {
+    const map: Record<DealStage, number> = Object.fromEntries(DEAL_STAGES.map(s => [s, 0])) as any;
+    filtered.forEach(d => {
+      if (focusCustomerIds.has(d.partner_id)) map[d.stage]++;
+    });
+    return map;
+  }, [filtered, focusCustomerIds]);
 
   const stageTotals = useMemo(() => {
     const map: Record<DealStage, { count: number; value: number }> = Object.fromEntries(
