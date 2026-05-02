@@ -26,6 +26,7 @@ import {
   type StrategyAccountType, type StrategyHealth,
 } from "@/types/strategy";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { formatCurrency } from "@/lib/formatters";
 import { formatDistanceToNow } from "date-fns";
 import { runPortfolioTour } from "@/components/business/strategy/portfolioTour";
 import { runStrategyTour } from "@/components/business/strategy/strategyTour";
