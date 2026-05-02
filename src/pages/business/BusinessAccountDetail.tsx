@@ -152,9 +152,22 @@ export default function BusinessAccountDetail() {
               <StatusBadgeMenu account={account} />
               {meta?.tier && <Badge variant="outline">Tier {meta.tier}</Badge>}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              {account.contact_name} · {account.email} · {account.phone || "—"}
-            </p>
+            {primaryContact ? (
+              <p className="text-sm text-muted-foreground mt-1">
+                {primaryContact.name} · {primaryContact.email} · {primaryContact.phone || "—"}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-1 italic">
+                No primary contact set ·{" "}
+                <button
+                  type="button"
+                  onClick={() => setTab("contacts")}
+                  className="not-italic underline text-primary hover:text-primary/80"
+                >
+                  + Add primary contact →
+                </button>
+              </p>
+            )}
             {account.headquarters_address && (
               <p className="text-xs text-muted-foreground mt-1">{account.headquarters_address}</p>
             )}
