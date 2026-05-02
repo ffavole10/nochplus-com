@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { User, LogOut, Pencil, Check, X, Search, ChevronRight, FileText, Share2, Home } from "lucide-react";
+import { User, LogOut, Pencil, Check, X, Search, ChevronRight, FileText, Share2, Home, Target } from "lucide-react";
+import { useFocusMode } from "@/hooks/useFocus5";
+import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -75,6 +78,8 @@ function getCampaignPageTitle(pathname: string): string | null {
 export function PlatformHeader() {
   const { session } = useAuth();
   const location = useLocation();
+  const focusMode = useFocusMode();
+  const navigateRouter = useNavigate();
   const { selectedCampaignId, selectedCampaignName, setSelectedCampaignName, selectedCustomer } = useCampaignContext();
   const { filters, updateFilter } = useFilters();
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -248,6 +253,26 @@ export function PlatformHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => focusMode.toggle(!focusMode.enabled)}
+            onContextMenu={(e) => { e.preventDefault(); navigateRouter("/business/strategy"); }}
+            title={focusMode.enabled ? "Click to turn off Focus mode" : "Click to turn on Focus mode (filters platform to your Focus 5)"}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
+              focusMode.enabled
+                ? "bg-amber-400/90 border-amber-500 text-amber-950 hover:bg-amber-400 shadow-[0_0_0_3px_rgba(251,191,36,0.15)]"
+                : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+            data-tour="focus-mode-toggle"
+          >
+            <Target className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">
+              {focusMode.enabled
+                ? `Focus mode: ON · ${focusMode.quarter || ""}`
+                : "Focus mode: OFF"}
+            </span>
+          </button>
           <CommandPaletteTrigger />
           {isDashboard && (
             <Button

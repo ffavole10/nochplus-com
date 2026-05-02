@@ -40,7 +40,28 @@ export interface AccountStrategy {
   created_at: string;
   updated_at: string;
   last_reviewed_at: string | null;
+  // Focus 5
+  is_focus?: boolean;
+  focus_quarter?: string | null;
+  focus_reason?: string | null;
+  focus_added_at?: string | null;
+  focus_added_by?: string | null;
 }
+
+export interface FocusHistoryEntry {
+  id: string;
+  strategy_id: string;
+  customer_id: string | null;
+  focus_quarter: string;
+  focus_reason: string | null;
+  added_at: string;
+  removed_at: string | null;
+  added_by: string | null;
+  removed_by: string | null;
+  created_at: string;
+}
+
+export const FOCUS_5_LIMIT = 5;
 
 export interface StrategyDecisionEntry {
   id: string;
