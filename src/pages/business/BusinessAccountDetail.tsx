@@ -114,7 +114,9 @@ export default function BusinessAccountDetail() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-0">
+      <FocusRibbon customerId={account.id} />
+      <div className="p-6 space-y-6">
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => navigate("/business/accounts")} className="gap-1.5">
           <ArrowLeft className="h-4 w-4" /> Accounts
