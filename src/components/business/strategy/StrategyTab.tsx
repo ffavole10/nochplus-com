@@ -128,6 +128,18 @@ function StrategyContent({
   const markReviewed = useMarkReviewed();
   const { data: plays = [] } = usePlays(strategy.id);
   const { data: kpis = [] } = useKpis(strategy.id);
+  const { data: tourDone } = useTourCompleted();
+  const markTourDone = useMarkTourCompleted();
+
+  useEffect(() => {
+    if (tourDone === false) {
+      const t = setTimeout(() => {
+        runStrategyTour("full", () => markTourDone.mutate());
+      }, 600);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourDone]);
 
   const health = useMemo(() => computeStrategyHealth(strategy, kpis, plays), [strategy, kpis, plays]);
   const activeKpis = kpis.filter((k) => !k.is_deferred);
