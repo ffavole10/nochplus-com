@@ -56,6 +56,7 @@ export default function BusinessAccountDetail() {
   const navigate = useNavigate();
   const { data: customers = [], isLoading } = useCustomers();
   const { data: contacts = [] } = useContacts(accountId || "");
+  const { data: primaryContact } = usePrimaryContact(accountId);
   const { data: campaigns = [] } = useCampaigns();
   const { data: estimates = [] } = useEstimates(null);
   const { data: deals = [] } = useDeals();
