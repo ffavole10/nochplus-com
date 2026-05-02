@@ -14,12 +14,7 @@ import {
   type StrategyAccountType,
   type KpiTemplate,
 } from "@/types/strategy";
-import {
-  useUpdateStrategy,
-  useKpiMutations,
-  usePlayMutations,
-  type AccountStrategy,
-} from "@/hooks/useStrategy";
+import { useUpdateStrategy, useKpiMutations, usePlayMutations } from "@/hooks/useStrategy";
 import type { AccountStrategy as AS } from "@/types/strategy";
 import { toast } from "sonner";
 
