@@ -300,6 +300,20 @@ export default function GrowthPipeline() {
             {users.map(u => <SelectItem key={u.user_id} value={u.user_id}>{u.display_name}</SelectItem>)}
           </SelectContent>
         </Select>
+        <button
+          type="button"
+          onClick={() => setFocusOnly((v) => !v)}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 h-9 rounded-md text-xs font-medium border transition-colors",
+            focusOnly
+              ? "bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-400"
+              : "bg-background text-muted-foreground border-border hover:bg-muted"
+          )}
+          title="Show only deals tied to Focus 5 customers"
+        >
+          <Star className={cn("h-3.5 w-3.5", focusOnly ? "fill-amber-400 text-amber-600" : "")} />
+          Focus 5 only
+        </button>
       </div>
 
       {isLoading ? (
