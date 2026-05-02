@@ -722,6 +722,7 @@ export default function GrowthDealDetail() {
         variant="destructive"
         onConfirm={confirmTypeChange}
       />
+      </div>
     </div>
   );
 }
