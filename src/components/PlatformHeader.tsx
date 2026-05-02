@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { User, LogOut, Pencil, Check, X, Search, ChevronRight, FileText, Share2, Home } from "lucide-react";
+import { User, LogOut, Pencil, Check, X, Search, ChevronRight, FileText, Share2, Home, Target } from "lucide-react";
+import { useFocusMode } from "@/hooks/useFocus5";
+import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
