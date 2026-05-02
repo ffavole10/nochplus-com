@@ -4,6 +4,7 @@ import { ArrowLeft, Building2, Ticket, Wrench, HardDrive, DollarSign, Receipt, B
 import { StrategyTab } from "@/components/business/strategy/StrategyTab";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useContacts } from "@/hooks/useContacts";
+import { usePrimaryContact } from "@/hooks/usePrimaryContacts";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useEstimates } from "@/hooks/useEstimates";
 import { useDeals } from "@/hooks/useDeals";
