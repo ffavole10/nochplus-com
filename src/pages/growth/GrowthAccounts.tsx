@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useCustomers } from "@/hooks/useCustomers";
+import { usePrimaryContactsByCustomer } from "@/hooks/usePrimaryContacts";
 import { useAllPartnerMeta } from "@/hooks/usePartnerMeta";
 import { useDeals } from "@/hooks/useDeals";
 import { usePageTitle } from "@/hooks/usePageTitle";
