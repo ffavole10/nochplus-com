@@ -404,16 +404,27 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
             </div>
           </section>
 
-          {/* Primary Contact */}
-          <section className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Primary Contact</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5"><Label className="text-xs">Contact Name *</Label><Input value={contactName} onChange={(e) => setContactName(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Contact Title</Label><Input value={contactTitle} onChange={(e) => setContactTitle(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Contact Email *</Label><Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Contact Phone</Label><Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} /></div>
-            </div>
-          </section>
+          {/* Primary Contact — only collected at creation; managed in Contacts tab thereafter */}
+          {!isEdit ? (
+            <section className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Primary Contact</h3>
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                Just one contact to start — add more in the Contacts tab after creation.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">Contact Name *</Label><Input value={contactName} onChange={(e) => setContactName(e.target.value)} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Contact Title</Label><Input value={contactTitle} onChange={(e) => setContactTitle(e.target.value)} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Contact Email *</Label><Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Contact Phone</Label><Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} /></div>
+              </div>
+            </section>
+          ) : (
+            <section className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
+              Manage contacts in the{" "}
+              <span className="font-semibold text-foreground">Contacts tab →</span>{" "}
+              of this account. Single source of truth.
+            </section>
+          )}
 
           {/* Internal Context */}
           <section className="space-y-3">
