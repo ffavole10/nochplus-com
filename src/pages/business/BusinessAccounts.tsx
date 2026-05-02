@@ -42,6 +42,17 @@ export default function BusinessAccounts() {
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
   const [view, setView] = useState<View>("operations");
   const [createOpen, setCreateOpen] = useState(false);
+  const [focusOnly, setFocusOnly] = useState(false);
+  const [focusFirst, setFocusFirst] = useState(false);
+  const { data: focusCustomerIds = new Set<string>() } = useFocus5CustomerIds();
+  const { data: allStrategies = [] } = useAllStrategies();
+  const focusMetaByCustomer = useMemo(() => {
+    const m: Record<string, { quarter: string | null; reason: string | null }> = {};
+    allStrategies.forEach((s: any) => {
+      if (s.is_focus) m[s.customer_id] = { quarter: s.focus_quarter, reason: s.focus_reason };
+    });
+    return m;
+  }, [allStrategies]);
 
   const metaMap = useMemo(() => {
     const m: Record<string, typeof allMeta[number]> = {};
