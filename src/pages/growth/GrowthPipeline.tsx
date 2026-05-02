@@ -57,6 +57,16 @@ export default function GrowthPipeline() {
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState<string>("all");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [focusOnly, setFocusOnly] = useState(false);
+  const { data: focusCustomerIds = new Set<string>() } = useFocus5CustomerIds();
+  const { data: allStrategies = [] } = useAllStrategies();
+  const focusMetaByCustomer = useMemo(() => {
+    const m: Record<string, { quarter: string | null; reason: string | null }> = {};
+    allStrategies.forEach((s: any) => {
+      if (s.is_focus) m[s.customer_id] = { quarter: s.focus_quarter, reason: s.focus_reason };
+    });
+    return m;
+  }, [allStrategies]);
 
   // Stage move dialog
   const [pendingMove, setPendingMove] = useState<{ deal: Deal; newStage: DealStage } | null>(null);
