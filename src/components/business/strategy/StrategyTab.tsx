@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import {
   useKpis, useKpiMutations,
   useRisks, useRiskMutations,
   seedKpisFromTemplates,
+  useTourCompleted, useMarkTourCompleted,
 } from "@/hooks/useStrategy";
 import { useContacts } from "@/hooks/useContacts";
 import {
