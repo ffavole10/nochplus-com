@@ -167,6 +167,7 @@ export default function BusinessAccounts() {
   }
 
   return (
+    <TooltipProvider>
     <div className="p-6 space-y-6">
       <BusinessPageHeader
         title="Accounts"
