@@ -47,6 +47,13 @@ import { useDeals } from "@/hooks/useDeals";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ContactFormModal } from "@/components/business/ContactFormModal";
+import {
+  CONTACT_TYPE_ORDER,
+  CONTACT_TYPE_LABELS,
+  CONTACT_TYPE_SHORT,
+  CONTACT_TYPE_PILL,
+  type ContactType,
+} from "@/lib/contactTypes";
 import { toast } from "sonner";
 import WorkOrderDetailModal from "@/components/field-capture/WorkOrderDetailModal";
 
