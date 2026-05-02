@@ -269,6 +269,7 @@ export default function BusinessAccountDetail() {
         onOpenChange={setEditOpen}
         account={account}
       />
+      </div>
     </div>
   );
 }
