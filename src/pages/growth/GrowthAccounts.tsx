@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useCustomers } from "@/hooks/useCustomers";
+import { usePrimaryContactsByCustomer } from "@/hooks/usePrimaryContacts";
 import { useAllPartnerMeta } from "@/hooks/usePartnerMeta";
 import { useDeals } from "@/hooks/useDeals";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -17,6 +18,7 @@ export default function GrowthAccounts() {
   const { data: customers = [], isLoading } = useCustomers();
   const { data: allMeta = [] } = useAllPartnerMeta();
   const { data: allDeals = [] } = useDeals();
+  const { data: primaryByCustomer = {} } = usePrimaryContactsByCustomer(customers.map(c => c.id));
 
   const metaMap = useMemo(() => {
     const m: Record<string, typeof allMeta[number]> = {};
@@ -75,7 +77,7 @@ export default function GrowthAccounts() {
                           <CustomerLogo logoUrl={c.logo_url} companyName={c.company} size="sm" />
                           <div>
                             <p className="font-medium">{c.company}</p>
-                            <p className="text-xs text-muted-foreground">{c.contact_name}</p>
+                            <p className="text-xs text-muted-foreground">{primaryByCustomer[c.id]?.name || c.contact_name || "—"}</p>
                           </div>
                         </div>
                       </td>

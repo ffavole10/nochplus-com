@@ -5,6 +5,7 @@ import { useFocus5CustomerIds } from "@/hooks/useFocus5";
 import { useAllStrategies } from "@/hooks/useStrategy";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCustomers } from "@/hooks/useCustomers";
+import { usePrimaryContactsByCustomer } from "@/hooks/usePrimaryContacts";
 import { useAllPartnerMeta } from "@/hooks/usePartnerMeta";
 import { useDeals } from "@/hooks/useDeals";
 import { useCampaigns } from "@/hooks/useCampaigns";
@@ -35,6 +36,8 @@ export default function BusinessAccounts() {
   const { data: allMeta = [] } = useAllPartnerMeta();
   const { data: allDeals = [] } = useDeals();
   const { data: campaigns = [] } = useCampaigns();
+  const customerIds = useMemo(() => customers.map((c) => c.id), [customers]);
+  const { data: primaryByCustomer = {} } = usePrimaryContactsByCustomer(customerIds);
 
   const [search, setSearch] = useState("");
   const [relationship, setRelationship] = useState<RelationshipFilter>("all");
@@ -135,8 +138,11 @@ export default function BusinessAccounts() {
       if (focusOnly && !focusCustomerIds.has(c.id)) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
+        const pc = primaryByCustomer[c.id];
         if (
           !c.company.toLowerCase().includes(q) &&
+          !pc?.name?.toLowerCase().includes(q) &&
+          !pc?.email?.toLowerCase().includes(q) &&
           !c.contact_name?.toLowerCase().includes(q) &&
           !c.email?.toLowerCase().includes(q)
         ) return false;
@@ -151,7 +157,7 @@ export default function BusinessAccounts() {
       });
     }
     return list;
-  }, [customers, accountTypes, relationship, status, selectedCats, search, focusOnly, focusFirst, focusCustomerIds]);
+  }, [customers, accountTypes, relationship, status, selectedCats, search, focusOnly, focusFirst, focusCustomerIds, primaryByCustomer]);
 
   const toggleCat = (cat: string) =>
     setSelectedCats((p) => (p.includes(cat) ? p.filter((x) => x !== cat) : [...p, cat]));
@@ -375,7 +381,7 @@ export default function BusinessAccounts() {
                                 )}
                               </span>
                             </p>
-                            <p className="text-xs text-muted-foreground">{c.contact_name || "—"}</p>
+                            <p className="text-xs text-muted-foreground">{primaryByCustomer[c.id]?.name || "—"}</p>
                           </div>
                         </div>
                       </td>
@@ -396,8 +402,8 @@ export default function BusinessAccounts() {
                           <td className="py-3 px-4 text-center font-medium">{c.ticket_count || 0}</td>
                           <td className="py-3 px-4">
                             <div className="text-xs">
-                              <p>{c.email}</p>
-                              <p className="text-muted-foreground">{c.phone}</p>
+                              <p>{primaryByCustomer[c.id]?.email || c.email || "—"}</p>
+                              <p className="text-muted-foreground">{primaryByCustomer[c.id]?.phone || c.phone || "—"}</p>
                             </div>
                           </td>
                         </>

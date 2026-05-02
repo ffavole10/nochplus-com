@@ -4,6 +4,7 @@ import { ArrowLeft, Building2, Ticket, Wrench, HardDrive, DollarSign, Receipt, B
 import { StrategyTab } from "@/components/business/strategy/StrategyTab";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useContacts } from "@/hooks/useContacts";
+import { usePrimaryContact } from "@/hooks/usePrimaryContacts";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useEstimates } from "@/hooks/useEstimates";
 import { useDeals } from "@/hooks/useDeals";
@@ -55,6 +56,7 @@ export default function BusinessAccountDetail() {
   const navigate = useNavigate();
   const { data: customers = [], isLoading } = useCustomers();
   const { data: contacts = [] } = useContacts(accountId || "");
+  const { data: primaryContact } = usePrimaryContact(accountId);
   const { data: campaigns = [] } = useCampaigns();
   const { data: estimates = [] } = useEstimates(null);
   const { data: deals = [] } = useDeals();
@@ -150,9 +152,22 @@ export default function BusinessAccountDetail() {
               <StatusBadgeMenu account={account} />
               {meta?.tier && <Badge variant="outline">Tier {meta.tier}</Badge>}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              {account.contact_name} · {account.email} · {account.phone || "—"}
-            </p>
+            {primaryContact ? (
+              <p className="text-sm text-muted-foreground mt-1">
+                {primaryContact.name} · {primaryContact.email} · {primaryContact.phone || "—"}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-1 italic">
+                No primary contact set ·{" "}
+                <button
+                  type="button"
+                  onClick={() => setTab("contacts")}
+                  className="not-italic underline text-primary hover:text-primary/80"
+                >
+                  + Add primary contact →
+                </button>
+              </p>
+            )}
             {account.headquarters_address && (
               <p className="text-xs text-muted-foreground mt-1">{account.headquarters_address}</p>
             )}
@@ -205,9 +220,25 @@ export default function BusinessAccountDetail() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card><CardContent className="p-4 text-sm space-y-2">
               <p className="font-semibold">Primary Contact</p>
-              <p>{account.contact_name || "—"}</p>
-              <p className="text-muted-foreground">{account.email}</p>
-              <p className="text-muted-foreground">{account.phone || "—"}</p>
+              {primaryContact ? (
+                <>
+                  <p>{primaryContact.name}</p>
+                  {primaryContact.title && <p className="text-muted-foreground text-xs">{primaryContact.title}</p>}
+                  <p className="text-muted-foreground">{primaryContact.email}</p>
+                  <p className="text-muted-foreground">{primaryContact.phone || "—"}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-muted-foreground italic">No primary contact set</p>
+                  <button
+                    type="button"
+                    onClick={() => setTab("contacts")}
+                    className="text-xs underline text-primary hover:text-primary/80"
+                  >
+                    + Add primary contact →
+                  </button>
+                </>
+              )}
             </CardContent></Card>
             <Card><CardContent className="p-4 text-sm space-y-2">
               <p className="font-semibold">Relationship</p>

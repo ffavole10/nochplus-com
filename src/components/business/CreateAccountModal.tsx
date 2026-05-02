@@ -172,8 +172,10 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
     if (!company.trim()) { toast.error("Company name required"); return; }
     if (!customerType) { toast.error("Customer type required"); return; }
     if (customerType === "other" && !customerTypeOther.trim()) { toast.error("Specify the customer type"); return; }
-    if (!contactName.trim()) { toast.error("Primary contact name required"); return; }
-    if (!contactEmail.trim()) { toast.error("Primary contact email required"); return; }
+    if (!isEdit) {
+      if (!contactName.trim()) { toast.error("Primary contact name required"); return; }
+      if (!contactEmail.trim()) { toast.error("Primary contact email required"); return; }
+    }
 
     setUploading(true);
     let uploadedLogoUrl: string | null = existingLogoUrl;
@@ -194,9 +196,6 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
 
       const payload: any = {
         company: company.trim(),
-        contact_name: contactName.trim(),
-        email: contactEmail.trim(),
-        phone: contactPhone.trim(),
         customer_type: customerType || null,
         customer_type_other: customerType === "other" ? customerTypeOther.trim() : null,
         website_url: domain.trim(),
@@ -211,6 +210,13 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
         pricing_type: pricingType,
         logo_url: uploadedLogoUrl,
       };
+      // Legacy primary contact fields are only written at creation. Edits go
+      // through the Contacts tab so the contacts table is the source of truth.
+      if (!isEdit) {
+        payload.contact_name = contactName.trim();
+        payload.email = contactEmail.trim();
+        payload.phone = contactPhone.trim();
+      }
 
       if (isEdit && account) {
         const before = account;
@@ -236,6 +242,21 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
           action: "created",
           new_value: company.trim(),
         });
+        // Mirror the creation-time primary contact into the contacts table
+        // so the Contacts tab and downstream views are immediately populated.
+        try {
+          await (supabase as any).from("contacts").insert({
+            customer_id: created.id,
+            name: contactName.trim(),
+            email: contactEmail.trim(),
+            phone: contactPhone.trim() || "",
+            title: contactTitle.trim() || null,
+            contact_type: "primary",
+            is_primary: true,
+          });
+        } catch (e) {
+          console.warn("Failed to seed primary contact:", e);
+        }
         // Auto-create empty strategy (status = needs_review)
         try {
           const { data: userData } = await supabase.auth.getUser();
@@ -404,16 +425,27 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
             </div>
           </section>
 
-          {/* Primary Contact */}
-          <section className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Primary Contact</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5"><Label className="text-xs">Contact Name *</Label><Input value={contactName} onChange={(e) => setContactName(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Contact Title</Label><Input value={contactTitle} onChange={(e) => setContactTitle(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Contact Email *</Label><Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">Contact Phone</Label><Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} /></div>
-            </div>
-          </section>
+          {/* Primary Contact — only collected at creation; managed in Contacts tab thereafter */}
+          {!isEdit ? (
+            <section className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Primary Contact</h3>
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                Just one contact to start — add more in the Contacts tab after creation.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">Contact Name *</Label><Input value={contactName} onChange={(e) => setContactName(e.target.value)} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Contact Title</Label><Input value={contactTitle} onChange={(e) => setContactTitle(e.target.value)} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Contact Email *</Label><Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Contact Phone</Label><Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} /></div>
+              </div>
+            </section>
+          ) : (
+            <section className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
+              Manage contacts in the{" "}
+              <span className="font-semibold text-foreground">Contacts tab →</span>{" "}
+              of this account. Single source of truth.
+            </section>
+          )}
 
           {/* Internal Context */}
           <section className="space-y-3">
