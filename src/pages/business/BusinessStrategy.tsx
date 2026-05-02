@@ -523,3 +523,201 @@ function CreateStrategyModal({
     </Dialog>
   );
 }
+
+// === Focus 5 Row ===
+function Focus5Row({
+  quarter, focusEntries, rollup, onEdit, onCardClick,
+}: {
+  quarter: string;
+  focusEntries: any[];
+  rollup: { arrTarget: number; connectorTarget: number; activePlays: number; onTrack: number };
+  onEdit: () => void;
+  onCardClick: (customerId: string) => void;
+}) {
+  const placeholdersNeeded = Math.max(0, 5 - focusEntries.length);
+  const isEmpty = focusEntries.length === 0;
+
+  if (isEmpty) {
+    return (
+      <Card className="border-amber-300 bg-amber-50/40 dark:bg-amber-950/10" data-tour="focus-5-row">
+        <CardContent className="py-8 px-6 text-center max-w-xl mx-auto space-y-3">
+          <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto">
+            <Target className="h-6 w-6 text-amber-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold">Lock in your Focus 5</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Pick the 5 accounts that will get 80% of your time this quarter.
+              Everything else takes a back seat.
+            </p>
+          </div>
+          <Button onClick={onEdit} className="gap-1.5 bg-amber-500 hover:bg-amber-600 text-amber-950">
+            <Target className="h-4 w-4" /> Choose Focus 5 →
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3" data-tour="focus-5-row">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Target className="h-5 w-5 text-amber-600" />
+          <h2 className="text-base font-bold">
+            Focus 5 — <span className="text-amber-700 dark:text-amber-400">{quarter.replace("-", " ")}</span>
+          </h2>
+          <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 text-[10px]">
+            80% of effort
+          </Badge>
+        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="text-xs font-medium text-amber-700 dark:text-amber-400 hover:underline"
+        >
+          Edit Focus 5 →
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {focusEntries.map((e) => {
+          const headline = e.kpis.find((k: any) => /arr/i.test(k.name)) || e.headlineKpi;
+          const pct = headline?.target_value ? Math.min(100, (Number(headline.current_value) / Number(headline.target_value)) * 100) : 0;
+          return (
+            <button
+              key={e.strategy.id}
+              type="button"
+              onClick={() => onCardClick(e.customer.id)}
+              className="text-left rounded-md border-[1.5px] border-amber-400 bg-amber-50/30 dark:bg-amber-950/10 p-3 hover:shadow-md hover:bg-amber-50/60 dark:hover:bg-amber-950/20 transition-all"
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400 flex items-center gap-0.5">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-500" /> Focus
+                </span>
+                <Badge className={cn("border text-[9px]", STRATEGY_HEALTH_COLORS[e.health as StrategyHealth])}>
+                  {STRATEGY_HEALTH_LABELS[e.health as StrategyHealth]}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2 mb-1">
+                <CustomerLogo logoUrl={e.customer.logo_url} companyName={e.customer.company} size="sm" />
+                <p className="text-sm font-semibold truncate">{e.customer.company}</p>
+              </div>
+              <p className="text-[10px] text-muted-foreground truncate mb-2">
+                {(e.strategy.account_types || []).map((t: StrategyAccountType) => ACCOUNT_TYPE_LABELS[t]).join(" · ") || "—"}
+              </p>
+              {headline ? (
+                <>
+                  <p className="text-xs font-medium truncate" title={headline.name}>
+                    {formatKpiValue(headline.target_value, headline.unit)} {headline.name.toLowerCase().includes("arr") ? "ARR target" : "target"}
+                  </p>
+                  <div className="h-1 w-full bg-muted rounded-full overflow-hidden mt-1.5">
+                    <div className="h-full bg-amber-500" style={{ width: `${pct}%` }} />
+                  </div>
+                </>
+              ) : (
+                <p className="text-[10px] text-muted-foreground italic">No KPIs set</p>
+              )}
+            </button>
+          );
+        })}
+        {Array.from({ length: placeholdersNeeded }).map((_, i) => (
+          <button
+            key={`ph-${i}`}
+            type="button"
+            onClick={onEdit}
+            className="rounded-md border-[1.5px] border-dashed border-amber-300/70 bg-amber-50/20 dark:bg-amber-950/5 p-3 flex flex-col items-center justify-center text-amber-700 dark:text-amber-400 hover:bg-amber-50/40 dark:hover:bg-amber-950/15 transition-all min-h-[140px]"
+          >
+            <Plus className="h-5 w-5 mb-1" />
+            <span className="text-[11px] font-medium">Add to Focus 5</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="rounded-md bg-muted/40 px-4 py-2 flex items-center justify-between flex-wrap gap-2 text-xs">
+        <span className="text-muted-foreground">
+          Combined: <span className="font-semibold text-foreground">${(rollup.arrTarget / 1000).toFixed(0)}K ARR target</span> ·{" "}
+          <span className="font-semibold text-foreground">{rollup.connectorTarget.toLocaleString()} connector targets</span> ·{" "}
+          <span className="font-semibold text-foreground">{rollup.activePlays} active plays</span>
+        </span>
+        <span className="font-semibold text-foreground">{rollup.onTrack} of {focusEntries.length} on track</span>
+      </div>
+    </div>
+  );
+}
+
+// === Compact Strategy Card ===
+function StrategyCard({ entry, onClick }: { entry: any; onClick: () => void }) {
+  const { strategy, customer, headlineKpi, activePlays, totalPlays, health } = entry;
+  const isNeedsReview = health === "needs_review";
+  const types = strategy.account_types || [];
+  const visibleTypes = types.slice(0, 2);
+  const extraCount = Math.max(0, types.length - 2);
+  const daysSinceCreated = Math.max(0, Math.floor((Date.now() - new Date(strategy.created_at).getTime()) / 86400000));
+
+  return (
+    <Card
+      className={cn(
+        "cursor-pointer transition-all",
+        isNeedsReview
+          ? "border-dashed border-amber-400 bg-amber-50/40 dark:bg-amber-950/10 hover:bg-amber-50/70 dark:hover:bg-amber-950/20"
+          : "hover:shadow-md"
+      )}
+      onClick={onClick}
+    >
+      <CardContent className="p-3 space-y-2">
+        <div className="flex items-start gap-2">
+          <CustomerLogo logoUrl={customer.logo_url} companyName={customer.company} size="sm" />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm truncate" title={customer.company}>{customer.company}</p>
+            {!isNeedsReview && (
+              <div className="flex flex-wrap gap-1 mt-0.5">
+                {visibleTypes.map((t: StrategyAccountType) => (
+                  <Badge key={t} variant="secondary" className="text-[9px]">{ACCOUNT_TYPE_LABELS[t]}</Badge>
+                ))}
+                {extraCount > 0 && <Badge variant="outline" className="text-[9px]">+{extraCount}</Badge>}
+              </div>
+            )}
+          </div>
+          {isNeedsReview ? (
+            <Badge className="border border-amber-300 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 text-[9px]">⚠ Review</Badge>
+          ) : (
+            <Badge className={cn("border text-[9px]", STRATEGY_HEALTH_COLORS[health as StrategyHealth])}>
+              {STRATEGY_HEALTH_LABELS[health as StrategyHealth]}
+            </Badge>
+          )}
+        </div>
+        {!isNeedsReview && headlineKpi && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span className="font-medium truncate" title={headlineKpi.name}>{headlineKpi.name}</span>
+              <span className="text-muted-foreground shrink-0 ml-2">
+                {formatKpiValue(headlineKpi.current_value, headlineKpi.unit)} / {formatKpiValue(headlineKpi.target_value, headlineKpi.unit)}
+              </span>
+            </div>
+            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary" style={{ width: `${Math.min(100, headlineKpi.target_value ? (Number(headlineKpi.current_value) / Number(headlineKpi.target_value)) * 100 : 0)}%` }} />
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+          {isNeedsReview ? (
+            <>
+              <span>No plays yet</span>
+              <span>Created {daysSinceCreated === 0 ? "today" : `${daysSinceCreated}d ago`}</span>
+            </>
+          ) : (
+            <>
+              <span>{activePlays}/{totalPlays} plays</span>
+              <span>
+                {strategy.last_reviewed_at
+                  ? formatDistanceToNow(new Date(strategy.last_reviewed_at), { addSuffix: true })
+                  : "Never reviewed"}
+              </span>
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
