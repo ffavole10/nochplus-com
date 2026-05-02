@@ -157,7 +157,7 @@ export default function BusinessAccounts() {
       });
     }
     return list;
-  }, [customers, accountTypes, relationship, status, selectedCats, search, focusOnly, focusFirst, focusCustomerIds]);
+  }, [customers, accountTypes, relationship, status, selectedCats, search, focusOnly, focusFirst, focusCustomerIds, primaryByCustomer]);
 
   const toggleCat = (cat: string) =>
     setSelectedCats((p) => (p.includes(cat) ? p.filter((x) => x !== cat) : [...p, cat]));
