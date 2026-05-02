@@ -236,6 +236,16 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
           action: "created",
           new_value: company.trim(),
         });
+        // Auto-create empty strategy (status = needs_review)
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          await (supabase as any).from("account_strategies").insert({
+            customer_id: created.id,
+            owner: userData?.user?.email || null,
+          });
+        } catch (e) {
+          console.warn("Failed to auto-create strategy:", e);
+        }
         onCreated?.(created);
       }
       onOpenChange(false);
