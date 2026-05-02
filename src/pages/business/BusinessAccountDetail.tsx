@@ -32,6 +32,7 @@ import {
   FilesTab,
 } from "@/components/business/account360/Tabs";
 import { ActivityTab } from "@/components/business/account360/ActivityTab";
+import { FocusRibbon } from "@/components/business/strategy/FocusRibbon";
 
 function ChargersEmptyReliability({ accountName, onLink }: { accountName: string; onLink: () => void }) {
   return (
