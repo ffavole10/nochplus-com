@@ -36,6 +36,8 @@ export default function BusinessAccounts() {
   const { data: allMeta = [] } = useAllPartnerMeta();
   const { data: allDeals = [] } = useDeals();
   const { data: campaigns = [] } = useCampaigns();
+  const customerIds = useMemo(() => customers.map((c) => c.id), [customers]);
+  const { data: primaryByCustomer = {} } = usePrimaryContactsByCustomer(customerIds);
 
   const [search, setSearch] = useState("");
   const [relationship, setRelationship] = useState<RelationshipFilter>("all");
