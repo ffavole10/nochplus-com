@@ -120,22 +120,19 @@ export default function BusinessAccounts() {
   }, [customers, accountTypes]);
 
   const filtered = useMemo(() => {
-    return customers.filter((c) => {
+    let list = customers.filter((c) => {
       const types = accountTypes[c.id] || [];
-      // Relationship filter
       if (relationship !== "all") {
         if (relationship === "both" && types.length < 2) return false;
         if (relationship === "customer" && !types.includes("customer")) return false;
         if (relationship === "partner" && !types.includes("partner")) return false;
       }
-      // Status
       if (status !== "all" && c.status !== status) return false;
-      // Categories
       if (selectedCats.length > 0) {
         const cats = ((c as any).categories as string[]) || [];
         if (!selectedCats.some((sc) => cats.includes(sc))) return false;
       }
-      // Search
+      if (focusOnly && !focusCustomerIds.has(c.id)) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         if (
@@ -146,7 +143,15 @@ export default function BusinessAccounts() {
       }
       return true;
     });
-  }, [customers, accountTypes, relationship, status, selectedCats, search]);
+    if (focusFirst) {
+      list = [...list].sort((a, b) => {
+        const aF = focusCustomerIds.has(a.id) ? 1 : 0;
+        const bF = focusCustomerIds.has(b.id) ? 1 : 0;
+        return bF - aF;
+      });
+    }
+    return list;
+  }, [customers, accountTypes, relationship, status, selectedCats, search, focusOnly, focusFirst, focusCustomerIds]);
 
   const toggleCat = (cat: string) =>
     setSelectedCats((p) => (p.includes(cat) ? p.filter((x) => x !== cat) : [...p, cat]));
