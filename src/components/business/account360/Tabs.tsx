@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import { TabHeader, TabEmpty, TabFooterLink, StatBox } from "./shared";
 import { ServiceTicket } from "@/types/serviceTicket";
-import { useContacts, useDeleteContact } from "@/hooks/useContacts";
+import { useContacts, useDeleteContact, useUpdateContact } from "@/hooks/useContacts";
 import { useDeals } from "@/hooks/useDeals";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
