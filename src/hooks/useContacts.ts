@@ -63,7 +63,7 @@ export function useCreateContact() {
           phone: contact.phone || "",
           role: contact.role ?? null,
           title: (contact as any).title ?? null,
-          contact_type: contact.contact_type ?? "other",
+          contact_type: contact.contact_type ?? "champion",
           notes: contact.notes ?? null,
           is_primary: !!contact.is_primary,
         } as any)
