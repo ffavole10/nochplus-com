@@ -172,8 +172,10 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
     if (!company.trim()) { toast.error("Company name required"); return; }
     if (!customerType) { toast.error("Customer type required"); return; }
     if (customerType === "other" && !customerTypeOther.trim()) { toast.error("Specify the customer type"); return; }
-    if (!contactName.trim()) { toast.error("Primary contact name required"); return; }
-    if (!contactEmail.trim()) { toast.error("Primary contact email required"); return; }
+    if (!isEdit) {
+      if (!contactName.trim()) { toast.error("Primary contact name required"); return; }
+      if (!contactEmail.trim()) { toast.error("Primary contact email required"); return; }
+    }
 
     setUploading(true);
     let uploadedLogoUrl: string | null = existingLogoUrl;
@@ -194,9 +196,6 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
 
       const payload: any = {
         company: company.trim(),
-        contact_name: contactName.trim(),
-        email: contactEmail.trim(),
-        phone: contactPhone.trim(),
         customer_type: customerType || null,
         customer_type_other: customerType === "other" ? customerTypeOther.trim() : null,
         website_url: domain.trim(),
@@ -211,6 +210,13 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
         pricing_type: pricingType,
         logo_url: uploadedLogoUrl,
       };
+      // Legacy primary contact fields are only written at creation. Edits go
+      // through the Contacts tab so the contacts table is the source of truth.
+      if (!isEdit) {
+        payload.contact_name = contactName.trim();
+        payload.email = contactEmail.trim();
+        payload.phone = contactPhone.trim();
+      }
 
       if (isEdit && account) {
         const before = account;
