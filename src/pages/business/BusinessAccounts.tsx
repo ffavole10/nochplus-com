@@ -402,8 +402,8 @@ export default function BusinessAccounts() {
                           <td className="py-3 px-4 text-center font-medium">{c.ticket_count || 0}</td>
                           <td className="py-3 px-4">
                             <div className="text-xs">
-                              <p>{c.email}</p>
-                              <p className="text-muted-foreground">{c.phone}</p>
+                              <p>{primaryByCustomer[c.id]?.email || c.email || "—"}</p>
+                              <p className="text-muted-foreground">{primaryByCustomer[c.id]?.phone || c.phone || "—"}</p>
                             </div>
                           </td>
                         </>
