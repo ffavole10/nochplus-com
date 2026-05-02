@@ -251,7 +251,7 @@ export default function GrowthPipeline() {
 
       {/* ============ Pipeline Insights ============ */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <InsightTile label="Pipeline Value" value={`$${insights.totalPipelineValue.toLocaleString()}`} accent="text-primary" />
+        <InsightTile label="Pipeline Value" value={formatCurrency(insights.totalPipelineValue)} accent="text-primary" />
         <InsightTile label="Avg Days in Stage" value={`${insights.avgDaysInStage}d`} />
         <InsightTile label="At Risk" value={String(insights.atRisk)} accent={insights.atRisk > 0 ? "text-rose-600" : ""} icon={insights.atRisk > 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : undefined} />
         <InsightTile label="Won (this month)" value={String(insights.wonThisMonth)} accent="text-emerald-600" />
