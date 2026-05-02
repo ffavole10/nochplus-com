@@ -50,6 +50,41 @@ Deno.serve(async (req: Request) => {
       .eq("customer_id", (deal as any).partner_id)
       .maybeSingle();
 
+    // Pull account strategy context
+    const { data: strategy } = await supabase
+      .from("account_strategies")
+      .select("*")
+      .eq("customer_id", (deal as any).partner_id)
+      .maybeSingle();
+    let strategyContext = "";
+    if (strategy) {
+      const { data: sPlays } = await supabase
+        .from("strategy_plays")
+        .select("title,status,owner,due_date")
+        .eq("strategy_id", (strategy as any).id)
+        .in("status", ["not_started", "in_progress"])
+        .limit(3);
+      const { data: sKpis } = await supabase
+        .from("strategy_kpis")
+        .select("name,current_value,target_value,is_deferred,is_primary")
+        .eq("strategy_id", (strategy as any).id);
+      const atRisk = (sKpis || []).filter((k: any) => {
+        if (k.is_deferred || !k.is_primary || !k.target_value) return false;
+        return Number(k.current_value) / Number(k.target_value) < 0.75;
+      });
+      strategyContext = `
+
+ACCOUNT STRATEGY
+- North Star: ${(strategy as any).north_star || "—"}
+- Account types: ${((strategy as any).account_types || []).join(", ") || "—"}
+- Current position: ${(strategy as any).current_position}
+- Top open plays: ${(sPlays || []).map((p: any) => `${p.title} (${p.status})`).join("; ") || "—"}
+- KPIs at risk: ${atRisk.map((k: any) => `${k.name} ${k.current_value}/${k.target_value}`).join("; ") || "none"}
+
+When generating talking points and recommended next actions, REFERENCE the account strategy above. If the strategy has open plays, suggest actions that advance them.`;
+    }
+
+
     const customer = (deal as any).customers || {};
 
     const prompt = `You are Scribe, the NOCH+ pipeline intelligence agent. Produce a sharp, actionable account brief for the rep working this deal.
