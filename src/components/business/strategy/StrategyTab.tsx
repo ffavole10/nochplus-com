@@ -71,6 +71,19 @@ export function StrategyTab({ account }: Props) {
     ensure.mutate(account.id);
   }
 
+  // Auto-open wizard if ?wizard=1 in URL
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("wizard") === "1" && strategy) {
+      setWizardOpen(true);
+      params.delete("wizard");
+      const qs = params.toString();
+      const newUrl = window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, [strategy]);
+
   if (isLoading || !strategy) {
     return (
       <div className="flex justify-center py-12">
