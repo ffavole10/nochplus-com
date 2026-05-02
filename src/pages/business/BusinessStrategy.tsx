@@ -84,6 +84,10 @@ export default function BusinessStrategy() {
   const [healthFilter, setHealthFilter] = useState<StrategyHealth | "all">("all");
   const [sort, setSort] = useState<SortKey>("health");
   const [createOpen, setCreateOpen] = useState(false);
+  const [focusManagerOpen, setFocusManagerOpen] = useState(false);
+  const [showAllOthers, setShowAllOthers] = useState(false);
+  const focusMode = useFocusMode();
+  const quarter = currentQuarter();
 
   const filtersActive =
     !!search.trim() || typeFilter !== "all" || ownerFilter !== "all" || healthFilter !== "all";
