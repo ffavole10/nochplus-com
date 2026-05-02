@@ -848,6 +848,7 @@ export function ContactsTab({
 }) {
   const { data: contacts = [] } = useContacts(account.id);
   const deleteContact = useDeleteContact();
+  const updateContact = useUpdateContact();
   const { confirm, dialogProps } = useConfirmDialog();
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
