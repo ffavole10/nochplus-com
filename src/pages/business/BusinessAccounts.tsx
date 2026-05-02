@@ -381,7 +381,7 @@ export default function BusinessAccounts() {
                                 )}
                               </span>
                             </p>
-                            <p className="text-xs text-muted-foreground">{c.contact_name || "—"}</p>
+                            <p className="text-xs text-muted-foreground">{primaryByCustomer[c.id]?.name || "—"}</p>
                           </div>
                         </div>
                       </td>
