@@ -78,6 +78,8 @@ function getCampaignPageTitle(pathname: string): string | null {
 export function PlatformHeader() {
   const { session } = useAuth();
   const location = useLocation();
+  const focusMode = useFocusMode();
+  const navigateRouter = useNavigate();
   const { selectedCampaignId, selectedCampaignName, setSelectedCampaignName, selectedCustomer } = useCampaignContext();
   const { filters, updateFilter } = useFilters();
   const [reportModalOpen, setReportModalOpen] = useState(false);
