@@ -11,23 +11,25 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { CustomerLogo } from "@/components/CustomerLogo";
 import {
   Search, AlertTriangle, Target, BarChart3, Activity, Clock,
-  HelpCircle, Plus, Sparkles, X,
+  HelpCircle, Plus, Sparkles, X, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAllStrategies, useTourCompleted, useMarkTourCompleted } from "@/hooks/useStrategy";
+import { useFocusMode } from "@/hooks/useFocus5";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useDeals } from "@/hooks/useDeals";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import {
   ACCOUNT_TYPE_LABELS, STRATEGY_HEALTH_COLORS, STRATEGY_HEALTH_LABELS,
-  computeStrategyHealth, formatKpiValue,
+  computeStrategyHealth, formatKpiValue, currentQuarter, FOCUS_5_LIMIT,
   type StrategyAccountType, type StrategyHealth,
 } from "@/types/strategy";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { formatDistanceToNow } from "date-fns";
 import { runPortfolioTour } from "@/components/business/strategy/portfolioTour";
 import { runStrategyTour } from "@/components/business/strategy/strategyTour";
+import { Focus5ManagerModal } from "@/components/business/strategy/Focus5ManagerModal";
 
 type SortKey = "health" | "arr" | "reviewed" | "name";
 
