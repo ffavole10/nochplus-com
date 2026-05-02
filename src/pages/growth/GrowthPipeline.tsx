@@ -354,6 +354,8 @@ export default function GrowthPipeline() {
                         const partner = customerMap[deal.partner_id];
                         const ops = opsMap[deal.partner_id];
                         const days = daysInStage(deal);
+                        const isFocus = focusCustomerIds.has(deal.partner_id);
+                        const focusMeta = focusMetaByCustomer[deal.partner_id];
                         return (
                           <Draggable key={deal.id} draggableId={deal.id} index={index}>
                             {(prov, snap) => (
@@ -361,15 +363,27 @@ export default function GrowthPipeline() {
                                 ref={prov.innerRef}
                                 {...prov.draggableProps}
                                 {...prov.dragHandleProps}
-                                className={`p-3 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all group ${
-                                  snap.isDragging ? "shadow-lg rotate-1" : ""
-                                }`}
+                                className={cn(
+                                  "p-3 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all group",
+                                  snap.isDragging ? "shadow-lg rotate-1" : "",
+                                  isFocus && "border-l-[3px] border-l-amber-400"
+                                )}
                                 onClick={() => navigate(`/business/pipeline/${deal.id}`)}
                               >
                                 <div className="flex items-start gap-2 mb-2">
                                   {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
                                   <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-muted-foreground truncate flex items-center gap-1.5">
+                                      {isFocus && (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Star className="h-3 w-3 fill-amber-400 text-amber-500 shrink-0" />
+                                          </TooltipTrigger>
+                                          <TooltipContent side="top" className="text-xs z-[2000]">
+                                            Focus 5 — {focusMeta?.quarter || "this quarter"}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      )}
                                       <span className="truncate">{partner?.company || "Unknown"}</span>
                                       <CustomerTypeBadge type={(partner as any)?.customer_type} typeOther={(partner as any)?.customer_type_other} />
                                     </p>
