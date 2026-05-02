@@ -571,6 +571,7 @@ export default function GrowthPipeline() {
         </DialogContent>
       </Dialog>
     </div>
+    </TooltipProvider>
   );
 }
 
