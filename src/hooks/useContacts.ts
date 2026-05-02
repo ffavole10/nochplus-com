@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logAccountActivity } from "@/lib/accountActivity";
+import type { ContactType } from "@/lib/contactTypes";
 
-export type ContactType = "primary" | "decision_maker" | "technical" | "billing" | "operations" | "other";
+export type { ContactType };
 
 export type Contact = {
   id: string;
@@ -62,7 +63,7 @@ export function useCreateContact() {
           phone: contact.phone || "",
           role: contact.role ?? null,
           title: (contact as any).title ?? null,
-          contact_type: contact.contact_type ?? "other",
+          contact_type: contact.contact_type ?? "champion",
           notes: contact.notes ?? null,
           is_primary: !!contact.is_primary,
         } as any)

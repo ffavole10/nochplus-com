@@ -42,11 +42,18 @@ import {
 } from "lucide-react";
 import { TabHeader, TabEmpty, TabFooterLink, StatBox } from "./shared";
 import { ServiceTicket } from "@/types/serviceTicket";
-import { useContacts, useDeleteContact } from "@/hooks/useContacts";
+import { useContacts, useDeleteContact, useUpdateContact } from "@/hooks/useContacts";
 import { useDeals } from "@/hooks/useDeals";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ContactFormModal } from "@/components/business/ContactFormModal";
+import {
+  CONTACT_TYPE_ORDER,
+  CONTACT_TYPE_LABELS,
+  CONTACT_TYPE_SHORT,
+  CONTACT_TYPE_PILL,
+  type ContactType,
+} from "@/lib/contactTypes";
 import { toast } from "sonner";
 import WorkOrderDetailModal from "@/components/field-capture/WorkOrderDetailModal";
 
@@ -841,10 +848,12 @@ export function ContactsTab({
 }) {
   const { data: contacts = [] } = useContacts(account.id);
   const deleteContact = useDeleteContact();
+  const updateContact = useUpdateContact();
   const { confirm, dialogProps } = useConfirmDialog();
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [defaultType, setDefaultType] = useState<ContactType | undefined>(undefined);
 
   // Scroll the focused contact into view + apply a temporary highlight pulse.
   useEffect(() => {
@@ -875,82 +884,155 @@ export function ContactsTab({
     deleteContact.mutate({ id: c.id, customer_id: account.id, name: c.name });
   };
 
-  const onAdd = () => { setEditing(null); setFormOpen(true); };
-  const onEdit = (c: any) => { setEditing(c); setFormOpen(true); };
+  const handleSetPrimary = async (c: any) => {
+    if (c.is_primary) return;
+    const current = contacts.find((x: any) => x.is_primary);
+    if (current) {
+      const ok = await confirm({
+        title: "Replace primary contact?",
+        description: `${current.name} is currently primary. Replace them with ${c.name}?`,
+        confirmLabel: "Replace",
+      });
+      if (!ok) return;
+    }
+    updateContact.mutate({ id: c.id, customer_id: account.id, is_primary: true, name: c.name });
+  };
+
+  const onAdd = (type?: ContactType) => {
+    setEditing(null);
+    setDefaultType(type);
+    setFormOpen(true);
+  };
+  const onEdit = (c: any) => {
+    setEditing(c);
+    setDefaultType(undefined);
+    setFormOpen(true);
+  };
+
+  // Group contacts by type. Primary contacts always go in the "primary" group
+  // regardless of their contact_type tag (UX: there is one primary).
+  const grouped: Record<ContactType, any[]> = {
+    primary: [], decision_maker: [], champion: [],
+    technical_buyer: [], operations_contact: [], billing_procurement: [],
+  };
+  for (const c of contacts as any[]) {
+    if (c.is_primary) {
+      grouped.primary.push(c);
+    } else {
+      const t = (c.contact_type as ContactType) || "champion";
+      (grouped[t] || grouped.champion).push(c);
+    }
+  }
+
+  const renderCard = (c: any) => {
+    const isHighlighted = highlightId === c.id;
+    const type = (c.is_primary ? "primary" : (c.contact_type || "champion")) as ContactType;
+    return (
+      <Card
+        key={c.id}
+        id={`contact-card-${c.id}`}
+        className={`group hover:border-primary/40 transition-all duration-300 ${
+          isHighlighted ? "ring-2 ring-primary border-primary animate-pulse" : ""
+        }`}
+      >
+        <CardContent className="p-4 flex gap-3">
+          <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-xs flex-shrink-0">
+            {initials(c.name || "?")}
+          </div>
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="font-semibold text-sm truncate">{c.name}</p>
+              <span className={`text-[9px] font-semibold uppercase tracking-wide border rounded-full px-1.5 py-0.5 ${CONTACT_TYPE_PILL[type]}`}>
+                {CONTACT_TYPE_LABELS[type]}
+              </span>
+            </div>
+            {c.title && <p className="text-[11px] text-muted-foreground">{c.title}</p>}
+            {c.email && (
+              <a href={`mailto:${c.email}`} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline">
+                <Mail className="h-3 w-3" /> {c.email}
+              </a>
+            )}
+            {c.phone && (
+              <a href={`tel:${c.phone}`} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline block">
+                <Phone className="h-3 w-3" /> {c.phone}
+              </a>
+            )}
+            {c.notes && (
+              <p className="text-[11px] text-muted-foreground line-clamp-2 pt-0.5">{c.notes}</p>
+            )}
+          </div>
+          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {!c.is_primary && (
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-amber-700 hover:text-amber-800" onClick={() => handleSetPrimary(c)} aria-label="Set as primary" title="Set as primary">
+                ★
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(c)} aria-label="Edit contact">
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(c)} aria-label="Remove contact">
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div>
       <TabHeader
-        title="Contacts"
+        title="Internal Contacts"
         count={contacts.length}
         subhead={`People at ${account.company}`}
         right={
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={onAdd}>
-            <Plus className="h-3.5 w-3.5" /> Add contact
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onAdd()}>
+            <Plus className="h-3.5 w-3.5" /> Add Contact
           </Button>
         }
       />
+
       {contacts.length === 0 ? (
         <TabEmpty
           label="No contacts yet for this account."
-          cta={<Button size="sm" onClick={onAdd} className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Add the first contact</Button>}
+          cta={<Button size="sm" onClick={() => onAdd()} className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Add first contact</Button>}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {contacts.map((c: any) => {
-            const isHighlighted = highlightId === c.id;
+        <div className="space-y-6">
+          {CONTACT_TYPE_ORDER.map((type) => {
+            const items = grouped[type];
             return (
-              <Card
-                key={c.id}
-                id={`contact-card-${c.id}`}
-                className={`hover:border-primary/40 transition-all duration-300 ${
-                  isHighlighted ? "ring-2 ring-primary border-primary animate-pulse" : ""
-                }`}
-              >
-                <CardContent className="p-4 flex gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-xs flex-shrink-0">
-                    {initials(c.name || "?")}
+              <section key={type} className="space-y-2">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  {CONTACT_TYPE_SHORT[type]}
+                </h3>
+                {items.length === 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => onAdd(type)}
+                    className="text-xs text-muted-foreground italic hover:text-foreground hover:underline"
+                  >
+                    No {CONTACT_TYPE_LABELS[type].toLowerCase()} yet. + Add
+                  </button>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {items.map(renderCard)}
                   </div>
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="font-semibold text-sm truncate">{c.name}</p>
-                      {c.is_primary && <Badge variant="default" className="text-[9px]">primary</Badge>}
-                      {c.contact_type && c.contact_type !== "other" && !c.is_primary && (
-                        <Badge variant="outline" className="text-[9px] capitalize">{String(c.contact_type).replace(/_/g, " ")}</Badge>
-                      )}
-                    </div>
-                    {c.title && <p className="text-[11px] text-muted-foreground">{c.title}</p>}
-                    {c.email && (
-                      <a href={`mailto:${c.email}`} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline">
-                        <Mail className="h-3 w-3" /> {c.email}
-                      </a>
-                    )}
-                    {c.phone && (
-                      <a href={`tel:${c.phone}`} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline block">
-                        <Phone className="h-3 w-3" /> {c.phone}
-                      </a>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(c)} aria-label="Edit contact">
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(c)} aria-label="Remove contact">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                )}
+              </section>
             );
           })}
         </div>
       )}
+
       <ContactFormModal
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(o) => { setFormOpen(o); if (!o) setDefaultType(undefined); }}
         customerId={account.id}
         contact={editing}
         forcePrimary={contacts.length === 0 && !editing}
+        defaultType={defaultType}
+        existingPrimary={contacts.find((x: any) => x.is_primary && (!editing || x.id !== editing.id)) || null}
       />
       <ConfirmDialog {...dialogProps} />
     </div>

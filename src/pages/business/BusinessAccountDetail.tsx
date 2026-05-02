@@ -94,6 +94,16 @@ export default function BusinessAccountDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  // Welcome toast after account creation flow lands on Contacts tab.
+  useEffect(() => {
+    if (searchParams.get("just_created") === "1" && account) {
+      import("sonner").then(({ toast }) =>
+        toast.success("Account created. Add more contacts here as your relationship grows.")
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account?.id]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
