@@ -117,7 +117,7 @@ Return concise markdown with these sections:
 ## Why Now (urgency drivers)
 ## Talking Points (3–5 bullets)
 ## Suggested Next Step
-## Risks & Watch-outs`;
+## Risks & Watch-outs${strategyContext}`;
 
     const claudeResp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
