@@ -448,11 +448,30 @@ export default function GrowthPipeline() {
                   const partner = customerMap[d.partner_id];
                   const ops = opsMap[d.partner_id];
                   const days = daysInStage(d);
+                  const isFocus = focusCustomerIds.has(d.partner_id);
+                  const focusMeta = focusMetaByCustomer[d.partner_id];
                   return (
-                    <tr key={d.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/business/pipeline/${d.id}`)}>
+                    <tr
+                      key={d.id}
+                      className={cn(
+                        "border-b border-border/50 hover:bg-muted/30 cursor-pointer",
+                        isFocus && "bg-amber-50/40 dark:bg-amber-950/10"
+                      )}
+                      onClick={() => navigate(`/business/pipeline/${d.id}`)}
+                    >
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
+                          {isFocus && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500 shrink-0" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs z-[2000]">
+                                Focus 5 — {focusMeta?.quarter || "this quarter"}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                           <span className="font-medium">{partner?.company || "—"}</span>
                           <CustomerTypeBadge type={(partner as any)?.customer_type} typeOther={(partner as any)?.customer_type_other} />
                         </div>
