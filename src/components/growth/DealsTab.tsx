@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/lib/formatters";
 import { useDeals, useCreateDeal } from "@/hooks/useDeals";
 import { useGrowthUsers, useGrowthUserMap } from "@/hooks/useGrowthUsers";
 import { DEAL_STAGES, DEAL_STAGE_COLORS, type DealStage } from "@/types/growth";
@@ -92,7 +93,7 @@ export function DealsTab({ partnerId }: Props) {
                   <tr key={d.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/growth/deals/${d.id}`)}>
                     <td className="py-3 px-4 font-medium">{d.deal_name}</td>
                     <td className="py-3 px-4"><Badge variant="outline" className={`text-xs ${DEAL_STAGE_COLORS[d.stage]}`}>{d.stage}</Badge></td>
-                    <td className="py-3 px-4 text-right font-medium">${Number(d.value).toLocaleString()}</td>
+                    <td className="py-3 px-4 text-right font-medium">{formatCurrency(Number(d.value))}</td>
                     <td className="py-3 px-4 text-right">{d.probability}%</td>
                     <td className="py-3 px-4 text-xs">
                       <div>{d.next_action || "—"}</div>

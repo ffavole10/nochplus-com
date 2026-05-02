@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/lib/formatters";
 import { Building2, AlertTriangle, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -227,7 +228,7 @@ function AccountCard({ customer, label, badgeClass }: { customer: Customer; labe
       </div>
       <div className="text-[11px] text-muted-foreground grid grid-cols-2 gap-1">
         <span>Tickets: <strong className="text-foreground">{customer.ticket_count || 0}</strong></span>
-        <span>Revenue: <strong className="text-foreground">${Number(customer.total_revenue || 0).toLocaleString()}</strong></span>
+        <span>Revenue: <strong className="text-foreground">{formatCurrency(Number(customer.total_revenue || 0))}</strong></span>
         <span>Status: <strong className="text-foreground">{customer.status}</strong></span>
         <span>Created: <strong className="text-foreground">{new Date(customer.created_at).toLocaleDateString()}</strong></span>
       </div>

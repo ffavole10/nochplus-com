@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { formatCurrency } from "@/lib/formatters";
 import { useDeal, useUpdateDeal, useDeleteDeal, useUpdateDealStage } from "@/hooks/useDeals";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useGrowthUsers } from "@/hooks/useGrowthUsers";
@@ -320,7 +321,7 @@ export default function GrowthDealDetail() {
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">{deal.deal_name}</p>
               <div className="flex items-center gap-4 mt-3 text-xs flex-wrap">
-                <Meta label="Value" value={`$${Number(deal.value || 0).toLocaleString()}`} accent="text-primary" />
+                <Meta label="Value" value={formatCurrency(Number(deal.value || 0))} accent="text-primary" />
                 <Meta
                   label="Predicted Close"
                   value={(deal as any).predicted_close_date
@@ -411,7 +412,7 @@ export default function GrowthDealDetail() {
               />
               <OpsTile
                 label="Est. NOCH+ savings"
-                value={`~$${Number(ops.estimated_monthly_savings || 0).toLocaleString()}/mo`}
+                value={`~${formatCurrency(Number(ops.estimated_monthly_savings || 0))}/mo`}
                 accent="text-emerald-700"
               />
               <OpsTile label="Sites" value={String(ops.sites_count)} />
@@ -624,7 +625,7 @@ export default function GrowthDealDetail() {
       <Card>
         <CardContent className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
           <Meta label="Predicted Close" value={(deal as any).predicted_close_date ? format(new Date((deal as any).predicted_close_date), "MMM d, yyyy") : "—"} />
-          <Meta label="Predicted ARR" value={`$${Number((deal as any).predicted_arr || 0).toLocaleString()}`} />
+          <Meta label="Predicted ARR" value={formatCurrency(Number((deal as any).predicted_arr || 0))} />
           <Meta label="Created" value={format(new Date(deal.created_at), "MMM d, yyyy")} />
           <Meta label="Last updated" value={format(new Date(deal.updated_at), "MMM d, yyyy h:mm a")} />
           {deal.stage === "Closed Lost" && (deal as any).loss_reason && (

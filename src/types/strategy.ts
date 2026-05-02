@@ -269,11 +269,13 @@ export const STRATEGY_HEALTH_COLORS: Record<StrategyHealth, string> = {
   needs_review: "bg-slate-500/10 text-slate-700 border-slate-300 dark:text-slate-400",
 };
 
+import { formatCurrency as _formatCurrency } from "@/lib/formatters";
+
 export function formatKpiValue(value: number | null | undefined, unit: StrategyKpiUnit): string {
   const v = Number(value ?? 0);
   switch (unit) {
     case "dollar":
-      return v >= 1000 ? `$${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}k` : `$${v.toLocaleString()}`;
+      return _formatCurrency(v);
     case "percent":
       return `${v}%`;
     case "yes_no":

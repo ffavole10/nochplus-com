@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/lib/formatters";
 import { Building2, Users, Eye, Plus, Search, AlertTriangle, Star } from "lucide-react";
 import { useFocus5CustomerIds } from "@/hooks/useFocus5";
 import { useAllStrategies } from "@/hooks/useStrategy";
@@ -418,7 +419,7 @@ export default function BusinessAccounts() {
                             {meta?.motion ? MOTION_LABELS[meta.motion as GrowthMotion] : "—"}
                           </td>
                           <td className="py-3 px-4 text-center font-medium">{stats.count}</td>
-                          <td className="py-3 px-4 text-right font-medium">${stats.value.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-right font-medium">{formatCurrency(stats.value)}</td>
                           <td className="py-3 px-4 text-xs">{meta?.nochplus_timing || "—"}</td>
                         </>
                       )}

@@ -28,7 +28,8 @@ const TYPE_OPTIONS: { value: DealType; label: string; sub: string; icon: typeof 
   { value: "hybrid", label: "Hybrid", sub: "Both", icon: Layers },
 ];
 
-const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
+import { formatCurrency } from "@/lib/formatters";
+const fmt = (n: number) => formatCurrency(n);
 
 export function DealEconomicsFields({ value, onChange }: Props) {
   const set = (patch: Partial<DealEconomicsForm>) => onChange({ ...value, ...patch });

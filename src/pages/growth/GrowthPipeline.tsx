@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LayoutGrid, List, Search, TrendingUp, Loader2, Plus, AlertTriangle, Star } from "lucide-react";
 import { differenceInDays } from "date-fns";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 function daysInStage(deal: Deal): number {
@@ -250,7 +251,7 @@ export default function GrowthPipeline() {
 
       {/* ============ Pipeline Insights ============ */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <InsightTile label="Pipeline Value" value={`$${insights.totalPipelineValue.toLocaleString()}`} accent="text-primary" />
+        <InsightTile label="Pipeline Value" value={formatCurrency(insights.totalPipelineValue)} accent="text-primary" />
         <InsightTile label="Avg Days in Stage" value={`${insights.avgDaysInStage}d`} />
         <InsightTile label="At Risk" value={String(insights.atRisk)} accent={insights.atRisk > 0 ? "text-rose-600" : ""} icon={insights.atRisk > 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : undefined} />
         <InsightTile label="Won (this month)" value={String(insights.wonThisMonth)} accent="text-emerald-600" />
@@ -272,7 +273,7 @@ export default function GrowthPipeline() {
                   <div className="absolute inset-y-0 left-0 bg-primary/70" style={{ width: `${pct}%` }} />
                 </div>
                 <div className="w-32 text-right tabular-nums text-muted-foreground">
-                  {t.count} · ${t.value.toLocaleString()}
+                  {t.count} · {formatCurrency(t.value)}
                 </div>
               </div>
             );
@@ -329,7 +330,7 @@ export default function GrowthPipeline() {
                     <Badge variant="secondary" className="text-[10px]">{stageTotals[stage].count}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                    <span>${stageTotals[stage].value.toLocaleString()}</span>
+                    <span>{formatCurrency(stageTotals[stage].value)}</span>
                     {focusCountByStage[stage] > 0 && (
                       <>
                         <span className="opacity-40">·</span>
@@ -391,7 +392,7 @@ export default function GrowthPipeline() {
                                   </div>
                                 </div>
                                 <div className="flex items-center justify-between mb-2">
-                                  <span className="text-sm font-bold text-primary">${Number(deal.value).toLocaleString()}</span>
+                                  <span className="text-sm font-bold text-primary">{formatCurrency(Number(deal.value))}</span>
                                   <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded border", ageColor(days))}>{days}d in stage</span>
                                 </div>
                                 {deal.next_action && (
@@ -478,7 +479,7 @@ export default function GrowthPipeline() {
                       </td>
                       <td className="py-3 px-4 font-medium">{d.deal_name}</td>
                       <td className="py-3 px-4"><Badge variant="outline" className={`text-xs ${DEAL_STAGE_COLORS[d.stage]}`}>{d.stage}</Badge></td>
-                      <td className="py-3 px-4 text-right font-medium">${Number(d.value).toLocaleString()}</td>
+                      <td className="py-3 px-4 text-right font-medium">{formatCurrency(Number(d.value))}</td>
                       <td className="py-3 px-4 text-right">
                         <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded border", ageColor(days))}>{days}d</span>
                       </td>

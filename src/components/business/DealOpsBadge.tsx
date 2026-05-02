@@ -1,5 +1,6 @@
 import { Zap, Wrench, DollarSign, Info } from "lucide-react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { formatCurrency } from "@/lib/formatters";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { AccountOpsSnapshot } from "@/types/growth";
@@ -58,7 +59,7 @@ export function DealOpsBadge({ ops, customerName, lastBriefAt, buyingSignal }: P
               <span className="text-muted-foreground">·</span>
               <DollarSign className="h-3 w-3 text-emerald-600 shrink-0" />
               <span className="text-emerald-700 font-medium tabular-nums">
-                ~${Number(ops!.estimated_monthly_savings || 0).toLocaleString()}/mo
+                ~{formatCurrency(Number(ops!.estimated_monthly_savings || 0))}/mo
               </span>
             </>
           ) : (
@@ -101,7 +102,7 @@ export function DealOpsBadge({ ops, customerName, lastBriefAt, buyingSignal }: P
               </div>
               <Row
                 label="Est. NOCH+ savings"
-                value={`~$${Number(ops!.estimated_monthly_savings || 0).toLocaleString()}/mo`}
+                value={`~${formatCurrency(Number(ops!.estimated_monthly_savings || 0))}/mo`}
                 valueClass="text-emerald-700 font-bold"
               />
               <div className="border-t pt-2 mt-2 space-y-1">
