@@ -18,6 +18,7 @@ export default function GrowthAccounts() {
   const { data: customers = [], isLoading } = useCustomers();
   const { data: allMeta = [] } = useAllPartnerMeta();
   const { data: allDeals = [] } = useDeals();
+  const { data: primaryByCustomer = {} } = usePrimaryContactsByCustomer(customers.map(c => c.id));
 
   const metaMap = useMemo(() => {
     const m: Record<string, typeof allMeta[number]> = {};
