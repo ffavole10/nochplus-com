@@ -77,7 +77,7 @@ export default function GrowthAccounts() {
                           <CustomerLogo logoUrl={c.logo_url} companyName={c.company} size="sm" />
                           <div>
                             <p className="font-medium">{c.company}</p>
-                            <p className="text-xs text-muted-foreground">{c.contact_name}</p>
+                            <p className="text-xs text-muted-foreground">{primaryByCustomer[c.id]?.name || c.contact_name || "—"}</p>
                           </div>
                         </div>
                       </td>
