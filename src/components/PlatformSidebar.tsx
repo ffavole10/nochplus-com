@@ -8,7 +8,7 @@ import {
   TrendingUp, Target, Workflow, Briefcase, BookText, PackageOpen,
   ClipboardList, ShieldCheck, Globe, Wrench, UserCheck,
   BadgeCheck, Inbox, Radar,
-  Crosshair,
+  Crosshair, Compass,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -189,6 +189,7 @@ export function PlatformSidebar() {
         >
           <NavItem item={{ title: "Accounts", url: "/business/accounts", icon: Building2 }} />
           <NavItem item={{ title: "Pipeline", url: "/business/pipeline", icon: TrendingUp }} />
+          <NavItem item={{ title: "Strategy", url: "/business/strategy", icon: Compass }} />
           <NavItem item={{ title: "Membership", url: "/business/membership", icon: BadgeCheck }} />
           <NavItem item={{ title: "Submissions", url: "/business/submissions", icon: Inbox }} />
         </NewSectionHeader>
