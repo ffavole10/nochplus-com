@@ -497,9 +497,19 @@ function AddDecisionDialog({
               <SelectTrigger><SelectValue placeholder="Pick a contact" /></SelectTrigger>
               <SelectContent className="z-[2100]">
                 {available.length === 0 && <p className="p-2 text-xs text-muted-foreground">No more contacts to add. Add one in the Contacts tab.</p>}
-                {available.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name} {c.title && `· ${c.title}`}</SelectItem>
-                ))}
+                {available.map((c) => {
+                  const t = (c.is_primary ? "primary" : (c.contact_type as ContactType) || "champion") as ContactType;
+                  return (
+                    <SelectItem key={c.id} value={c.id}>
+                      <span className="inline-flex items-center gap-2">
+                        <span>{c.name}{c.title ? ` · ${c.title}` : ""}</span>
+                        <span className={`text-[9px] font-semibold uppercase tracking-wide border rounded-full px-1.5 py-0.5 ${CONTACT_TYPE_PILL[t]}`}>
+                          {CONTACT_TYPE_LABELS[t]}
+                        </span>
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
