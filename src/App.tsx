@@ -79,6 +79,7 @@ import BusinessAccountDetail from "./pages/business/BusinessAccountDetail";
 import BusinessPipeline from "./pages/business/BusinessPipeline";
 import BusinessMembership from "./pages/business/BusinessMembership";
 import BusinessSubmissions from "./pages/business/BusinessSubmissions";
+import BusinessStrategy from "./pages/business/BusinessStrategy";
 
 // Campaign pages — new tab structure
 import CampaignList from "./pages/campaigns/CampaignList";
@@ -192,6 +193,7 @@ const App = () => (
             <Route path="/business/pipeline" element={<BusinessPipeline />} />
             <Route path="/business/pipeline/:dealId" element={<GrowthDealDetail />} />
             <Route path="/business/membership" element={<BusinessMembership />} />
+            <Route path="/business/strategy" element={<BusinessStrategy />} />
             <Route path="/business/submissions" element={<BusinessSubmissions />} />
             <Route path="/knowledge" element={<Knowledge />} />
             <Route path="/knowledge/swi-library" element={<KnowledgeSwiLibrary />} />
