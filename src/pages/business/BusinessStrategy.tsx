@@ -636,7 +636,7 @@ function Focus5Row({
 
       <div className="rounded-md bg-muted/40 px-4 py-2 flex items-center justify-between flex-wrap gap-2 text-xs">
         <span className="text-muted-foreground">
-          Combined: <span className="font-semibold text-foreground">${(rollup.arrTarget / 1000).toFixed(0)}K ARR target</span> ·{" "}
+          Combined: <span className="font-semibold text-foreground">{formatCurrency(rollup.arrTarget)} ARR target</span> ·{" "}
           <span className="font-semibold text-foreground">{rollup.connectorTarget.toLocaleString()} connector targets</span> ·{" "}
           <span className="font-semibold text-foreground">{rollup.activePlays} active plays</span>
         </span>
