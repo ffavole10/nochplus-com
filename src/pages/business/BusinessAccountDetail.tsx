@@ -155,6 +155,7 @@ export default function BusinessAccountDetail() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="overview" className="gap-1.5"><Building2 className="h-3.5 w-3.5" />Overview</TabsTrigger>
+          <TabsTrigger value="strategy" className="gap-1.5"><Compass className="h-3.5 w-3.5" />Strategy</TabsTrigger>
           <TabsTrigger value="tickets" className="gap-1.5"><Ticket className="h-3.5 w-3.5" />Tickets <Badge variant="secondary" className="ml-1 text-[10px] h-4">{accountTickets.length}</Badge></TabsTrigger>
           <TabsTrigger value="work-orders" className="gap-1.5"><Wrench className="h-3.5 w-3.5" />Work Orders</TabsTrigger>
           <TabsTrigger value="chargers" className="gap-1.5"><HardDrive className="h-3.5 w-3.5" />Chargers</TabsTrigger>
@@ -213,6 +214,10 @@ export default function BusinessAccountDetail() {
               </CardContent></Card>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="strategy" className="mt-6">
+          <StrategyTab account={account} />
         </TabsContent>
 
         <TabsContent value="tickets" className="mt-6">
