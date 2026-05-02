@@ -328,7 +328,18 @@ export default function GrowthPipeline() {
                     <h3 className="text-xs font-bold uppercase tracking-wide text-foreground">{stage}</h3>
                     <Badge variant="secondary" className="text-[10px]">{stageTotals[stage].count}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">${stageTotals[stage].value.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                    <span>${stageTotals[stage].value.toLocaleString()}</span>
+                    {focusCountByStage[stage] > 0 && (
+                      <>
+                        <span className="opacity-40">·</span>
+                        <span className="inline-flex items-center gap-0.5 text-amber-600 font-semibold">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+                          {focusCountByStage[stage]} Focus
+                        </span>
+                      </>
+                    )}
+                  </p>
                 </div>
                 <Droppable droppableId={stage}>
                   {(provided, snapshot) => (
