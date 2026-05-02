@@ -25,6 +25,7 @@ import {
   useTourCompleted, useMarkTourCompleted,
 } from "@/hooks/useStrategy";
 import { useContacts } from "@/hooks/useContacts";
+import { CONTACT_TYPE_LABELS, CONTACT_TYPE_PILL, type ContactType } from "@/lib/contactTypes";
 import {
   ACCOUNT_TYPE_LABELS, POSITION_LABELS, STRATEGY_HEALTH_COLORS, STRATEGY_HEALTH_LABELS,
   computeKpiHealth, computeStrategyHealth, currentQuarter, formatKpiValue,
