@@ -1,0 +1,3 @@
+COMMENT ON COLUMN public.customers.contact_name IS 'DEPRECATED 2026-05-02: Use public.contacts (is_primary=true). Scheduled for removal after 30 days.';
+COMMENT ON COLUMN public.customers.email IS 'DEPRECATED 2026-05-02: Use public.contacts (is_primary=true). Scheduled for removal after 30 days.';
+COMMENT ON COLUMN public.customers.phone IS 'DEPRECATED 2026-05-02: Use public.contacts (is_primary=true). Scheduled for removal after 30 days.';
