@@ -343,6 +343,7 @@ export default function BusinessStrategy() {
             </Select>
           </CardContent>
         </Card>
+        )}
 
         {/* Cards Grid / Empty States */}
         {isLoading ? (
