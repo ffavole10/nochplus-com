@@ -273,7 +273,7 @@ export default function GrowthPipeline() {
                   <div className="absolute inset-y-0 left-0 bg-primary/70" style={{ width: `${pct}%` }} />
                 </div>
                 <div className="w-32 text-right tabular-nums text-muted-foreground">
-                  {t.count} · ${t.value.toLocaleString()}
+                  {t.count} · {formatCurrency(t.value)}
                 </div>
               </div>
             );
@@ -330,7 +330,7 @@ export default function GrowthPipeline() {
                     <Badge variant="secondary" className="text-[10px]">{stageTotals[stage].count}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                    <span>${stageTotals[stage].value.toLocaleString()}</span>
+                    <span>{formatCurrency(stageTotals[stage].value)}</span>
                     {focusCountByStage[stage] > 0 && (
                       <>
                         <span className="opacity-40">·</span>
@@ -392,7 +392,7 @@ export default function GrowthPipeline() {
                                   </div>
                                 </div>
                                 <div className="flex items-center justify-between mb-2">
-                                  <span className="text-sm font-bold text-primary">${Number(deal.value).toLocaleString()}</span>
+                                  <span className="text-sm font-bold text-primary">{formatCurrency(Number(deal.value))}</span>
                                   <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded border", ageColor(days))}>{days}d in stage</span>
                                 </div>
                                 {deal.next_action && (
@@ -479,7 +479,7 @@ export default function GrowthPipeline() {
                       </td>
                       <td className="py-3 px-4 font-medium">{d.deal_name}</td>
                       <td className="py-3 px-4"><Badge variant="outline" className={`text-xs ${DEAL_STAGE_COLORS[d.stage]}`}>{d.stage}</Badge></td>
-                      <td className="py-3 px-4 text-right font-medium">${Number(d.value).toLocaleString()}</td>
+                      <td className="py-3 px-4 text-right font-medium">{formatCurrency(Number(d.value))}</td>
                       <td className="py-3 px-4 text-right">
                         <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded border", ageColor(days))}>{days}d</span>
                       </td>
