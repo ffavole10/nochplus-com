@@ -220,9 +220,25 @@ export default function BusinessAccountDetail() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card><CardContent className="p-4 text-sm space-y-2">
               <p className="font-semibold">Primary Contact</p>
-              <p>{account.contact_name || "—"}</p>
-              <p className="text-muted-foreground">{account.email}</p>
-              <p className="text-muted-foreground">{account.phone || "—"}</p>
+              {primaryContact ? (
+                <>
+                  <p>{primaryContact.name}</p>
+                  {primaryContact.title && <p className="text-muted-foreground text-xs">{primaryContact.title}</p>}
+                  <p className="text-muted-foreground">{primaryContact.email}</p>
+                  <p className="text-muted-foreground">{primaryContact.phone || "—"}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-muted-foreground italic">No primary contact set</p>
+                  <button
+                    type="button"
+                    onClick={() => setTab("contacts")}
+                    className="text-xs underline text-primary hover:text-primary/80"
+                  >
+                    + Add primary contact →
+                  </button>
+                </>
+              )}
             </CardContent></Card>
             <Card><CardContent className="p-4 text-sm space-y-2">
               <p className="font-semibold">Relationship</p>
