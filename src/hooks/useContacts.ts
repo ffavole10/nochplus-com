@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logAccountActivity } from "@/lib/accountActivity";
+import type { ContactType } from "@/lib/contactTypes";
 
-export type ContactType = "primary" | "decision_maker" | "technical" | "billing" | "operations" | "other";
+export type { ContactType };
 
 export type Contact = {
   id: string;
