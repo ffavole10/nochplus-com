@@ -138,8 +138,11 @@ export default function BusinessAccounts() {
       if (focusOnly && !focusCustomerIds.has(c.id)) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
+        const pc = primaryByCustomer[c.id];
         if (
           !c.company.toLowerCase().includes(q) &&
+          !pc?.name?.toLowerCase().includes(q) &&
+          !pc?.email?.toLowerCase().includes(q) &&
           !c.contact_name?.toLowerCase().includes(q) &&
           !c.email?.toLowerCase().includes(q)
         ) return false;
