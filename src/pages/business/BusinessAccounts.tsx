@@ -439,8 +439,10 @@ export default function BusinessAccounts() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onCreated={(c) => {
-          toast.success(`Account "${c.company}" created`);
           setCreateOpen(false);
+          // Route to the new account's Contacts tab so the user can immediately
+          // add additional internal contacts.
+          navigate(`/business/accounts/${c.id}?tab=contacts&just_created=1`);
         }}
       />
     </div>
