@@ -242,6 +242,21 @@ export function CreateAccountModal({ open, onOpenChange, initialCompanyName = ""
           action: "created",
           new_value: company.trim(),
         });
+        // Mirror the creation-time primary contact into the contacts table
+        // so the Contacts tab and downstream views are immediately populated.
+        try {
+          await (supabase as any).from("contacts").insert({
+            customer_id: created.id,
+            name: contactName.trim(),
+            email: contactEmail.trim(),
+            phone: contactPhone.trim() || "",
+            title: contactTitle.trim() || null,
+            contact_type: "primary",
+            is_primary: true,
+          });
+        } catch (e) {
+          console.warn("Failed to seed primary contact:", e);
+        }
         // Auto-create empty strategy (status = needs_review)
         try {
           const { data: userData } = await supabase.auth.getUser();
