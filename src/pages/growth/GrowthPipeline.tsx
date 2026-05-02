@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { LayoutGrid, List, Search, TrendingUp, Loader2, Plus, AlertTriangle } from "lucide-react";
+import { LayoutGrid, List, Search, TrendingUp, Loader2, Plus, AlertTriangle, Star } from "lucide-react";
 import { differenceInDays } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
