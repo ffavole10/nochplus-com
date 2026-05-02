@@ -107,7 +107,12 @@ export type Database = {
           created_at: string
           current_position: Database["public"]["Enums"]["strategy_position"]
           customer_id: string
+          focus_added_at: string | null
+          focus_added_by: string | null
+          focus_quarter: string | null
+          focus_reason: string | null
           id: string
+          is_focus: boolean
           last_reviewed_at: string | null
           north_star: string | null
           owner: string | null
@@ -120,7 +125,12 @@ export type Database = {
           created_at?: string
           current_position?: Database["public"]["Enums"]["strategy_position"]
           customer_id: string
+          focus_added_at?: string | null
+          focus_added_by?: string | null
+          focus_quarter?: string | null
+          focus_reason?: string | null
           id?: string
+          is_focus?: boolean
           last_reviewed_at?: string | null
           north_star?: string | null
           owner?: string | null
@@ -133,7 +143,12 @@ export type Database = {
           created_at?: string
           current_position?: Database["public"]["Enums"]["strategy_position"]
           customer_id?: string
+          focus_added_at?: string | null
+          focus_added_by?: string | null
+          focus_quarter?: string | null
+          focus_reason?: string | null
           id?: string
+          is_focus?: boolean
           last_reviewed_at?: string | null
           north_star?: string | null
           owner?: string | null
@@ -2521,6 +2536,53 @@ export type Database = {
           },
         ]
       }
+      focus_history: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          created_at: string
+          customer_id: string | null
+          focus_quarter: string
+          focus_reason: string | null
+          id: string
+          removed_at: string | null
+          removed_by: string | null
+          strategy_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          created_at?: string
+          customer_id?: string | null
+          focus_quarter: string
+          focus_reason?: string | null
+          id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          strategy_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          created_at?: string
+          customer_id?: string | null
+          focus_quarter?: string
+          focus_reason?: string | null
+          id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          strategy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "focus_history_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "account_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           access_notes: string | null
@@ -3335,6 +3397,8 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string
+          focus_mode_enabled: boolean
+          focus_mode_quarter: string | null
           has_completed_strategy_tour: boolean
           id: string
           updated_at: string
@@ -3346,6 +3410,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email: string
+          focus_mode_enabled?: boolean
+          focus_mode_quarter?: string | null
           has_completed_strategy_tour?: boolean
           id?: string
           updated_at?: string
@@ -3357,6 +3423,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string
+          focus_mode_enabled?: boolean
+          focus_mode_quarter?: string | null
           has_completed_strategy_tour?: boolean
           id?: string
           updated_at?: string
