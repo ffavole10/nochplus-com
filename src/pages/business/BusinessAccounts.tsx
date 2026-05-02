@@ -5,6 +5,7 @@ import { useFocus5CustomerIds } from "@/hooks/useFocus5";
 import { useAllStrategies } from "@/hooks/useStrategy";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCustomers } from "@/hooks/useCustomers";
+import { usePrimaryContactsByCustomer } from "@/hooks/usePrimaryContacts";
 import { useAllPartnerMeta } from "@/hooks/usePartnerMeta";
 import { useDeals } from "@/hooks/useDeals";
 import { useCampaigns } from "@/hooks/useCampaigns";
