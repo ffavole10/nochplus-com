@@ -284,7 +284,9 @@ export default function GrowthDealDetail() {
   const closerEnabled = deal.stage === "Proposal Out" || deal.stage === "In Negotiation" || deal.stage === "Closed Won";
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div>
+      <FocusRibbon customerId={deal.partner_id} />
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
       <ConfirmDialog {...confirmDialogProps} />
       {/* ════════ Breadcrumb ════════ */}
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
