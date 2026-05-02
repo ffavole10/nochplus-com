@@ -298,7 +298,8 @@ export default function BusinessStrategy() {
           </Card>
         )}
 
-        {/* Filters */}
+        {/* Filters (hidden in Focus Mode) */}
+        {!focusMode.enabled && (
         <Card data-tour="portfolio-filters">
           <CardContent className="p-4 flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[200px]">
