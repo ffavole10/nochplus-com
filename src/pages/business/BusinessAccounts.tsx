@@ -350,6 +350,20 @@ export default function BusinessAccounts() {
                           <div>
                             <p className="font-medium text-foreground flex items-center gap-1.5 flex-wrap">
                               {c.company}
+                              {focusCustomerIds.has(c.id) && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-300">
+                                      <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-600" />
+                                      Focus
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="text-xs z-[2000] max-w-[260px]">
+                                    Focus 5 — {focusMetaByCustomer[c.id]?.quarter || "this quarter"}
+                                    {focusMetaByCustomer[c.id]?.reason ? ` · ${focusMetaByCustomer[c.id]?.reason}` : ""}
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
                               <CustomerTypeBadge type={(c as any).customer_type} typeOther={(c as any).customer_type_other} />
                               <span className="flex gap-1">
                                 {types.includes("customer") && (
