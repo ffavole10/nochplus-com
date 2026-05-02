@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LayoutGrid, List, Search, TrendingUp, Loader2, Plus, AlertTriangle, Star } from "lucide-react";
 import { differenceInDays } from "date-fns";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 function daysInStage(deal: Deal): number {
