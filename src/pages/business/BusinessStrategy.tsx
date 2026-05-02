@@ -144,6 +144,39 @@ export default function BusinessStrategy() {
     return list;
   }, [enriched, search, typeFilter, ownerFilter, healthFilter, sort]);
 
+  // Focus 5 entries (always sourced from raw enriched, ignore filters so the row is stable)
+  const focusEntries = useMemo(
+    () => enriched.filter((e) => e.customer && e.strategy.is_focus),
+    [enriched]
+  );
+  const focusCustomerIds = useMemo(
+    () => new Set(focusEntries.map((e) => e.customer.id)),
+    [focusEntries]
+  );
+
+  // Other accounts = filtered minus focus. When Focus Mode is ON, hide other accounts.
+  const otherAccounts = useMemo(
+    () => filtered.filter((e) => !focusCustomerIds.has(e.customer.id)),
+    [filtered, focusCustomerIds]
+  );
+
+  // Combined rollup metrics
+  const focusRollup = useMemo(() => {
+    let arrTarget = 0;
+    let connectorTarget = 0;
+    let activePlays = 0;
+    let onTrack = 0;
+    focusEntries.forEach((e) => {
+      const arrKpi = e.kpis.find((k: any) => /arr/i.test(k.name));
+      arrTarget += Number(arrKpi?.target_value || 0);
+      const connKpi = e.kpis.find((k: any) => /connector/i.test(k.name));
+      connectorTarget += Number(connKpi?.target_value || 0);
+      activePlays += e.activePlays;
+      if (e.health === "on_track") onTrack++;
+    });
+    return { arrTarget, connectorTarget, activePlays, onTrack };
+  }, [focusEntries]);
+
   const connectorsInStrategy = useMemo(() => {
     return allKpis
       .filter((k: any) => /connector/i.test(k.name))
