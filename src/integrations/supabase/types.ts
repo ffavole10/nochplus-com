@@ -101,6 +101,63 @@ export type Database = {
           },
         ]
       }
+      account_strategies: {
+        Row: {
+          account_types: Json
+          created_at: string
+          current_position: Database["public"]["Enums"]["strategy_position"]
+          customer_id: string
+          id: string
+          last_reviewed_at: string | null
+          north_star: string | null
+          owner: string | null
+          status: Database["public"]["Enums"]["strategy_status"]
+          strategic_value: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_types?: Json
+          created_at?: string
+          current_position?: Database["public"]["Enums"]["strategy_position"]
+          customer_id: string
+          id?: string
+          last_reviewed_at?: string | null
+          north_star?: string | null
+          owner?: string | null
+          status?: Database["public"]["Enums"]["strategy_status"]
+          strategic_value?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_types?: Json
+          created_at?: string
+          current_position?: Database["public"]["Enums"]["strategy_position"]
+          customer_id?: string
+          id?: string
+          last_reviewed_at?: string | null
+          north_star?: string | null
+          owner?: string | null
+          status?: Database["public"]["Enums"]["strategy_status"]
+          strategic_value?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_strategies_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "account_strategies_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activities: {
         Row: {
           activity_date: string
@@ -3278,6 +3335,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string
+          has_completed_strategy_tour: boolean
           id: string
           updated_at: string
           user_id: string
@@ -3288,6 +3346,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email: string
+          has_completed_strategy_tour?: boolean
           id?: string
           updated_at?: string
           user_id: string
@@ -3298,6 +3357,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string
+          has_completed_strategy_tour?: boolean
           id?: string
           updated_at?: string
           user_id?: string
@@ -4435,6 +4495,189 @@ export type Database = {
             columns: ["technician_id"]
             isOneToOne: false
             referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategy_decision_map: {
+        Row: {
+          contact_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          role: Database["public"]["Enums"]["strategy_decision_role"]
+          strategy_id: string
+          temperature: Database["public"]["Enums"]["strategy_temperature"]
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          role: Database["public"]["Enums"]["strategy_decision_role"]
+          strategy_id: string
+          temperature?: Database["public"]["Enums"]["strategy_temperature"]
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          role?: Database["public"]["Enums"]["strategy_decision_role"]
+          strategy_id?: string
+          temperature?: Database["public"]["Enums"]["strategy_temperature"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_decision_map_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategy_decision_map_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "account_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategy_kpis: {
+        Row: {
+          created_at: string
+          current_value: number
+          deferred_reason: string | null
+          id: string
+          is_deferred: boolean
+          is_primary: boolean
+          kpi_template_origin: string | null
+          name: string
+          notes: string | null
+          strategy_id: string
+          target_date: string | null
+          target_value: number | null
+          unit: Database["public"]["Enums"]["strategy_kpi_unit"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number
+          deferred_reason?: string | null
+          id?: string
+          is_deferred?: boolean
+          is_primary?: boolean
+          kpi_template_origin?: string | null
+          name: string
+          notes?: string | null
+          strategy_id: string
+          target_date?: string | null
+          target_value?: number | null
+          unit?: Database["public"]["Enums"]["strategy_kpi_unit"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number
+          deferred_reason?: string | null
+          id?: string
+          is_deferred?: boolean
+          is_primary?: boolean
+          kpi_template_origin?: string | null
+          name?: string
+          notes?: string | null
+          strategy_id?: string
+          target_date?: string | null
+          target_value?: number | null
+          unit?: Database["public"]["Enums"]["strategy_kpi_unit"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_kpis_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "account_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategy_plays: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          owner: string | null
+          quarter: string | null
+          status: Database["public"]["Enums"]["strategy_play_status"]
+          strategy_id: string
+          title: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          owner?: string | null
+          quarter?: string | null
+          status?: Database["public"]["Enums"]["strategy_play_status"]
+          strategy_id: string
+          title: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          owner?: string | null
+          quarter?: string | null
+          status?: Database["public"]["Enums"]["strategy_play_status"]
+          strategy_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_plays_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "account_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategy_risks: {
+        Row: {
+          created_at: string
+          id: string
+          risk_text: string
+          severity: Database["public"]["Enums"]["strategy_risk_severity"]
+          strategy_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          risk_text: string
+          severity?: Database["public"]["Enums"]["strategy_risk_severity"]
+          strategy_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          risk_text?: string
+          severity?: Database["public"]["Enums"]["strategy_risk_severity"]
+          strategy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_risks_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "account_strategies"
             referencedColumns: ["id"]
           },
         ]
@@ -6039,6 +6282,41 @@ export type Database = {
         | "Blocker"
         | "Operational"
         | "Unknown"
+      strategy_account_type:
+        | "revenue"
+        | "strategic_partner"
+        | "reference"
+        | "beachhead"
+        | "defensive"
+      strategy_decision_role:
+        | "champion"
+        | "decision_maker"
+        | "blocker"
+        | "influencer"
+      strategy_kpi_unit:
+        | "dollar"
+        | "percent"
+        | "count"
+        | "yes_no"
+        | "multiplier"
+        | "days"
+        | "months"
+        | "custom"
+      strategy_play_status:
+        | "not_started"
+        | "in_progress"
+        | "complete"
+        | "abandoned"
+      strategy_position:
+        | "pre_engagement"
+        | "active_dialogue"
+        | "pilot"
+        | "contracted"
+        | "at_risk"
+        | "champion"
+      strategy_risk_severity: "watch" | "risk" | "critical"
+      strategy_status: "needs_review" | "active" | "archived"
+      strategy_temperature: "cold" | "warm" | "hot"
       ticket_assessment_status: "pending_review" | "assessed" | "rejected"
       work_order_job_type:
         | "repair"
@@ -6342,6 +6620,46 @@ export const Constants = {
         "Operational",
         "Unknown",
       ],
+      strategy_account_type: [
+        "revenue",
+        "strategic_partner",
+        "reference",
+        "beachhead",
+        "defensive",
+      ],
+      strategy_decision_role: [
+        "champion",
+        "decision_maker",
+        "blocker",
+        "influencer",
+      ],
+      strategy_kpi_unit: [
+        "dollar",
+        "percent",
+        "count",
+        "yes_no",
+        "multiplier",
+        "days",
+        "months",
+        "custom",
+      ],
+      strategy_play_status: [
+        "not_started",
+        "in_progress",
+        "complete",
+        "abandoned",
+      ],
+      strategy_position: [
+        "pre_engagement",
+        "active_dialogue",
+        "pilot",
+        "contracted",
+        "at_risk",
+        "champion",
+      ],
+      strategy_risk_severity: ["watch", "risk", "critical"],
+      strategy_status: ["needs_review", "active", "archived"],
+      strategy_temperature: ["cold", "warm", "hot"],
       ticket_assessment_status: ["pending_review", "assessed", "rejected"],
       work_order_job_type: [
         "repair",
