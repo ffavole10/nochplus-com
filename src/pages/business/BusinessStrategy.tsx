@@ -345,142 +345,81 @@ export default function BusinessStrategy() {
         </Card>
         )}
 
-        {/* Cards Grid / Empty States */}
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin h-6 w-6 border-b-2 border-primary rounded-full" />
-          </div>
-        ) : hasZeroStrategies ? (
-          <Card data-tour="portfolio-cards">
-            <CardContent className="py-12 px-6 text-center max-w-xl mx-auto space-y-4">
-              <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                <Target className="h-7 w-7 text-primary" />
+        {/* Other Accounts (hidden when Focus Mode is ON) */}
+        {!focusMode.enabled && (
+          isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin h-6 w-6 border-b-2 border-primary rounded-full" />
+            </div>
+          ) : hasZeroStrategies ? (
+            <Card data-tour="portfolio-cards">
+              <CardContent className="py-12 px-6 text-center max-w-xl mx-auto space-y-4">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <Target className="h-7 w-7 text-primary" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-xl font-bold">Welcome to Account Strategy</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Every account in NOCH+ deserves a clear plan. Strategy turns prospects into wins
+                    and customers into champions.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                  <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
+                    <Plus className="h-4 w-4" /> Create your first strategy
+                  </Button>
+                  <Button variant="outline" onClick={() => runPortfolioTour()} className="gap-1.5">
+                    <Sparkles className="h-4 w-4" /> Take the tour
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : otherAccounts.length === 0 ? (
+            <Card data-tour="portfolio-cards">
+              <CardContent className="py-12 text-center text-sm text-muted-foreground space-y-3">
+                <p>{filtersActive ? "No other strategies match the current filters." : "All strategies are in Focus 5."}</p>
+                {filtersActive && (
+                  <Button size="sm" variant="outline" onClick={clearFilters} className="gap-1.5">
+                    <X className="h-3.5 w-3.5" /> Clear filters
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3" data-tour="portfolio-cards">
+              <div className="flex items-baseline justify-between">
+                <h2 className="text-sm font-semibold text-foreground">
+                  Other accounts <span className="text-muted-foreground font-normal">({otherAccounts.length})</span>
+                </h2>
+                {otherAccounts.length > 6 && (
+                  <Button size="sm" variant="ghost" className="text-xs" onClick={() => setShowAllOthers((s) => !s)}>
+                    {showAllOthers ? "Show fewer" : `Show all ${otherAccounts.length}`}
+                  </Button>
+                )}
               </div>
-              <div className="space-y-1.5">
-                <h3 className="text-xl font-bold">Welcome to Account Strategy</h3>
-                <p className="text-sm text-muted-foreground">
-                  Every account in NOCH+ deserves a clear plan. Strategy turns prospects into wins
-                  and customers into champions.
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 opacity-90">
+                {(showAllOthers ? otherAccounts : otherAccounts.slice(0, 6)).map((entry) => (
+                  <StrategyCard
+                    key={entry.strategy.id}
+                    entry={entry}
+                    onClick={() => goToStrategy(entry.customer.id, entry.health === "needs_review")}
+                  />
+                ))}
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
-                  <Plus className="h-4 w-4" /> Create your first strategy
-                </Button>
-                <Button variant="outline" onClick={() => runPortfolioTour()} className="gap-1.5">
-                  <Sparkles className="h-4 w-4" /> Take the tour
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : filtered.length === 0 ? (
-          <Card data-tour="portfolio-cards">
-            <CardContent className="py-12 text-center text-sm text-muted-foreground space-y-3">
-              <p>No strategies match the current filters.</p>
-              {filtersActive && (
-                <Button size="sm" variant="outline" onClick={clearFilters} className="gap-1.5">
-                  <X className="h-3.5 w-3.5" /> Clear filters
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-tour="portfolio-cards">
-            {filtered.map(({ strategy, customer, headlineKpi, activePlays, totalPlays, health }) => {
-              const isNeedsReview = health === "needs_review";
-              const types = strategy.account_types || [];
-              const visibleTypes = types.slice(0, 2);
-              const extraCount = Math.max(0, types.length - 2);
-              const daysSinceCreated = Math.max(0, Math.floor((Date.now() - new Date(strategy.created_at).getTime()) / 86400000));
-
-              return (
-                <Card
-                  key={strategy.id}
-                  className={cn(
-                    "cursor-pointer transition-all",
-                    isNeedsReview
-                      ? "border-dashed border-amber-400 bg-amber-50/40 dark:bg-amber-950/10 hover:bg-amber-50/70 dark:hover:bg-amber-950/20"
-                      : "hover:shadow-md"
-                  )}
-                  onClick={() => goToStrategy(customer.id, isNeedsReview)}
-                >
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <CustomerLogo logoUrl={customer.logo_url} companyName={customer.company} size="md" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm truncate" title={customer.company}>{customer.company}</p>
-                        {!isNeedsReview && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {visibleTypes.map((t: StrategyAccountType) => (
-                              <Badge key={t} variant="secondary" className="text-[10px]">{ACCOUNT_TYPE_LABELS[t]}</Badge>
-                            ))}
-                            {extraCount > 0 && <Badge variant="outline" className="text-[10px]">+{extraCount}</Badge>}
-                          </div>
-                        )}
-                      </div>
-                      {isNeedsReview ? (
-                        <Badge className="border border-amber-300 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 text-[10px]">
-                          ⚠ Needs Review
-                        </Badge>
-                      ) : (
-                        <Badge className={cn("border text-[10px]", STRATEGY_HEALTH_COLORS[health])}>
-                          {STRATEGY_HEALTH_LABELS[health]}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {isNeedsReview ? (
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
-                          Needs strategic review
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Click to set up this account's strategy
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2.5em]">
-                        {strategy.north_star || "No North Star yet"}
-                      </p>
-                    )}
-
-                    {!isNeedsReview && headlineKpi && (
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="font-medium truncate" title={headlineKpi.name}>{headlineKpi.name}</span>
-                          <span className="text-muted-foreground shrink-0 ml-2">
-                            {formatKpiValue(headlineKpi.current_value, headlineKpi.unit)} / {formatKpiValue(headlineKpi.target_value, headlineKpi.unit)}
-                          </span>
-                        </div>
-                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary" style={{ width: `${Math.min(100, headlineKpi.target_value ? (Number(headlineKpi.current_value) / Number(headlineKpi.target_value)) * 100 : 0)}%` }} />
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                      {isNeedsReview ? (
-                        <>
-                          <span>No plays yet</span>
-                          <span>Created {daysSinceCreated === 0 ? "today" : `${daysSinceCreated}d ago`}</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>{activePlays} of {totalPlays} plays active</span>
-                          <span>
-                            {strategy.last_reviewed_at
-                              ? `Reviewed ${formatDistanceToNow(new Date(strategy.last_reviewed_at), { addSuffix: true })}`
-                              : "Never reviewed"}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+            </div>
+          )
         )}
+
+        <Focus5ManagerModal
+          open={focusManagerOpen}
+          onOpenChange={setFocusManagerOpen}
+          entries={enriched.filter((e) => e.customer).map((e) => ({
+            strategy: e.strategy,
+            customer: e.customer,
+            health: e.health,
+          }))}
+        />
+
 
         <CreateStrategyModal
           open={createOpen}
