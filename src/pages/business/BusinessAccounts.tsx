@@ -444,5 +444,6 @@ export default function BusinessAccounts() {
         }}
       />
     </div>
+    </TooltipProvider>
   );
 }
