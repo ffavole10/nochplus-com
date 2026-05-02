@@ -209,7 +209,7 @@ export default function BusinessStrategy() {
 
   return (
     <TooltipProvider>
-      <div className="p-6 space-y-6">
+      <div className={cn("p-6 space-y-6", focusMode.enabled && "ring-2 ring-amber-400/60 rounded-md m-2")}>
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap" data-tour="portfolio-header">
           <div>
