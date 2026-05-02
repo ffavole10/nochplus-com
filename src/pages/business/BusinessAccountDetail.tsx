@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Building2, Ticket, Wrench, HardDrive, DollarSign, Receipt, BadgeCheck, GitBranch, Users, FolderOpen, History, Pencil } from "lucide-react";
+import { ArrowLeft, Building2, Ticket, Wrench, HardDrive, DollarSign, Receipt, BadgeCheck, GitBranch, Users, FolderOpen, History, Pencil, Compass } from "lucide-react";
+import { StrategyTab } from "@/components/business/strategy/StrategyTab";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useContacts } from "@/hooks/useContacts";
 import { useCampaigns } from "@/hooks/useCampaigns";
