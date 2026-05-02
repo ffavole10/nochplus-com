@@ -87,6 +87,22 @@ When generating talking points and recommended next actions, REFERENCE the accou
 
     const customer = (deal as any).customers || {};
 
+    // Pull all internal contacts for this customer (primary + the rest).
+    const { data: contactRows } = await supabase
+      .from("contacts")
+      .select("name,title,contact_type,email,is_primary")
+      .eq("customer_id", (deal as any).partner_id)
+      .order("is_primary", { ascending: false });
+    const allContacts = contactRows || [];
+    const primaryContact = allContacts.find((c: any) => c.is_primary) || null;
+
+    const contactsBlock = allContacts.length === 0
+      ? "- (no internal contacts on file)"
+      : allContacts.map((c: any) => {
+          const tag = c.is_primary ? "PRIMARY" : (c.contact_type || "champion").toUpperCase().replace(/_/g, " ");
+          return `- [${tag}] ${c.name}${c.title ? ` — ${c.title}` : ""}${c.email ? ` <${c.email}>` : ""}`;
+        }).join("\n");
+
     const prompt = `You are Scribe, the NOCH+ pipeline intelligence agent. Produce a sharp, actionable account brief for the rep working this deal.
 
 DEAL
@@ -103,6 +119,10 @@ CUSTOMER
 - Industry: ${customer.industry || "—"}
 - Website: ${customer.website_url || "—"}
 - Description: ${customer.description || "—"}
+- Primary contact: ${primaryContact ? `${primaryContact.name}${primaryContact.title ? ` (${primaryContact.title})` : ""}` : "—"}
+
+INTERNAL CONTACT ROSTER
+${contactsBlock}
 
 LIVE OPS SNAPSHOT (NOCH+ network)
 - Chargers: ${snapshot?.charger_count ?? 0}
@@ -111,6 +131,8 @@ LIVE OPS SNAPSHOT (NOCH+ network)
 - Uptime: ${Number(snapshot?.uptime_pct ?? 100).toFixed(1)}%
 - Truck rolls (30d): ${snapshot?.truck_rolls_30d ?? 0}
 - Estimated monthly NOCH+ savings: $${Number(snapshot?.estimated_monthly_savings ?? 0).toLocaleString()}
+
+Use the full contact roster when relevant. If briefing on a deal in proposal stage, suggest who to engage at the customer (e.g., loop in the Decision Maker, prep the Technical Buyer, lean on the Champion to socialize internally). Reference contacts by name and role.
 
 Return concise markdown with these sections:
 ## Executive Summary
