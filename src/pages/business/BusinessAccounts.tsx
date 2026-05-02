@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Users, Eye, Plus, Search, AlertTriangle } from "lucide-react";
+import { Building2, Users, Eye, Plus, Search, AlertTriangle, Star } from "lucide-react";
+import { useFocus5CustomerIds } from "@/hooks/useFocus5";
+import { useAllStrategies } from "@/hooks/useStrategy";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useAllPartnerMeta } from "@/hooks/usePartnerMeta";
 import { useDeals } from "@/hooks/useDeals";
