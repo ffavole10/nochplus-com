@@ -32,6 +32,7 @@ import {
   FilesTab,
 } from "@/components/business/account360/Tabs";
 import { ActivityTab } from "@/components/business/account360/ActivityTab";
+import { FocusRibbon } from "@/components/business/strategy/FocusRibbon";
 
 function ChargersEmptyReliability({ accountName, onLink }: { accountName: string; onLink: () => void }) {
   return (
@@ -113,7 +114,9 @@ export default function BusinessAccountDetail() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-0">
+      <FocusRibbon customerId={account.id} />
+      <div className="p-6 space-y-6">
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => navigate("/business/accounts")} className="gap-1.5">
           <ArrowLeft className="h-4 w-4" /> Accounts
@@ -266,6 +269,7 @@ export default function BusinessAccountDetail() {
         onOpenChange={setEditOpen}
         account={account}
       />
+      </div>
     </div>
   );
 }

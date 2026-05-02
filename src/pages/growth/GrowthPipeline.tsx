@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { useDeals, useUpdateDealStage, useCreateDeal } from "@/hooks/useDeals";
 import { useCustomers } from "@/hooks/useCustomers";
+import { useFocus5CustomerIds } from "@/hooks/useFocus5";
+import { useAllStrategies } from "@/hooks/useStrategy";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useGrowthUsers, useGrowthUserMap } from "@/hooks/useGrowthUsers";
 import { useAccountOpsSnapshots } from "@/hooks/useAccountOpsSnapshot";
 import { useLatestScribeBriefs } from "@/hooks/useAgentOutputs";
@@ -22,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { LayoutGrid, List, Search, TrendingUp, Loader2, Plus, AlertTriangle } from "lucide-react";
+import { LayoutGrid, List, Search, TrendingUp, Loader2, Plus, AlertTriangle, Star } from "lucide-react";
 import { differenceInDays } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -54,6 +57,16 @@ export default function GrowthPipeline() {
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState<string>("all");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [focusOnly, setFocusOnly] = useState(false);
+  const { data: focusCustomerIds = new Set<string>() } = useFocus5CustomerIds();
+  const { data: allStrategies = [] } = useAllStrategies();
+  const focusMetaByCustomer = useMemo(() => {
+    const m: Record<string, { quarter: string | null; reason: string | null }> = {};
+    allStrategies.forEach((s: any) => {
+      if (s.is_focus) m[s.customer_id] = { quarter: s.focus_quarter, reason: s.focus_reason };
+    });
+    return m;
+  }, [allStrategies]);
 
   // Stage move dialog
   const [pendingMove, setPendingMove] = useState<{ deal: Deal; newStage: DealStage } | null>(null);
@@ -83,6 +96,7 @@ export default function GrowthPipeline() {
     return deals.filter(d => {
       if (accountFilter !== "all" && d.partner_id !== accountFilter) return false;
       if (ownerFilter !== "all" && d.owner_user_id !== ownerFilter) return false;
+      if (focusOnly && !focusCustomerIds.has(d.partner_id)) return false;
       if (search) {
         const q = search.toLowerCase();
         const partner = customerMap[d.partner_id];
@@ -90,13 +104,21 @@ export default function GrowthPipeline() {
       }
       return true;
     });
-  }, [deals, accountFilter, ownerFilter, search, customerMap]);
+  }, [deals, accountFilter, ownerFilter, focusOnly, focusCustomerIds, search, customerMap]);
 
   const dealsByStage = useMemo(() => {
     const map: Record<DealStage, Deal[]> = Object.fromEntries(DEAL_STAGES.map(s => [s, [] as Deal[]])) as any;
     filtered.forEach(d => { map[d.stage]?.push(d); });
     return map;
   }, [filtered]);
+
+  const focusCountByStage = useMemo(() => {
+    const map: Record<DealStage, number> = Object.fromEntries(DEAL_STAGES.map(s => [s, 0])) as any;
+    filtered.forEach(d => {
+      if (focusCustomerIds.has(d.partner_id)) map[d.stage]++;
+    });
+    return map;
+  }, [filtered, focusCustomerIds]);
 
   const stageTotals = useMemo(() => {
     const map: Record<DealStage, { count: number; value: number }> = Object.fromEntries(
@@ -206,6 +228,7 @@ export default function GrowthPipeline() {
   };
 
   return (
+    <TooltipProvider>
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -277,6 +300,20 @@ export default function GrowthPipeline() {
             {users.map(u => <SelectItem key={u.user_id} value={u.user_id}>{u.display_name}</SelectItem>)}
           </SelectContent>
         </Select>
+        <button
+          type="button"
+          onClick={() => setFocusOnly((v) => !v)}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 h-9 rounded-md text-xs font-medium border transition-colors",
+            focusOnly
+              ? "bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-400"
+              : "bg-background text-muted-foreground border-border hover:bg-muted"
+          )}
+          title="Show only deals tied to Focus 5 customers"
+        >
+          <Star className={cn("h-3.5 w-3.5", focusOnly ? "fill-amber-400 text-amber-600" : "")} />
+          Focus 5 only
+        </button>
       </div>
 
       {isLoading ? (
@@ -291,7 +328,18 @@ export default function GrowthPipeline() {
                     <h3 className="text-xs font-bold uppercase tracking-wide text-foreground">{stage}</h3>
                     <Badge variant="secondary" className="text-[10px]">{stageTotals[stage].count}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">${stageTotals[stage].value.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                    <span>${stageTotals[stage].value.toLocaleString()}</span>
+                    {focusCountByStage[stage] > 0 && (
+                      <>
+                        <span className="opacity-40">·</span>
+                        <span className="inline-flex items-center gap-0.5 text-amber-600 font-semibold">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+                          {focusCountByStage[stage]} Focus
+                        </span>
+                      </>
+                    )}
+                  </p>
                 </div>
                 <Droppable droppableId={stage}>
                   {(provided, snapshot) => (
@@ -306,6 +354,8 @@ export default function GrowthPipeline() {
                         const partner = customerMap[deal.partner_id];
                         const ops = opsMap[deal.partner_id];
                         const days = daysInStage(deal);
+                        const isFocus = focusCustomerIds.has(deal.partner_id);
+                        const focusMeta = focusMetaByCustomer[deal.partner_id];
                         return (
                           <Draggable key={deal.id} draggableId={deal.id} index={index}>
                             {(prov, snap) => (
@@ -313,15 +363,27 @@ export default function GrowthPipeline() {
                                 ref={prov.innerRef}
                                 {...prov.draggableProps}
                                 {...prov.dragHandleProps}
-                                className={`p-3 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all group ${
-                                  snap.isDragging ? "shadow-lg rotate-1" : ""
-                                }`}
+                                className={cn(
+                                  "p-3 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all group",
+                                  snap.isDragging ? "shadow-lg rotate-1" : "",
+                                  isFocus && "border-l-[3px] border-l-amber-400"
+                                )}
                                 onClick={() => navigate(`/business/pipeline/${deal.id}`)}
                               >
                                 <div className="flex items-start gap-2 mb-2">
                                   {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
                                   <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-muted-foreground truncate flex items-center gap-1.5">
+                                      {isFocus && (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Star className="h-3 w-3 fill-amber-400 text-amber-500 shrink-0" />
+                                          </TooltipTrigger>
+                                          <TooltipContent side="top" className="text-xs z-[2000]">
+                                            Focus 5 — {focusMeta?.quarter || "this quarter"}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      )}
                                       <span className="truncate">{partner?.company || "Unknown"}</span>
                                       <CustomerTypeBadge type={(partner as any)?.customer_type} typeOther={(partner as any)?.customer_type_other} />
                                     </p>
@@ -386,11 +448,30 @@ export default function GrowthPipeline() {
                   const partner = customerMap[d.partner_id];
                   const ops = opsMap[d.partner_id];
                   const days = daysInStage(d);
+                  const isFocus = focusCustomerIds.has(d.partner_id);
+                  const focusMeta = focusMetaByCustomer[d.partner_id];
                   return (
-                    <tr key={d.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/business/pipeline/${d.id}`)}>
+                    <tr
+                      key={d.id}
+                      className={cn(
+                        "border-b border-border/50 hover:bg-muted/30 cursor-pointer",
+                        isFocus && "bg-amber-50/40 dark:bg-amber-950/10"
+                      )}
+                      onClick={() => navigate(`/business/pipeline/${d.id}`)}
+                    >
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           {partner && <CustomerLogo logoUrl={partner.logo_url} companyName={partner.company} size="sm" />}
+                          {isFocus && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500 shrink-0" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs z-[2000]">
+                                Focus 5 — {focusMeta?.quarter || "this quarter"}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                           <span className="font-medium">{partner?.company || "—"}</span>
                           <CustomerTypeBadge type={(partner as any)?.customer_type} typeOther={(partner as any)?.customer_type_other} />
                         </div>
@@ -490,6 +571,7 @@ export default function GrowthPipeline() {
         </DialogContent>
       </Dialog>
     </div>
+    </TooltipProvider>
   );
 }
 

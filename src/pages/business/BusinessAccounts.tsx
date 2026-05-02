@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Users, Eye, Plus, Search, AlertTriangle } from "lucide-react";
+import { Building2, Users, Eye, Plus, Search, AlertTriangle, Star } from "lucide-react";
+import { useFocus5CustomerIds } from "@/hooks/useFocus5";
+import { useAllStrategies } from "@/hooks/useStrategy";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useAllPartnerMeta } from "@/hooks/usePartnerMeta";
 import { useDeals } from "@/hooks/useDeals";
@@ -39,6 +42,17 @@ export default function BusinessAccounts() {
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
   const [view, setView] = useState<View>("operations");
   const [createOpen, setCreateOpen] = useState(false);
+  const [focusOnly, setFocusOnly] = useState(false);
+  const [focusFirst, setFocusFirst] = useState(false);
+  const { data: focusCustomerIds = new Set<string>() } = useFocus5CustomerIds();
+  const { data: allStrategies = [] } = useAllStrategies();
+  const focusMetaByCustomer = useMemo(() => {
+    const m: Record<string, { quarter: string | null; reason: string | null }> = {};
+    allStrategies.forEach((s: any) => {
+      if (s.is_focus) m[s.customer_id] = { quarter: s.focus_quarter, reason: s.focus_reason };
+    });
+    return m;
+  }, [allStrategies]);
 
   const metaMap = useMemo(() => {
     const m: Record<string, typeof allMeta[number]> = {};
@@ -106,22 +120,19 @@ export default function BusinessAccounts() {
   }, [customers, accountTypes]);
 
   const filtered = useMemo(() => {
-    return customers.filter((c) => {
+    let list = customers.filter((c) => {
       const types = accountTypes[c.id] || [];
-      // Relationship filter
       if (relationship !== "all") {
         if (relationship === "both" && types.length < 2) return false;
         if (relationship === "customer" && !types.includes("customer")) return false;
         if (relationship === "partner" && !types.includes("partner")) return false;
       }
-      // Status
       if (status !== "all" && c.status !== status) return false;
-      // Categories
       if (selectedCats.length > 0) {
         const cats = ((c as any).categories as string[]) || [];
         if (!selectedCats.some((sc) => cats.includes(sc))) return false;
       }
-      // Search
+      if (focusOnly && !focusCustomerIds.has(c.id)) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         if (
@@ -132,7 +143,15 @@ export default function BusinessAccounts() {
       }
       return true;
     });
-  }, [customers, accountTypes, relationship, status, selectedCats, search]);
+    if (focusFirst) {
+      list = [...list].sort((a, b) => {
+        const aF = focusCustomerIds.has(a.id) ? 1 : 0;
+        const bF = focusCustomerIds.has(b.id) ? 1 : 0;
+        return bF - aF;
+      });
+    }
+    return list;
+  }, [customers, accountTypes, relationship, status, selectedCats, search, focusOnly, focusFirst, focusCustomerIds]);
 
   const toggleCat = (cat: string) =>
     setSelectedCats((p) => (p.includes(cat) ? p.filter((x) => x !== cat) : [...p, cat]));
@@ -148,6 +167,7 @@ export default function BusinessAccounts() {
   }
 
   return (
+    <TooltipProvider>
     <div className="p-6 space-y-6">
       <BusinessPageHeader
         title="Accounts"
@@ -234,8 +254,8 @@ export default function BusinessAccounts() {
           </div>
         </div>
 
-        {/* Category chips */}
-        <div className="flex flex-wrap gap-2">
+        {/* Category chips + Focus chip + sort */}
+        <div className="flex flex-wrap gap-2 items-center">
           {CATEGORIES.map((cat) => (
             <Badge
               key={cat}
@@ -251,6 +271,32 @@ export default function BusinessAccounts() {
               Clear
             </Badge>
           )}
+          <button
+            type="button"
+            onClick={() => setFocusOnly((v) => !v)}
+            className={cn(
+              "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors",
+              focusOnly
+                ? "bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-400"
+                : "bg-background text-muted-foreground border-border hover:bg-muted"
+            )}
+          >
+            <Star className={cn("h-3 w-3", focusOnly && "fill-amber-400 text-amber-600")} />
+            Focus 5
+          </button>
+          <button
+            type="button"
+            onClick={() => setFocusFirst((v) => !v)}
+            className={cn(
+              "ml-auto text-xs px-2.5 py-0.5 rounded-full border transition-colors",
+              focusFirst
+                ? "bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-400"
+                : "bg-background text-muted-foreground border-border hover:bg-muted"
+            )}
+            title="Sort Focus 5 accounts to the top"
+          >
+            {focusFirst ? "★ Focus first" : "Sort: Focus first"}
+          </button>
         </div>
       </div>
 
@@ -305,6 +351,20 @@ export default function BusinessAccounts() {
                           <div>
                             <p className="font-medium text-foreground flex items-center gap-1.5 flex-wrap">
                               {c.company}
+                              {focusCustomerIds.has(c.id) && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-300">
+                                      <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-600" />
+                                      Focus
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="text-xs z-[2000] max-w-[260px]">
+                                    Focus 5 — {focusMetaByCustomer[c.id]?.quarter || "this quarter"}
+                                    {focusMetaByCustomer[c.id]?.reason ? ` · ${focusMetaByCustomer[c.id]?.reason}` : ""}
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
                               <CustomerTypeBadge type={(c as any).customer_type} typeOther={(c as any).customer_type_other} />
                               <span className="flex gap-1">
                                 {types.includes("customer") && (
@@ -384,5 +444,6 @@ export default function BusinessAccounts() {
         }}
       />
     </div>
+    </TooltipProvider>
   );
 }
