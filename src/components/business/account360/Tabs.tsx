@@ -894,36 +894,8 @@ export function ContactsTab({
       });
       if (!ok) return;
     }
-    // Persist via update — useUpdateContact unsets other primaries automatically.
-    const { error } = await supabase
-      .from("contacts")
-      .update({ is_primary: false } as any)
-      .eq("customer_id", account.id);
-    if (error) { toast.error(error.message); return; }
-    const { error: e2 } = await supabase
-      .from("contacts")
-      .update({ is_primary: true } as any)
-      .eq("id", c.id);
-    if (e2) { toast.error(e2.message); return; }
-    toast.success(`${c.name} is now primary contact`);
-    // Trigger refetch via deleteContact's queryKey invalidation pattern is overkill —
-    // a simple location reload of cached contacts via a window event would do, but
-    // ContactFormModal/useUpdateContact share the queryKey ["contacts", customer_id].
-    // The simplest reliable refresh is to re-open form state — but here we just
-    // rely on the next mount; for instant UX, dispatch a custom invalidation:
-    window.dispatchEvent(new CustomEvent("contacts:invalidate", { detail: { customer_id: account.id } }));
+    updateContact.mutate({ id: c.id, customer_id: account.id, is_primary: true, name: c.name });
   };
-
-  // Listen for our own invalidation event to refetch via React Query cache key
-  // by leveraging useDeleteContact's queryClient — instead, simpler: just
-  // refetch when contacts list changes after Set Primary by using the modal's
-  // existing patterns. For now, we trust the invalidation event in useFocus5
-  // pattern. As a fallback, force re-render via highlightId state:
-  useEffect(() => {
-    const handler = () => setHighlightId((id) => id);
-    window.addEventListener("contacts:invalidate", handler);
-    return () => window.removeEventListener("contacts:invalidate", handler);
-  }, []);
 
   const onAdd = (type?: ContactType) => {
     setEditing(null);
