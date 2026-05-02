@@ -261,8 +261,32 @@ export default function BusinessStrategy() {
           </div>
         </div>
 
+        {/* Focus Mode Banner */}
+        {focusMode.enabled && (
+          <div className="rounded-md border border-amber-400/70 bg-amber-50 dark:bg-amber-950/30 px-4 py-2.5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Target className="h-4 w-4 text-amber-600" />
+              <span className="font-medium text-amber-900 dark:text-amber-200">
+                Focus mode active — viewing only Focus 5 accounts.
+              </span>
+            </div>
+            <Button size="sm" variant="ghost" className="text-xs text-amber-800 dark:text-amber-200" onClick={() => focusMode.toggle(false)}>
+              Turn off
+            </Button>
+          </div>
+        )}
+
+        {/* Focus 5 Row */}
+        <Focus5Row
+          quarter={quarter}
+          focusEntries={focusEntries}
+          rollup={focusRollup}
+          onEdit={() => setFocusManagerOpen(true)}
+          onCardClick={(customerId) => goToStrategy(customerId)}
+        />
+
         {/* Alert Banner */}
-        {needsReviewCount > 0 && healthFilter !== "needs_review" && (
+        {needsReviewCount > 0 && healthFilter !== "needs_review" && !focusMode.enabled && (
           <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
             <CardContent className="p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
