@@ -253,8 +253,8 @@ export default function BusinessAccounts() {
           </div>
         </div>
 
-        {/* Category chips */}
-        <div className="flex flex-wrap gap-2">
+        {/* Category chips + Focus chip + sort */}
+        <div className="flex flex-wrap gap-2 items-center">
           {CATEGORIES.map((cat) => (
             <Badge
               key={cat}
@@ -270,6 +270,32 @@ export default function BusinessAccounts() {
               Clear
             </Badge>
           )}
+          <button
+            type="button"
+            onClick={() => setFocusOnly((v) => !v)}
+            className={cn(
+              "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors",
+              focusOnly
+                ? "bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-400"
+                : "bg-background text-muted-foreground border-border hover:bg-muted"
+            )}
+          >
+            <Star className={cn("h-3 w-3", focusOnly && "fill-amber-400 text-amber-600")} />
+            Focus 5
+          </button>
+          <button
+            type="button"
+            onClick={() => setFocusFirst((v) => !v)}
+            className={cn(
+              "ml-auto text-xs px-2.5 py-0.5 rounded-full border transition-colors",
+              focusFirst
+                ? "bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-400"
+                : "bg-background text-muted-foreground border-border hover:bg-muted"
+            )}
+            title="Sort Focus 5 accounts to the top"
+          >
+            {focusFirst ? "★ Focus first" : "Sort: Focus first"}
+          </button>
         </div>
       </div>
 
