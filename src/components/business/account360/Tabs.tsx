@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/lib/formatters";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -486,7 +487,7 @@ export function EstimatesTab({ account }: { account: { id: string; company: stri
       />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <StatBox label="Total Sent" value={String(totals.sent)} />
-        <StatBox label="Total Approved" value={`$${totals.approvedTotal.toLocaleString()}`} />
+        <StatBox label="Total Approved" value={formatCurrency(totals.approvedTotal)} />
         <StatBox label="Approval Rate" value={`${totals.rate}%`} />
         <StatBox label="Total Estimates" value={String(totals.count)} />
       </div>
@@ -533,7 +534,7 @@ export function EstimatesTab({ account }: { account: { id: string; company: stri
                     <TableCell className="font-mono text-xs">{r.ticket_id || "—"}</TableCell>
                     <TableCell><Badge variant="outline" className="text-[10px]">{r.status}</Badge></TableCell>
                     <TableCell className="text-xs">{r.sent_at ? format(new Date(r.sent_at), "MMM d, yyyy") : "—"}</TableCell>
-                    <TableCell className="text-right text-xs">${Number(r.total || 0).toLocaleString()}</TableCell>
+                    <TableCell className="text-right text-xs">{formatCurrency(Number(r.total || 0))}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -602,7 +603,7 @@ export function InvoicesTab({
         subhead={`All invoices for ${account.company}`}
       />
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-        <StatBox label="Total Outstanding" value={`$${totals.outstanding.toLocaleString()}`} />
+        <StatBox label="Total Outstanding" value={formatCurrency(totals.outstanding)} />
         <StatBox label="Total Invoices" value={String(totals.count)} />
         <StatBox label="Paid Last 90 Days" value="—" sub="Coming soon" />
       </div>
@@ -661,7 +662,7 @@ export function InvoicesTab({
                     </TableCell>
                     <TableCell><Badge variant="outline" className="text-[10px]">{r.status}</Badge></TableCell>
                     <TableCell className="text-xs">{r.invoice_date ? format(new Date(r.invoice_date), "MMM d, yyyy") : "—"}</TableCell>
-                    <TableCell className="text-right text-xs">${Number(r.total_amount || 0).toLocaleString()}</TableCell>
+                    <TableCell className="text-right text-xs">{formatCurrency(Number(r.total_amount || 0))}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -742,7 +743,7 @@ export function MembershipTab({ account }: { account: { id: string; company: str
         <CardContent className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div><p className="text-[11px] uppercase text-muted-foreground">Tier</p><p className="font-bold capitalize">{member.tier}</p></div>
           <div><p className="text-[11px] uppercase text-muted-foreground">Enrolled</p><p className="font-bold">{format(new Date(member.created_at), "MMM d, yyyy")}</p></div>
-          <div><p className="text-[11px] uppercase text-muted-foreground">Monthly</p><p className="font-bold">${Number(member.monthly_amount || 0).toLocaleString()}</p></div>
+          <div><p className="text-[11px] uppercase text-muted-foreground">Monthly</p><p className="font-bold">{formatCurrency(Number(member.monthly_amount || 0))}</p></div>
           <div><p className="text-[11px] uppercase text-muted-foreground">Status</p><p className="font-bold capitalize">{member.status}</p></div>
         </CardContent>
       </Card>
@@ -806,8 +807,8 @@ export function PipelineTab({ account }: { account: { id: string; company: strin
         subhead={`Open deals and pipeline activity for ${account.company}`}
       />
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-        <StatBox label="Total Open Pipeline" value={`$${totalOpen.toLocaleString()}`} />
-        <StatBox label="Avg Deal Size" value={`$${Math.round(avg).toLocaleString()}`} />
+        <StatBox label="Total Open Pipeline" value={formatCurrency(totalOpen)} />
+        <StatBox label="Avg Deal Size" value={formatCurrency(avg)} />
         <StatBox label="Open Deals" value={String(open.length)} />
       </div>
       {deals.length === 0 ? (
@@ -821,7 +822,7 @@ export function PipelineTab({ account }: { account: { id: string; company: strin
                   <p className="font-semibold text-sm truncate">{d.deal_name}</p>
                   <Badge variant="outline" className="text-[10px]">{d.stage}</Badge>
                 </div>
-                <p className="text-xl font-bold">${Number(d.value || 0).toLocaleString()}</p>
+                <p className="text-xl font-bold">{formatCurrency(Number(d.value || 0))}</p>
                 <div className="text-[11px] text-muted-foreground space-y-0.5">
                   {d.owner && <p>Owner: {d.owner}</p>}
                   {d.expected_close_date && <p>Close: {format(new Date(d.expected_close_date), "MMM d, yyyy")}</p>}

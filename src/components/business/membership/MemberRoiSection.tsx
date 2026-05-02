@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Truck, Gauge, Sparkles, Plug, Clock, Brain } from "lucide-react";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
@@ -107,7 +108,7 @@ export function MemberRoiSection() {
           value={stats.truckRollsAvoided > 0 ? String(stats.truckRollsAvoided) : "Building baseline"}
           sub={
             stats.truckRollsAvoided > 0
-              ? `≈ $${dollarsSaved.toLocaleString()} saved`
+              ? `≈ ${formatCurrency(dollarsSaved)} saved`
               : "Tracking remote resolutions"
           }
           neuralLayer="resolution layer"

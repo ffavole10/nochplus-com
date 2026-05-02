@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useCustomers } from "@/hooks/useCustomers";
+import { formatCurrency } from "@/lib/formatters";
 import { usePrimaryContactsByCustomer } from "@/hooks/usePrimaryContacts";
 import { useAllPartnerMeta } from "@/hooks/usePartnerMeta";
 import { useDeals } from "@/hooks/useDeals";
@@ -86,7 +87,7 @@ export default function GrowthAccounts() {
                       </td>
                       <td className="py-3 px-4 text-xs">{meta?.motion ? MOTION_LABELS[meta.motion as GrowthMotion] : "—"}</td>
                       <td className="py-3 px-4 text-center font-medium">{stats.count}</td>
-                      <td className="py-3 px-4 text-right font-medium">${stats.value.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-right font-medium">{formatCurrency(stats.value)}</td>
                       <td className="py-3 px-4 text-xs">{meta?.nochplus_timing || "—"}</td>
                       <td className="py-3 px-4 text-right">
                         <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={(e) => { e.stopPropagation(); navigate(`/partners/${c.id}?tab=account-map`); }}>
