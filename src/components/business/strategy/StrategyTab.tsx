@@ -288,6 +288,16 @@ function StrategyContent({
       {/* Risks */}
       <RisksSection strategyId={strategy.id} />
 
+      {/* Weekly Review notes */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <h3 className="text-sm font-semibold">Weekly Review Activity</h3>
+          <QuickNoteCapture linkType="strategy" linkId={strategy.id} />
+          <LinkedNotesList linkType="strategy" linkId={strategy.id} title="Notes from Weekly Reviews" />
+        </CardContent>
+      </Card>
+
+
       {/* Footer */}
       <Card>
         <CardContent className="p-4 flex items-center justify-between text-xs text-muted-foreground flex-wrap gap-2">
