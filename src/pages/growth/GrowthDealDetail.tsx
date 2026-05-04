@@ -38,6 +38,8 @@ import { toast } from "sonner";
 import { format, formatDistanceToNow, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { FocusRibbon } from "@/components/business/strategy/FocusRibbon";
+import { QuickNoteCapture } from "@/components/business/weekly-review/QuickNoteCapture";
+import { LinkedNotesList } from "@/components/business/weekly-review/LinkedNotesList";
 
 const SIGNAL_BADGE: Record<string, string> = {
   none: "bg-muted text-muted-foreground border-muted",
