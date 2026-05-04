@@ -5467,6 +5467,134 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_review_notes: {
+        Row: {
+          action_status:
+            | Database["public"]["Enums"]["weekly_review_action_status"]
+            | null
+          author: string
+          author_user_id: string | null
+          created_at: string
+          due_date: string | null
+          edited_at: string | null
+          id: string
+          is_pre_meeting: boolean
+          linked_to_id: string | null
+          linked_to_type: Database["public"]["Enums"]["weekly_review_link_type"]
+          locked: boolean
+          note_text: string
+          note_type: Database["public"]["Enums"]["weekly_review_note_type"]
+          owner: string | null
+          weekly_review_id: string
+        }
+        Insert: {
+          action_status?:
+            | Database["public"]["Enums"]["weekly_review_action_status"]
+            | null
+          author: string
+          author_user_id?: string | null
+          created_at?: string
+          due_date?: string | null
+          edited_at?: string | null
+          id?: string
+          is_pre_meeting?: boolean
+          linked_to_id?: string | null
+          linked_to_type?: Database["public"]["Enums"]["weekly_review_link_type"]
+          locked?: boolean
+          note_text: string
+          note_type: Database["public"]["Enums"]["weekly_review_note_type"]
+          owner?: string | null
+          weekly_review_id: string
+        }
+        Update: {
+          action_status?:
+            | Database["public"]["Enums"]["weekly_review_action_status"]
+            | null
+          author?: string
+          author_user_id?: string | null
+          created_at?: string
+          due_date?: string | null
+          edited_at?: string | null
+          id?: string
+          is_pre_meeting?: boolean
+          linked_to_id?: string | null
+          linked_to_type?: Database["public"]["Enums"]["weekly_review_link_type"]
+          locked?: boolean
+          note_text?: string
+          note_type?: Database["public"]["Enums"]["weekly_review_note_type"]
+          owner?: string | null
+          weekly_review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_review_notes_weekly_review_id_fkey"
+            columns: ["weekly_review_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_reviews: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          end_date: string
+          id: string
+          skip_reason:
+            | Database["public"]["Enums"]["weekly_review_skip_reason"]
+            | null
+          skip_reason_notes: string | null
+          skipped_at: string | null
+          skipped_by: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["weekly_review_status"]
+          summary: string | null
+          updated_at: string
+          week_number: number
+          year: number
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          end_date: string
+          id?: string
+          skip_reason?:
+            | Database["public"]["Enums"]["weekly_review_skip_reason"]
+            | null
+          skip_reason_notes?: string | null
+          skipped_at?: string | null
+          skipped_by?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["weekly_review_status"]
+          summary?: string | null
+          updated_at?: string
+          week_number: number
+          year: number
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          skip_reason?:
+            | Database["public"]["Enums"]["weekly_review_skip_reason"]
+            | null
+          skip_reason_notes?: string | null
+          skipped_at?: string | null
+          skipped_by?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["weekly_review_status"]
+          summary?: string | null
+          updated_at?: string
+          week_number?: number
+          year?: number
+        }
+        Relationships: []
+      }
       work_description_templates: {
         Row: {
           created_at: string
@@ -5920,6 +6048,63 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      auto_advance_weekly_review_statuses: { Args: never; Returns: undefined }
+      close_weekly_review: {
+        Args: { _closed_by?: string; _id: string }
+        Returns: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          end_date: string
+          id: string
+          skip_reason:
+            | Database["public"]["Enums"]["weekly_review_skip_reason"]
+            | null
+          skip_reason_notes: string | null
+          skipped_at: string | null
+          skipped_by: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["weekly_review_status"]
+          summary: string | null
+          updated_at: string
+          week_number: number
+          year: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "weekly_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_or_create_current_weekly_review: {
+        Args: never
+        Returns: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          end_date: string
+          id: string
+          skip_reason:
+            | Database["public"]["Enums"]["weekly_review_skip_reason"]
+            | null
+          skip_reason_notes: string | null
+          skipped_at: string | null
+          skipped_by: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["weekly_review_status"]
+          summary: string | null
+          updated_at: string
+          week_number: number
+          year: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "weekly_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -6205,6 +6390,39 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      skip_weekly_review: {
+        Args: {
+          _id: string
+          _notes?: string
+          _reason: Database["public"]["Enums"]["weekly_review_skip_reason"]
+          _skipped_by?: string
+        }
+        Returns: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          end_date: string
+          id: string
+          skip_reason:
+            | Database["public"]["Enums"]["weekly_review_skip_reason"]
+            | null
+          skip_reason_notes: string | null
+          skipped_at: string | null
+          skipped_by: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["weekly_review_status"]
+          summary: string | null
+          updated_at: string
+          week_number: number
+          year: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "weekly_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       account_relationship_type: "partner" | "customer" | "prospect" | "both"
@@ -6386,6 +6604,27 @@ export type Database = {
       strategy_status: "needs_review" | "active" | "archived"
       strategy_temperature: "cold" | "warm" | "hot"
       ticket_assessment_status: "pending_review" | "assessed" | "rejected"
+      weekly_review_action_status: "open" | "complete" | "abandoned"
+      weekly_review_link_type: "deal" | "strategy" | "account" | "none"
+      weekly_review_note_type:
+        | "update"
+        | "decision"
+        | "action_item"
+        | "risk"
+        | "need"
+      weekly_review_skip_reason:
+        | "holiday"
+        | "trade_show"
+        | "team_travel"
+        | "sprint_week"
+        | "other"
+      weekly_review_status:
+        | "pre_meeting"
+        | "open"
+        | "closed"
+        | "skipped"
+        | "missed"
+        | "pending_close"
       work_order_job_type:
         | "repair"
         | "troubleshooting"
@@ -6729,6 +6968,30 @@ export const Constants = {
       strategy_status: ["needs_review", "active", "archived"],
       strategy_temperature: ["cold", "warm", "hot"],
       ticket_assessment_status: ["pending_review", "assessed", "rejected"],
+      weekly_review_action_status: ["open", "complete", "abandoned"],
+      weekly_review_link_type: ["deal", "strategy", "account", "none"],
+      weekly_review_note_type: [
+        "update",
+        "decision",
+        "action_item",
+        "risk",
+        "need",
+      ],
+      weekly_review_skip_reason: [
+        "holiday",
+        "trade_show",
+        "team_travel",
+        "sprint_week",
+        "other",
+      ],
+      weekly_review_status: [
+        "pre_meeting",
+        "open",
+        "closed",
+        "skipped",
+        "missed",
+        "pending_close",
+      ],
       work_order_job_type: [
         "repair",
         "troubleshooting",

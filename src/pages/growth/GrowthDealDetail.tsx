@@ -38,6 +38,8 @@ import { toast } from "sonner";
 import { format, formatDistanceToNow, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { FocusRibbon } from "@/components/business/strategy/FocusRibbon";
+import { QuickNoteCapture } from "@/components/business/weekly-review/QuickNoteCapture";
+import { LinkedNotesList } from "@/components/business/weekly-review/LinkedNotesList";
 
 const SIGNAL_BADGE: Record<string, string> = {
   none: "bg-muted text-muted-foreground border-muted",
@@ -580,6 +582,9 @@ export default function GrowthDealDetail() {
               Add Note
             </Button>
           </div>
+
+          <QuickNoteCapture linkType="deal" linkId={deal.id} />
+          <LinkedNotesList linkType="deal" linkId={deal.id} />
 
           {activities.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6 italic">No activity logged yet.</p>

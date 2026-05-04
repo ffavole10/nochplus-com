@@ -36,6 +36,8 @@ import {
 import { StrategyWizard } from "./StrategyWizard";
 import { runStrategyTour, runSectionHelp } from "./strategyTour";
 import { toast } from "sonner";
+import { QuickNoteCapture } from "@/components/business/weekly-review/QuickNoteCapture";
+import { LinkedNotesList } from "@/components/business/weekly-review/LinkedNotesList";
 import { format, formatDistanceToNow } from "date-fns";
 
 const TEMPERATURE_COLORS: Record<StrategyTemperature, string> = {
@@ -287,6 +289,16 @@ function StrategyContent({
 
       {/* Risks */}
       <RisksSection strategyId={strategy.id} />
+
+      {/* Weekly Review notes */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <h3 className="text-sm font-semibold">Weekly Review Activity</h3>
+          <QuickNoteCapture linkType="strategy" linkId={strategy.id} />
+          <LinkedNotesList linkType="strategy" linkId={strategy.id} title="Notes from Weekly Reviews" />
+        </CardContent>
+      </Card>
+
 
       {/* Footer */}
       <Card>

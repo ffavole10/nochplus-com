@@ -11,6 +11,7 @@ import { TechnicianGate } from "@/components/TechnicianGate";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
 import { CommandPaletteProvider } from "@/components/command-palette/CommandPaletteContext";
 import { CommandPalette } from "@/components/command-palette/CommandPalette";
+import { WeeklyReviewBanner } from "@/components/business/weekly-review/WeeklyReviewBanner";
 
 function ActivityTracker() {
   useActivityTracking();
@@ -31,6 +32,7 @@ export default function MainPlatformLayout() {
                 <PlatformSidebar />
                 <div className="flex-1 flex flex-col min-h-screen overflow-auto">
                   <PlatformHeader />
+                  <WeeklyReviewBanner />
                   <main className="flex-1">
                     <ErrorBoundary>
                       <SectionAccessGuard>

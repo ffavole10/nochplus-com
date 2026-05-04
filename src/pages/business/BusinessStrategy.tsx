@@ -1,5 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { WeeklyReviewTab } from "@/components/business/weekly-review/WeeklyReviewTab";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -208,10 +210,26 @@ export default function BusinessStrategy() {
 
   const hasZeroStrategies = !isLoading && strategies.length === 0;
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") === "weekly_review" ? "weekly_review" : "portfolio";
+  const setActiveTab = (v: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (v === "portfolio") next.delete("tab"); else next.set("tab", v);
+    setSearchParams(next, { replace: true });
+  };
+
   return (
     <TooltipProvider>
-      <div className={cn("p-6 space-y-6", focusMode.enabled && "ring-2 ring-amber-400/60 rounded-md m-2")}>
-        {/* Header */}
+      <div className={cn("p-6 space-y-4", focusMode.enabled && "ring-2 ring-amber-400/60 rounded-md m-2")}>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+            <TabsTrigger value="weekly_review">Weekly Review</TabsTrigger>
+          </TabsList>
+          <TabsContent value="weekly_review" className="mt-4">
+            <WeeklyReviewTab />
+          </TabsContent>
+          <TabsContent value="portfolio" className="mt-4 space-y-6">
         <div className="flex items-start justify-between gap-4 flex-wrap" data-tour="portfolio-header">
           <div>
             <h1 className="text-2xl font-bold">Account Strategy</h1>
@@ -431,6 +449,8 @@ export default function BusinessStrategy() {
             goToStrategy(customerId, true);
           }}
         />
+        </TabsContent>
+        </Tabs>
       </div>
     </TooltipProvider>
   );
