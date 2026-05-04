@@ -449,6 +449,8 @@ export default function BusinessStrategy() {
             goToStrategy(customerId, true);
           }}
         />
+        </TabsContent>
+        </Tabs>
       </div>
     </TooltipProvider>
   );
