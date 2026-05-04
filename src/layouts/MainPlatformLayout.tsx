@@ -11,6 +11,7 @@ import { TechnicianGate } from "@/components/TechnicianGate";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
 import { CommandPaletteProvider } from "@/components/command-palette/CommandPaletteContext";
 import { CommandPalette } from "@/components/command-palette/CommandPalette";
+import { WeeklyReviewBanner } from "@/components/business/weekly-review/WeeklyReviewBanner";
 
 function ActivityTracker() {
   useActivityTracking();
