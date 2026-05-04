@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WeeklyReviewTab } from "@/components/business/weekly-review/WeeklyReviewTab";
+import { QuarterlyReviewTab } from "@/components/business/quarterly-review/QuarterlyReviewTab";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
