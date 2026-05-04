@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WeeklyReviewTab } from "@/components/business/weekly-review/WeeklyReviewTab";
+import { QuarterlyReviewTab } from "@/components/business/quarterly-review/QuarterlyReviewTab";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -211,7 +212,10 @@ export default function BusinessStrategy() {
   const hasZeroStrategies = !isLoading && strategies.length === 0;
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") === "weekly_review" ? "weekly_review" : "portfolio";
+  const tabParam = searchParams.get("tab");
+  const activeTab =
+    tabParam === "weekly_review" ? "weekly_review" :
+    tabParam === "quarterly_review" ? "quarterly_review" : "portfolio";
   const setActiveTab = (v: string) => {
     const next = new URLSearchParams(searchParams);
     if (v === "portfolio") next.delete("tab"); else next.set("tab", v);
@@ -225,9 +229,13 @@ export default function BusinessStrategy() {
           <TabsList>
             <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
             <TabsTrigger value="weekly_review">Weekly Review</TabsTrigger>
+            <TabsTrigger value="quarterly_review">Quarterly Review</TabsTrigger>
           </TabsList>
           <TabsContent value="weekly_review" className="mt-4">
             <WeeklyReviewTab />
+          </TabsContent>
+          <TabsContent value="quarterly_review" className="mt-4">
+            <QuarterlyReviewTab />
           </TabsContent>
           <TabsContent value="portfolio" className="mt-4 space-y-6">
         <div className="flex items-start justify-between gap-4 flex-wrap" data-tour="portfolio-header">

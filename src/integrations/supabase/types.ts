@@ -3489,6 +3489,202 @@ export type Database = {
         }
         Relationships: []
       }
+      qbr_financial_data: {
+        Row: {
+          avg_monthly_burn: number | null
+          cash_end: number | null
+          cash_start: number | null
+          entered_at: string | null
+          entered_by: string | null
+          id: string
+          net_income: number | null
+          notes: string | null
+          qbr_id: string
+          quarterly_expenses: number | null
+          quarterly_revenue: number | null
+          runway_months: number | null
+          source: string | null
+          supporting_document_path: string | null
+        }
+        Insert: {
+          avg_monthly_burn?: number | null
+          cash_end?: number | null
+          cash_start?: number | null
+          entered_at?: string | null
+          entered_by?: string | null
+          id?: string
+          net_income?: number | null
+          notes?: string | null
+          qbr_id: string
+          quarterly_expenses?: number | null
+          quarterly_revenue?: number | null
+          runway_months?: number | null
+          source?: string | null
+          supporting_document_path?: string | null
+        }
+        Update: {
+          avg_monthly_burn?: number | null
+          cash_end?: number | null
+          cash_start?: number | null
+          entered_at?: string | null
+          entered_by?: string | null
+          id?: string
+          net_income?: number | null
+          notes?: string | null
+          qbr_id?: string
+          quarterly_expenses?: number | null
+          quarterly_revenue?: number | null
+          runway_months?: number | null
+          source?: string | null
+          supporting_document_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbr_financial_data_qbr_id_fkey"
+            columns: ["qbr_id"]
+            isOneToOne: true
+            referencedRelation: "quarterly_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbr_focus_accounts: {
+        Row: {
+          account_name: string
+          end_of_quarter_state: string | null
+          id: string
+          order_index: number
+          qbr_id: string
+          strategy_id: string | null
+          what_we_achieved: string | null
+          why_it_mattered: string | null
+        }
+        Insert: {
+          account_name: string
+          end_of_quarter_state?: string | null
+          id?: string
+          order_index?: number
+          qbr_id: string
+          strategy_id?: string | null
+          what_we_achieved?: string | null
+          why_it_mattered?: string | null
+        }
+        Update: {
+          account_name?: string
+          end_of_quarter_state?: string | null
+          id?: string
+          order_index?: number
+          qbr_id?: string
+          strategy_id?: string | null
+          what_we_achieved?: string | null
+          why_it_mattered?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbr_focus_accounts_qbr_id_fkey"
+            columns: ["qbr_id"]
+            isOneToOne: false
+            referencedRelation: "quarterly_reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qbr_focus_accounts_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "account_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbr_sections: {
+        Row: {
+          content: Json
+          data_source: Database["public"]["Enums"]["qbr_data_source"]
+          id: string
+          last_updated_by: string | null
+          qbr_id: string
+          section_key: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          data_source?: Database["public"]["Enums"]["qbr_data_source"]
+          id?: string
+          last_updated_by?: string | null
+          qbr_id: string
+          section_key: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          data_source?: Database["public"]["Enums"]["qbr_data_source"]
+          id?: string
+          last_updated_by?: string | null
+          qbr_id?: string
+          section_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbr_sections_qbr_id_fkey"
+            columns: ["qbr_id"]
+            isOneToOne: false
+            referencedRelation: "quarterly_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quarterly_reviews: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          created_by: string | null
+          created_retroactively: boolean
+          end_date: string
+          entry_mode: Database["public"]["Enums"]["qbr_entry_mode"]
+          id: string
+          quarter: Database["public"]["Enums"]["qbr_quarter"]
+          source_document_path: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["qbr_status"]
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_retroactively?: boolean
+          end_date: string
+          entry_mode?: Database["public"]["Enums"]["qbr_entry_mode"]
+          id?: string
+          quarter: Database["public"]["Enums"]["qbr_quarter"]
+          source_document_path?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["qbr_status"]
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_retroactively?: boolean
+          end_date?: string
+          entry_mode?: Database["public"]["Enums"]["qbr_entry_mode"]
+          id?: string
+          quarter?: Database["public"]["Enums"]["qbr_quarter"]
+          source_document_path?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["qbr_status"]
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       quote_rules: {
         Row: {
           action_type: string
@@ -6559,6 +6755,10 @@ export type Database = {
         | "12+ months"
         | "Never"
       growth_tier: "A" | "B" | "C"
+      qbr_data_source: "auto" | "document" | "manual" | "quickbooks"
+      qbr_entry_mode: "auto" | "document_upload" | "manual" | "hybrid"
+      qbr_quarter: "Q1" | "Q2" | "Q3" | "Q4"
+      qbr_status: "in_progress" | "prep_open" | "active" | "closed"
       recurring_model: "per_connector" | "flat_monthly"
       relationship_status: "Cold" | "Warm" | "Hot" | "Champion"
       stakeholder_role:
@@ -6917,6 +7117,10 @@ export const Constants = {
         "Never",
       ],
       growth_tier: ["A", "B", "C"],
+      qbr_data_source: ["auto", "document", "manual", "quickbooks"],
+      qbr_entry_mode: ["auto", "document_upload", "manual", "hybrid"],
+      qbr_quarter: ["Q1", "Q2", "Q3", "Q4"],
+      qbr_status: ["in_progress", "prep_open", "active", "closed"],
       recurring_model: ["per_connector", "flat_monthly"],
       relationship_status: ["Cold", "Warm", "Hot", "Champion"],
       stakeholder_role: [
