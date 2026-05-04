@@ -211,6 +211,7 @@ export default function BusinessStrategy() {
 
   const hasZeroStrategies = !isLoading && strategies.length === 0;
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
   const activeTab =
     tabParam === "weekly_review" ? "weekly_review" :
