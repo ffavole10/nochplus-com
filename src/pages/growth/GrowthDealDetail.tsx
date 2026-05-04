@@ -581,6 +581,9 @@ export default function GrowthDealDetail() {
             </Button>
           </div>
 
+          <QuickNoteCapture linkType="deal" linkId={deal.id} />
+          <LinkedNotesList linkType="deal" linkId={deal.id} />
+
           {activities.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6 italic">No activity logged yet.</p>
           ) : (
