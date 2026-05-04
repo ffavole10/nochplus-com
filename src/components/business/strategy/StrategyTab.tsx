@@ -36,6 +36,8 @@ import {
 import { StrategyWizard } from "./StrategyWizard";
 import { runStrategyTour, runSectionHelp } from "./strategyTour";
 import { toast } from "sonner";
+import { QuickNoteCapture } from "@/components/business/weekly-review/QuickNoteCapture";
+import { LinkedNotesList } from "@/components/business/weekly-review/LinkedNotesList";
 import { format, formatDistanceToNow } from "date-fns";
 
 const TEMPERATURE_COLORS: Record<StrategyTemperature, string> = {
