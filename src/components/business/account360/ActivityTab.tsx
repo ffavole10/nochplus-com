@@ -74,12 +74,14 @@ export function ActivityTab({ account }: { account: { id: string; company: strin
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       <TabHeader
         title="Activity"
         count={entries.length}
         subhead={`Audit log for ${account.company}`}
       />
+      <QuickNoteCapture linkType="account" linkId={account.id} />
+      <LinkedNotesList linkType="account" linkId={account.id} title="Weekly Review notes" />
       {entries.length === 0 ? (
         <TabEmpty label="No activity yet for this account." />
       ) : (
