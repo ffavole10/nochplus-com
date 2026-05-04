@@ -16,6 +16,8 @@ import {
 import { useAccountActivity, type AccountActivityEntry } from "@/hooks/useAccountActivity";
 import { fieldLabel } from "@/lib/accountActivity";
 import { TabHeader, TabEmpty } from "./shared";
+import { QuickNoteCapture } from "@/components/business/weekly-review/QuickNoteCapture";
+import { LinkedNotesList } from "@/components/business/weekly-review/LinkedNotesList";
 
 const ICONS: Record<string, any> = {
   created: Plus,
