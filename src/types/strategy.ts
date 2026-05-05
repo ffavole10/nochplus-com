@@ -91,6 +91,7 @@ export type StrategyKpiTargetType = "single" | "phased";
 export interface QuarterPhasingEntry {
   target_value: number;
   target_percent: number;
+  notes?: string;
 }
 
 export type QuarterPhasing = Partial<Record<"Q1" | "Q2" | "Q3" | "Q4" | "Q1_next", QuarterPhasingEntry>>;
