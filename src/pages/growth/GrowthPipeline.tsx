@@ -52,7 +52,6 @@ export default function GrowthPipeline() {
   const userMap = useGrowthUserMap();
   const { data: opsMap = {} } = useAccountOpsSnapshots();
   const { data: briefMap = {} } = useLatestScribeBriefs();
-  const updateStage = useUpdateDealStage();
   const createDeal = useCreateDeal();
 
   const [view, setView] = useState<"kanban" | "list">("kanban");
