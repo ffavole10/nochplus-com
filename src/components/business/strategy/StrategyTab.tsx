@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  Plus, Pencil, Trash2, AlertTriangle, Eye, CheckCircle2, Circle, Play, X, HelpCircle, Sparkles, History,
+  Plus, Pencil, Trash2, AlertTriangle, Eye, CheckCircle2, Circle, Play, X, HelpCircle, Sparkles, History, Lock, Unlock,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
