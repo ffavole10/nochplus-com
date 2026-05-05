@@ -787,6 +787,8 @@ function KpisSection({ strategyId, accountTypes }: { strategyId: string; account
                 onEdit={() => setEditKpi(k)}
                 onRemove={() => remove.mutate(k.id)}
                 onUpdateActual={() => setActualKpi(k)}
+                unlocked={unlocked}
+                onRequestUnlock={(q, y) => requestUnlock(k, q, y)}
               />
             ) : (
               <SingleKpiCard
