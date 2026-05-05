@@ -931,21 +931,22 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
 
   const annualNum = Number(annual || 0);
 
+  type PRow = { value: number; pct: number; notes: string };
   // Recompute the locked quarter as the remainder of the others.
-  const recomputeLocked = (state: Record<QKey, { value: number; pct: number }>, lockedQ: QKey, ann: number) => {
+  const recomputeLocked = (state: Record<QKey, PRow>, lockedQ: QKey, ann: number): Record<QKey, PRow> => {
     const others = QUARTERS.filter((q) => q !== lockedQ);
     const sumOtherPct = others.reduce((s, q) => s + (Number(state[q].pct) || 0), 0);
     const sumOtherVal = others.reduce((s, q) => s + (Number(state[q].value) || 0), 0);
     const lockedPct = Math.max(0, 100 - sumOtherPct);
     const lockedVal = ann > 0 ? Math.max(0, ann - sumOtherVal) : 0;
-    return { ...state, [lockedQ]: { value: lockedVal, pct: lockedPct } };
+    return { ...state, [lockedQ]: { ...state[lockedQ], value: lockedVal, pct: lockedPct } };
   };
 
   // When annual changes, recompute dollar amounts from existing percentages and rebalance locked.
   useEffect(() => {
     if (targetType !== "phased" || !annualNum) return;
     setPhasing((prev) => {
-      const next = { ...prev };
+      const next: Record<QKey, PRow> = { ...prev };
       QUARTERS.filter((q) => q !== locked).forEach((q) => {
         next[q] = { ...next[q], value: Math.round(((Number(next[q].pct) || 0) / 100) * annualNum) };
       });
@@ -958,11 +959,11 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
     setTemplate(tplKey);
     const tpl = PHASING_TEMPLATES[tplKey];
     if (!tpl) return;
-    const next: Record<QKey, { value: number; pct: number }> = { ...phasing };
+    const next: Record<QKey, PRow> = { ...phasing };
     QUARTERS.forEach((q) => {
       const pct = tpl.quarters[q];
       const value = annualNum ? Math.round((pct / 100) * annualNum) : 0;
-      next[q] = { value, pct };
+      next[q] = { ...next[q], value, pct };
     });
     setPhasing(recomputeLocked(next, locked, annualNum));
   };
@@ -971,7 +972,7 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
     if (q === locked) return;
     const v = Number(raw || 0);
     const pct = annualNum > 0 ? (v / annualNum) * 100 : 0;
-    const next = { ...phasing, [q]: { value: v, pct: Math.round(pct * 10) / 10 } };
+    const next: Record<QKey, PRow> = { ...phasing, [q]: { ...phasing[q], value: v, pct: Math.round(pct * 10) / 10 } };
     setPhasing(recomputeLocked(next, locked, annualNum));
     setTemplate("");
   };
@@ -980,9 +981,13 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
     if (q === locked) return;
     const p = Number(raw || 0);
     const v = annualNum > 0 ? Math.round((p / 100) * annualNum) : 0;
-    const next = { ...phasing, [q]: { pct: p, value: v } };
+    const next: Record<QKey, PRow> = { ...phasing, [q]: { ...phasing[q], pct: p, value: v } };
     setPhasing(recomputeLocked(next, locked, annualNum));
     setTemplate("");
+  };
+
+  const updateQuarterNotes = (q: QKey, raw: string) => {
+    setPhasing((prev) => ({ ...prev, [q]: { ...prev[q], notes: raw } }));
   };
 
   const setLockedQuarter = (q: QKey) => {
