@@ -920,11 +920,11 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
     (kpi?.annual_target_value ?? (kpi?.target_type === "phased" ? kpi?.target_value : ""))?.toString() || ""
   );
   const initialPhasing = (kpi?.quarter_phasing || {}) as QuarterPhasing;
-  const [phasing, setPhasing] = useState<Record<QKey, { value: number; pct: number }>>(() => ({
-    Q1: { value: Number(initialPhasing.Q1?.target_value || 0), pct: Number(initialPhasing.Q1?.target_percent || 0) },
-    Q2: { value: Number(initialPhasing.Q2?.target_value || 0), pct: Number(initialPhasing.Q2?.target_percent || 0) },
-    Q3: { value: Number(initialPhasing.Q3?.target_value || 0), pct: Number(initialPhasing.Q3?.target_percent || 0) },
-    Q4: { value: Number(initialPhasing.Q4?.target_value || 0), pct: Number(initialPhasing.Q4?.target_percent || 0) },
+  const [phasing, setPhasing] = useState<Record<QKey, { value: number; pct: number; notes: string }>>(() => ({
+    Q1: { value: Number(initialPhasing.Q1?.target_value || 0), pct: Number(initialPhasing.Q1?.target_percent || 0), notes: initialPhasing.Q1?.notes || "" },
+    Q2: { value: Number(initialPhasing.Q2?.target_value || 0), pct: Number(initialPhasing.Q2?.target_percent || 0), notes: initialPhasing.Q2?.notes || "" },
+    Q3: { value: Number(initialPhasing.Q3?.target_value || 0), pct: Number(initialPhasing.Q3?.target_percent || 0), notes: initialPhasing.Q3?.notes || "" },
+    Q4: { value: Number(initialPhasing.Q4?.target_value || 0), pct: Number(initialPhasing.Q4?.target_percent || 0), notes: initialPhasing.Q4?.notes || "" },
   }));
   const [locked, setLocked] = useState<QKey>((kpi?.locked_quarter as QKey) || "Q4");
   const [template, setTemplate] = useState<string>("");
