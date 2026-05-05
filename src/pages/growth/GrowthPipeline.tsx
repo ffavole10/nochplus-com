@@ -374,6 +374,16 @@ export default function GrowthPipeline() {
                                   lastBriefAt={briefMap[deal.id]?.generated_at}
                                   buyingSignal={briefMap[deal.id]?.buying_signal_flag}
                                 />
+                                {deal.stage === "Closed Won" && (deal as any).win_reason && (
+                                  <Badge variant="outline" className="mt-1.5 text-[10px] bg-emerald-50 text-emerald-700 border-emerald-300">
+                                    Won · {WIN_REASON_LABELS[(deal as any).win_reason as keyof typeof WIN_REASON_LABELS] || (deal as any).win_reason}
+                                  </Badge>
+                                )}
+                                {deal.stage === "Closed Lost" && (deal as any).loss_reason && (
+                                  <Badge variant="outline" className="mt-1.5 text-[10px] bg-rose-50 text-rose-700 border-rose-300">
+                                    Lost · {LOSS_REASON_LABELS[(deal as any).loss_reason] || (deal as any).loss_reason}
+                                  </Badge>
+                                )}
                                 {(deal.owner || (deal.owner_user_id && userMap[deal.owner_user_id])) && (
                                   <div className="mt-1.5 pt-1.5 border-t border-border/50">
                                     <span className="text-[10px] text-muted-foreground">
