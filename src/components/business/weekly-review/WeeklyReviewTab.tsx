@@ -264,10 +264,20 @@ function LiveMode({ review, onExit, onClose }: { review: WeeklyReview; onExit: (
   const customerById = useMemo(() => Object.fromEntries(customers.map((c: any) => [c.id, c])), [customers]);
 
   const openDeals = useMemo(
-    () => deals.filter((d: any) => d.stage !== "Closed Won" && d.stage !== "Closed Lost")
-      .sort((a: any, b: any) => Number(b.tcv_value || 0) - Number(a.tcv_value || 0)),
+    () => deals.filter((d: any) => d.stage !== "Closed Won" && d.stage !== "Closed Lost"),
     [deals]
   );
+  const { data: focusCustomerIds = new Set<string>() } = useFocus5CustomerIds();
+  const dealsByStage = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    DEAL_STAGES.forEach((s) => { map[s] = []; });
+    openDeals.forEach((d: any) => { if (map[d.stage]) map[d.stage].push(d); });
+    // sort each by value desc
+    Object.keys(map).forEach((k) => map[k].sort((a, b) => Number(b.value || 0) - Number(a.value || 0)));
+    return map;
+  }, [openDeals]);
+  const totalArr = useMemo(() => openDeals.reduce((s: number, d: any) => s + Number(d.value || 0), 0), [openDeals]);
+  const stagesWithDeals = DEAL_STAGES.filter((s) => dealsByStage[s].length > 0);
   const focusStrategies = useMemo(() => strategies.filter((s: any) => s.is_focus), [strategies]);
   const atRisk = useMemo(
     () => strategies.filter((s: any) => !s.is_focus && (s.status === "needs_review" || s.current_position === "at_risk")),
