@@ -1148,6 +1148,28 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
   const [locked, setLocked] = useState<QKey>((kpi?.locked_quarter as QKey) || "Q4");
   const [template, setTemplate] = useState<string>("");
 
+  // Date-based per-quarter locks (Q1 in Q2 of same year, etc.)
+  const editingYear = useMemo(() => new Date().getFullYear(), []);
+  const isDateLocked = (q: QKey) => isQuarterLocked(q, editingYear);
+  const isQuarterUnlocked = (q: QKey) => !!(kpi?.id && unlocked?.has(unlockKey(kpi.id, q, editingYear)));
+  const isFieldDisabled = (q: QKey) => isDateLocked(q) && !isQuarterUnlocked(q);
+  const lockReason = (q: QKey) => `${q} closed on ${formatQuarterEnd(q, editingYear)}. Unlock from quarter detail panel to amend.`;
+
+  // Snapshot of initial phased state per quarter (for audit before/after)
+  const initialPhasedSnapshot = useMemo(() => {
+    const snap: Record<QKey, { value: number; pct: number; notes: string }> = {} as any;
+    QUARTERS.forEach((q) => {
+      snap[q] = {
+        value: Number(initialPhasing[q]?.target_value || 0),
+        pct: Number(initialPhasing[q]?.target_percent || 0),
+        notes: initialPhasing[q]?.notes || "",
+      };
+    });
+    return snap;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
   const annualNum = Number(annual || 0);
 
   type PRow = { value: number; pct: number; notes: string };
