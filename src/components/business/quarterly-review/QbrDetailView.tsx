@@ -6,6 +6,9 @@ import { useQuarterlyReview, QBR_SECTION_LABELS } from "@/hooks/useQbr";
 import { formatCurrency } from "@/lib/formatters";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { QbrHeadlineBanner } from "./QbrHeadlineBanner";
+import { QbrMonthlyTrajectory } from "./QbrMonthlyTrajectory";
+import { QbrInsightsColumns } from "./QbrInsightsColumns";
 
 const ENTRY_BADGE: Record<string, { label: string; icon: any; color: string }> = {
   document_upload: { label: "Document upload", icon: FileText, color: "bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-900/30 dark:text-sky-200" },
@@ -21,7 +24,7 @@ export function QbrDetailView({ id, onBack }: { id: string; onBack: () => void }
   if (isLoading || !data) {
     return <div className="py-12 text-center text-sm text-muted-foreground">Loading QBR…</div>;
   }
-  const { qbr, sections, financial, focus_accounts } = data;
+  const { qbr, sections, financial, focus_accounts, monthly } = data;
   const badge = ENTRY_BADGE[qbr.entry_mode] || ENTRY_BADGE.manual;
   const Icon = badge.icon;
 
@@ -62,6 +65,14 @@ export function QbrDetailView({ id, onBack }: { id: string; onBack: () => void }
         </div>
       </div>
 
+      <QbrHeadlineBanner
+        financial={financial}
+        opMetrics={sections.operational_metrics}
+        focusAccounts={focus_accounts}
+      />
+
+      <QbrMonthlyTrajectory months={monthly} />
+
       <SectionBlock title="Strategic Narrative" source="document">
         <p className="whitespace-pre-wrap text-sm">{sections.strategic_narrative?.content || <Empty />}</p>
       </SectionBlock>
@@ -81,6 +92,12 @@ export function QbrDetailView({ id, onBack }: { id: string; onBack: () => void }
         ) : <Empty />}
       </SectionBlock>
 
+      <QbrInsightsColumns
+        wins={Array.isArray(sections.wins?.content) ? sections.wins.content : []}
+        lessons={Array.isArray(sections.lessons?.content) ? sections.lessons.content : []}
+        decisions={Array.isArray(sections.decisions?.content) ? sections.decisions.content : []}
+      />
+
       <SectionBlock title="Operational Metrics" source={sections.operational_metrics?.data_source || "manual"}>
         <KeyValueGrid value={sections.operational_metrics?.content} />
       </SectionBlock>
@@ -88,10 +105,6 @@ export function QbrDetailView({ id, onBack }: { id: string; onBack: () => void }
       <SectionBlock title="Team & Organization" source={sections.team_org?.data_source || "manual"}>
         <KeyValueGrid value={sections.team_org?.content} />
       </SectionBlock>
-
-      <BulletBlock title="Top Wins" items={sections.wins?.content} source={sections.wins?.data_source} />
-      <BulletBlock title="Top Lessons" items={sections.lessons?.content} source={sections.lessons?.data_source} />
-      <BulletBlock title="Strategic Decisions" items={sections.decisions?.content} source={sections.decisions?.data_source} />
 
       <SectionBlock title="Focus Accounts" source="manual">
         {focus_accounts.length === 0 ? <Empty /> : (
