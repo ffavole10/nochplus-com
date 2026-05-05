@@ -979,6 +979,8 @@ function PhasedKpiCard({
             phasingNotes={phase?.notes || ""}
             currentWeek={isCurrent ? status.weeksElapsed : null}
             onAddActual={onUpdateActual}
+            isUnlocked={unlocked.has(unlockKey(k.id, q, status.year))}
+            onRequestUnlock={() => onRequestUnlock(q, status.year)}
           />
         )}
       </div>
