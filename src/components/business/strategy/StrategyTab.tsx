@@ -1173,14 +1173,23 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
   const annualNum = Number(annual || 0);
 
   type PRow = { value: number; pct: number; notes: string };
-  // Recompute the locked quarter as the remainder of the others.
+  // Recompute the auto-balance quarter as the remainder of the others.
+  // Date-locked quarters are treated as fixed (their pct/value count toward total but cannot absorb).
   const recomputeLocked = (state: Record<QKey, PRow>, lockedQ: QKey, ann: number): Record<QKey, PRow> => {
-    const others = QUARTERS.filter((q) => q !== lockedQ);
+    // Find the effective absorber: prefer chosen `lockedQ`, but if that quarter is
+    // date-locked (and not unlocked), pick first non-locked quarter as absorber.
+    let absorber: QKey = lockedQ;
+    if (isFieldDisabled(absorber)) {
+      const firstFree = QUARTERS.find((q) => !isFieldDisabled(q));
+      if (!firstFree) return state; // all locked
+      absorber = firstFree;
+    }
+    const others = QUARTERS.filter((q) => q !== absorber);
     const sumOtherPct = others.reduce((s, q) => s + (Number(state[q].pct) || 0), 0);
     const sumOtherVal = others.reduce((s, q) => s + (Number(state[q].value) || 0), 0);
     const lockedPct = Math.max(0, 100 - sumOtherPct);
     const lockedVal = ann > 0 ? Math.max(0, ann - sumOtherVal) : 0;
-    return { ...state, [lockedQ]: { ...state[lockedQ], value: lockedVal, pct: lockedPct } };
+    return { ...state, [absorber]: { ...state[absorber], value: lockedVal, pct: lockedPct } };
   };
 
   // When annual changes, recompute dollar amounts from existing percentages and rebalance locked.
@@ -1188,7 +1197,7 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
     if (targetType !== "phased" || !annualNum) return;
     setPhasing((prev) => {
       const next: Record<QKey, PRow> = { ...prev };
-      QUARTERS.filter((q) => q !== locked).forEach((q) => {
+      QUARTERS.filter((q) => q !== locked && !isFieldDisabled(q)).forEach((q) => {
         next[q] = { ...next[q], value: Math.round(((Number(next[q].pct) || 0) / 100) * annualNum) };
       });
       return recomputeLocked(next, locked, annualNum);
@@ -1202,6 +1211,7 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
     if (!tpl) return;
     const next: Record<QKey, PRow> = { ...phasing };
     QUARTERS.forEach((q) => {
+      if (isFieldDisabled(q)) return; // don't overwrite locked quarter
       const pct = tpl.quarters[q];
       const value = annualNum ? Math.round((pct / 100) * annualNum) : 0;
       next[q] = { ...next[q], value, pct };
@@ -1210,7 +1220,7 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
   };
 
   const updateQuarterValue = (q: QKey, raw: string) => {
-    if (q === locked) return;
+    if (q === locked || isFieldDisabled(q)) return;
     const v = Number(raw || 0);
     const pct = annualNum > 0 ? (v / annualNum) * 100 : 0;
     const next: Record<QKey, PRow> = { ...phasing, [q]: { ...phasing[q], value: v, pct: Math.round(pct * 10) / 10 } };
@@ -1219,7 +1229,7 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
   };
 
   const updateQuarterPct = (q: QKey, raw: string) => {
-    if (q === locked) return;
+    if (q === locked || isFieldDisabled(q)) return;
     const p = Number(raw || 0);
     const v = annualNum > 0 ? Math.round((p / 100) * annualNum) : 0;
     const next: Record<QKey, PRow> = { ...phasing, [q]: { ...phasing[q], pct: p, value: v } };
@@ -1228,10 +1238,12 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
   };
 
   const updateQuarterNotes = (q: QKey, raw: string) => {
+    if (isFieldDisabled(q)) return;
     setPhasing((prev) => ({ ...prev, [q]: { ...prev[q], notes: raw } }));
   };
 
   const setLockedQuarter = (q: QKey) => {
+    if (isFieldDisabled(q)) return;
     setLocked(q);
     setPhasing((prev) => recomputeLocked(prev, q, annualNum));
   };
