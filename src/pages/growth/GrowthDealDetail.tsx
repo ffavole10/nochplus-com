@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/formatters";
-import { useDeal, useUpdateDeal, useDeleteDeal, useUpdateDealStage } from "@/hooks/useDeals";
+import { useDeal, useUpdateDeal, useDeleteDeal } from "@/hooks/useDeals";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useGrowthUsers } from "@/hooks/useGrowthUsers";
 import { useActivities, useCreateActivity } from "@/hooks/useActivities";
