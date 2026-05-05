@@ -2168,6 +2168,53 @@ export type Database = {
         }
         Relationships: []
       }
+      deal_stage_transitions: {
+        Row: {
+          created_at: string
+          deal_id: string
+          from_stage: string | null
+          id: string
+          notes: string | null
+          reason_code: string | null
+          to_stage: string
+          transition_type: string
+          user_id: string | null
+          value_at_transition: number | null
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          from_stage?: string | null
+          id?: string
+          notes?: string | null
+          reason_code?: string | null
+          to_stage: string
+          transition_type: string
+          user_id?: string | null
+          value_at_transition?: number | null
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          from_stage?: string | null
+          id?: string
+          notes?: string | null
+          reason_code?: string | null
+          to_stage?: string
+          transition_type?: string
+          user_id?: string | null
+          value_at_transition?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_stage_transitions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_stakeholders: {
         Row: {
           created_at: string
@@ -2205,6 +2252,7 @@ export type Database = {
         Row: {
           actual_arr: number | null
           actual_close_date: string | null
+          closed_at: string | null
           competitor: string | null
           connector_count: number | null
           contract_length_months: number
@@ -2218,6 +2266,7 @@ export type Database = {
           id: string
           last_activity_at: string | null
           loss_reason: string | null
+          loss_reason_notes: string | null
           model_close_probability: number | null
           monthly_rate: number | null
           next_action: string | null
@@ -2236,10 +2285,13 @@ export type Database = {
           stage: Database["public"]["Enums"]["deal_stage"]
           updated_at: string
           value: number
+          win_reason: string | null
+          win_reason_notes: string | null
         }
         Insert: {
           actual_arr?: number | null
           actual_close_date?: string | null
+          closed_at?: string | null
           competitor?: string | null
           connector_count?: number | null
           contract_length_months?: number
@@ -2253,6 +2305,7 @@ export type Database = {
           id?: string
           last_activity_at?: string | null
           loss_reason?: string | null
+          loss_reason_notes?: string | null
           model_close_probability?: number | null
           monthly_rate?: number | null
           next_action?: string | null
@@ -2273,10 +2326,13 @@ export type Database = {
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           value?: number
+          win_reason?: string | null
+          win_reason_notes?: string | null
         }
         Update: {
           actual_arr?: number | null
           actual_close_date?: string | null
+          closed_at?: string | null
           competitor?: string | null
           connector_count?: number | null
           contract_length_months?: number
@@ -2290,6 +2346,7 @@ export type Database = {
           id?: string
           last_activity_at?: string | null
           loss_reason?: string | null
+          loss_reason_notes?: string | null
           model_close_probability?: number | null
           monthly_rate?: number | null
           next_action?: string | null
@@ -2310,6 +2367,8 @@ export type Database = {
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           value?: number
+          win_reason?: string | null
+          win_reason_notes?: string | null
         }
         Relationships: [
           {

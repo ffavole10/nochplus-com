@@ -1,17 +1,19 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/formatters";
-import { useDeal, useUpdateDeal, useDeleteDeal, useUpdateDealStage } from "@/hooks/useDeals";
+import { useDeal, useUpdateDeal, useDeleteDeal } from "@/hooks/useDeals";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useGrowthUsers } from "@/hooks/useGrowthUsers";
 import { useActivities, useCreateActivity } from "@/hooks/useActivities";
 import { useAccountOpsSnapshot } from "@/hooks/useAccountOpsSnapshot";
 import { useAgentOutputs, useGenerateScribeBrief, useGeneratePlaceholderOutput } from "@/hooks/useAgentOutputs";
 import {
-  DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS,
-  validateStageTransition, relationshipContext, type DealStage, type AgentOutput,
+  DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASON_LABELS, WIN_REASON_LABELS,
+  relationshipContext, type DealStage, type AgentOutput,
   type ChargerRelationshipType,
 } from "@/types/growth";
+import { StageTransitionDialog } from "@/components/business/StageTransitionDialog";
+import { useDealStageTransitions } from "@/hooks/useStageTransitions";
 import { LinkChargersModal } from "@/components/business/LinkChargersModal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
@@ -58,7 +60,7 @@ export default function GrowthDealDetail() {
   const update = useUpdateDeal();
   const remove = useDeleteDeal();
   const createActivity = useCreateActivity();
-  const updateStage = useUpdateDealStage();
+  
   const { confirm: confirmDialog, dialogProps: confirmDialogProps } = useConfirmDialog();
   const { data: ops } = useAccountOpsSnapshot(deal?.partner_id);
   const { data: agentOutputs = [] } = useAgentOutputs(dealId);
@@ -70,7 +72,7 @@ export default function GrowthDealDetail() {
 
   // Stage change confirm
   const [pendingStage, setPendingStage] = useState<DealStage | null>(null);
-  const [pendingLoss, setPendingLoss] = useState<string>("");
+  
 
   // Edit deal modal
   const [editOpen, setEditOpen] = useState(false);
@@ -174,26 +176,7 @@ export default function GrowthDealDetail() {
 
   const handleStageSelect = (newStage: DealStage) => {
     if (newStage === deal.stage) return;
-    const err = validateStageTransition(deal as any, newStage);
-    if (err) { toast.error(err); return; }
     setPendingStage(newStage);
-    setPendingLoss("");
-  };
-
-  const confirmStageChange = () => {
-    if (!pendingStage) return;
-    const extra: Record<string, any> = { last_activity_at: new Date().toISOString() };
-    if (pendingStage === "Closed Lost") {
-      if (!pendingLoss) { toast.error("Loss reason required."); return; }
-      extra.loss_reason = pendingLoss;
-    }
-    updateStage.mutate(
-      { id: deal.id, stage: pendingStage, partner_id: deal.partner_id, extra },
-      {
-        onSuccess: () => { toast.success(`Moved to "${pendingStage}"`); setPendingStage(null); },
-        onError: (e: any) => toast.error(e.message),
-      },
-    );
   };
 
   const handleSaveEdit = () => {
@@ -634,7 +617,10 @@ export default function GrowthDealDetail() {
           <Meta label="Created" value={format(new Date(deal.created_at), "MMM d, yyyy")} />
           <Meta label="Last updated" value={format(new Date(deal.updated_at), "MMM d, yyyy h:mm a")} />
           {deal.stage === "Closed Lost" && (deal as any).loss_reason && (
-            <Meta label="Loss Reason" value={LOSS_REASON_LABELS[(deal as any).loss_reason as keyof typeof LOSS_REASON_LABELS]} accent="text-rose-600" />
+            <Meta label="Loss Reason" value={LOSS_REASON_LABELS[(deal as any).loss_reason] || (deal as any).loss_reason} accent="text-rose-600" />
+          )}
+          {deal.stage === "Closed Won" && (deal as any).win_reason && (
+            <Meta label="Win Reason" value={WIN_REASON_LABELS[(deal as any).win_reason as keyof typeof WIN_REASON_LABELS] || (deal as any).win_reason} accent="text-emerald-600" />
           )}
           {(deal as any).competitor && (
             <Meta label="Competitor" value={(deal as any).competitor} />
@@ -642,29 +628,50 @@ export default function GrowthDealDetail() {
         </CardContent>
       </Card>
 
-      {/* ════════ Stage change confirm dialog ════════ */}
-      <Dialog open={!!pendingStage} onOpenChange={(o) => !o && setPendingStage(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Move deal to "{pendingStage}"?</DialogTitle></DialogHeader>
-          {pendingStage === "Closed Lost" && (
-            <div className="space-y-1.5">
-              <Label className="text-xs">Loss Reason *</Label>
-              <Select value={pendingLoss} onValueChange={setPendingLoss}>
-                <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
-                <SelectContent>
-                  {LOSS_REASONS.map((r) => <SelectItem key={r} value={r}>{LOSS_REASON_LABELS[r]}</SelectItem>)}
-                </SelectContent>
-              </Select>
+      {/* ════════ Stage History ════════ */}
+      <StageHistorySection dealId={deal.id} />
+
+      {/* ════════ Reopen action for closed deals ════════ */}
+      {(deal.stage === "Closed Won" || deal.stage === "Closed Lost") && (
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">Reopen this deal</p>
+              <p className="text-xs text-muted-foreground">
+                Clears the {deal.stage === "Closed Won" ? "win" : "loss"} reason and moves it back to In Negotiation.
+              </p>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingStage(null)}>Cancel</Button>
-            <Button onClick={confirmStageChange} disabled={updateStage.isPending}>
-              {updateStage.isPending && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}Confirm
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const ok = await confirmDialog({
+                  title: "Reopen this deal?",
+                  description: `Reopening will clear the ${deal.stage === "Closed Won" ? "win" : "loss"} reason and move this deal back to In Negotiation. Continue?`,
+                  confirmLabel: "Reopen deal",
+                });
+                if (ok) setPendingStage("In Negotiation" as DealStage);
+              }}
+            >
+              Reopen Deal
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ════════ Stage transition dialog ════════ */}
+      {pendingStage && (
+        <StageTransitionDialog
+          open={!!pendingStage}
+          onOpenChange={(o) => !o && setPendingStage(null)}
+          dealId={deal.id}
+          partnerId={deal.partner_id}
+          dealName={deal.deal_name}
+          fromStage={deal.stage}
+          toStage={pendingStage}
+          currentValue={Number(deal.value || 0)}
+        />
+      )}
 
       {/* ════════ Edit Deal dialog ════════ */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -875,5 +882,54 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
       </p>
       {children}
     </div>
+  );
+}
+
+function StageHistorySection({ dealId }: { dealId: string }) {
+  const { data: transitions = [], isLoading } = useDealStageTransitions(dealId);
+  const [open, setOpen] = useState(false);
+  if (isLoading || transitions.length === 0) return null;
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <button onClick={() => setOpen((o) => !o)} className="flex items-center justify-between w-full text-left">
+          <div>
+            <p className="text-sm font-semibold">Stage History</p>
+            <p className="text-xs text-muted-foreground">{transitions.length} transitions</p>
+          </div>
+          <span className="text-xs text-muted-foreground">{open ? "Hide" : "Show"}</span>
+        </button>
+        {open && (
+          <div className="mt-3 space-y-2">
+            {transitions.map((t) => {
+              const cls = t.transition_type === "closed_won" ? "border-emerald-300 bg-emerald-50/50"
+                : t.transition_type === "closed_lost" ? "border-rose-300 bg-rose-50/50"
+                : t.transition_type === "backward" ? "border-amber-300 bg-amber-50/50"
+                : t.transition_type === "reopen" ? "border-blue-300 bg-blue-50/50"
+                : "border-border bg-muted/20";
+              const reasonLabel = t.transition_type === "closed_won"
+                ? WIN_REASON_LABELS[t.reason_code as keyof typeof WIN_REASON_LABELS]
+                : t.transition_type === "closed_lost"
+                ? LOSS_REASON_LABELS[t.reason_code as string]
+                : null;
+              return (
+                <div key={t.id} className={cn("text-xs p-2 rounded border", cls)}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">
+                      {t.from_stage || "—"} → {t.to_stage}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {format(new Date(t.created_at), "MMM d, yyyy h:mm a")}
+                    </span>
+                  </div>
+                  {reasonLabel && <p className="mt-1"><span className="font-medium">Reason:</span> {reasonLabel}</p>}
+                  {t.notes && <p className="mt-1 text-muted-foreground">{t.notes}</p>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

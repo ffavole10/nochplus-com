@@ -12,7 +12,8 @@ import { useLatestScribeBriefs } from "@/hooks/useAgentOutputs";
 import { DealOpsBadge } from "@/components/business/DealOpsBadge";
 import { DealEconomicsFields, emptyEconomics, economicsToPayload, type DealEconomicsForm } from "@/components/business/DealEconomicsFields";
 import { CustomerPicker } from "@/components/business/CustomerPicker";
-import { DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS, validateStageTransition, type DealStage, type Deal } from "@/types/growth";
+import { DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASON_LABELS, WIN_REASON_LABELS, type DealStage, type Deal } from "@/types/growth";
+import { StageTransitionDialog } from "@/components/business/StageTransitionDialog";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
@@ -51,7 +52,6 @@ export default function GrowthPipeline() {
   const userMap = useGrowthUserMap();
   const { data: opsMap = {} } = useAccountOpsSnapshots();
   const { data: briefMap = {} } = useLatestScribeBriefs();
-  const updateStage = useUpdateDealStage();
   const createDeal = useCreateDeal();
 
   const [view, setView] = useState<"kanban" | "list">("kanban");
@@ -71,8 +71,6 @@ export default function GrowthPipeline() {
 
   // Stage move dialog
   const [pendingMove, setPendingMove] = useState<{ deal: Deal; newStage: DealStage } | null>(null);
-  const [moveNote, setMoveNote] = useState("");
-  const [pendingLossReason, setPendingLossReason] = useState<string>("");
 
   // Add Deal dialog
   const [addOpen, setAddOpen] = useState(false);
@@ -164,36 +162,7 @@ export default function GrowthPipeline() {
     const deal = deals.find(d => d.id === draggableId);
     if (!deal) return;
     const newStage = destination.droppableId as DealStage;
-    const err = validateStageTransition(deal, newStage);
-    if (err) {
-      toast.error(err);
-      return;
-    }
     setPendingMove({ deal, newStage });
-    setMoveNote("");
-    setPendingLossReason("");
-  };
-
-  const confirmMove = () => {
-    if (!pendingMove) return;
-    const extra: Record<string, any> = { last_activity_at: new Date().toISOString() };
-    if (pendingMove.newStage === "Closed Lost") {
-      if (!pendingLossReason) { toast.error("Loss reason required."); return; }
-      extra.loss_reason = pendingLossReason;
-    }
-    updateStage.mutate({
-      id: pendingMove.deal.id,
-      stage: pendingMove.newStage,
-      note: moveNote,
-      partner_id: pendingMove.deal.partner_id,
-      extra,
-    }, {
-      onSuccess: () => {
-        toast.success(`Deal moved to "${pendingMove.newStage}"`);
-        setPendingMove(null);
-      },
-      onError: (e: any) => toast.error(e.message),
-    });
   };
 
   const resetForm = () => {
@@ -405,6 +374,16 @@ export default function GrowthPipeline() {
                                   lastBriefAt={briefMap[deal.id]?.generated_at}
                                   buyingSignal={briefMap[deal.id]?.buying_signal_flag}
                                 />
+                                {deal.stage === "Closed Won" && (deal as any).win_reason && (
+                                  <Badge variant="outline" className="mt-1.5 text-[10px] bg-emerald-50 text-emerald-700 border-emerald-300">
+                                    Won · {WIN_REASON_LABELS[(deal as any).win_reason as keyof typeof WIN_REASON_LABELS] || (deal as any).win_reason}
+                                  </Badge>
+                                )}
+                                {deal.stage === "Closed Lost" && (deal as any).loss_reason && (
+                                  <Badge variant="outline" className="mt-1.5 text-[10px] bg-rose-50 text-rose-700 border-rose-300">
+                                    Lost · {LOSS_REASON_LABELS[(deal as any).loss_reason] || (deal as any).loss_reason}
+                                  </Badge>
+                                )}
                                 {(deal.owner || (deal.owner_user_id && userMap[deal.owner_user_id])) && (
                                   <div className="mt-1.5 pt-1.5 border-t border-border/50">
                                     <span className="text-[10px] text-muted-foreground">
@@ -501,36 +480,18 @@ export default function GrowthPipeline() {
       )}
 
       {/* ============ Stage move dialog ============ */}
-      <Dialog open={!!pendingMove} onOpenChange={(o) => !o && setPendingMove(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Move deal to "{pendingMove?.newStage}"?</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            {pendingMove?.newStage === "Closed Lost" && (
-              <div className="space-y-1.5">
-                <Label className="text-xs">Loss Reason *</Label>
-                <Select value={pendingLossReason} onValueChange={setPendingLossReason}>
-                  <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
-                  <SelectContent>
-                    {LOSS_REASONS.map(r => <SelectItem key={r} value={r}>{LOSS_REASON_LABELS[r]}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div className="space-y-1.5">
-              <Label className="text-xs">What moved this deal? (Logged to activity feed)</Label>
-              <Textarea rows={3} value={moveNote} onChange={e => setMoveNote(e.target.value)} placeholder="e.g. Champion confirmed budget approval" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingMove(null)}>Cancel</Button>
-            <Button onClick={confirmMove} disabled={updateStage.isPending}>
-              {updateStage.isPending && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}Confirm Move
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {pendingMove && (
+        <StageTransitionDialog
+          open={!!pendingMove}
+          onOpenChange={(o) => !o && setPendingMove(null)}
+          dealId={pendingMove.deal.id}
+          partnerId={pendingMove.deal.partner_id}
+          dealName={pendingMove.deal.deal_name}
+          fromStage={pendingMove.deal.stage}
+          toStage={pendingMove.newStage}
+          currentValue={Number(pendingMove.deal.value || 0)}
+        />
+      )}
 
       {/* ============ Add Deal dialog ============ */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
