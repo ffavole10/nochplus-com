@@ -693,6 +693,9 @@ function PlayDialog({ play, quarter, onClose, onSave }: { play: any; quarter: st
   );
 }
 
+type QKey = "Q1" | "Q2" | "Q3" | "Q4";
+const QUARTERS: QKey[] = ["Q1", "Q2", "Q3", "Q4"];
+
 // === KPIs ===
 
 // In-memory unlock grants for past quarters. Reset on page reload, per spec
