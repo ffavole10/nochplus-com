@@ -32,11 +32,13 @@ import {
   computeKpiHealth, computeStrategyHealth, currentQuarter, formatKpiValue,
   computePhasedKpiStatus, getCurrentQuarterInfo,
   PHASED_STATUS_LABELS, PHASED_STATUS_COLORS, PHASING_TEMPLATES,
+  isQuarterLocked, formatQuarterEnd,
   type StrategyAccountType, type StrategyPosition, type StrategyDecisionRole,
   type StrategyTemperature, type StrategyPlayStatus, type StrategyKpiUnit,
   type StrategyRiskSeverity, type KpiHealth,
   type StrategyKpi, type StrategyKpiActual, type QuarterPhasing,
 } from "@/types/strategy";
+import { supabase } from "@/integrations/supabase/client";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { StrategyWizard } from "./StrategyWizard";
 import { runStrategyTour, runSectionHelp } from "./strategyTour";
@@ -691,7 +693,43 @@ function PlayDialog({ play, quarter, onClose, onSave }: { play: any; quarter: st
   );
 }
 
+type QKey = "Q1" | "Q2" | "Q3" | "Q4";
+const QUARTERS: QKey[] = ["Q1", "Q2", "Q3", "Q4"];
+
 // === KPIs ===
+
+// In-memory unlock grants for past quarters. Reset on page reload, per spec
+// ("After save (or modal close), quarter auto-relocks. Each unlock requires a new reason").
+type UnlockKey = string; // `${kpiId}:${quarter}:${year}`
+function unlockKey(kpiId: string, quarter: QKey, year: number): UnlockKey {
+  return `${kpiId}:${quarter}:${year}`;
+}
+
+async function logKpiAudit(args: {
+  kpi_id: string;
+  quarter: string;
+  action: "unlock" | "edit_while_unlocked";
+  reason?: string | null;
+  before_value?: any;
+  after_value?: any;
+}) {
+  try {
+    const { data: u } = await supabase.auth.getUser();
+    await (supabase as any).from("strategy_kpi_audit_log").insert({
+      kpi_id: args.kpi_id,
+      quarter: args.quarter,
+      action: args.action,
+      reason: args.reason ?? null,
+      before_value: args.before_value ?? null,
+      after_value: args.after_value ?? null,
+      user_id: u.user?.id ?? null,
+      user_email: u.user?.email ?? null,
+    });
+  } catch (e) {
+    console.warn("audit log insert failed", e);
+  }
+}
+
 function KpisSection({ strategyId, accountTypes }: { strategyId: string; accountTypes: StrategyAccountType[] }) {
   const { data: kpis = [] } = useKpis(strategyId);
   const { data: actuals = [] } = useKpiActuals(strategyId);
@@ -700,6 +738,26 @@ function KpisSection({ strategyId, accountTypes }: { strategyId: string; account
   const [addOpen, setAddOpen] = useState(false);
   const [editKpi, setEditKpi] = useState<any | null>(null);
   const [actualKpi, setActualKpi] = useState<StrategyKpi | null>(null);
+  const [unlocked, setUnlocked] = useState<Set<UnlockKey>>(new Set());
+  const [unlockRequest, setUnlockRequest] = useState<{ kpi: StrategyKpi; quarter: QKey; year: number } | null>(null);
+
+  const requestUnlock = (kpi: StrategyKpi, quarter: QKey, year: number) => {
+    setUnlockRequest({ kpi, quarter, year });
+  };
+  const grantUnlock = async (reason: string) => {
+    if (!unlockRequest) return;
+    const k = unlockKey(unlockRequest.kpi.id, unlockRequest.quarter, unlockRequest.year);
+    setUnlocked((prev) => new Set(prev).add(k));
+    await logKpiAudit({
+      kpi_id: unlockRequest.kpi.id,
+      quarter: `${unlockRequest.quarter}-${unlockRequest.year}`,
+      action: "unlock",
+      reason,
+    });
+    toast.success(`${unlockRequest.quarter} ${unlockRequest.year} unlocked for amendment`);
+    setUnlockRequest(null);
+  };
+
 
   const typeLabel = accountTypes.length ? accountTypes.map((t) => ACCOUNT_TYPE_LABELS[t]).join(" + ") : "—";
 
@@ -729,6 +787,8 @@ function KpisSection({ strategyId, accountTypes }: { strategyId: string; account
                 onEdit={() => setEditKpi(k)}
                 onRemove={() => remove.mutate(k.id)}
                 onUpdateActual={() => setActualKpi(k)}
+                unlocked={unlocked}
+                onRequestUnlock={(q, y) => requestUnlock(k, q, y)}
               />
             ) : (
               <SingleKpiCard
@@ -748,12 +808,43 @@ function KpisSection({ strategyId, accountTypes }: { strategyId: string; account
       {(addOpen || editKpi) && (
         <KpiDialog
           kpi={editKpi}
+          unlocked={unlocked}
           onClose={() => { setAddOpen(false); setEditKpi(null); }}
-          onSave={async (data) => {
-            if (editKpi) await update.mutateAsync({ id: editKpi.id, ...data } as any);
-            else await add.mutateAsync({ strategy_id: strategyId, ...data, is_primary: true, is_deferred: false } as any);
+          onSave={async (data, auditEdits) => {
+            if (editKpi) {
+              const before = editKpi;
+              await update.mutateAsync({ id: editKpi.id, ...data } as any);
+              for (const edit of auditEdits || []) {
+                await logKpiAudit({
+                  kpi_id: editKpi.id,
+                  quarter: `${edit.quarter}-${new Date().getFullYear()}`,
+                  action: "edit_while_unlocked",
+                  before_value: edit.before,
+                  after_value: edit.after,
+                });
+              }
+              // Auto-relock unlocked quarters for this KPI
+              setUnlocked((prev) => {
+                const next = new Set(prev);
+                for (const k of Array.from(next)) {
+                  if (k.startsWith(`${editKpi.id}:`)) next.delete(k);
+                }
+                return next;
+              });
+            } else {
+              await add.mutateAsync({ strategy_id: strategyId, ...data, is_primary: true, is_deferred: false } as any);
+            }
             setAddOpen(false); setEditKpi(null);
           }}
+        />
+      )}
+
+      {unlockRequest && (
+        <UnlockQuarterDialog
+          quarter={unlockRequest.quarter}
+          year={unlockRequest.year}
+          onClose={() => setUnlockRequest(null)}
+          onConfirm={grantUnlock}
         />
       )}
 
@@ -815,8 +906,8 @@ function SingleKpiCard({ kpi: k, onEdit, onRemove }: { kpi: StrategyKpi; onEdit:
 }
 
 function PhasedKpiCard({
-  kpi: k, actuals, onEdit, onRemove, onUpdateActual,
-}: { kpi: StrategyKpi; actuals: StrategyKpiActual[]; onEdit: () => void; onRemove: () => void; onUpdateActual: () => void }) {
+  kpi: k, actuals, onEdit, onRemove, onUpdateActual, unlocked, onRequestUnlock,
+}: { kpi: StrategyKpi; actuals: StrategyKpiActual[]; onEdit: () => void; onRemove: () => void; onUpdateActual: () => void; unlocked: Set<string>; onRequestUnlock: (q: QKey, year: number) => void }) {
   const status = useMemo(() => computePhasedKpiStatus(k, actuals), [k, actuals]);
   const [expanded, setExpanded] = useState<QKey | null>(null);
   const phasing = (k.quarter_phasing || {}) as QuarterPhasing;
@@ -888,6 +979,8 @@ function PhasedKpiCard({
             phasingNotes={phase?.notes || ""}
             currentWeek={isCurrent ? status.weeksElapsed : null}
             onAddActual={onUpdateActual}
+            isUnlocked={unlocked.has(unlockKey(k.id, q, status.year))}
+            onRequestUnlock={() => onRequestUnlock(q, status.year)}
           />
         )}
       </div>
@@ -940,11 +1033,12 @@ function PhasedKpiCard({
 }
 
 function QuarterDetailPanel({
-  kpi: k, quarter, year, ctx, target, actual, qActuals, phasingNotes, currentWeek, onAddActual,
+  kpi: k, quarter, year, ctx, target, actual, qActuals, phasingNotes, currentWeek, onAddActual, isUnlocked, onRequestUnlock,
 }: {
   kpi: StrategyKpi; quarter: QKey; year: number; ctx: "past" | "current" | "future";
   target: number; actual: number; qActuals: StrategyKpiActual[]; phasingNotes: string;
   currentWeek: number | null; onAddActual: () => void;
+  isUnlocked?: boolean; onRequestUnlock?: () => void;
 }) {
   const pace = ctx === "current" && currentWeek
     ? (target > 0 ? (actual / (target * (currentWeek / 13))) : 0)
@@ -952,11 +1046,26 @@ function QuarterDetailPanel({
   const expected = ctx === "current" && currentWeek ? target * (currentWeek / 13) : 0;
   return (
     <div className="ml-8 mr-2 mb-2 px-3 py-2 rounded border bg-muted/30 space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] font-semibold">
-          {quarter} {year} · {ctx === "past" ? "past — locked" : ctx === "current" ? `Week ${currentWeek}/13` : "future"}
+          {quarter} {year} · {ctx === "past" ? `closed ${formatQuarterEnd(quarter, year)}` : ctx === "current" ? `Week ${currentWeek}/13` : "future"}
         </p>
-        {ctx === "past" && <Badge variant="outline" className="text-[9px]"><Lock className="h-2.5 w-2.5 mr-1" />Locked</Badge>}
+        {ctx === "past" && (
+          <div className="flex items-center gap-1.5">
+            {isUnlocked ? (
+              <Badge variant="outline" className="text-[9px] border-amber-300 text-amber-700 bg-amber-50 dark:bg-amber-950/30">
+                <Unlock className="h-2.5 w-2.5 mr-1" />Unlocked
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[9px]"><Lock className="h-2.5 w-2.5 mr-1" />Locked</Badge>
+            )}
+            {!isUnlocked && onRequestUnlock && (
+              <Button size="sm" variant="ghost" className="h-5 px-1.5 text-[10px] gap-1" onClick={onRequestUnlock}>
+                <Unlock className="h-2.5 w-2.5" /> Unlock Quarter
+              </Button>
+            )}
+          </div>
+        )}
       </div>
       <p className="text-[10px] text-muted-foreground">
         Target: <span className="text-foreground font-medium">{formatKpiValue(target, k.unit)}</span> ·
@@ -1018,10 +1127,8 @@ function UpdateActualDialog({ kpi, onClose, onSave }: { kpi: StrategyKpi; onClos
   );
 }
 
-type QKey = "Q1" | "Q2" | "Q3" | "Q4";
-const QUARTERS: QKey[] = ["Q1", "Q2", "Q3", "Q4"];
 
-function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; onSave: (data: any) => void }) {
+function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () => void; onSave: (data: any, auditEdits?: { quarter: QKey; before: any; after: any }[]) => void | Promise<void>; unlocked?: Set<string> }) {
   const [name, setName] = useState(kpi?.name || "");
   const [unit, setUnit] = useState<StrategyKpiUnit>(kpi?.unit || "count");
   const [targetType, setTargetType] = useState<"single" | "phased">(kpi?.target_type || "single");
@@ -1041,17 +1148,48 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
   const [locked, setLocked] = useState<QKey>((kpi?.locked_quarter as QKey) || "Q4");
   const [template, setTemplate] = useState<string>("");
 
+  // Date-based per-quarter locks (Q1 in Q2 of same year, etc.)
+  const editingYear = useMemo(() => new Date().getFullYear(), []);
+  const isDateLocked = (q: QKey) => isQuarterLocked(q, editingYear);
+  const isQuarterUnlocked = (q: QKey) => !!(kpi?.id && unlocked?.has(unlockKey(kpi.id, q, editingYear)));
+  const isFieldDisabled = (q: QKey) => isDateLocked(q) && !isQuarterUnlocked(q);
+  const lockReason = (q: QKey) => `${q} closed on ${formatQuarterEnd(q, editingYear)}. Unlock from quarter detail panel to amend.`;
+
+  // Snapshot of initial phased state per quarter (for audit before/after)
+  const initialPhasedSnapshot = useMemo(() => {
+    const snap: Record<QKey, { value: number; pct: number; notes: string }> = {} as any;
+    QUARTERS.forEach((q) => {
+      snap[q] = {
+        value: Number(initialPhasing[q]?.target_value || 0),
+        pct: Number(initialPhasing[q]?.target_percent || 0),
+        notes: initialPhasing[q]?.notes || "",
+      };
+    });
+    return snap;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
   const annualNum = Number(annual || 0);
 
   type PRow = { value: number; pct: number; notes: string };
-  // Recompute the locked quarter as the remainder of the others.
+  // Recompute the auto-balance quarter as the remainder of the others.
+  // Date-locked quarters are treated as fixed (their pct/value count toward total but cannot absorb).
   const recomputeLocked = (state: Record<QKey, PRow>, lockedQ: QKey, ann: number): Record<QKey, PRow> => {
-    const others = QUARTERS.filter((q) => q !== lockedQ);
+    // Find the effective absorber: prefer chosen `lockedQ`, but if that quarter is
+    // date-locked (and not unlocked), pick first non-locked quarter as absorber.
+    let absorber: QKey = lockedQ;
+    if (isFieldDisabled(absorber)) {
+      const firstFree = QUARTERS.find((q) => !isFieldDisabled(q));
+      if (!firstFree) return state; // all locked
+      absorber = firstFree;
+    }
+    const others = QUARTERS.filter((q) => q !== absorber);
     const sumOtherPct = others.reduce((s, q) => s + (Number(state[q].pct) || 0), 0);
     const sumOtherVal = others.reduce((s, q) => s + (Number(state[q].value) || 0), 0);
     const lockedPct = Math.max(0, 100 - sumOtherPct);
     const lockedVal = ann > 0 ? Math.max(0, ann - sumOtherVal) : 0;
-    return { ...state, [lockedQ]: { ...state[lockedQ], value: lockedVal, pct: lockedPct } };
+    return { ...state, [absorber]: { ...state[absorber], value: lockedVal, pct: lockedPct } };
   };
 
   // When annual changes, recompute dollar amounts from existing percentages and rebalance locked.
@@ -1059,7 +1197,7 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
     if (targetType !== "phased" || !annualNum) return;
     setPhasing((prev) => {
       const next: Record<QKey, PRow> = { ...prev };
-      QUARTERS.filter((q) => q !== locked).forEach((q) => {
+      QUARTERS.filter((q) => q !== locked && !isFieldDisabled(q)).forEach((q) => {
         next[q] = { ...next[q], value: Math.round(((Number(next[q].pct) || 0) / 100) * annualNum) };
       });
       return recomputeLocked(next, locked, annualNum);
@@ -1073,6 +1211,7 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
     if (!tpl) return;
     const next: Record<QKey, PRow> = { ...phasing };
     QUARTERS.forEach((q) => {
+      if (isFieldDisabled(q)) return; // don't overwrite locked quarter
       const pct = tpl.quarters[q];
       const value = annualNum ? Math.round((pct / 100) * annualNum) : 0;
       next[q] = { ...next[q], value, pct };
@@ -1081,7 +1220,7 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
   };
 
   const updateQuarterValue = (q: QKey, raw: string) => {
-    if (q === locked) return;
+    if (q === locked || isFieldDisabled(q)) return;
     const v = Number(raw || 0);
     const pct = annualNum > 0 ? (v / annualNum) * 100 : 0;
     const next: Record<QKey, PRow> = { ...phasing, [q]: { ...phasing[q], value: v, pct: Math.round(pct * 10) / 10 } };
@@ -1090,7 +1229,7 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
   };
 
   const updateQuarterPct = (q: QKey, raw: string) => {
-    if (q === locked) return;
+    if (q === locked || isFieldDisabled(q)) return;
     const p = Number(raw || 0);
     const v = annualNum > 0 ? Math.round((p / 100) * annualNum) : 0;
     const next: Record<QKey, PRow> = { ...phasing, [q]: { ...phasing[q], pct: p, value: v } };
@@ -1099,10 +1238,12 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
   };
 
   const updateQuarterNotes = (q: QKey, raw: string) => {
+    if (isFieldDisabled(q)) return;
     setPhasing((prev) => ({ ...prev, [q]: { ...prev[q], notes: raw } }));
   };
 
   const setLockedQuarter = (q: QKey) => {
+    if (isFieldDisabled(q)) return;
     setLocked(q);
     setPhasing((prev) => recomputeLocked(prev, q, annualNum));
   };
@@ -1128,8 +1269,25 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
       });
     } else {
       const qp: QuarterPhasing = {};
+      const auditEdits: { quarter: QKey; before: any; after: any }[] = [];
       QUARTERS.forEach((q) => {
-        qp[q] = { target_value: Number(phasing[q].value || 0), target_percent: Number(phasing[q].pct || 0), notes: phasing[q].notes || "" };
+        const proposed = { value: Number(phasing[q].value || 0), pct: Number(phasing[q].pct || 0), notes: phasing[q].notes || "" };
+        const initial = initialPhasedSnapshot[q];
+        let final = proposed;
+        if (isFieldDisabled(q)) {
+          // Backend safety: silently revert any mutation to a date-locked, non-unlocked quarter.
+          final = initial;
+        } else if (isDateLocked(q) && isQuarterUnlocked(q)) {
+          // Capture audit log entry for edit-while-unlocked
+          if (
+            proposed.value !== initial.value ||
+            proposed.pct !== initial.pct ||
+            proposed.notes !== initial.notes
+          ) {
+            auditEdits.push({ quarter: q, before: initial, after: proposed });
+          }
+        }
+        qp[q] = { target_value: final.value, target_percent: final.pct, notes: final.notes };
       });
       onSave({
         name: name.trim(), unit,
@@ -1140,7 +1298,7 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
         locked_quarter: locked,
         current_value: current === "" ? 0 : Number(current),
         notes: notes.trim() || null,
-      });
+      }, auditEdits);
     }
   };
 
@@ -1229,18 +1387,35 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {QUARTERS.map((q) => {
-                  const isLocked = q === locked;
+                  const isAutoBalance = q === locked;
+                  const dateLocked = isFieldDisabled(q);
+                  const wasUnlocked = isDateLocked(q) && isQuarterUnlocked(q);
+                  const disabled = dateLocked;
+                  const tip = dateLocked ? lockReason(q) : (wasUnlocked ? `${q} unlocked for this session — edits will be audit-logged.` : "");
                   return (
-                    <div key={q} className={cn("space-y-1 rounded p-1.5", isLocked && "bg-muted/40")}>
+                    <div
+                      key={q}
+                      className={cn("space-y-1 rounded p-1.5",
+                        isAutoBalance && "bg-muted/40",
+                        dateLocked && "bg-muted/60 opacity-80",
+                        wasUnlocked && "ring-1 ring-amber-300 bg-amber-50/40 dark:bg-amber-950/20",
+                      )}
+                      title={tip || undefined}
+                    >
                       <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-bold">{q}</Label>
+                        <Label className="text-[10px] font-bold flex items-center gap-1">
+                          {q}
+                          {dateLocked && <Lock className="h-2.5 w-2.5 text-muted-foreground" />}
+                          {wasUnlocked && <Unlock className="h-2.5 w-2.5 text-amber-600" />}
+                        </Label>
                         <button
                           type="button"
-                          onClick={() => setLockedQuarter(q)}
-                          title={isLocked ? "Auto-balanced quarter" : "Make this the auto-balanced quarter"}
-                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => !dateLocked && setLockedQuarter(q)}
+                          disabled={dateLocked}
+                          title={dateLocked ? lockReason(q) : (isAutoBalance ? "Auto-balanced quarter" : "Make this the auto-balanced quarter")}
+                          className={cn("text-muted-foreground hover:text-foreground", dateLocked && "cursor-not-allowed opacity-60 hover:text-muted-foreground")}
                         >
-                          {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                          {dateLocked ? <Lock className="h-3 w-3" /> : isAutoBalance ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
                         </button>
                       </div>
                       <Input
@@ -1248,22 +1423,28 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
                         placeholder="$"
                         value={phasing[q].value || ""}
                         onChange={(e) => updateQuarterValue(q, e.target.value)}
-                        readOnly={isLocked}
-                        className={cn("h-8 text-xs", isLocked && "text-muted-foreground")}
+                        readOnly={isAutoBalance || disabled}
+                        disabled={disabled}
+                        title={tip || undefined}
+                        className={cn("h-8 text-xs", (isAutoBalance || disabled) && "text-muted-foreground")}
                       />
                       <Input
                         type="number"
                         placeholder="%"
                         value={phasing[q].pct ? String(Math.round(phasing[q].pct * 10) / 10) : ""}
                         onChange={(e) => updateQuarterPct(q, e.target.value)}
-                        readOnly={isLocked}
-                        className={cn("h-8 text-xs", isLocked && "text-muted-foreground")}
+                        readOnly={isAutoBalance || disabled}
+                        disabled={disabled}
+                        title={tip || undefined}
+                        className={cn("h-8 text-xs", (isAutoBalance || disabled) && "text-muted-foreground")}
                       />
                       <Textarea
                         rows={2}
                         placeholder="Notes / assumptions"
                         value={phasing[q].notes || ""}
                         onChange={(e) => updateQuarterNotes(q, e.target.value)}
+                        disabled={disabled}
+                        title={tip || undefined}
                         className="text-[10px] min-h-[44px]"
                       />
                     </div>
@@ -1365,5 +1546,43 @@ function RisksSection({ strategyId }: { strategyId: string }) {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function UnlockQuarterDialog({
+  quarter, year, onClose, onConfirm,
+}: { quarter: QKey; year: number; onClose: () => void; onConfirm: (reason: string) => void | Promise<void> }) {
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const valid = reason.trim().length >= 10;
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Unlock className="h-4 w-4 text-amber-600" /> Unlock {quarter} {year}?</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Unlocking allows edits to target, actuals, and notes for this closed quarter. This action is logged with timestamp and your user. Required: provide a reason for the audit log.
+          </p>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Reason for unlock <span className="text-muted-foreground">(min 10 chars)</span></Label>
+            <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Late ARR booking from December close-out — needs to be reflected." />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>Cancel</Button>
+          <Button
+            disabled={!valid || submitting}
+            onClick={async () => {
+              setSubmitting(true);
+              try { await onConfirm(reason.trim()); } finally { setSubmitting(false); }
+            }}
+          >
+            {submitting ? "Unlocking…" : "Unlock"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
