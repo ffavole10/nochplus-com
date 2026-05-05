@@ -18,7 +18,13 @@ import {
 import { useDeals } from "@/hooks/useDeals";
 import { useAllStrategies } from "@/hooks/useStrategy";
 import { useCustomers } from "@/hooks/useCustomers";
+import { useFocus5CustomerIds } from "@/hooks/useFocus5";
 import { SkipReviewModal } from "./SkipReviewModal";
+import { CustomerLogo } from "@/components/CustomerLogo";
+import { formatCurrency } from "@/lib/formatters";
+import { DEAL_STAGES, DEAL_STAGE_COLORS, type DealStage } from "@/types/growth";
+import { Star, AlertTriangle } from "lucide-react";
+import { differenceInDays } from "date-fns";
 
 const CHIPS: WeeklyReviewNoteType[] = ["update", "decision", "action_item", "risk", "need"];
 
