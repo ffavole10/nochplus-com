@@ -176,26 +176,7 @@ export default function GrowthDealDetail() {
 
   const handleStageSelect = (newStage: DealStage) => {
     if (newStage === deal.stage) return;
-    const err = validateStageTransition(deal as any, newStage);
-    if (err) { toast.error(err); return; }
     setPendingStage(newStage);
-    setPendingLoss("");
-  };
-
-  const confirmStageChange = () => {
-    if (!pendingStage) return;
-    const extra: Record<string, any> = { last_activity_at: new Date().toISOString() };
-    if (pendingStage === "Closed Lost") {
-      if (!pendingLoss) { toast.error("Loss reason required."); return; }
-      extra.loss_reason = pendingLoss;
-    }
-    updateStage.mutate(
-      { id: deal.id, stage: pendingStage, partner_id: deal.partner_id, extra },
-      {
-        onSuccess: () => { toast.success(`Moved to "${pendingStage}"`); setPendingStage(null); },
-        onError: (e: any) => toast.error(e.message),
-      },
-    );
   };
 
   const handleSaveEdit = () => {
