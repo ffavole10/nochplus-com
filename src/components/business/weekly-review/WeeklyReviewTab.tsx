@@ -621,3 +621,78 @@ function ForwardPrompt({ label, reviewId, isPre }: { label: string; reviewId: st
     </div>
   );
 }
+
+function WeeklyTransitionsSection({ deals, customerById }: { deals: any[]; customerById: Record<string, any> }) {
+  const { data: transitions = [] } = useRecentStageTransitions(7);
+  const dealById = useMemo(() => Object.fromEntries(deals.map((d) => [d.id, d])), [deals]);
+
+  if (transitions.length === 0) {
+    return (
+      <Section title="This Week's Transitions" subtitle="No stage moves in the last 7 days.">
+        <div />
+      </Section>
+    );
+  }
+
+  const groups: Record<string, typeof transitions> = {
+    forward: transitions.filter((t) => t.transition_type === "forward"),
+    backward: transitions.filter((t) => t.transition_type === "backward"),
+    closed_won: transitions.filter((t) => t.transition_type === "closed_won"),
+    closed_lost: transitions.filter((t) => t.transition_type === "closed_lost"),
+  };
+  const labels: Record<string, string> = {
+    forward: "Forward moves",
+    backward: "Backward moves",
+    closed_won: "Closed Won",
+    closed_lost: "Closed Lost",
+  };
+
+  return (
+    <Section
+      title="This Week's Transitions"
+      subtitle={`${transitions.length} stage move${transitions.length === 1 ? "" : "s"} in the last 7 days`}
+    >
+      <div className="space-y-4">
+        {(["forward", "backward", "closed_won", "closed_lost"] as const).map((k) => {
+          const items = groups[k];
+          if (items.length === 0) return null;
+          return (
+            <div key={k}>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                {labels[k]} ({items.length})
+              </p>
+              <div className="space-y-1.5">
+                {items.map((t) => {
+                  const deal = dealById[t.deal_id];
+                  const partner = deal ? customerById[deal.partner_id] : null;
+                  const reason = k === "closed_won"
+                    ? WIN_REASON_LABELS[t.reason_code as keyof typeof WIN_REASON_LABELS]
+                    : k === "closed_lost"
+                    ? LOSS_REASON_LABELS[t.reason_code as string]
+                    : null;
+                  return (
+                    <div key={t.id} className="text-xs rounded border bg-card px-2.5 py-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium truncate">
+                          {partner?.company ? `${partner.company} · ` : ""}{deal?.deal_name || "Deal"}
+                        </span>
+                        <span className="text-muted-foreground shrink-0">{t.from_stage || "—"} → {t.to_stage}</span>
+                      </div>
+                      {(reason || t.notes) && (
+                        <p className="mt-0.5 text-muted-foreground truncate">
+                          {reason ? <span className="font-medium">{reason}</span> : null}
+                          {reason && t.notes ? " · " : ""}
+                          {t.notes || ""}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Section>
+  );
+}
