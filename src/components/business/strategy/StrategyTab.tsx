@@ -1166,6 +1166,9 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
               </p>
             </div>
           )}
+              </>
+            );
+          })()}
 
           <div className="space-y-1.5"><Label className="text-xs">Notes</Label><Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
         </div>
