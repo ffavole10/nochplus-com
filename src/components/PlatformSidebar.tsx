@@ -21,7 +21,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/components/ui/sidebar";
-import nochLogo from "@/assets/noch-logo-white.png";
+import nochLogo from "@/assets/noch-logo-new.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { cn } from "@/lib/utils";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
