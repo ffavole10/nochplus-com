@@ -1387,18 +1387,35 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {QUARTERS.map((q) => {
-                  const isLocked = q === locked;
+                  const isAutoBalance = q === locked;
+                  const dateLocked = isFieldDisabled(q);
+                  const wasUnlocked = isDateLocked(q) && isQuarterUnlocked(q);
+                  const disabled = dateLocked;
+                  const tip = dateLocked ? lockReason(q) : (wasUnlocked ? `${q} unlocked for this session — edits will be audit-logged.` : "");
                   return (
-                    <div key={q} className={cn("space-y-1 rounded p-1.5", isLocked && "bg-muted/40")}>
+                    <div
+                      key={q}
+                      className={cn("space-y-1 rounded p-1.5",
+                        isAutoBalance && "bg-muted/40",
+                        dateLocked && "bg-muted/60 opacity-80",
+                        wasUnlocked && "ring-1 ring-amber-300 bg-amber-50/40 dark:bg-amber-950/20",
+                      )}
+                      title={tip || undefined}
+                    >
                       <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-bold">{q}</Label>
+                        <Label className="text-[10px] font-bold flex items-center gap-1">
+                          {q}
+                          {dateLocked && <Lock className="h-2.5 w-2.5 text-muted-foreground" />}
+                          {wasUnlocked && <Unlock className="h-2.5 w-2.5 text-amber-600" />}
+                        </Label>
                         <button
                           type="button"
-                          onClick={() => setLockedQuarter(q)}
-                          title={isLocked ? "Auto-balanced quarter" : "Make this the auto-balanced quarter"}
-                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => !dateLocked && setLockedQuarter(q)}
+                          disabled={dateLocked}
+                          title={dateLocked ? lockReason(q) : (isAutoBalance ? "Auto-balanced quarter" : "Make this the auto-balanced quarter")}
+                          className={cn("text-muted-foreground hover:text-foreground", dateLocked && "cursor-not-allowed opacity-60 hover:text-muted-foreground")}
                         >
-                          {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                          {dateLocked ? <Lock className="h-3 w-3" /> : isAutoBalance ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
                         </button>
                       </div>
                       <Input
@@ -1406,22 +1423,28 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
                         placeholder="$"
                         value={phasing[q].value || ""}
                         onChange={(e) => updateQuarterValue(q, e.target.value)}
-                        readOnly={isLocked}
-                        className={cn("h-8 text-xs", isLocked && "text-muted-foreground")}
+                        readOnly={isAutoBalance || disabled}
+                        disabled={disabled}
+                        title={tip || undefined}
+                        className={cn("h-8 text-xs", (isAutoBalance || disabled) && "text-muted-foreground")}
                       />
                       <Input
                         type="number"
                         placeholder="%"
                         value={phasing[q].pct ? String(Math.round(phasing[q].pct * 10) / 10) : ""}
                         onChange={(e) => updateQuarterPct(q, e.target.value)}
-                        readOnly={isLocked}
-                        className={cn("h-8 text-xs", isLocked && "text-muted-foreground")}
+                        readOnly={isAutoBalance || disabled}
+                        disabled={disabled}
+                        title={tip || undefined}
+                        className={cn("h-8 text-xs", (isAutoBalance || disabled) && "text-muted-foreground")}
                       />
                       <Textarea
                         rows={2}
                         placeholder="Notes / assumptions"
                         value={phasing[q].notes || ""}
                         onChange={(e) => updateQuarterNotes(q, e.target.value)}
+                        disabled={disabled}
+                        title={tip || undefined}
                         className="text-[10px] min-h-[44px]"
                       />
                     </div>
