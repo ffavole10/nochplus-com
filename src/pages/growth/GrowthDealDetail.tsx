@@ -60,7 +60,7 @@ export default function GrowthDealDetail() {
   const update = useUpdateDeal();
   const remove = useDeleteDeal();
   const createActivity = useCreateActivity();
-  const updateStage = useUpdateDealStage();
+  
   const { confirm: confirmDialog, dialogProps: confirmDialogProps } = useConfirmDialog();
   const { data: ops } = useAccountOpsSnapshot(deal?.partner_id);
   const { data: agentOutputs = [] } = useAgentOutputs(dealId);
