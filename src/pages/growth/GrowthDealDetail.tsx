@@ -617,7 +617,10 @@ export default function GrowthDealDetail() {
           <Meta label="Created" value={format(new Date(deal.created_at), "MMM d, yyyy")} />
           <Meta label="Last updated" value={format(new Date(deal.updated_at), "MMM d, yyyy h:mm a")} />
           {deal.stage === "Closed Lost" && (deal as any).loss_reason && (
-            <Meta label="Loss Reason" value={LOSS_REASON_LABELS[(deal as any).loss_reason as keyof typeof LOSS_REASON_LABELS]} accent="text-rose-600" />
+            <Meta label="Loss Reason" value={LOSS_REASON_LABELS[(deal as any).loss_reason] || (deal as any).loss_reason} accent="text-rose-600" />
+          )}
+          {deal.stage === "Closed Won" && (deal as any).win_reason && (
+            <Meta label="Win Reason" value={WIN_REASON_LABELS[(deal as any).win_reason as keyof typeof WIN_REASON_LABELS] || (deal as any).win_reason} accent="text-emerald-600" />
           )}
           {(deal as any).competitor && (
             <Meta label="Competitor" value={(deal as any).competitor} />
@@ -625,29 +628,50 @@ export default function GrowthDealDetail() {
         </CardContent>
       </Card>
 
-      {/* ════════ Stage change confirm dialog ════════ */}
-      <Dialog open={!!pendingStage} onOpenChange={(o) => !o && setPendingStage(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Move deal to "{pendingStage}"?</DialogTitle></DialogHeader>
-          {pendingStage === "Closed Lost" && (
-            <div className="space-y-1.5">
-              <Label className="text-xs">Loss Reason *</Label>
-              <Select value={pendingLoss} onValueChange={setPendingLoss}>
-                <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
-                <SelectContent>
-                  {LOSS_REASONS.map((r) => <SelectItem key={r} value={r}>{LOSS_REASON_LABELS[r]}</SelectItem>)}
-                </SelectContent>
-              </Select>
+      {/* ════════ Stage History ════════ */}
+      <StageHistorySection dealId={deal.id} />
+
+      {/* ════════ Reopen action for closed deals ════════ */}
+      {(deal.stage === "Closed Won" || deal.stage === "Closed Lost") && (
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">Reopen this deal</p>
+              <p className="text-xs text-muted-foreground">
+                Clears the {deal.stage === "Closed Won" ? "win" : "loss"} reason and moves it back to In Negotiation.
+              </p>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingStage(null)}>Cancel</Button>
-            <Button onClick={confirmStageChange} disabled={updateStage.isPending}>
-              {updateStage.isPending && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}Confirm
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const ok = await confirmDialog({
+                  title: "Reopen this deal?",
+                  description: `Reopening will clear the ${deal.stage === "Closed Won" ? "win" : "loss"} reason and move this deal back to In Negotiation. Continue?`,
+                  confirmLabel: "Reopen deal",
+                });
+                if (ok) setPendingStage("In Negotiation" as DealStage);
+              }}
+            >
+              Reopen Deal
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ════════ Stage transition dialog ════════ */}
+      {pendingStage && (
+        <StageTransitionDialog
+          open={!!pendingStage}
+          onOpenChange={(o) => !o && setPendingStage(null)}
+          dealId={deal.id}
+          partnerId={deal.partner_id}
+          dealName={deal.deal_name}
+          fromStage={deal.stage}
+          toStage={pendingStage}
+          currentValue={Number(deal.value || 0)}
+        />
+      )}
 
       {/* ════════ Edit Deal dialog ════════ */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
