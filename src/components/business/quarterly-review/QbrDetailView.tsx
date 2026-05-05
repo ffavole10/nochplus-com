@@ -6,6 +6,9 @@ import { useQuarterlyReview, QBR_SECTION_LABELS } from "@/hooks/useQbr";
 import { formatCurrency } from "@/lib/formatters";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { QbrHeadlineBanner } from "./QbrHeadlineBanner";
+import { QbrMonthlyTrajectory } from "./QbrMonthlyTrajectory";
+import { QbrInsightsColumns } from "./QbrInsightsColumns";
 
 const ENTRY_BADGE: Record<string, { label: string; icon: any; color: string }> = {
   document_upload: { label: "Document upload", icon: FileText, color: "bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-900/30 dark:text-sky-200" },
