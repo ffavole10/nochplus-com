@@ -70,16 +70,83 @@ export type ActivityType = typeof ACTIVITY_TYPES[number];
 export const DEAL_HEALTH_VALUES = ["healthy", "at_risk", "critical", "stalled"] as const;
 export type DealHealth = typeof DEAL_HEALTH_VALUES[number];
 
-export const LOSS_REASONS = ["price", "timing", "competitor", "no_decision", "bad_fit", "other"] as const;
+export const LOSS_REASONS = [
+  "lost_to_competitor", "no_budget", "timing_not_right", "decision_delayed",
+  "lost_to_status_quo", "champion_left", "product_gap", "pricing", "other",
+] as const;
 export type LossReason = typeof LOSS_REASONS[number];
 
-export const LOSS_REASON_LABELS: Record<LossReason, string> = {
+export const LOSS_REASON_LABELS: Record<string, string> = {
+  lost_to_competitor: "Lost to competitor",
+  no_budget: "No budget",
+  timing_not_right: "Timing not right",
+  decision_delayed: "Decision delayed",
+  lost_to_status_quo: "Lost to status quo",
+  champion_left: "Champion left",
+  product_gap: "Product gap",
+  pricing: "Pricing",
+  other: "Other",
+  // legacy
   price: "Price",
   timing: "Timing",
   competitor: "Competitor",
   no_decision: "No decision",
   bad_fit: "Bad fit",
+};
+
+export const WIN_REASONS = [
+  "displaced_competitor", "new_initiative_funded", "champion_drove_internal",
+  "timing_aligned", "product_fit", "pricing_won", "other",
+] as const;
+export type WinReason = typeof WIN_REASONS[number];
+
+export const WIN_REASON_LABELS: Record<WinReason, string> = {
+  displaced_competitor: "Displaced competitor",
+  new_initiative_funded: "New initiative funded",
+  champion_drove_internal: "Champion drove internal",
+  timing_aligned: "Timing aligned",
+  product_fit: "Product fit",
+  pricing_won: "Pricing won",
   other: "Other",
+};
+
+export type StageTransitionType = "forward" | "backward" | "closed_won" | "closed_lost" | "reopen";
+
+export interface DealStageTransition {
+  id: string;
+  deal_id: string;
+  from_stage: string | null;
+  to_stage: string;
+  transition_type: StageTransitionType;
+  reason_code: string | null;
+  notes: string | null;
+  value_at_transition: number | null;
+  user_id: string | null;
+  created_at: string;
+}
+
+export const STAGE_ORDER: Record<DealStage, number> = {
+  "Account Mapped": 0,
+  "Engaged": 1,
+  "Qualified": 2,
+  "Proposal Out": 3,
+  "In Negotiation": 4,
+  "Closed Won": 5,
+  "Closed Lost": 5,
+};
+
+export function classifyTransition(from: DealStage, to: DealStage): StageTransitionType {
+  if (to === "Closed Won") return "closed_won";
+  if (to === "Closed Lost") return "closed_lost";
+  if ((from === "Closed Won" || from === "Closed Lost") && to !== "Closed Won" && to !== "Closed Lost") return "reopen";
+  return STAGE_ORDER[to] > STAGE_ORDER[from] ? "forward" : "backward";
+}
+
+export const FORWARD_PROMPTS: Partial<Record<DealStage, string>> = {
+  "Engaged": "What triggered engagement? (event, intro, outreach, inbound, etc.)",
+  "Qualified": "Pain confirmed, budget signal, decision-maker identified. What changed?",
+  "Proposal Out": "Proposal value and what's included.",
+  "In Negotiation": "What they pushed back on (price, scope, terms, timing).",
 };
 
 export interface PartnerMeta {
