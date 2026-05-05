@@ -694,6 +694,39 @@ function PlayDialog({ play, quarter, onClose, onSave }: { play: any; quarter: st
 }
 
 // === KPIs ===
+
+// In-memory unlock grants for past quarters. Reset on page reload, per spec
+// ("After save (or modal close), quarter auto-relocks. Each unlock requires a new reason").
+type UnlockKey = string; // `${kpiId}:${quarter}:${year}`
+function unlockKey(kpiId: string, quarter: QKey, year: number): UnlockKey {
+  return `${kpiId}:${quarter}:${year}`;
+}
+
+async function logKpiAudit(args: {
+  kpi_id: string;
+  quarter: string;
+  action: "unlock" | "edit_while_unlocked";
+  reason?: string | null;
+  before_value?: any;
+  after_value?: any;
+}) {
+  try {
+    const { data: u } = await supabase.auth.getUser();
+    await (supabase as any).from("strategy_kpi_audit_log").insert({
+      kpi_id: args.kpi_id,
+      quarter: args.quarter,
+      action: args.action,
+      reason: args.reason ?? null,
+      before_value: args.before_value ?? null,
+      after_value: args.after_value ?? null,
+      user_id: u.user?.id ?? null,
+      user_email: u.user?.email ?? null,
+    });
+  } catch (e) {
+    console.warn("audit log insert failed", e);
+  }
+}
+
 function KpisSection({ strategyId, accountTypes }: { strategyId: string; accountTypes: StrategyAccountType[] }) {
   const { data: kpis = [] } = useKpis(strategyId);
   const { data: actuals = [] } = useKpiActuals(strategyId);
@@ -702,6 +735,26 @@ function KpisSection({ strategyId, accountTypes }: { strategyId: string; account
   const [addOpen, setAddOpen] = useState(false);
   const [editKpi, setEditKpi] = useState<any | null>(null);
   const [actualKpi, setActualKpi] = useState<StrategyKpi | null>(null);
+  const [unlocked, setUnlocked] = useState<Set<UnlockKey>>(new Set());
+  const [unlockRequest, setUnlockRequest] = useState<{ kpi: StrategyKpi; quarter: QKey; year: number } | null>(null);
+
+  const requestUnlock = (kpi: StrategyKpi, quarter: QKey, year: number) => {
+    setUnlockRequest({ kpi, quarter, year });
+  };
+  const grantUnlock = async (reason: string) => {
+    if (!unlockRequest) return;
+    const k = unlockKey(unlockRequest.kpi.id, unlockRequest.quarter, unlockRequest.year);
+    setUnlocked((prev) => new Set(prev).add(k));
+    await logKpiAudit({
+      kpi_id: unlockRequest.kpi.id,
+      quarter: `${unlockRequest.quarter}-${unlockRequest.year}`,
+      action: "unlock",
+      reason,
+    });
+    toast.success(`${unlockRequest.quarter} ${unlockRequest.year} unlocked for amendment`);
+    setUnlockRequest(null);
+  };
+
 
   const typeLabel = accountTypes.length ? accountTypes.map((t) => ACCOUNT_TYPE_LABELS[t]).join(" + ") : "—";
 
