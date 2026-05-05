@@ -884,3 +884,52 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
     </div>
   );
 }
+
+function StageHistorySection({ dealId }: { dealId: string }) {
+  const { data: transitions = [], isLoading } = useDealStageTransitions(dealId);
+  const [open, setOpen] = useState(false);
+  if (isLoading || transitions.length === 0) return null;
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <button onClick={() => setOpen((o) => !o)} className="flex items-center justify-between w-full text-left">
+          <div>
+            <p className="text-sm font-semibold">Stage History</p>
+            <p className="text-xs text-muted-foreground">{transitions.length} transitions</p>
+          </div>
+          <span className="text-xs text-muted-foreground">{open ? "Hide" : "Show"}</span>
+        </button>
+        {open && (
+          <div className="mt-3 space-y-2">
+            {transitions.map((t) => {
+              const cls = t.transition_type === "closed_won" ? "border-emerald-300 bg-emerald-50/50"
+                : t.transition_type === "closed_lost" ? "border-rose-300 bg-rose-50/50"
+                : t.transition_type === "backward" ? "border-amber-300 bg-amber-50/50"
+                : t.transition_type === "reopen" ? "border-blue-300 bg-blue-50/50"
+                : "border-border bg-muted/20";
+              const reasonLabel = t.transition_type === "closed_won"
+                ? WIN_REASON_LABELS[t.reason_code as keyof typeof WIN_REASON_LABELS]
+                : t.transition_type === "closed_lost"
+                ? LOSS_REASON_LABELS[t.reason_code as string]
+                : null;
+              return (
+                <div key={t.id} className={cn("text-xs p-2 rounded border", cls)}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">
+                      {t.from_stage || "—"} → {t.to_stage}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {format(new Date(t.created_at), "MMM d, yyyy h:mm a")}
+                    </span>
+                  </div>
+                  {reasonLabel && <p className="mt-1"><span className="font-medium">Reason:</span> {reasonLabel}</p>}
+                  {t.notes && <p className="mt-1 text-muted-foreground">{t.notes}</p>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
