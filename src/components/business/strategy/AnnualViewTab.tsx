@@ -312,7 +312,7 @@ export function AnnualViewTab() {
               {tableRows.map((r) => (
                 <tr key={r.strategy.id} className="border-t hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/business/accounts/${r.customer.id}?tab=strategy`)}>
                   <td className="p-2 flex items-center gap-2">
-                    <CustomerLogo company={r.customer.company} domain={r.customer.domain || undefined} size={20} />
+                    <CustomerLogo company={r.customer.company} domain={r.customer.domain || undefined} size="sm" />
                     <span className="font-medium">{r.customer.company}</span>
                   </td>
                   {QUARTERS.map((q) => (
@@ -369,7 +369,7 @@ export function AnnualViewTab() {
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CustomerLogo company={r.customer.company} domain={r.customer.domain || undefined} size={24} />
+                      <CustomerLogo company={r.customer.company} domain={r.customer.domain || undefined} size="sm" />
                       <div>
                         <p className="text-sm font-semibold">{r.customer.company}</p>
                         <p className="text-[10px] text-muted-foreground uppercase">{currentQ} {currentYear}</p>
