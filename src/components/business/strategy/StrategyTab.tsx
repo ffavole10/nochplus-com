@@ -1017,7 +1017,7 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
     } else {
       const qp: QuarterPhasing = {};
       QUARTERS.forEach((q) => {
-        qp[q] = { target_value: Number(phasing[q].value || 0), target_percent: Number(phasing[q].pct || 0) };
+        qp[q] = { target_value: Number(phasing[q].value || 0), target_percent: Number(phasing[q].pct || 0), notes: phasing[q].notes || "" };
       });
       onSave({
         name: name.trim(), unit,
