@@ -20,6 +20,7 @@ import {
   useDecisionMap, useDecisionMapMutations,
   usePlays, usePlayMutations,
   useKpis, useKpiMutations,
+  useKpiActuals, useKpiActualMutations,
   useRisks, useRiskMutations,
   seedKpisFromTemplates,
   useTourCompleted, useMarkTourCompleted,
@@ -29,10 +30,14 @@ import { CONTACT_TYPE_LABELS, CONTACT_TYPE_PILL, type ContactType } from "@/lib/
 import {
   ACCOUNT_TYPE_LABELS, POSITION_LABELS, STRATEGY_HEALTH_COLORS, STRATEGY_HEALTH_LABELS,
   computeKpiHealth, computeStrategyHealth, currentQuarter, formatKpiValue,
+  computePhasedKpiStatus, getCurrentQuarterInfo,
+  PHASED_STATUS_LABELS, PHASED_STATUS_COLORS, PHASING_TEMPLATES,
   type StrategyAccountType, type StrategyPosition, type StrategyDecisionRole,
   type StrategyTemperature, type StrategyPlayStatus, type StrategyKpiUnit,
   type StrategyRiskSeverity, type KpiHealth,
+  type StrategyKpi, type StrategyKpiActual, type QuarterPhasing,
 } from "@/types/strategy";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { StrategyWizard } from "./StrategyWizard";
 import { runStrategyTour, runSectionHelp } from "./strategyTour";
 import { toast } from "sonner";
