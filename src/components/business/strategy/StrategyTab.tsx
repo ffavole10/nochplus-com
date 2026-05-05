@@ -818,53 +818,114 @@ function PhasedKpiCard({
   kpi: k, actuals, onEdit, onRemove, onUpdateActual,
 }: { kpi: StrategyKpi; actuals: StrategyKpiActual[]; onEdit: () => void; onRemove: () => void; onUpdateActual: () => void }) {
   const status = useMemo(() => computePhasedKpiStatus(k, actuals), [k, actuals]);
-  const quarterPct = status.quarterTarget > 0 ? Math.min(100, (status.actualToday / status.quarterTarget) * 100) : 0;
-  const expectedPct = status.quarterTarget > 0 ? Math.min(100, (status.expectedToday / status.quarterTarget) * 100) : 0;
+  const [expanded, setExpanded] = useState<QKey | null>(null);
+  const phasing = (k.quarter_phasing || {}) as QuarterPhasing;
+  const annualActualPct = status.annualTarget > 0 ? Math.min(100, (status.annualActual / status.annualTarget) * 100) : 0;
+  const yearWeek = Math.min(52, Math.max(1, Math.ceil(((Date.now() - new Date(status.year, 0, 1).getTime()) / (7 * 86400000)))));
+
+  const qIndex = (q: QKey) => Number(q[1]) - 1;
+  const currentQIdx = qIndex(status.currentQuarter);
+
+  const quarterRow = (q: QKey) => {
+    const idx = qIndex(q);
+    const phase = phasing[q];
+    const target = Number(phase?.target_value || 0);
+    const qActuals = actuals.filter((a) => a.strategy_kpi_id === k.id && a.quarter === q && a.year === status.year);
+    const actual = qActuals.reduce((s, a) => s + Number(a.actual_value || 0), 0);
+    const isPast = idx < currentQIdx;
+    const isCurrent = idx === currentQIdx;
+    const isFuture = idx > currentQIdx;
+    const ctx: "past" | "current" | "future" = isPast ? "past" : isCurrent ? "current" : "future";
+    const pctOfTarget = target > 0 ? Math.min(100, (actual / target) * 100) : (actual > 0 ? 100 : 0);
+    const expectedPct = isCurrent && target > 0 ? Math.min(100, (status.expectedToday / target) * 100) : 0;
+
+    let badge: { label: string; cls: string } | null = null;
+    if (isFuture) badge = { label: "—", cls: "text-muted-foreground" };
+    else if (target === 0 && actual === 0) badge = { label: "✓", cls: "text-emerald-600" };
+    else if (isPast) {
+      if (target > 0 && actual >= target) badge = { label: "✓ done", cls: "text-emerald-600" };
+      else if (target > 0) badge = { label: `✗ ${Math.round((actual / target) * 100)}%`, cls: "text-rose-600" };
+      else badge = { label: "✓", cls: "text-emerald-600" };
+    } else if (isCurrent) {
+      const pace = status.expectedToday > 0 ? actual / status.expectedToday : 0;
+      const delta = Math.round((pace - 1) * 100);
+      if (status.weeksElapsed <= 2) badge = { label: "starting", cls: "text-slate-500" };
+      else if (pace >= 1) badge = { label: `+${delta}%`, cls: "text-emerald-600" };
+      else badge = { label: `${delta}%`, cls: "text-rose-600" };
+    }
+
+    return (
+      <div key={q}>
+        <button
+          type="button"
+          onClick={() => setExpanded(expanded === q ? null : q)}
+          className={cn(
+            "w-full flex items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-muted/50 transition",
+            isCurrent && "ring-1 ring-primary/40 bg-primary/5",
+            isPast && "opacity-70",
+          )}
+        >
+          <span className="text-[10px] font-bold w-6 shrink-0">{q}</span>
+          <div className="relative h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+            <div className={cn("absolute inset-y-0 left-0", isPast ? "bg-slate-400" : isCurrent ? "bg-teal-500" : "bg-muted-foreground/20")} style={{ width: `${pctOfTarget}%` }} />
+            {isCurrent && <div className="absolute inset-y-0 w-px bg-foreground/60" style={{ left: `${expectedPct}%` }} />}
+          </div>
+          <span className="text-[10px] text-muted-foreground w-20 text-right truncate">
+            {formatKpiValue(actual, k.unit)}<span className="opacity-50"> / {formatKpiValue(target, k.unit)}</span>
+          </span>
+          <span className={cn("text-[10px] w-14 text-right shrink-0", badge?.cls)}>{badge?.label}</span>
+          <span className="text-[9px] uppercase text-muted-foreground/60 w-12 shrink-0">{ctx}</span>
+        </button>
+        {expanded === q && (
+          <QuarterDetailPanel
+            kpi={k}
+            quarter={q}
+            year={status.year}
+            ctx={ctx}
+            target={target}
+            actual={actual}
+            qActuals={qActuals}
+            phasingNotes={phase?.notes || ""}
+            currentWeek={isCurrent ? status.weeksElapsed : null}
+            onAddActual={onUpdateActual}
+          />
+        )}
+      </div>
+    );
+  };
 
   return (
-    <Card className={cn("relative group", k.is_deferred && "opacity-60")}>
-      <CardContent className="p-3 space-y-2">
+    <Card className={cn("relative group md:col-span-2", k.is_deferred && "opacity-60")}>
+      <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold truncate" title={k.name}>{k.name}</p>
-            <Badge variant="outline" className="text-[10px] mt-1">Phased · {status.currentQuarter} {status.year}</Badge>
+            <p className="text-[10px] text-muted-foreground">Phased · {status.year} · current {status.currentQuarter}</p>
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge variant="outline" className={cn("text-[10px] cursor-help", PHASED_STATUS_COLORS[status.status])}>
-                  {PHASED_STATUS_LABELS[status.status]}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[260px]">
-                Week {status.weeksElapsed} of 13 in {status.currentQuarter}.<br/>
-                Expected: {formatKpiValue(status.expectedToday, k.unit)}.<br/>
-                Actual: {formatKpiValue(status.actualToday, k.unit)}.<br/>
-                {status.expectedToday > 0 ? `${Math.round(status.pace * 100)}% of pace.` : "No expected progress yet this quarter."}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="text-right shrink-0">
+            <p className="text-xs">
+              <span className="font-bold">{formatKpiValue(status.annualActual, k.unit)}</span>
+              <span className="text-muted-foreground"> / {formatKpiValue(status.annualTarget, k.unit)} annual</span>
+            </p>
+            <Badge variant="outline" className={cn("text-[10px] mt-1", PHASED_STATUS_COLORS[status.status])}>
+              {PHASED_STATUS_LABELS[status.status]}
+            </Badge>
+          </div>
         </div>
         <div>
-          <p className="text-xs">
-            <span className="font-bold">{formatKpiValue(status.actualToday, k.unit)}</span>
-            <span className="text-muted-foreground"> / {formatKpiValue(status.quarterTarget, k.unit)} {status.currentQuarter} target</span>
-          </p>
-          <p className="text-[10px] text-muted-foreground">
-            {formatKpiValue(status.annualActual, k.unit)} / {formatKpiValue(status.annualTarget, k.unit)} annual
+          <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-primary/70" style={{ width: `${annualActualPct}%` }} />
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Annual progress · {Math.round(annualActualPct)}% (Week {yearWeek} of 52)
           </p>
         </div>
-        <div className="relative h-2 w-full bg-muted rounded-full overflow-hidden">
-          <div className="absolute inset-y-0 left-0 bg-teal-500 transition-all" style={{ width: `${quarterPct}%` }} />
-          <div
-            className="absolute inset-y-0 w-0.5 bg-foreground/70"
-            style={{ left: `${expectedPct}%` }}
-            title={`Expected by today: ${formatKpiValue(status.expectedToday, k.unit)}`}
-          />
+        <div className="space-y-1">
+          {QUARTERS.map(quarterRow)}
         </div>
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 pt-1">
           <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] gap-1" onClick={onUpdateActual}>
-            <Plus className="h-3 w-3" /> Update actual
+            <Plus className="h-3 w-3" /> Add {status.currentQuarter} actual
           </Button>
           {!k.is_deferred && (
             <div className="flex gap-1 opacity-0 group-hover:opacity-100">
@@ -875,6 +936,57 @@ function PhasedKpiCard({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function QuarterDetailPanel({
+  kpi: k, quarter, year, ctx, target, actual, qActuals, phasingNotes, currentWeek, onAddActual,
+}: {
+  kpi: StrategyKpi; quarter: QKey; year: number; ctx: "past" | "current" | "future";
+  target: number; actual: number; qActuals: StrategyKpiActual[]; phasingNotes: string;
+  currentWeek: number | null; onAddActual: () => void;
+}) {
+  const pace = ctx === "current" && currentWeek
+    ? (target > 0 ? (actual / (target * (currentWeek / 13))) : 0)
+    : 0;
+  const expected = ctx === "current" && currentWeek ? target * (currentWeek / 13) : 0;
+  return (
+    <div className="ml-8 mr-2 mb-2 px-3 py-2 rounded border bg-muted/30 space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-semibold">
+          {quarter} {year} · {ctx === "past" ? "past — locked" : ctx === "current" ? `Week ${currentWeek}/13` : "future"}
+        </p>
+        {ctx === "past" && <Badge variant="outline" className="text-[9px]"><Lock className="h-2.5 w-2.5 mr-1" />Locked</Badge>}
+      </div>
+      <p className="text-[10px] text-muted-foreground">
+        Target: <span className="text-foreground font-medium">{formatKpiValue(target, k.unit)}</span> ·
+        Actual: <span className="text-foreground font-medium"> {formatKpiValue(actual, k.unit)}</span>
+        {ctx === "current" && expected > 0 && (
+          <> · Pace: <span className="text-foreground font-medium">{Math.round(pace * 100)}%</span> of expected ({formatKpiValue(expected, k.unit)})</>
+        )}
+      </p>
+      {phasingNotes && (
+        <p className="text-[10px] italic text-muted-foreground border-l-2 pl-2">{phasingNotes}</p>
+      )}
+      <div className="space-y-0.5">
+        <p className="text-[10px] font-semibold text-muted-foreground">Recent actuals</p>
+        {qActuals.length === 0 && <p className="text-[10px] text-muted-foreground italic">None recorded</p>}
+        {qActuals.slice(0, 5).map((a) => (
+          <p key={a.id} className="text-[10px] flex justify-between">
+            <span>{format(new Date(a.entered_at), "MMM d")}</span>
+            <span className="font-mono">+{formatKpiValue(Number(a.delta_value ?? a.actual_value), k.unit)}</span>
+          </p>
+        ))}
+      </div>
+      {ctx === "current" && (
+        <Button size="sm" variant="outline" className="h-6 text-[10px] gap-1" onClick={onAddActual}>
+          <Plus className="h-2.5 w-2.5" /> Add actual for current week
+        </Button>
+      )}
+      {ctx === "future" && (
+        <p className="text-[10px] text-muted-foreground italic">Forecast quarter — actuals open once {quarter} begins.</p>
+      )}
+    </div>
   );
 }
 
