@@ -71,8 +71,6 @@ export default function GrowthPipeline() {
 
   // Stage move dialog
   const [pendingMove, setPendingMove] = useState<{ deal: Deal; newStage: DealStage } | null>(null);
-  const [moveNote, setMoveNote] = useState("");
-  const [pendingLossReason, setPendingLossReason] = useState<string>("");
 
   // Add Deal dialog
   const [addOpen, setAddOpen] = useState(false);
