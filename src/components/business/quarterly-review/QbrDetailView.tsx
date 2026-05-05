@@ -65,6 +65,14 @@ export function QbrDetailView({ id, onBack }: { id: string; onBack: () => void }
         </div>
       </div>
 
+      <QbrHeadlineBanner
+        financial={financial}
+        opMetrics={sections.operational_metrics}
+        focusAccounts={focus_accounts}
+      />
+
+      <QbrMonthlyTrajectory months={monthly} />
+
       <SectionBlock title="Strategic Narrative" source="document">
         <p className="whitespace-pre-wrap text-sm">{sections.strategic_narrative?.content || <Empty />}</p>
       </SectionBlock>
@@ -84,6 +92,12 @@ export function QbrDetailView({ id, onBack }: { id: string; onBack: () => void }
         ) : <Empty />}
       </SectionBlock>
 
+      <QbrInsightsColumns
+        wins={Array.isArray(sections.wins?.content) ? sections.wins.content : []}
+        lessons={Array.isArray(sections.lessons?.content) ? sections.lessons.content : []}
+        decisions={Array.isArray(sections.decisions?.content) ? sections.decisions.content : []}
+      />
+
       <SectionBlock title="Operational Metrics" source={sections.operational_metrics?.data_source || "manual"}>
         <KeyValueGrid value={sections.operational_metrics?.content} />
       </SectionBlock>
@@ -91,10 +105,6 @@ export function QbrDetailView({ id, onBack }: { id: string; onBack: () => void }
       <SectionBlock title="Team & Organization" source={sections.team_org?.data_source || "manual"}>
         <KeyValueGrid value={sections.team_org?.content} />
       </SectionBlock>
-
-      <BulletBlock title="Top Wins" items={sections.wins?.content} source={sections.wins?.data_source} />
-      <BulletBlock title="Top Lessons" items={sections.lessons?.content} source={sections.lessons?.data_source} />
-      <BulletBlock title="Strategic Decisions" items={sections.decisions?.content} source={sections.decisions?.data_source} />
 
       <SectionBlock title="Focus Accounts" source="manual">
         {focus_accounts.length === 0 ? <Empty /> : (
