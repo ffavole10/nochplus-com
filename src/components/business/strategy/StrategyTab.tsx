@@ -1128,7 +1128,7 @@ function UpdateActualDialog({ kpi, onClose, onSave }: { kpi: StrategyKpi; onClos
 }
 
 
-function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; onSave: (data: any) => void }) {
+function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () => void; onSave: (data: any, auditEdits?: { quarter: QKey; before: any; after: any }[]) => void | Promise<void>; unlocked?: Set<string> }) {
   const [name, setName] = useState(kpi?.name || "");
   const [unit, setUnit] = useState<StrategyKpiUnit>(kpi?.unit || "count");
   const [targetType, setTargetType] = useState<"single" | "phased">(kpi?.target_type || "single");
