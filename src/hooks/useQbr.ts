@@ -125,16 +125,27 @@ export function useQuarterlyReviews() {
   });
 }
 
+export interface QbrMonthlyBreakdown {
+  id: string;
+  qbr_id: string;
+  month_index: number;
+  month_label: string;
+  revenue: number | null;
+  net_income: number | null;
+  annotation: string | null;
+}
+
 export function useQuarterlyReview(id?: string) {
   return useQuery({
     queryKey: ["quarterly-reviews", id],
     enabled: !!id,
     queryFn: async () => {
-      const [qbrR, sectionsR, finR, focusR] = await Promise.all([
+      const [qbrR, sectionsR, finR, focusR, monthlyR] = await Promise.all([
         sb.from("quarterly_reviews").select("*").eq("id", id).maybeSingle(),
         sb.from("qbr_sections").select("*").eq("qbr_id", id),
         sb.from("qbr_financial_data").select("*").eq("qbr_id", id).maybeSingle(),
         sb.from("qbr_focus_accounts").select("*").eq("qbr_id", id).order("order_index"),
+        sb.from("qbr_monthly_breakdown").select("*").eq("qbr_id", id).order("month_index"),
       ]);
       if (qbrR.error) throw qbrR.error;
       const sections: Record<string, QbrSection> = {};
@@ -144,8 +155,24 @@ export function useQuarterlyReview(id?: string) {
         sections,
         financial: (finR.data as QbrFinancial) || null,
         focus_accounts: (focusR.data as QbrFocusAccount[]) || [],
+        monthly: (monthlyR.data as QbrMonthlyBreakdown[]) || [],
       };
     },
+  });
+}
+
+export function useUpdateMonthlyAnnotation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, qbr_id, annotation }: { id: string; qbr_id: string; annotation: string }) => {
+      const { error } = await sb.from("qbr_monthly_breakdown").update({ annotation }).eq("id", id);
+      if (error) throw error;
+      return { qbr_id };
+    },
+    onSuccess: ({ qbr_id }) => {
+      qc.invalidateQueries({ queryKey: ["quarterly-reviews", qbr_id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
