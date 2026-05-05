@@ -808,12 +808,43 @@ function KpisSection({ strategyId, accountTypes }: { strategyId: string; account
       {(addOpen || editKpi) && (
         <KpiDialog
           kpi={editKpi}
+          unlocked={unlocked}
           onClose={() => { setAddOpen(false); setEditKpi(null); }}
-          onSave={async (data) => {
-            if (editKpi) await update.mutateAsync({ id: editKpi.id, ...data } as any);
-            else await add.mutateAsync({ strategy_id: strategyId, ...data, is_primary: true, is_deferred: false } as any);
+          onSave={async (data, auditEdits) => {
+            if (editKpi) {
+              const before = editKpi;
+              await update.mutateAsync({ id: editKpi.id, ...data } as any);
+              for (const edit of auditEdits || []) {
+                await logKpiAudit({
+                  kpi_id: editKpi.id,
+                  quarter: `${edit.quarter}-${new Date().getFullYear()}`,
+                  action: "edit_while_unlocked",
+                  before_value: edit.before,
+                  after_value: edit.after,
+                });
+              }
+              // Auto-relock unlocked quarters for this KPI
+              setUnlocked((prev) => {
+                const next = new Set(prev);
+                for (const k of Array.from(next)) {
+                  if (k.startsWith(`${editKpi.id}:`)) next.delete(k);
+                }
+                return next;
+              });
+            } else {
+              await add.mutateAsync({ strategy_id: strategyId, ...data, is_primary: true, is_deferred: false } as any);
+            }
             setAddOpen(false); setEditKpi(null);
           }}
+        />
+      )}
+
+      {unlockRequest && (
+        <UnlockQuarterDialog
+          quarter={unlockRequest.quarter}
+          year={unlockRequest.year}
+          onClose={() => setUnlockRequest(null)}
+          onConfirm={grantUnlock}
         />
       )}
 
