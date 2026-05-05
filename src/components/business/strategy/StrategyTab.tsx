@@ -1548,3 +1548,41 @@ function RisksSection({ strategyId }: { strategyId: string }) {
     </Card>
   );
 }
+
+function UnlockQuarterDialog({
+  quarter, year, onClose, onConfirm,
+}: { quarter: QKey; year: number; onClose: () => void; onConfirm: (reason: string) => void | Promise<void> }) {
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const valid = reason.trim().length >= 10;
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Unlock className="h-4 w-4 text-amber-600" /> Unlock {quarter} {year}?</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Unlocking allows edits to target, actuals, and notes for this closed quarter. This action is logged with timestamp and your user. Required: provide a reason for the audit log.
+          </p>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Reason for unlock <span className="text-muted-foreground">(min 10 chars)</span></Label>
+            <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Late ARR booking from December close-out — needs to be reflected." />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>Cancel</Button>
+          <Button
+            disabled={!valid || submitting}
+            onClick={async () => {
+              setSubmitting(true);
+              try { await onConfirm(reason.trim()); } finally { setSubmitting(false); }
+            }}
+          >
+            {submitting ? "Unlocking…" : "Unlock"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
