@@ -332,6 +332,9 @@ function LiveMode({ review, onExit, onClose }: { review: WeeklyReview; onExit: (
         </Card>
       )}
 
+      {/* Section 0: This week's transitions */}
+      <WeeklyTransitionsSection deals={deals} customerById={customerById} />
+
       {/* Section 1: Pipeline — stage-grouped review layout */}
       <Section
         title="Pipeline"
