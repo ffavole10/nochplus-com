@@ -4906,6 +4906,7 @@ export type Database = {
           is_deferred: boolean
           is_primary: boolean
           kpi_template_origin: string | null
+          locked_quarter: string
           name: string
           notes: string | null
           quarter_phasing: Json | null
@@ -4925,6 +4926,7 @@ export type Database = {
           is_deferred?: boolean
           is_primary?: boolean
           kpi_template_origin?: string | null
+          locked_quarter?: string
           name: string
           notes?: string | null
           quarter_phasing?: Json | null
@@ -4944,6 +4946,7 @@ export type Database = {
           is_deferred?: boolean
           is_primary?: boolean
           kpi_template_origin?: string | null
+          locked_quarter?: string
           name?: string
           notes?: string | null
           quarter_phasing?: Json | null

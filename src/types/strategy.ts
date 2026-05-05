@@ -113,6 +113,7 @@ export interface StrategyKpi {
   target_type?: StrategyKpiTargetType;
   annual_target_value?: number | null;
   quarter_phasing?: QuarterPhasing | null;
+  locked_quarter?: "Q1" | "Q2" | "Q3" | "Q4" | null;
 }
 
 export interface StrategyKpiActual {

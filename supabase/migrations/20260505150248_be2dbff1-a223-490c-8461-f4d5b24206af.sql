@@ -1,0 +1,1 @@
+ALTER TABLE public.strategy_kpis ADD COLUMN IF NOT EXISTS locked_quarter text NOT NULL DEFAULT 'Q4' CHECK (locked_quarter IN ('Q1','Q2','Q3','Q4'));

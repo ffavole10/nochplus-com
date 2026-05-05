@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  Plus, Pencil, Trash2, AlertTriangle, Eye, CheckCircle2, Circle, Play, X, HelpCircle, Sparkles, History,
+  Plus, Pencil, Trash2, AlertTriangle, Eye, CheckCircle2, Circle, Play, X, HelpCircle, Sparkles, History, Lock, Unlock,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -906,6 +906,9 @@ function UpdateActualDialog({ kpi, onClose, onSave }: { kpi: StrategyKpi; onClos
   );
 }
 
+type QKey = "Q1" | "Q2" | "Q3" | "Q4";
+const QUARTERS: QKey[] = ["Q1", "Q2", "Q3", "Q4"];
+
 function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; onSave: (data: any) => void }) {
   const [name, setName] = useState(kpi?.name || "");
   const [unit, setUnit] = useState<StrategyKpiUnit>(kpi?.unit || "count");
@@ -913,78 +916,118 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
   const [target, setTarget] = useState<string>(kpi?.target_value?.toString() || "");
   const [current, setCurrent] = useState<string>(kpi?.current_value?.toString() || "0");
   const [notes, setNotes] = useState(kpi?.notes || "");
-  const [annual, setAnnual] = useState<string>(kpi?.annual_target_value?.toString() || "");
+  const [annual, setAnnual] = useState<string>(
+    (kpi?.annual_target_value ?? (kpi?.target_type === "phased" ? kpi?.target_value : ""))?.toString() || ""
+  );
   const initialPhasing = (kpi?.quarter_phasing || {}) as QuarterPhasing;
-  const [phasing, setPhasing] = useState<Record<"Q1"|"Q2"|"Q3"|"Q4", { value: string; pct: string }>>({
-    Q1: { value: initialPhasing.Q1?.target_value?.toString() || "", pct: initialPhasing.Q1?.target_percent?.toString() || "" },
-    Q2: { value: initialPhasing.Q2?.target_value?.toString() || "", pct: initialPhasing.Q2?.target_percent?.toString() || "" },
-    Q3: { value: initialPhasing.Q3?.target_value?.toString() || "", pct: initialPhasing.Q3?.target_percent?.toString() || "" },
-    Q4: { value: initialPhasing.Q4?.target_value?.toString() || "", pct: initialPhasing.Q4?.target_percent?.toString() || "" },
-  });
+  const [phasing, setPhasing] = useState<Record<QKey, { value: number; pct: number }>>(() => ({
+    Q1: { value: Number(initialPhasing.Q1?.target_value || 0), pct: Number(initialPhasing.Q1?.target_percent || 0) },
+    Q2: { value: Number(initialPhasing.Q2?.target_value || 0), pct: Number(initialPhasing.Q2?.target_percent || 0) },
+    Q3: { value: Number(initialPhasing.Q3?.target_value || 0), pct: Number(initialPhasing.Q3?.target_percent || 0) },
+    Q4: { value: Number(initialPhasing.Q4?.target_value || 0), pct: Number(initialPhasing.Q4?.target_percent || 0) },
+  }));
+  const [locked, setLocked] = useState<QKey>((kpi?.locked_quarter as QKey) || "Q4");
   const [template, setTemplate] = useState<string>("");
 
   const annualNum = Number(annual || 0);
-  const totalPct = (["Q1","Q2","Q3","Q4"] as const).reduce((s, q) => s + (Number(phasing[q].pct) || 0), 0);
-  const totalValue = (["Q1","Q2","Q3","Q4"] as const).reduce((s, q) => s + (Number(phasing[q].value) || 0), 0);
+
+  // Recompute the locked quarter as the remainder of the others.
+  const recomputeLocked = (state: Record<QKey, { value: number; pct: number }>, lockedQ: QKey, ann: number) => {
+    const others = QUARTERS.filter((q) => q !== lockedQ);
+    const sumOtherPct = others.reduce((s, q) => s + (Number(state[q].pct) || 0), 0);
+    const sumOtherVal = others.reduce((s, q) => s + (Number(state[q].value) || 0), 0);
+    const lockedPct = Math.max(0, 100 - sumOtherPct);
+    const lockedVal = ann > 0 ? Math.max(0, ann - sumOtherVal) : 0;
+    return { ...state, [lockedQ]: { value: lockedVal, pct: lockedPct } };
+  };
+
+  // When annual changes, recompute dollar amounts from existing percentages and rebalance locked.
+  useEffect(() => {
+    if (targetType !== "phased" || !annualNum) return;
+    setPhasing((prev) => {
+      const next = { ...prev };
+      QUARTERS.filter((q) => q !== locked).forEach((q) => {
+        next[q] = { ...next[q], value: Math.round(((Number(next[q].pct) || 0) / 100) * annualNum) };
+      });
+      return recomputeLocked(next, locked, annualNum);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [annualNum, targetType]);
 
   const applyTemplate = (tplKey: string) => {
     setTemplate(tplKey);
     const tpl = PHASING_TEMPLATES[tplKey];
     if (!tpl) return;
-    const next = { ...phasing };
-    (["Q1","Q2","Q3","Q4"] as const).forEach((q) => {
+    const next: Record<QKey, { value: number; pct: number }> = { ...phasing };
+    QUARTERS.forEach((q) => {
       const pct = tpl.quarters[q];
       const value = annualNum ? Math.round((pct / 100) * annualNum) : 0;
-      next[q] = { pct: pct.toString(), value: value ? value.toString() : "" };
+      next[q] = { value, pct };
     });
-    setPhasing(next);
+    setPhasing(recomputeLocked(next, locked, annualNum));
   };
 
-  const updateQuarterValue = (q: "Q1"|"Q2"|"Q3"|"Q4", value: string) => {
-    const v = Number(value || 0);
-    const pct = annualNum > 0 ? ((v / annualNum) * 100) : 0;
-    setPhasing({ ...phasing, [q]: { value, pct: pct ? pct.toFixed(1).replace(/\.0$/, "") : "" } });
+  const updateQuarterValue = (q: QKey, raw: string) => {
+    if (q === locked) return;
+    const v = Number(raw || 0);
+    const pct = annualNum > 0 ? (v / annualNum) * 100 : 0;
+    const next = { ...phasing, [q]: { value: v, pct: Math.round(pct * 10) / 10 } };
+    setPhasing(recomputeLocked(next, locked, annualNum));
+    setTemplate("");
   };
-  const updateQuarterPct = (q: "Q1"|"Q2"|"Q3"|"Q4", pct: string) => {
-    const p = Number(pct || 0);
+
+  const updateQuarterPct = (q: QKey, raw: string) => {
+    if (q === locked) return;
+    const p = Number(raw || 0);
     const v = annualNum > 0 ? Math.round((p / 100) * annualNum) : 0;
-    setPhasing({ ...phasing, [q]: { pct, value: v ? v.toString() : "" } });
+    const next = { ...phasing, [q]: { pct: p, value: v } };
+    setPhasing(recomputeLocked(next, locked, annualNum));
+    setTemplate("");
   };
+
+  const setLockedQuarter = (q: QKey) => {
+    setLocked(q);
+    setPhasing((prev) => recomputeLocked(prev, q, annualNum));
+  };
+
+  const totalPct = QUARTERS.reduce((s, q) => s + (Number(phasing[q].pct) || 0), 0);
+  const totalValue = QUARTERS.reduce((s, q) => s + (Number(phasing[q].value) || 0), 0);
+  const pctDelta = totalPct - 100;
+  const isExact = Math.abs(pctDelta) < 0.5;
+  const isOver = pctDelta > 0.5;
+  const isUnder = pctDelta < -0.5;
 
   const handleSave = () => {
     if (targetType === "single") {
       onSave({
-        name: name.trim(),
-        unit,
+        name: name.trim(), unit,
         target_type: "single",
         target_value: target === "" ? null : Number(target),
         current_value: current === "" ? 0 : Number(current),
         annual_target_value: null,
         quarter_phasing: null,
+        locked_quarter: null,
         notes: notes.trim() || null,
       });
     } else {
       const qp: QuarterPhasing = {};
-      (["Q1","Q2","Q3","Q4"] as const).forEach((q) => {
-        qp[q] = {
-          target_value: Number(phasing[q].value || 0),
-          target_percent: Number(phasing[q].pct || 0),
-        };
+      QUARTERS.forEach((q) => {
+        qp[q] = { target_value: Number(phasing[q].value || 0), target_percent: Number(phasing[q].pct || 0) };
       });
       onSave({
-        name: name.trim(),
-        unit,
+        name: name.trim(), unit,
         target_type: "phased",
         target_value: annual === "" ? null : Number(annual),
         annual_target_value: annual === "" ? null : Number(annual),
         quarter_phasing: qp,
+        locked_quarter: locked,
         current_value: current === "" ? 0 : Number(current),
         notes: notes.trim() || null,
       });
     }
   };
 
-  const phasedValid = targetType === "single" || (Math.abs(totalPct - 100) < 0.5);
+  const phasedSaveBlocked = targetType === "phased" && (annualNum <= 0 || isOver);
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -1026,7 +1069,7 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
               </label>
             </div>
             <p className="text-[10px] text-muted-foreground">
-              Time-phased targets let you track progress against where you should be at this point in the quarter, not against the annual or quarter-end value.
+              Phased targets break your annual goal into quarterly milestones, so status updates show whether you're on pace for THIS point in the quarter — not just whether you've hit the annual target.
             </p>
           </div>
 
@@ -1050,29 +1093,58 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
                 </Select>
               </div>
               <div className="grid grid-cols-4 gap-2">
-                {(["Q1","Q2","Q3","Q4"] as const).map((q) => (
-                  <div key={q} className="space-y-1">
-                    <Label className="text-[10px] font-bold">{q}</Label>
-                    <Input
-                      type="number"
-                      placeholder="$"
-                      value={phasing[q].value}
-                      onChange={(e) => updateQuarterValue(q, e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                    <Input
-                      type="number"
-                      placeholder="%"
-                      value={phasing[q].pct}
-                      onChange={(e) => updateQuarterPct(q, e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                  </div>
-                ))}
+                {QUARTERS.map((q) => {
+                  const isLocked = q === locked;
+                  return (
+                    <div key={q} className={cn("space-y-1 rounded p-1.5", isLocked && "bg-muted/40")}>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-bold">{q}</Label>
+                        <button
+                          type="button"
+                          onClick={() => setLockedQuarter(q)}
+                          title={isLocked ? "Auto-balanced quarter" : "Make this the auto-balanced quarter"}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                        </button>
+                      </div>
+                      <Input
+                        type="number"
+                        placeholder="$"
+                        value={phasing[q].value || ""}
+                        onChange={(e) => updateQuarterValue(q, e.target.value)}
+                        readOnly={isLocked}
+                        className={cn("h-8 text-xs", isLocked && "text-muted-foreground")}
+                      />
+                      <Input
+                        type="number"
+                        placeholder="%"
+                        value={phasing[q].pct ? String(Math.round(phasing[q].pct * 10) / 10) : ""}
+                        onChange={(e) => updateQuarterPct(q, e.target.value)}
+                        readOnly={isLocked}
+                        className={cn("h-8 text-xs", isLocked && "text-muted-foreground")}
+                      />
+                    </div>
+                  );
+                })}
               </div>
-              <p className={cn("text-[11px]", phasedValid ? "text-muted-foreground" : "text-rose-600")}>
-                Total: {totalPct.toFixed(1)}% of annual ({formatKpiValue(totalValue, unit)})
-                {!phasedValid && " — must equal 100%"}
+              <div
+                className={cn(
+                  "text-[11px] rounded px-2 py-1.5 flex items-center justify-between",
+                  isExact && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+                  isUnder && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+                  isOver && "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400",
+                )}
+              >
+                <span>
+                  Total: {formatKpiValue(totalValue, unit)} ({totalPct.toFixed(1)}%)
+                  {isExact && " ✓"}
+                  {isUnder && ` ⚠ ${Math.abs(pctDelta).toFixed(1)}% (${formatKpiValue(annualNum - totalValue, unit)}) unaccounted for`}
+                  {isOver && ` ✗ exceeds annual by ${formatKpiValue(totalValue - annualNum, unit)} — resolve to save`}
+                </span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                {locked} auto-balances by default to keep totals at 100%. Click any other quarter's lock icon to change which one auto-balances.
               </p>
             </div>
           )}
@@ -1081,7 +1153,7 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button disabled={!name.trim() || !phasedValid} onClick={handleSave}>Save</Button>
+          <Button disabled={!name.trim() || phasedSaveBlocked} onClick={handleSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
