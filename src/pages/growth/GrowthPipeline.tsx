@@ -470,36 +470,18 @@ export default function GrowthPipeline() {
       )}
 
       {/* ============ Stage move dialog ============ */}
-      <Dialog open={!!pendingMove} onOpenChange={(o) => !o && setPendingMove(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Move deal to "{pendingMove?.newStage}"?</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            {pendingMove?.newStage === "Closed Lost" && (
-              <div className="space-y-1.5">
-                <Label className="text-xs">Loss Reason *</Label>
-                <Select value={pendingLossReason} onValueChange={setPendingLossReason}>
-                  <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
-                  <SelectContent>
-                    {LOSS_REASONS.map(r => <SelectItem key={r} value={r}>{LOSS_REASON_LABELS[r]}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div className="space-y-1.5">
-              <Label className="text-xs">What moved this deal? (Logged to activity feed)</Label>
-              <Textarea rows={3} value={moveNote} onChange={e => setMoveNote(e.target.value)} placeholder="e.g. Champion confirmed budget approval" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingMove(null)}>Cancel</Button>
-            <Button onClick={confirmMove} disabled={updateStage.isPending}>
-              {updateStage.isPending && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}Confirm Move
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {pendingMove && (
+        <StageTransitionDialog
+          open={!!pendingMove}
+          onOpenChange={(o) => !o && setPendingMove(null)}
+          dealId={pendingMove.deal.id}
+          partnerId={pendingMove.deal.partner_id}
+          dealName={pendingMove.deal.deal_name}
+          fromStage={pendingMove.deal.stage}
+          toStage={pendingMove.newStage}
+          currentValue={Number(pendingMove.deal.value || 0)}
+        />
+      )}
 
       {/* ============ Add Deal dialog ============ */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
