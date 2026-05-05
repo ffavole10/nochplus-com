@@ -13,8 +13,10 @@ export function QbrHeadlineBanner({ financial, opMetrics, focusAccounts }: Props
   const revenue = financial?.quarterly_revenue ?? null;
   const netIncome = financial?.net_income ?? null;
   const op = (opMetrics?.content || {}) as Record<string, any>;
-  const connectors = op.connectors_engaged ?? op.connectors ?? null;
-  const customers = op.active_customers_end ?? op.customers ?? null;
+  const cpWOs = op.chargepoint_q1_work_orders ?? null;
+  const jobsPerWeek = op.avg_jobs_per_week ?? null;
+  const states = op.states_operating ?? null;
+  const techs = op.technicians_end ?? null;
   const anchor = focusAccounts[0]?.account_name;
 
   const positive = (netIncome ?? 0) >= 0;
