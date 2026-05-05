@@ -4856,34 +4856,46 @@ export type Database = {
         Row: {
           actual_value: number
           created_at: string
+          delta_value: number | null
           entered_at: string
           entered_by: string | null
+          entered_in_weekly_review: boolean
           id: string
           notes: string | null
           quarter: string
           strategy_kpi_id: string
+          week_starting: string | null
+          weekly_review_id: string | null
           year: number
         }
         Insert: {
           actual_value?: number
           created_at?: string
+          delta_value?: number | null
           entered_at?: string
           entered_by?: string | null
+          entered_in_weekly_review?: boolean
           id?: string
           notes?: string | null
           quarter: string
           strategy_kpi_id: string
+          week_starting?: string | null
+          weekly_review_id?: string | null
           year: number
         }
         Update: {
           actual_value?: number
           created_at?: string
+          delta_value?: number | null
           entered_at?: string
           entered_by?: string | null
+          entered_in_weekly_review?: boolean
           id?: string
           notes?: string | null
           quarter?: string
           strategy_kpi_id?: string
+          week_starting?: string | null
+          weekly_review_id?: string | null
           year?: number
         }
         Relationships: [
@@ -4892,6 +4904,13 @@ export type Database = {
             columns: ["strategy_kpi_id"]
             isOneToOne: false
             referencedRelation: "strategy_kpis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategy_kpi_actuals_weekly_review_id_fkey"
+            columns: ["weekly_review_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_reviews"
             referencedColumns: ["id"]
           },
         ]

@@ -122,6 +122,10 @@ export interface StrategyKpiActual {
   quarter: "Q1" | "Q2" | "Q3" | "Q4";
   year: number;
   actual_value: number;
+  delta_value?: number | null;
+  week_starting?: string | null;
+  entered_in_weekly_review?: boolean;
+  weekly_review_id?: string | null;
   entered_by: string | null;
   entered_at: string;
   notes: string | null;

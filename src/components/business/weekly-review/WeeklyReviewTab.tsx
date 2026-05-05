@@ -20,6 +20,7 @@ import { useAllStrategies } from "@/hooks/useStrategy";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useFocus5CustomerIds } from "@/hooks/useFocus5";
 import { SkipReviewModal } from "./SkipReviewModal";
+import { InlineKpiUpdater } from "./InlineKpiUpdater";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { formatCurrency } from "@/lib/formatters";
 import { DEAL_STAGES, DEAL_STAGE_COLORS, type DealStage } from "@/types/growth";
@@ -420,6 +421,7 @@ function LiveMode({ review, onExit, onClose }: { review: WeeklyReview; onExit: (
                 linkId={s.id}
                 existingNotes={notesByLink.get(`strategy:${s.id}`) || []}
                 isPre={isPre}
+                extra={<InlineKpiUpdater strategyId={s.id} weeklyReviewId={review.id} />}
               />
             ))}
           </div>
@@ -501,10 +503,11 @@ function Empty({ children }: { children: React.ReactNode }) {
 }
 
 function ArtifactRow({
-  title, meta, header, reviewId, linkType, linkId, existingNotes, isPre,
+  title, meta, header, extra, reviewId, linkType, linkId, existingNotes, isPre,
 }: {
   title: string; meta?: string;
   header?: React.ReactNode;
+  extra?: React.ReactNode;
   reviewId: string; linkType: WeeklyReviewLinkType; linkId: string;
   existingNotes: WeeklyReviewNote[]; isPre: boolean;
 }) {
@@ -539,6 +542,7 @@ function ArtifactRow({
           </div>
         </div>
       )}
+      {extra}
       {existingNotes.length > 0 && (
         <ol className="space-y-1 pl-2 border-l-2 border-muted">
           {existingNotes.map((n) => {
