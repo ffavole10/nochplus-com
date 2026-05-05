@@ -138,7 +138,7 @@ export const STAGE_ORDER: Record<DealStage, number> = {
 export function classifyTransition(from: DealStage, to: DealStage): StageTransitionType {
   if (to === "Closed Won") return "closed_won";
   if (to === "Closed Lost") return "closed_lost";
-  if ((from === "Closed Won" || from === "Closed Lost") && to !== "Closed Won" && to !== "Closed Lost") return "reopen";
+  if (from === "Closed Won" || from === "Closed Lost") return "reopen";
   return STAGE_ORDER[to] > STAGE_ORDER[from] ? "forward" : "backward";
 }
 
