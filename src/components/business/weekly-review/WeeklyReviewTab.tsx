@@ -23,7 +23,8 @@ import { SkipReviewModal } from "./SkipReviewModal";
 import { InlineKpiUpdater } from "./InlineKpiUpdater";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { formatCurrency } from "@/lib/formatters";
-import { DEAL_STAGES, DEAL_STAGE_COLORS, type DealStage } from "@/types/growth";
+import { DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASON_LABELS, WIN_REASON_LABELS, type DealStage } from "@/types/growth";
+import { useRecentStageTransitions } from "@/hooks/useStageTransitions";
 import { Star, AlertTriangle } from "lucide-react";
 import { differenceInDays } from "date-fns";
 
