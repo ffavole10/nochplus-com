@@ -13,8 +13,10 @@ export function QbrHeadlineBanner({ financial, opMetrics, focusAccounts }: Props
   const revenue = financial?.quarterly_revenue ?? null;
   const netIncome = financial?.net_income ?? null;
   const op = (opMetrics?.content || {}) as Record<string, any>;
-  const connectors = op.connectors_engaged ?? op.connectors ?? null;
-  const customers = op.active_customers_end ?? op.customers ?? null;
+  const cpWOs = op.chargepoint_q1_work_orders ?? null;
+  const jobsPerWeek = op.avg_jobs_per_week ?? null;
+  const states = op.states_operating ?? null;
+  const techs = op.technicians_end ?? null;
   const anchor = focusAccounts[0]?.account_name;
 
   const positive = (netIncome ?? 0) >= 0;
@@ -39,15 +41,13 @@ export function QbrHeadlineBanner({ financial, opMetrics, focusAccounts }: Props
       </Tile>
 
       <Tile label="OPERATIONS" icon={<Zap className="h-3 w-3" />}>
-        <div className="space-y-0.5 mt-1">
-          <div className="text-sm">
-            <span className="font-semibold text-base">{connectors ?? "—"}</span>
-            <span className="text-xs text-muted-foreground ml-1">connectors</span>
-          </div>
-          <div className="text-sm">
-            <span className="font-semibold text-base">{customers ?? "—"}</span>
-            <span className="text-xs text-muted-foreground ml-1">customers</span>
-          </div>
+        <div className="text-2xl font-bold tracking-tight">
+          {cpWOs != null ? `${cpWOs}` : "—"}
+          <span className="text-xs font-normal text-muted-foreground ml-1">ChargePoint WOs</span>
+        </div>
+        <div className="text-[11px] text-muted-foreground mt-1">
+          {[jobsPerWeek != null && `${jobsPerWeek} jobs/wk`, states != null && `${states} states`, techs != null && `${techs} techs`]
+            .filter(Boolean).join(" · ") || "—"}
         </div>
       </Tile>
 
