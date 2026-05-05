@@ -906,8 +906,8 @@ function SingleKpiCard({ kpi: k, onEdit, onRemove }: { kpi: StrategyKpi; onEdit:
 }
 
 function PhasedKpiCard({
-  kpi: k, actuals, onEdit, onRemove, onUpdateActual,
-}: { kpi: StrategyKpi; actuals: StrategyKpiActual[]; onEdit: () => void; onRemove: () => void; onUpdateActual: () => void }) {
+  kpi: k, actuals, onEdit, onRemove, onUpdateActual, unlocked, onRequestUnlock,
+}: { kpi: StrategyKpi; actuals: StrategyKpiActual[]; onEdit: () => void; onRemove: () => void; onUpdateActual: () => void; unlocked: Set<string>; onRequestUnlock: (q: QKey, year: number) => void }) {
   const status = useMemo(() => computePhasedKpiStatus(k, actuals), [k, actuals]);
   const [expanded, setExpanded] = useState<QKey | null>(null);
   const phasing = (k.quarter_phasing || {}) as QuarterPhasing;
