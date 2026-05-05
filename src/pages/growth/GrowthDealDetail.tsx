@@ -72,7 +72,7 @@ export default function GrowthDealDetail() {
 
   // Stage change confirm
   const [pendingStage, setPendingStage] = useState<DealStage | null>(null);
-  const [pendingLoss, setPendingLoss] = useState<string>("");
+  
 
   // Edit deal modal
   const [editOpen, setEditOpen] = useState(false);
