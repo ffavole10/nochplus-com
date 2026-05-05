@@ -421,6 +421,7 @@ function LiveMode({ review, onExit, onClose }: { review: WeeklyReview; onExit: (
                 linkId={s.id}
                 existingNotes={notesByLink.get(`strategy:${s.id}`) || []}
                 isPre={isPre}
+                extra={<InlineKpiUpdater strategyId={s.id} weeklyReviewId={review.id} />}
               />
             ))}
           </div>
