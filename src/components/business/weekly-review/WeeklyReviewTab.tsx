@@ -331,22 +331,77 @@ function LiveMode({ review, onExit, onClose }: { review: WeeklyReview; onExit: (
         </Card>
       )}
 
-      {/* Section 1: Pipeline */}
-      <Section title="Pipeline" subtitle={`${openDeals.length} open deals`}>
+      {/* Section 1: Pipeline — stage-grouped review layout */}
+      <Section
+        title="Pipeline"
+        subtitle={`${openDeals.length} open ${openDeals.length === 1 ? "deal" : "deals"} across ${stagesWithDeals.length} ${stagesWithDeals.length === 1 ? "stage" : "stages"} · ${formatCurrency(totalArr)} total ARR`}
+      >
         {openDeals.length === 0 ? <Empty>No open deals.</Empty> : (
-          <div className="space-y-2">
-            {openDeals.slice(0, 20).map((d: any) => (
-              <ArtifactRow
-                key={d.id}
-                title={d.deal_name || `Deal ${d.id.slice(0, 6)}`}
-                meta={`${d.stage || "—"}${d.owner ? ` · ${d.owner}` : ""}`}
-                reviewId={review.id}
-                linkType="deal"
-                linkId={d.id}
-                existingNotes={notesByLink.get(`deal:${d.id}`) || []}
-                isPre={isPre}
-              />
-            ))}
+          <div className="space-y-5">
+            {stagesWithDeals.map((stage) => {
+              const stageDeals = dealsByStage[stage];
+              const stageTotal = stageDeals.reduce((s, d) => s + Number(d.value || 0), 0);
+              return (
+                <div key={stage} className="space-y-2">
+                  <div className="flex items-center justify-between gap-2 pb-1.5 border-b">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={cn("text-[11px] font-semibold", DEAL_STAGE_COLORS[stage as DealStage])}>
+                        {stage}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">({stageDeals.length})</span>
+                    </div>
+                    <span className="text-xs font-medium tabular-nums text-muted-foreground">{formatCurrency(stageTotal)} total ARR</span>
+                  </div>
+                  {stageDeals.map((d: any) => {
+                    const partner: any = customerById[d.partner_id];
+                    const isFocus = focusCustomerIds.has(d.partner_id);
+                    const days = Math.max(0, differenceInDays(new Date(), new Date(d.last_activity_at || d.updated_at)));
+                    const health = d.deal_health as string | null;
+                    const healthMeta = health === "critical" ? { label: "Critical", cls: "bg-rose-100 text-rose-800 border-rose-300" }
+                      : health === "at_risk" ? { label: "At Risk", cls: "bg-amber-100 text-amber-800 border-amber-300" }
+                      : health === "stalled" ? { label: "Stalled", cls: "bg-slate-200 text-slate-800 border-slate-300" }
+                      : health === "healthy" ? { label: "Healthy", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" }
+                      : null;
+                    return (
+                      <ArtifactRow
+                        key={d.id}
+                        title={d.deal_name || `Deal ${d.id.slice(0, 6)}`}
+                        reviewId={review.id}
+                        linkType="deal"
+                        linkId={d.id}
+                        existingNotes={notesByLink.get(`deal:${d.id}`) || []}
+                        isPre={isPre}
+                        header={
+                          <div className="flex items-start gap-2.5">
+                            <CustomerLogo logoUrl={partner?.logo_url} companyName={partner?.company || "—"} size="sm" />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {isFocus && <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500 shrink-0" />}
+                                <span className="text-sm font-semibold truncate">{partner?.company || "Unknown"}</span>
+                                {healthMeta && (
+                                  <Badge variant="outline" className={cn("text-[9px] py-0 h-4", healthMeta.cls)}>
+                                    {health === "at_risk" || health === "critical" ? <AlertTriangle className="h-2.5 w-2.5 mr-0.5" /> : null}
+                                    {healthMeta.label}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {d.deal_name}{d.owner ? ` · ${d.owner}` : ""}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                ARR: <span className="font-medium text-foreground">{formatCurrency(Number(d.value || 0))}</span>
+                                <span className="opacity-50"> · </span>
+                                {days}d in stage
+                              </p>
+                            </div>
+                          </div>
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         )}
       </Section>
