@@ -33,7 +33,14 @@ export function QbrMonthlyTrajectory({ months }: { months: QbrMonthlyBreakdown[]
               <XAxis dataKey="month" tick={{ fontSize: 12 }} />
               <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(v) => formatCurrency(v)} />
               <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(v) => formatCurrency(v)} />
-              <ReferenceLine yAxisId="right" y={0} stroke="hsl(var(--border))" />
+              <ReferenceLine
+                yAxisId="right"
+                y={0}
+                stroke="hsl(var(--muted-foreground))"
+                strokeDasharray="4 4"
+                strokeOpacity={0.6}
+                label={{ value: "$0", position: "right", fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+              />
               <Tooltip
                 formatter={(v: number, name: string) => [formatCurrency(v), name === "revenue" ? "Revenue" : "Net Income"]}
                 contentStyle={{ fontSize: 12 }}
@@ -49,8 +56,31 @@ export function QbrMonthlyTrajectory({ months }: { months: QbrMonthlyBreakdown[]
                 strokeWidth={2}
                 dot={{ r: 4, fill: "hsl(220 50% 25%)" }}
                 activeDot={{ r: 6 }}
-              />
-            </ComposedChart>
+              >
+                <LabelList
+                  dataKey="netIncome"
+                  position="top"
+                  content={(props: any) => {
+                    const { x, y, value } = props;
+                    if (value == null) return null;
+                    const positive = value >= 0;
+                    const sign = positive ? "+" : "-";
+                    const label = `${sign}${formatCurrency(Math.abs(value))}`;
+                    return (
+                      <text
+                        x={x}
+                        y={y - 10}
+                        textAnchor="middle"
+                        fontSize={10}
+                        fontWeight={600}
+                        fill={positive ? "hsl(174 70% 35%)" : "hsl(0 70% 50%)"}
+                      >
+                        {label}
+                      </text>
+                    );
+                  }}
+                />
+              </Line>
           </ResponsiveContainer>
         </div>
 
