@@ -1056,31 +1056,49 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
             <div className="space-y-1.5"><Label className="text-xs">Current actual</Label><Input type="number" value={current} onChange={(e) => setCurrent(e.target.value)} /></div>
           </div>
 
-          <div className="space-y-2 rounded-md border p-3">
-            <Label className="text-xs font-semibold">Target type</Label>
-            <div className="flex gap-4 text-xs">
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input type="radio" checked={targetType === "single"} onChange={() => setTargetType("single")} />
-                Single annual target
-              </label>
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input type="radio" checked={targetType === "phased"} onChange={() => setTargetType("phased")} />
-                Phased quarterly targets
-              </label>
-            </div>
-            <p className="text-[10px] text-muted-foreground">
-              Phased targets break your annual goal into quarterly milestones, so status updates show whether you're on pace for THIS point in the quarter — not just whether you've hit the annual target.
-            </p>
-          </div>
+          {(() => {
+            const unitMeta: Record<string, { label: string; placeholder: string }> = {
+              dollar: { label: "Annual target ($)", placeholder: "e.g. 2,400,000" },
+              percent: { label: "Annual target (%)", placeholder: "e.g. 50" },
+              count: { label: "Annual target (count)", placeholder: "e.g. 10,000" },
+              days: { label: "Annual target (days)", placeholder: "e.g. 365" },
+              months: { label: "Annual target (months)", placeholder: "e.g. 12" },
+              multiplier: { label: "Annual target (ratio)", placeholder: "e.g. 0.95" },
+              custom: { label: "Annual target", placeholder: "e.g. 2,000" },
+              yes_no: { label: "Target", placeholder: "" },
+            };
+            const meta = unitMeta[unit] || unitMeta.custom;
+            const isBinary = unit === "yes_no";
+            const effectiveType = isBinary ? "single" : targetType;
+            return (
+              <>
+                {!isBinary && (
+                  <div className="space-y-2 rounded-md border p-3">
+                    <Label className="text-xs font-semibold">Target type</Label>
+                    <div className="flex gap-4 text-xs">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" checked={targetType === "single"} onChange={() => setTargetType("single")} />
+                        Single annual target
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" checked={targetType === "phased"} onChange={() => setTargetType("phased")} />
+                        Phased quarterly targets
+                      </label>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Phased targets break your annual goal into quarterly milestones, so status updates show whether you're on pace for THIS point in the quarter — not just whether you've hit the annual target.
+                    </p>
+                  </div>
+                )}
 
-          {targetType === "single" ? (
-            <div className="space-y-1.5"><Label className="text-xs">Target value</Label><Input type="number" value={target} onChange={(e) => setTarget(e.target.value)} /></div>
-          ) : (
-            <div className="space-y-3 rounded-md border p-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Annual target</Label>
-                <Input type="number" value={annual} onChange={(e) => setAnnual(e.target.value)} placeholder="e.g. 2400000" />
-              </div>
+                {effectiveType === "single" ? (
+                  <div className="space-y-1.5"><Label className="text-xs">{isBinary ? "Target (1 = yes)" : meta.label}</Label><Input type="number" value={target} onChange={(e) => setTarget(e.target.value)} placeholder={meta.placeholder} /></div>
+                ) : (
+                  <div className="space-y-3 rounded-md border p-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">{meta.label}</Label>
+                      <Input type="number" value={annual} onChange={(e) => setAnnual(e.target.value)} placeholder={meta.placeholder} />
+                    </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Phasing template</Label>
                 <Select value={template} onValueChange={applyTemplate}>
