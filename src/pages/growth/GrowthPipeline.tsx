@@ -162,36 +162,7 @@ export default function GrowthPipeline() {
     const deal = deals.find(d => d.id === draggableId);
     if (!deal) return;
     const newStage = destination.droppableId as DealStage;
-    const err = validateStageTransition(deal, newStage);
-    if (err) {
-      toast.error(err);
-      return;
-    }
     setPendingMove({ deal, newStage });
-    setMoveNote("");
-    setPendingLossReason("");
-  };
-
-  const confirmMove = () => {
-    if (!pendingMove) return;
-    const extra: Record<string, any> = { last_activity_at: new Date().toISOString() };
-    if (pendingMove.newStage === "Closed Lost") {
-      if (!pendingLossReason) { toast.error("Loss reason required."); return; }
-      extra.loss_reason = pendingLossReason;
-    }
-    updateStage.mutate({
-      id: pendingMove.deal.id,
-      stage: pendingMove.newStage,
-      note: moveNote,
-      partner_id: pendingMove.deal.partner_id,
-      extra,
-    }, {
-      onSuccess: () => {
-        toast.success(`Deal moved to "${pendingMove.newStage}"`);
-        setPendingMove(null);
-      },
-      onError: (e: any) => toast.error(e.message),
-    });
   };
 
   const resetForm = () => {
