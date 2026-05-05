@@ -6,6 +6,7 @@ import type {
   StrategyDecisionEntry,
   StrategyPlay,
   StrategyKpi,
+  StrategyKpiActual,
   StrategyRisk,
   StrategyAccountType,
 } from "@/types/strategy";
