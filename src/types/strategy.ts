@@ -155,6 +155,26 @@ export const PHASING_TEMPLATES: Record<string, { label: string; quarters: Record
   hockey_stick: { label: "Hockey stick (partnership ramps)", quarters: { Q1: 5, Q2: 5, Q3: 25, Q4: 65 } },
 };
 
+export function getQuarterEndDate(quarter: "Q1"|"Q2"|"Q3"|"Q4", year: number): Date {
+  const qIdx = Number(quarter[1]) - 1;
+  // last day of the quarter (month qIdx*3+2, day 0 of next month trick)
+  return new Date(year, qIdx * 3 + 3, 0, 23, 59, 59, 999);
+}
+
+export function getQuarterStartDate(quarter: "Q1"|"Q2"|"Q3"|"Q4", year: number): Date {
+  const qIdx = Number(quarter[1]) - 1;
+  return new Date(year, qIdx * 3, 1);
+}
+
+export function isQuarterLocked(quarter: "Q1"|"Q2"|"Q3"|"Q4", year: number, now = new Date()): boolean {
+  return now.getTime() > getQuarterEndDate(quarter, year).getTime();
+}
+
+export function formatQuarterEnd(quarter: "Q1"|"Q2"|"Q3"|"Q4", year: number): string {
+  const d = getQuarterEndDate(quarter, year);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
 export function getCurrentQuarterInfo(d = new Date()): { quarter: "Q1"|"Q2"|"Q3"|"Q4"; year: number; weeksElapsed: number } {
   const month = d.getMonth();
   const qIdx = Math.floor(month / 3);
