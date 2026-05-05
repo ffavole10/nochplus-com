@@ -4915,6 +4915,45 @@ export type Database = {
           },
         ]
       }
+      strategy_kpi_audit_log: {
+        Row: {
+          action: string
+          after_value: Json | null
+          before_value: Json | null
+          created_at: string
+          id: string
+          kpi_id: string
+          quarter: string
+          reason: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          after_value?: Json | null
+          before_value?: Json | null
+          created_at?: string
+          id?: string
+          kpi_id: string
+          quarter: string
+          reason?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          after_value?: Json | null
+          before_value?: Json | null
+          created_at?: string
+          id?: string
+          kpi_id?: string
+          quarter?: string
+          reason?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       strategy_kpis: {
         Row: {
           annual_target_value: number | null
