@@ -21,7 +21,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/components/ui/sidebar";
-import nochLogo from "@/assets/noch-logo-white.png";
+import nochLogo from "@/assets/noch-logo-new.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { cn } from "@/lib/utils";
 import { useServiceTicketsStore } from "@/stores/serviceTicketsStore";
@@ -148,7 +148,7 @@ export function PlatformSidebar() {
             className="block hover:opacity-80 transition-opacity"
             aria-label="Go to Mission Control"
           >
-            <img src={nochLogo} alt="Noch Power" className="w-[45%] h-auto brightness-0 invert" />
+            <img src={nochLogo} alt="Noch Power" className="w-[45%] h-auto brightness-0 invert object-scale-down" />
           </button>
         </div>
       </SidebarHeader>

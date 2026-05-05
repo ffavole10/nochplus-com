@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchRoleInfo, postLoginPath } from "@/lib/postLoginRoute";
-import nochLogoWhite from "@/assets/noch-logo-white.png";
+import nochLogoWhite from "@/assets/noch-logo-new.png";
 import nochPlusIcon from "@/assets/noch-plus-icon.png";
 
 export default function FieldLogin() {

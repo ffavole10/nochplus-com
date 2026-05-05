@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import loginBg from "@/assets/login-background.webp";
-import nochLogo from "@/assets/noch-logo-white.png";
+import nochLogo from "@/assets/noch-logo-new.png";
 import { toast } from "sonner";
 import { fetchRoleInfo, postLoginPath } from "@/lib/postLoginRoute";
 
