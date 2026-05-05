@@ -436,9 +436,10 @@ function Empty({ children }: { children: React.ReactNode }) {
 }
 
 function ArtifactRow({
-  title, meta, reviewId, linkType, linkId, existingNotes, isPre,
+  title, meta, header, reviewId, linkType, linkId, existingNotes, isPre,
 }: {
   title: string; meta?: string;
+  header?: React.ReactNode;
   reviewId: string; linkType: WeeklyReviewLinkType; linkId: string;
   existingNotes: WeeklyReviewNote[]; isPre: boolean;
 }) {
@@ -465,12 +466,14 @@ function ArtifactRow({
 
   return (
     <div className="rounded-md border p-2.5 space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{title}</p>
-          {meta && <p className="text-[11px] text-muted-foreground truncate">{meta}</p>}
+      {header ? header : (
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{title}</p>
+            {meta && <p className="text-[11px] text-muted-foreground truncate">{meta}</p>}
+          </div>
         </div>
-      </div>
+      )}
       {existingNotes.length > 0 && (
         <ol className="space-y-1 pl-2 border-l-2 border-muted">
           {existingNotes.map((n) => {
