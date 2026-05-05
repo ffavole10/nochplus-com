@@ -86,6 +86,15 @@ export interface StrategyPlay {
   completed_at: string | null;
 }
 
+export type StrategyKpiTargetType = "single" | "phased";
+
+export interface QuarterPhasingEntry {
+  target_value: number;
+  target_percent: number;
+}
+
+export type QuarterPhasing = Partial<Record<"Q1" | "Q2" | "Q3" | "Q4" | "Q1_next", QuarterPhasingEntry>>;
+
 export interface StrategyKpi {
   id: string;
   strategy_id: string;
@@ -101,7 +110,110 @@ export interface StrategyKpi {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  target_type?: StrategyKpiTargetType;
+  annual_target_value?: number | null;
+  quarter_phasing?: QuarterPhasing | null;
 }
+
+export interface StrategyKpiActual {
+  id: string;
+  strategy_kpi_id: string;
+  quarter: "Q1" | "Q2" | "Q3" | "Q4";
+  year: number;
+  actual_value: number;
+  entered_by: string | null;
+  entered_at: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export type PhasedKpiPaceStatus = "starting" | "ahead" | "on_track" | "tracking" | "behind" | "on_schedule";
+
+export interface PhasedKpiStatus {
+  status: PhasedKpiPaceStatus;
+  currentQuarter: "Q1" | "Q2" | "Q3" | "Q4";
+  year: number;
+  quarterTarget: number;
+  weeksElapsed: number;
+  expectedToday: number;
+  actualToday: number;
+  pace: number;
+  annualTarget: number;
+  annualActual: number;
+}
+
+export const PHASING_TEMPLATES: Record<string, { label: string; quarters: Record<"Q1"|"Q2"|"Q3"|"Q4", number> }> = {
+  linear: { label: "Linear (steady growth)", quarters: { Q1: 25, Q2: 25, Q3: 25, Q4: 25 } },
+  back_loaded: { label: "Back-loaded (typical SaaS)", quarters: { Q1: 5, Q2: 15, Q3: 30, Q4: 50 } },
+  front_loaded: { label: "Front-loaded (fast wins)", quarters: { Q1: 40, Q2: 30, Q3: 20, Q4: 10 } },
+  hockey_stick: { label: "Hockey stick (partnership ramps)", quarters: { Q1: 5, Q2: 5, Q3: 25, Q4: 65 } },
+};
+
+export function getCurrentQuarterInfo(d = new Date()): { quarter: "Q1"|"Q2"|"Q3"|"Q4"; year: number; weeksElapsed: number } {
+  const month = d.getMonth();
+  const qIdx = Math.floor(month / 3);
+  const quarter = (`Q${qIdx + 1}`) as "Q1"|"Q2"|"Q3"|"Q4";
+  const qStart = new Date(d.getFullYear(), qIdx * 3, 1);
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+  const weeksElapsed = Math.min(13, Math.max(1, Math.ceil((d.getTime() - qStart.getTime()) / msPerWeek)));
+  return { quarter, year: d.getFullYear(), weeksElapsed };
+}
+
+export function computePhasedKpiStatus(
+  kpi: StrategyKpi,
+  actuals: StrategyKpiActual[],
+  now = new Date()
+): PhasedKpiStatus {
+  const { quarter, year, weeksElapsed } = getCurrentQuarterInfo(now);
+  const phasing = (kpi.quarter_phasing || {}) as QuarterPhasing;
+  const qEntry = phasing[quarter];
+  const quarterTarget = Number(qEntry?.target_value || 0);
+  const annualTarget = Number(kpi.annual_target_value || 0);
+
+  const qActuals = actuals.filter((a) => a.strategy_kpi_id === kpi.id && a.quarter === quarter && a.year === year);
+  const actualToday = qActuals.reduce((sum, a) => sum + Number(a.actual_value || 0), 0);
+  const annualActual = actuals
+    .filter((a) => a.strategy_kpi_id === kpi.id && a.year === year)
+    .reduce((sum, a) => sum + Number(a.actual_value || 0), 0);
+
+  const expectedToday = quarterTarget * (weeksElapsed / 13);
+  const pace = expectedToday > 0 ? actualToday / expectedToday : 0;
+
+  let status: PhasedKpiPaceStatus;
+  if (quarterTarget === 0) {
+    status = actualToday > 0 ? "ahead" : "on_schedule";
+  } else if (weeksElapsed <= 2) {
+    status = "starting";
+  } else if (pace >= 1.2) {
+    status = "ahead";
+  } else if (pace >= 1.0) {
+    status = "on_track";
+  } else if (pace >= 0.75) {
+    status = "tracking";
+  } else {
+    status = "behind";
+  }
+
+  return { status, currentQuarter: quarter, year, quarterTarget, weeksElapsed, expectedToday, actualToday, pace, annualTarget, annualActual };
+}
+
+export const PHASED_STATUS_LABELS: Record<PhasedKpiPaceStatus, string> = {
+  starting: "Starting",
+  ahead: "Ahead",
+  on_track: "On track",
+  tracking: "Tracking",
+  behind: "Behind",
+  on_schedule: "On schedule",
+};
+
+export const PHASED_STATUS_COLORS: Record<PhasedKpiPaceStatus, string> = {
+  starting: "bg-slate-500/10 text-slate-700 border-slate-300 dark:text-slate-400",
+  ahead: "bg-emerald-500/10 text-emerald-700 border-emerald-300 dark:text-emerald-400",
+  on_track: "bg-teal-500/10 text-teal-700 border-teal-300 dark:text-teal-400",
+  tracking: "bg-amber-500/10 text-amber-700 border-amber-300 dark:text-amber-400",
+  behind: "bg-rose-500/10 text-rose-700 border-rose-300 dark:text-rose-400",
+  on_schedule: "bg-slate-500/10 text-slate-700 border-slate-300 dark:text-slate-400",
+};
 
 export interface StrategyRisk {
   id: string;

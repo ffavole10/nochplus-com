@@ -6,6 +6,7 @@ import type {
   StrategyDecisionEntry,
   StrategyPlay,
   StrategyKpi,
+  StrategyKpiActual,
   StrategyRisk,
   StrategyAccountType,
 } from "@/types/strategy";
@@ -348,4 +349,50 @@ export function useMarkTourCompleted() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile-tour-flag"] }),
   });
+}
+
+// KPI Actuals (phased KPIs)
+export function useKpiActuals(strategyId?: string) {
+  return useQuery({
+    queryKey: ["strategy-kpi-actuals", strategyId],
+    enabled: !!strategyId,
+    queryFn: async (): Promise<StrategyKpiActual[]> => {
+      const { data: kpis } = await sb.from("strategy_kpis").select("id").eq("strategy_id", strategyId);
+      const ids = (kpis || []).map((k: any) => k.id);
+      if (!ids.length) return [];
+      const { data, error } = await sb
+        .from("strategy_kpi_actuals")
+        .select("*")
+        .in("strategy_kpi_id", ids)
+        .order("entered_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as StrategyKpiActual[];
+    },
+  });
+}
+
+export function useKpiActualMutations(strategyId?: string) {
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["strategy-kpi-actuals", strategyId] });
+
+  const add = useMutation({
+    mutationFn: async (actual: Omit<StrategyKpiActual, "id" | "created_at" | "entered_at">) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const payload = { ...actual, entered_by: actual.entered_by || userData?.user?.email || null };
+      const { data, error } = await sb.from("strategy_kpi_actuals").insert(payload).select().single();
+      if (error) throw error;
+      return data as StrategyKpiActual;
+    },
+    onSuccess: invalidate,
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await sb.from("strategy_kpi_actuals").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
+
+  return { add, remove };
 }

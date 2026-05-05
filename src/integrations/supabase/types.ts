@@ -4852,8 +4852,53 @@ export type Database = {
           },
         ]
       }
+      strategy_kpi_actuals: {
+        Row: {
+          actual_value: number
+          created_at: string
+          entered_at: string
+          entered_by: string | null
+          id: string
+          notes: string | null
+          quarter: string
+          strategy_kpi_id: string
+          year: number
+        }
+        Insert: {
+          actual_value?: number
+          created_at?: string
+          entered_at?: string
+          entered_by?: string | null
+          id?: string
+          notes?: string | null
+          quarter: string
+          strategy_kpi_id: string
+          year: number
+        }
+        Update: {
+          actual_value?: number
+          created_at?: string
+          entered_at?: string
+          entered_by?: string | null
+          id?: string
+          notes?: string | null
+          quarter?: string
+          strategy_kpi_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_kpi_actuals_strategy_kpi_id_fkey"
+            columns: ["strategy_kpi_id"]
+            isOneToOne: false
+            referencedRelation: "strategy_kpis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       strategy_kpis: {
         Row: {
+          annual_target_value: number | null
           created_at: string
           current_value: number
           deferred_reason: string | null
@@ -4863,13 +4908,16 @@ export type Database = {
           kpi_template_origin: string | null
           name: string
           notes: string | null
+          quarter_phasing: Json | null
           strategy_id: string
           target_date: string | null
+          target_type: Database["public"]["Enums"]["strategy_kpi_target_type"]
           target_value: number | null
           unit: Database["public"]["Enums"]["strategy_kpi_unit"]
           updated_at: string
         }
         Insert: {
+          annual_target_value?: number | null
           created_at?: string
           current_value?: number
           deferred_reason?: string | null
@@ -4879,13 +4927,16 @@ export type Database = {
           kpi_template_origin?: string | null
           name: string
           notes?: string | null
+          quarter_phasing?: Json | null
           strategy_id: string
           target_date?: string | null
+          target_type?: Database["public"]["Enums"]["strategy_kpi_target_type"]
           target_value?: number | null
           unit?: Database["public"]["Enums"]["strategy_kpi_unit"]
           updated_at?: string
         }
         Update: {
+          annual_target_value?: number | null
           created_at?: string
           current_value?: number
           deferred_reason?: string | null
@@ -4895,8 +4946,10 @@ export type Database = {
           kpi_template_origin?: string | null
           name?: string
           notes?: string | null
+          quarter_phasing?: Json | null
           strategy_id?: string
           target_date?: string | null
+          target_type?: Database["public"]["Enums"]["strategy_kpi_target_type"]
           target_value?: number | null
           unit?: Database["public"]["Enums"]["strategy_kpi_unit"]
           updated_at?: string
@@ -6823,6 +6876,7 @@ export type Database = {
         | "decision_maker"
         | "blocker"
         | "influencer"
+      strategy_kpi_target_type: "single" | "phased"
       strategy_kpi_unit:
         | "dollar"
         | "percent"
@@ -7188,6 +7242,7 @@ export const Constants = {
         "blocker",
         "influencer",
       ],
+      strategy_kpi_target_type: ["single", "phased"],
       strategy_kpi_unit: [
         "dollar",
         "percent",

@@ -20,6 +20,7 @@ import {
   useDecisionMap, useDecisionMapMutations,
   usePlays, usePlayMutations,
   useKpis, useKpiMutations,
+  useKpiActuals, useKpiActualMutations,
   useRisks, useRiskMutations,
   seedKpisFromTemplates,
   useTourCompleted, useMarkTourCompleted,
@@ -29,10 +30,14 @@ import { CONTACT_TYPE_LABELS, CONTACT_TYPE_PILL, type ContactType } from "@/lib/
 import {
   ACCOUNT_TYPE_LABELS, POSITION_LABELS, STRATEGY_HEALTH_COLORS, STRATEGY_HEALTH_LABELS,
   computeKpiHealth, computeStrategyHealth, currentQuarter, formatKpiValue,
+  computePhasedKpiStatus, getCurrentQuarterInfo,
+  PHASED_STATUS_LABELS, PHASED_STATUS_COLORS, PHASING_TEMPLATES,
   type StrategyAccountType, type StrategyPosition, type StrategyDecisionRole,
   type StrategyTemperature, type StrategyPlayStatus, type StrategyKpiUnit,
   type StrategyRiskSeverity, type KpiHealth,
+  type StrategyKpi, type StrategyKpiActual, type QuarterPhasing,
 } from "@/types/strategy";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { StrategyWizard } from "./StrategyWizard";
 import { runStrategyTour, runSectionHelp } from "./strategyTour";
 import { toast } from "sonner";
@@ -689,9 +694,12 @@ function PlayDialog({ play, quarter, onClose, onSave }: { play: any; quarter: st
 // === KPIs ===
 function KpisSection({ strategyId, accountTypes }: { strategyId: string; accountTypes: StrategyAccountType[] }) {
   const { data: kpis = [] } = useKpis(strategyId);
+  const { data: actuals = [] } = useKpiActuals(strategyId);
   const { add, update, remove } = useKpiMutations(strategyId);
+  const { add: addActual } = useKpiActualMutations(strategyId);
   const [addOpen, setAddOpen] = useState(false);
   const [editKpi, setEditKpi] = useState<any | null>(null);
+  const [actualKpi, setActualKpi] = useState<StrategyKpi | null>(null);
 
   const typeLabel = accountTypes.length ? accountTypes.map((t) => ACCOUNT_TYPE_LABELS[t]).join(" + ") : "—";
 
@@ -712,37 +720,23 @@ function KpisSection({ strategyId, accountTypes }: { strategyId: string; account
         {kpis.length === 0 && <p className="text-sm text-muted-foreground italic">No KPIs yet. Pick an account type to auto-populate.</p>}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {kpis.map((k) => {
-            const health = computeKpiHealth(k);
-            const target = Number(k.target_value || 0);
-            const current = Number(k.current_value || 0);
-            const pct = target ? Math.min(100, Math.round((current / target) * 100)) : 0;
-            return (
-              <Card key={k.id} className={cn("relative group", k.is_deferred && "opacity-60")}>
-                <CardContent className="p-3 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" title={k.name}>{k.name}</p>
-                      {k.is_deferred && <Badge variant="outline" className="text-[10px] mt-1">{k.deferred_reason || "Telemetry pending"}</Badge>}
-                    </div>
-                    {!k.is_deferred && health && (
-                      <Badge variant="secondary" className="text-[10px]">{KPI_HEALTH_LABELS[health]}</Badge>
-                    )}
-                  </div>
-                  <p className="text-xs">
-                    <span className="font-bold">{formatKpiValue(current, k.unit)}</span>
-                    <span className="text-muted-foreground"> / {formatKpiValue(target, k.unit)}</span>
-                  </p>
-                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                    <div className={cn("h-full transition-all", health ? KPI_HEALTH_COLORS[health] : "bg-muted-foreground")} style={{ width: `${pct}%` }} />
-                  </div>
-                  {!k.is_deferred && (
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100">
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditKpi(k)}><Pencil className="h-3 w-3" /></Button>
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => remove.mutate(k.id)}><Trash2 className="h-3 w-3" /></Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+            const isPhased = k.target_type === "phased";
+            return isPhased ? (
+              <PhasedKpiCard
+                key={k.id}
+                kpi={k}
+                actuals={actuals}
+                onEdit={() => setEditKpi(k)}
+                onRemove={() => remove.mutate(k.id)}
+                onUpdateActual={() => setActualKpi(k)}
+              />
+            ) : (
+              <SingleKpiCard
+                key={k.id}
+                kpi={k}
+                onEdit={() => setEditKpi(k)}
+                onRemove={() => remove.mutate(k.id)}
+              />
             );
           })}
         </div>
@@ -762,24 +756,244 @@ function KpisSection({ strategyId, accountTypes }: { strategyId: string; account
           }}
         />
       )}
+
+      {actualKpi && (
+        <UpdateActualDialog
+          kpi={actualKpi}
+          onClose={() => setActualKpi(null)}
+          onSave={async ({ value, notes }) => {
+            const { quarter, year } = getCurrentQuarterInfo();
+            await addActual.mutateAsync({
+              strategy_kpi_id: actualKpi.id,
+              quarter, year,
+              actual_value: value,
+              entered_by: null,
+              notes: notes || null,
+            } as any);
+            toast.success("Actual recorded");
+            setActualKpi(null);
+          }}
+        />
+      )}
     </Card>
+  );
+}
+
+function SingleKpiCard({ kpi: k, onEdit, onRemove }: { kpi: StrategyKpi; onEdit: () => void; onRemove: () => void }) {
+  const health = computeKpiHealth(k);
+  const target = Number(k.target_value || 0);
+  const current = Number(k.current_value || 0);
+  const pct = target ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  return (
+    <Card className={cn("relative group", k.is_deferred && "opacity-60")}>
+      <CardContent className="p-3 space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold truncate" title={k.name}>{k.name}</p>
+            {k.is_deferred && <Badge variant="outline" className="text-[10px] mt-1">{k.deferred_reason || "Telemetry pending"}</Badge>}
+          </div>
+          {!k.is_deferred && health && (
+            <Badge variant="secondary" className="text-[10px]">{health}</Badge>
+          )}
+        </div>
+        <p className="text-xs">
+          <span className="font-bold">{formatKpiValue(current, k.unit)}</span>
+          <span className="text-muted-foreground"> / {formatKpiValue(target, k.unit)}</span>
+        </p>
+        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+          <div className={cn("h-full transition-all", health ? KPI_HEALTH_COLORS[health] : "bg-muted-foreground")} style={{ width: `${pct}%` }} />
+        </div>
+        {!k.is_deferred && (
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onEdit}><Pencil className="h-3 w-3" /></Button>
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onRemove}><Trash2 className="h-3 w-3" /></Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PhasedKpiCard({
+  kpi: k, actuals, onEdit, onRemove, onUpdateActual,
+}: { kpi: StrategyKpi; actuals: StrategyKpiActual[]; onEdit: () => void; onRemove: () => void; onUpdateActual: () => void }) {
+  const status = useMemo(() => computePhasedKpiStatus(k, actuals), [k, actuals]);
+  const quarterPct = status.quarterTarget > 0 ? Math.min(100, (status.actualToday / status.quarterTarget) * 100) : 0;
+  const expectedPct = status.quarterTarget > 0 ? Math.min(100, (status.expectedToday / status.quarterTarget) * 100) : 0;
+
+  return (
+    <Card className={cn("relative group", k.is_deferred && "opacity-60")}>
+      <CardContent className="p-3 space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold truncate" title={k.name}>{k.name}</p>
+            <Badge variant="outline" className="text-[10px] mt-1">Phased · {status.currentQuarter} {status.year}</Badge>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className={cn("text-[10px] cursor-help", PHASED_STATUS_COLORS[status.status])}>
+                  {PHASED_STATUS_LABELS[status.status]}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[260px]">
+                Week {status.weeksElapsed} of 13 in {status.currentQuarter}.<br/>
+                Expected: {formatKpiValue(status.expectedToday, k.unit)}.<br/>
+                Actual: {formatKpiValue(status.actualToday, k.unit)}.<br/>
+                {status.expectedToday > 0 ? `${Math.round(status.pace * 100)}% of pace.` : "No expected progress yet this quarter."}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div>
+          <p className="text-xs">
+            <span className="font-bold">{formatKpiValue(status.actualToday, k.unit)}</span>
+            <span className="text-muted-foreground"> / {formatKpiValue(status.quarterTarget, k.unit)} {status.currentQuarter} target</span>
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            {formatKpiValue(status.annualActual, k.unit)} / {formatKpiValue(status.annualTarget, k.unit)} annual
+          </p>
+        </div>
+        <div className="relative h-2 w-full bg-muted rounded-full overflow-hidden">
+          <div className="absolute inset-y-0 left-0 bg-teal-500 transition-all" style={{ width: `${quarterPct}%` }} />
+          <div
+            className="absolute inset-y-0 w-0.5 bg-foreground/70"
+            style={{ left: `${expectedPct}%` }}
+            title={`Expected by today: ${formatKpiValue(status.expectedToday, k.unit)}`}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] gap-1" onClick={onUpdateActual}>
+            <Plus className="h-3 w-3" /> Update actual
+          </Button>
+          {!k.is_deferred && (
+            <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onEdit}><Pencil className="h-3 w-3" /></Button>
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onRemove}><Trash2 className="h-3 w-3" /></Button>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function UpdateActualDialog({ kpi, onClose, onSave }: { kpi: StrategyKpi; onClose: () => void; onSave: (d: { value: number; notes: string }) => void }) {
+  const { quarter } = getCurrentQuarterInfo();
+  const [value, setValue] = useState("");
+  const [notes, setNotes] = useState("");
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Update actual · {kpi.name}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Current {quarter} actual to add</Label>
+            <Input type="number" value={value} onChange={(e) => setValue(e.target.value)} placeholder="0" />
+            <p className="text-[10px] text-muted-foreground">Adds to existing {quarter} actuals.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Notes</Label>
+            <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button disabled={value === "" || isNaN(Number(value))} onClick={() => onSave({ value: Number(value), notes })}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; onSave: (data: any) => void }) {
   const [name, setName] = useState(kpi?.name || "");
   const [unit, setUnit] = useState<StrategyKpiUnit>(kpi?.unit || "count");
+  const [targetType, setTargetType] = useState<"single" | "phased">(kpi?.target_type || "single");
   const [target, setTarget] = useState<string>(kpi?.target_value?.toString() || "");
   const [current, setCurrent] = useState<string>(kpi?.current_value?.toString() || "0");
   const [notes, setNotes] = useState(kpi?.notes || "");
+  const [annual, setAnnual] = useState<string>(kpi?.annual_target_value?.toString() || "");
+  const initialPhasing = (kpi?.quarter_phasing || {}) as QuarterPhasing;
+  const [phasing, setPhasing] = useState<Record<"Q1"|"Q2"|"Q3"|"Q4", { value: string; pct: string }>>({
+    Q1: { value: initialPhasing.Q1?.target_value?.toString() || "", pct: initialPhasing.Q1?.target_percent?.toString() || "" },
+    Q2: { value: initialPhasing.Q2?.target_value?.toString() || "", pct: initialPhasing.Q2?.target_percent?.toString() || "" },
+    Q3: { value: initialPhasing.Q3?.target_value?.toString() || "", pct: initialPhasing.Q3?.target_percent?.toString() || "" },
+    Q4: { value: initialPhasing.Q4?.target_value?.toString() || "", pct: initialPhasing.Q4?.target_percent?.toString() || "" },
+  });
+  const [template, setTemplate] = useState<string>("");
+
+  const annualNum = Number(annual || 0);
+  const totalPct = (["Q1","Q2","Q3","Q4"] as const).reduce((s, q) => s + (Number(phasing[q].pct) || 0), 0);
+  const totalValue = (["Q1","Q2","Q3","Q4"] as const).reduce((s, q) => s + (Number(phasing[q].value) || 0), 0);
+
+  const applyTemplate = (tplKey: string) => {
+    setTemplate(tplKey);
+    const tpl = PHASING_TEMPLATES[tplKey];
+    if (!tpl) return;
+    const next = { ...phasing };
+    (["Q1","Q2","Q3","Q4"] as const).forEach((q) => {
+      const pct = tpl.quarters[q];
+      const value = annualNum ? Math.round((pct / 100) * annualNum) : 0;
+      next[q] = { pct: pct.toString(), value: value ? value.toString() : "" };
+    });
+    setPhasing(next);
+  };
+
+  const updateQuarterValue = (q: "Q1"|"Q2"|"Q3"|"Q4", value: string) => {
+    const v = Number(value || 0);
+    const pct = annualNum > 0 ? ((v / annualNum) * 100) : 0;
+    setPhasing({ ...phasing, [q]: { value, pct: pct ? pct.toFixed(1).replace(/\.0$/, "") : "" } });
+  };
+  const updateQuarterPct = (q: "Q1"|"Q2"|"Q3"|"Q4", pct: string) => {
+    const p = Number(pct || 0);
+    const v = annualNum > 0 ? Math.round((p / 100) * annualNum) : 0;
+    setPhasing({ ...phasing, [q]: { pct, value: v ? v.toString() : "" } });
+  };
+
+  const handleSave = () => {
+    if (targetType === "single") {
+      onSave({
+        name: name.trim(),
+        unit,
+        target_type: "single",
+        target_value: target === "" ? null : Number(target),
+        current_value: current === "" ? 0 : Number(current),
+        annual_target_value: null,
+        quarter_phasing: null,
+        notes: notes.trim() || null,
+      });
+    } else {
+      const qp: QuarterPhasing = {};
+      (["Q1","Q2","Q3","Q4"] as const).forEach((q) => {
+        qp[q] = {
+          target_value: Number(phasing[q].value || 0),
+          target_percent: Number(phasing[q].pct || 0),
+        };
+      });
+      onSave({
+        name: name.trim(),
+        unit,
+        target_type: "phased",
+        target_value: annual === "" ? null : Number(annual),
+        annual_target_value: annual === "" ? null : Number(annual),
+        quarter_phasing: qp,
+        current_value: current === "" ? 0 : Number(current),
+        notes: notes.trim() || null,
+      });
+    }
+  };
+
+  const phasedValid = targetType === "single" || (Math.abs(totalPct - 100) < 0.5);
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{kpi ? "Edit KPI" : "Add Custom KPI"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5"><Label className="text-xs">Name *</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div className="grid grid-cols-3 gap-3">
+
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Unit</Label>
               <Select value={unit} onValueChange={(v) => setUnit(v as StrategyKpiUnit)}>
@@ -796,20 +1010,78 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5"><Label className="text-xs">Target</Label><Input type="number" value={target} onChange={(e) => setTarget(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label className="text-xs">Current</Label><Input type="number" value={current} onChange={(e) => setCurrent(e.target.value)} /></div>
+            <div className="space-y-1.5"><Label className="text-xs">Current actual</Label><Input type="number" value={current} onChange={(e) => setCurrent(e.target.value)} /></div>
           </div>
+
+          <div className="space-y-2 rounded-md border p-3">
+            <Label className="text-xs font-semibold">Target type</Label>
+            <div className="flex gap-4 text-xs">
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" checked={targetType === "single"} onChange={() => setTargetType("single")} />
+                Single annual target
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" checked={targetType === "phased"} onChange={() => setTargetType("phased")} />
+                Phased quarterly targets
+              </label>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Time-phased targets let you track progress against where you should be at this point in the quarter, not against the annual or quarter-end value.
+            </p>
+          </div>
+
+          {targetType === "single" ? (
+            <div className="space-y-1.5"><Label className="text-xs">Target value</Label><Input type="number" value={target} onChange={(e) => setTarget(e.target.value)} /></div>
+          ) : (
+            <div className="space-y-3 rounded-md border p-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Annual target</Label>
+                <Input type="number" value={annual} onChange={(e) => setAnnual(e.target.value)} placeholder="e.g. 2400000" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Phasing template</Label>
+                <Select value={template} onValueChange={applyTemplate}>
+                  <SelectTrigger><SelectValue placeholder="Pick a template (optional)" /></SelectTrigger>
+                  <SelectContent className="z-[2100]">
+                    {Object.entries(PHASING_TEMPLATES).map(([key, tpl]) => (
+                      <SelectItem key={key} value={key}>{tpl.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {(["Q1","Q2","Q3","Q4"] as const).map((q) => (
+                  <div key={q} className="space-y-1">
+                    <Label className="text-[10px] font-bold">{q}</Label>
+                    <Input
+                      type="number"
+                      placeholder="$"
+                      value={phasing[q].value}
+                      onChange={(e) => updateQuarterValue(q, e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="%"
+                      value={phasing[q].pct}
+                      onChange={(e) => updateQuarterPct(q, e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className={cn("text-[11px]", phasedValid ? "text-muted-foreground" : "text-rose-600")}>
+                Total: {totalPct.toFixed(1)}% of annual ({formatKpiValue(totalValue, unit)})
+                {!phasedValid && " — must equal 100%"}
+              </p>
+            </div>
+          )}
+
           <div className="space-y-1.5"><Label className="text-xs">Notes</Label><Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button disabled={!name.trim()} onClick={() => onSave({
-            name: name.trim(),
-            unit,
-            target_value: target === "" ? null : Number(target),
-            current_value: current === "" ? 0 : Number(current),
-            notes: notes.trim() || null,
-          })}>Save</Button>
+          <Button disabled={!name.trim() || !phasedValid} onClick={handleSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
