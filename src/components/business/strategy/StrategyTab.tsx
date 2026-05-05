@@ -1076,8 +1076,6 @@ function UpdateActualDialog({ kpi, onClose, onSave }: { kpi: StrategyKpi; onClos
   );
 }
 
-type QKey = "Q1" | "Q2" | "Q3" | "Q4";
-const QUARTERS: QKey[] = ["Q1", "Q2", "Q3", "Q4"];
 
 function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; onSave: (data: any) => void }) {
   const [name, setName] = useState(kpi?.name || "");
