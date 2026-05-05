@@ -1269,8 +1269,25 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
       });
     } else {
       const qp: QuarterPhasing = {};
+      const auditEdits: { quarter: QKey; before: any; after: any }[] = [];
       QUARTERS.forEach((q) => {
-        qp[q] = { target_value: Number(phasing[q].value || 0), target_percent: Number(phasing[q].pct || 0), notes: phasing[q].notes || "" };
+        const proposed = { value: Number(phasing[q].value || 0), pct: Number(phasing[q].pct || 0), notes: phasing[q].notes || "" };
+        const initial = initialPhasedSnapshot[q];
+        let final = proposed;
+        if (isFieldDisabled(q)) {
+          // Backend safety: silently revert any mutation to a date-locked, non-unlocked quarter.
+          final = initial;
+        } else if (isDateLocked(q) && isQuarterUnlocked(q)) {
+          // Capture audit log entry for edit-while-unlocked
+          if (
+            proposed.value !== initial.value ||
+            proposed.pct !== initial.pct ||
+            proposed.notes !== initial.notes
+          ) {
+            auditEdits.push({ quarter: q, before: initial, after: proposed });
+          }
+        }
+        qp[q] = { target_value: final.value, target_percent: final.pct, notes: final.notes };
       });
       onSave({
         name: name.trim(), unit,
@@ -1281,7 +1298,7 @@ function KpiDialog({ kpi, onClose, onSave, unlocked }: { kpi: any; onClose: () =
         locked_quarter: locked,
         current_value: current === "" ? 0 : Number(current),
         notes: notes.trim() || null,
-      });
+      }, auditEdits);
     }
   };
 
