@@ -18,7 +18,13 @@ import {
 import { useDeals } from "@/hooks/useDeals";
 import { useAllStrategies } from "@/hooks/useStrategy";
 import { useCustomers } from "@/hooks/useCustomers";
+import { useFocus5CustomerIds } from "@/hooks/useFocus5";
 import { SkipReviewModal } from "./SkipReviewModal";
+import { CustomerLogo } from "@/components/CustomerLogo";
+import { formatCurrency } from "@/lib/formatters";
+import { DEAL_STAGES, DEAL_STAGE_COLORS, type DealStage } from "@/types/growth";
+import { Star, AlertTriangle } from "lucide-react";
+import { differenceInDays } from "date-fns";
 
 const CHIPS: WeeklyReviewNoteType[] = ["update", "decision", "action_item", "risk", "need"];
 
@@ -258,10 +264,20 @@ function LiveMode({ review, onExit, onClose }: { review: WeeklyReview; onExit: (
   const customerById = useMemo(() => Object.fromEntries(customers.map((c: any) => [c.id, c])), [customers]);
 
   const openDeals = useMemo(
-    () => deals.filter((d: any) => d.stage !== "Closed Won" && d.stage !== "Closed Lost")
-      .sort((a: any, b: any) => Number(b.tcv_value || 0) - Number(a.tcv_value || 0)),
+    () => deals.filter((d: any) => d.stage !== "Closed Won" && d.stage !== "Closed Lost"),
     [deals]
   );
+  const { data: focusCustomerIds = new Set<string>() } = useFocus5CustomerIds();
+  const dealsByStage = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    DEAL_STAGES.forEach((s) => { map[s] = []; });
+    openDeals.forEach((d: any) => { if (map[d.stage]) map[d.stage].push(d); });
+    // sort each by value desc
+    Object.keys(map).forEach((k) => map[k].sort((a, b) => Number(b.value || 0) - Number(a.value || 0)));
+    return map;
+  }, [openDeals]);
+  const totalArr = useMemo(() => openDeals.reduce((s: number, d: any) => s + Number(d.value || 0), 0), [openDeals]);
+  const stagesWithDeals = DEAL_STAGES.filter((s) => dealsByStage[s].length > 0);
   const focusStrategies = useMemo(() => strategies.filter((s: any) => s.is_focus), [strategies]);
   const atRisk = useMemo(
     () => strategies.filter((s: any) => !s.is_focus && (s.status === "needs_review" || s.current_position === "at_risk")),
@@ -315,22 +331,77 @@ function LiveMode({ review, onExit, onClose }: { review: WeeklyReview; onExit: (
         </Card>
       )}
 
-      {/* Section 1: Pipeline */}
-      <Section title="Pipeline" subtitle={`${openDeals.length} open deals`}>
+      {/* Section 1: Pipeline — stage-grouped review layout */}
+      <Section
+        title="Pipeline"
+        subtitle={`${openDeals.length} open ${openDeals.length === 1 ? "deal" : "deals"} across ${stagesWithDeals.length} ${stagesWithDeals.length === 1 ? "stage" : "stages"} · ${formatCurrency(totalArr)} total ARR`}
+      >
         {openDeals.length === 0 ? <Empty>No open deals.</Empty> : (
-          <div className="space-y-2">
-            {openDeals.slice(0, 20).map((d: any) => (
-              <ArtifactRow
-                key={d.id}
-                title={d.deal_name || `Deal ${d.id.slice(0, 6)}`}
-                meta={`${d.stage || "—"}${d.owner ? ` · ${d.owner}` : ""}`}
-                reviewId={review.id}
-                linkType="deal"
-                linkId={d.id}
-                existingNotes={notesByLink.get(`deal:${d.id}`) || []}
-                isPre={isPre}
-              />
-            ))}
+          <div className="space-y-5">
+            {stagesWithDeals.map((stage) => {
+              const stageDeals = dealsByStage[stage];
+              const stageTotal = stageDeals.reduce((s, d) => s + Number(d.value || 0), 0);
+              return (
+                <div key={stage} className="space-y-2">
+                  <div className="flex items-center justify-between gap-2 pb-1.5 border-b">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={cn("text-[11px] font-semibold", DEAL_STAGE_COLORS[stage as DealStage])}>
+                        {stage}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">({stageDeals.length})</span>
+                    </div>
+                    <span className="text-xs font-medium tabular-nums text-muted-foreground">{formatCurrency(stageTotal)} total ARR</span>
+                  </div>
+                  {stageDeals.map((d: any) => {
+                    const partner: any = customerById[d.partner_id];
+                    const isFocus = focusCustomerIds.has(d.partner_id);
+                    const days = Math.max(0, differenceInDays(new Date(), new Date(d.last_activity_at || d.updated_at)));
+                    const health = d.deal_health as string | null;
+                    const healthMeta = health === "critical" ? { label: "Critical", cls: "bg-rose-100 text-rose-800 border-rose-300" }
+                      : health === "at_risk" ? { label: "At Risk", cls: "bg-amber-100 text-amber-800 border-amber-300" }
+                      : health === "stalled" ? { label: "Stalled", cls: "bg-slate-200 text-slate-800 border-slate-300" }
+                      : health === "healthy" ? { label: "Healthy", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" }
+                      : null;
+                    return (
+                      <ArtifactRow
+                        key={d.id}
+                        title={d.deal_name || `Deal ${d.id.slice(0, 6)}`}
+                        reviewId={review.id}
+                        linkType="deal"
+                        linkId={d.id}
+                        existingNotes={notesByLink.get(`deal:${d.id}`) || []}
+                        isPre={isPre}
+                        header={
+                          <div className="flex items-start gap-2.5">
+                            <CustomerLogo logoUrl={partner?.logo_url} companyName={partner?.company || "—"} size="sm" />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {isFocus && <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500 shrink-0" />}
+                                <span className="text-sm font-semibold truncate">{partner?.company || "Unknown"}</span>
+                                {healthMeta && (
+                                  <Badge variant="outline" className={cn("text-[9px] py-0 h-4", healthMeta.cls)}>
+                                    {health === "at_risk" || health === "critical" ? <AlertTriangle className="h-2.5 w-2.5 mr-0.5" /> : null}
+                                    {healthMeta.label}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {d.deal_name}{d.owner ? ` · ${d.owner}` : ""}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                ARR: <span className="font-medium text-foreground">{formatCurrency(Number(d.value || 0))}</span>
+                                <span className="opacity-50"> · </span>
+                                {days}d in stage
+                              </p>
+                            </div>
+                          </div>
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         )}
       </Section>
@@ -430,9 +501,10 @@ function Empty({ children }: { children: React.ReactNode }) {
 }
 
 function ArtifactRow({
-  title, meta, reviewId, linkType, linkId, existingNotes, isPre,
+  title, meta, header, reviewId, linkType, linkId, existingNotes, isPre,
 }: {
   title: string; meta?: string;
+  header?: React.ReactNode;
   reviewId: string; linkType: WeeklyReviewLinkType; linkId: string;
   existingNotes: WeeklyReviewNote[]; isPre: boolean;
 }) {
@@ -459,12 +531,14 @@ function ArtifactRow({
 
   return (
     <div className="rounded-md border p-2.5 space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{title}</p>
-          {meta && <p className="text-[11px] text-muted-foreground truncate">{meta}</p>}
+      {header ? header : (
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{title}</p>
+            {meta && <p className="text-[11px] text-muted-foreground truncate">{meta}</p>}
+          </div>
         </div>
-      </div>
+      )}
       {existingNotes.length > 0 && (
         <ol className="space-y-1 pl-2 border-l-2 border-muted">
           {existingNotes.map((n) => {
