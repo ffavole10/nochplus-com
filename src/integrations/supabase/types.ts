@@ -3596,6 +3596,50 @@ export type Database = {
           },
         ]
       }
+      qbr_monthly_breakdown: {
+        Row: {
+          annotation: string | null
+          created_at: string
+          id: string
+          month_index: number
+          month_label: string
+          net_income: number | null
+          qbr_id: string
+          revenue: number | null
+          updated_at: string
+        }
+        Insert: {
+          annotation?: string | null
+          created_at?: string
+          id?: string
+          month_index: number
+          month_label: string
+          net_income?: number | null
+          qbr_id: string
+          revenue?: number | null
+          updated_at?: string
+        }
+        Update: {
+          annotation?: string | null
+          created_at?: string
+          id?: string
+          month_index?: number
+          month_label?: string
+          net_income?: number | null
+          qbr_id?: string
+          revenue?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbr_monthly_breakdown_qbr_id_fkey"
+            columns: ["qbr_id"]
+            isOneToOne: false
+            referencedRelation: "quarterly_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       qbr_sections: {
         Row: {
           content: Json
