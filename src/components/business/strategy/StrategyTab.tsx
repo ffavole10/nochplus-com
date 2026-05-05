@@ -32,11 +32,13 @@ import {
   computeKpiHealth, computeStrategyHealth, currentQuarter, formatKpiValue,
   computePhasedKpiStatus, getCurrentQuarterInfo,
   PHASED_STATUS_LABELS, PHASED_STATUS_COLORS, PHASING_TEMPLATES,
+  isQuarterLocked, formatQuarterEnd,
   type StrategyAccountType, type StrategyPosition, type StrategyDecisionRole,
   type StrategyTemperature, type StrategyPlayStatus, type StrategyKpiUnit,
   type StrategyRiskSeverity, type KpiHealth,
   type StrategyKpi, type StrategyKpiActual, type QuarterPhasing,
 } from "@/types/strategy";
+import { supabase } from "@/integrations/supabase/client";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { StrategyWizard } from "./StrategyWizard";
 import { runStrategyTour, runSectionHelp } from "./strategyTour";
