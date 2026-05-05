@@ -1147,6 +1147,13 @@ function KpiDialog({ kpi, onClose, onSave }: { kpi: any; onClose: () => void; on
                         readOnly={isLocked}
                         className={cn("h-8 text-xs", isLocked && "text-muted-foreground")}
                       />
+                      <Textarea
+                        rows={2}
+                        placeholder="Notes / assumptions"
+                        value={phasing[q].notes || ""}
+                        onChange={(e) => updateQuarterNotes(q, e.target.value)}
+                        className="text-[10px] min-h-[44px]"
+                      />
                     </div>
                   );
                 })}
