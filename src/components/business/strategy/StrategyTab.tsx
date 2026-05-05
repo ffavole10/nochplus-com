@@ -1033,11 +1033,12 @@ function PhasedKpiCard({
 }
 
 function QuarterDetailPanel({
-  kpi: k, quarter, year, ctx, target, actual, qActuals, phasingNotes, currentWeek, onAddActual,
+  kpi: k, quarter, year, ctx, target, actual, qActuals, phasingNotes, currentWeek, onAddActual, isUnlocked, onRequestUnlock,
 }: {
   kpi: StrategyKpi; quarter: QKey; year: number; ctx: "past" | "current" | "future";
   target: number; actual: number; qActuals: StrategyKpiActual[]; phasingNotes: string;
   currentWeek: number | null; onAddActual: () => void;
+  isUnlocked?: boolean; onRequestUnlock?: () => void;
 }) {
   const pace = ctx === "current" && currentWeek
     ? (target > 0 ? (actual / (target * (currentWeek / 13))) : 0)
@@ -1045,11 +1046,26 @@ function QuarterDetailPanel({
   const expected = ctx === "current" && currentWeek ? target * (currentWeek / 13) : 0;
   return (
     <div className="ml-8 mr-2 mb-2 px-3 py-2 rounded border bg-muted/30 space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] font-semibold">
-          {quarter} {year} · {ctx === "past" ? "past — locked" : ctx === "current" ? `Week ${currentWeek}/13` : "future"}
+          {quarter} {year} · {ctx === "past" ? `closed ${formatQuarterEnd(quarter, year)}` : ctx === "current" ? `Week ${currentWeek}/13` : "future"}
         </p>
-        {ctx === "past" && <Badge variant="outline" className="text-[9px]"><Lock className="h-2.5 w-2.5 mr-1" />Locked</Badge>}
+        {ctx === "past" && (
+          <div className="flex items-center gap-1.5">
+            {isUnlocked ? (
+              <Badge variant="outline" className="text-[9px] border-amber-300 text-amber-700 bg-amber-50 dark:bg-amber-950/30">
+                <Unlock className="h-2.5 w-2.5 mr-1" />Unlocked
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[9px]"><Lock className="h-2.5 w-2.5 mr-1" />Locked</Badge>
+            )}
+            {!isUnlocked && onRequestUnlock && (
+              <Button size="sm" variant="ghost" className="h-5 px-1.5 text-[10px] gap-1" onClick={onRequestUnlock}>
+                <Unlock className="h-2.5 w-2.5" /> Unlock Quarter
+              </Button>
+            )}
+          </div>
+        )}
       </div>
       <p className="text-[10px] text-muted-foreground">
         Target: <span className="text-foreground font-medium">{formatKpiValue(target, k.unit)}</span> ·
