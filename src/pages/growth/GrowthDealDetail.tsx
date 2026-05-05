@@ -8,10 +8,12 @@ import { useActivities, useCreateActivity } from "@/hooks/useActivities";
 import { useAccountOpsSnapshot } from "@/hooks/useAccountOpsSnapshot";
 import { useAgentOutputs, useGenerateScribeBrief, useGeneratePlaceholderOutput } from "@/hooks/useAgentOutputs";
 import {
-  DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASONS, LOSS_REASON_LABELS,
-  validateStageTransition, relationshipContext, type DealStage, type AgentOutput,
+  DEAL_STAGES, DEAL_STAGE_COLORS, LOSS_REASON_LABELS, WIN_REASON_LABELS,
+  relationshipContext, type DealStage, type AgentOutput,
   type ChargerRelationshipType,
 } from "@/types/growth";
+import { StageTransitionDialog } from "@/components/business/StageTransitionDialog";
+import { useDealStageTransitions } from "@/hooks/useStageTransitions";
 import { LinkChargersModal } from "@/components/business/LinkChargersModal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
