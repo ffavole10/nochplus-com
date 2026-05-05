@@ -24,7 +24,7 @@ export function QbrDetailView({ id, onBack }: { id: string; onBack: () => void }
   if (isLoading || !data) {
     return <div className="py-12 text-center text-sm text-muted-foreground">Loading QBR…</div>;
   }
-  const { qbr, sections, financial, focus_accounts } = data;
+  const { qbr, sections, financial, focus_accounts, monthly } = data;
   const badge = ENTRY_BADGE[qbr.entry_mode] || ENTRY_BADGE.manual;
   const Icon = badge.icon;
 
