@@ -81,6 +81,7 @@ export function QbrMonthlyTrajectory({ months }: { months: QbrMonthlyBreakdown[]
                   }}
                 />
               </Line>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
 
