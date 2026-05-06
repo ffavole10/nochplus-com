@@ -139,15 +139,27 @@ export function MembershipMemberMap({ members, searchHighlight }: Props) {
       memberCount += 1;
       total += conn;
 
-      const candidates = candidateCityStates(m);
+      // Priority: override coords > geocoded coords > city lookup candidates
       let placed: { lat: number; lng: number; key: string } | null = null;
-      for (const cs of candidates) {
-        const raw = lookupCityCoords(cs.city, cs.state);
-        if (!raw) continue;
-        const norm = normalizeUSCoords(raw.lat, raw.lng);
-        if (!norm) continue;
-        placed = { lat: norm[0], lng: norm[1], key: `${cs.city.toLowerCase()}|${cs.state.toLowerCase()}` };
-        break;
+      const oLat = m.override_lat, oLng = m.override_lng;
+      if (typeof oLat === "number" && typeof oLng === "number") {
+        const norm = normalizeUSCoords(oLat, oLng);
+        if (norm) placed = { lat: norm[0], lng: norm[1], key: `override|${m.id}` };
+      }
+      if (!placed && typeof m.geocoded_lat === "number" && typeof m.geocoded_lng === "number") {
+        const norm = normalizeUSCoords(m.geocoded_lat, m.geocoded_lng);
+        if (norm) placed = { lat: norm[0], lng: norm[1], key: `geo|${m.id}` };
+      }
+      if (!placed) {
+        const candidates = candidateCityStates(m);
+        for (const cs of candidates) {
+          const raw = lookupCityCoords(cs.city, cs.state);
+          if (!raw) continue;
+          const norm = normalizeUSCoords(raw.lat, raw.lng);
+          if (!norm) continue;
+          placed = { lat: norm[0], lng: norm[1], key: `${cs.city.toLowerCase()}|${cs.state.toLowerCase()}` };
+          break;
+        }
       }
       if (!placed) {
         console.warn(`[MembershipMap] Could not geocode ${m.company} (address="${m.address}", hq="${m.hq_city}, ${m.hq_region}")`);
