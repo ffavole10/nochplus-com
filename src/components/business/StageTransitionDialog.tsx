@@ -108,9 +108,9 @@ export function StageTransitionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
-        <div className="space-y-3">
+      <DialogContent className="max-w-md p-0 flex flex-col max-h-[90vh] gap-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0"><DialogTitle>{title}</DialogTitle></DialogHeader>
+        <div className="space-y-3 overflow-y-auto px-6 py-4 flex-1 min-h-0">
           {type === "closed_won" && (
             <>
               <div className="space-y-1.5">
@@ -165,7 +165,7 @@ export function StageTransitionDialog({
             </div>
           )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="px-6 py-4 border-t border-border shrink-0 bg-background">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleConfirm} disabled={commit.isPending || !!validation || reasonOtherNeedsNotes && (type === "closed_won" || type === "closed_lost")}>
             {commit.isPending && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}
