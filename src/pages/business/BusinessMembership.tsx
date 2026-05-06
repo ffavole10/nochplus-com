@@ -38,15 +38,10 @@ export default function BusinessMembership() {
         <TabsContent value="active-members" className="mt-6 space-y-6">
           <Card>
             <CardContent className="p-0">
-              <NochPlusDashboard />
+              <MembershipIndexDashboard />
             </CardContent>
           </Card>
           <MemberRoiSection />
-          <Card>
-            <CardContent className="p-0">
-              <NochPlusMembers />
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="plan-tiers" className="mt-6">
