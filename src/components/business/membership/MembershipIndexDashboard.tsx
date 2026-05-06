@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { TIER_LABELS, TIER_BADGE_CLASSES, type TierName } from "@/constants/nochPlusTiers";
+import { MembershipMemberMap, type MapMember } from "./MembershipMemberMap";
 
 type AccountMember = {
   id: string;
@@ -25,6 +26,9 @@ type AccountMember = {
   billing_cycle: "monthly" | "annual_prepay";
   annual_period_end: string | null;
   is_demo_membership: boolean;
+  address: string | null;
+  hq_city: string | null;
+  hq_region: string | null;
 };
 
 export function MembershipIndexDashboard() {
@@ -38,7 +42,7 @@ export function MembershipIndexDashboard() {
       const { data, error } = await supabase
         .from("customers")
         .select(
-          "id, company, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, negotiated_monthly_revenue, list_monthly_revenue, discount_pct, billing_cycle, annual_period_end, is_demo_membership"
+          "id, company, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, negotiated_monthly_revenue, list_monthly_revenue, discount_pct, billing_cycle, annual_period_end, is_demo_membership, address, hq_city, hq_region"
         )
         .in("membership_status", ["active", "demo", "paused"])
         .order("enrolled_at", { ascending: false });
