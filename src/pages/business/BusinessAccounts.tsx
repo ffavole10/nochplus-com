@@ -19,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomerLogo } from "@/components/CustomerLogo";
 import { CustomerTypeBadge } from "@/components/business/CustomerTypeBadge";
 import { BusinessPageHeader } from "@/components/business/BusinessPageHeader";
+import { FocusModeToggle } from "@/components/business/FocusModeToggle";
 import { CreateAccountModal } from "@/components/business/CreateAccountModal";
 import { TIER_COLORS, MOTION_LABELS, type GrowthMotion } from "@/types/growth";
 import { toast } from "sonner";
@@ -182,6 +183,7 @@ export default function BusinessAccounts() {
         icon={Building2}
         actions={
           <div className="flex items-center gap-2">
+            <FocusModeToggle />
             <Button variant="outline" onClick={() => navigate("/business/accounts/duplicates")} className="gap-2">
               <AlertTriangle className="h-4 w-4" /> Review Duplicates
             </Button>
