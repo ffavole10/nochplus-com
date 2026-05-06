@@ -538,11 +538,22 @@ function EnrollmentModal({
   const { data: contacts = [] } = useContacts(account.id);
   const createContact = useCreateContact();
 
-  const [chargerCount, setChargerCount] = useState<string>(
-    currentChargers ? String(currentChargers) : ""
-  );
-  const [chargerType, setChargerType] = useState<"ac" | "dc">("ac");
-  const [negotiatedInput, setNegotiatedInput] = useState<string>("");
+  // Load existing charger lines for this account (used when changing tier)
+  const { data: existingLines = [] } = useQuery({
+    queryKey: ["membership_charger_lines", account.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("membership_charger_lines")
+        .select("*")
+        .eq("account_id", account.id)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: open,
+  });
+
+  const [lines, setLines] = useState<ChargerLine[]>([]);
   const [discountReason, setDiscountReason] = useState("");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual_prepay">(
     "monthly"
@@ -556,33 +567,61 @@ function EnrollmentModal({
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [confirmDowngradeOpen, setConfirmDowngradeOpen] = useState(false);
 
-  const count = Number(chargerCount) || 0;
-  const listMonthly = tier ? tierUnitPrice(tier, chargerType) * count : 0;
-
-  // Reset when reopened — wipe overrides so tier change doesn't carry old discount.
+  // Build initial lines whenever modal opens or tier changes
   useEffect(() => {
-    if (open) {
-      setChargerCount(currentChargers ? String(currentChargers) : "");
-      setContactId(currentBillingContactId || "");
-      setEffectiveDate(new Date().toISOString().slice(0, 10));
-      setNotes("");
-      setIsDemo(!!currentIsDemo);
-      setNegotiatedInput("");
-      setDiscountReason("");
-      setBillingCycle("monthly");
-    }
-  }, [open, currentChargers, currentBillingContactId, currentIsDemo, tier]);
+    if (!open || !tier) return;
+    setContactId(currentBillingContactId || "");
+    setEffectiveDate(new Date().toISOString().slice(0, 10));
+    setNotes("");
+    setIsDemo(!!currentIsDemo);
+    setDiscountReason("");
+    setBillingCycle("monthly");
 
-  const negotiatedMonthly =
-    negotiatedInput === "" ? listMonthly : Math.max(0, Number(negotiatedInput) || 0);
+    if (existingLines.length > 0) {
+      // Recalc tier rates against the (possibly new) tier; preserve negotiated.
+      setLines(
+        existingLines.map((l) => {
+          const lt = l.charger_type as ChargerLineType;
+          return {
+            id: l.id,
+            charger_type: lt,
+            connector_count: Number(l.connector_count) || 1,
+            tier_rate_per_connector: tierRateForLineType(tier, lt),
+            negotiated_rate_per_connector:
+              Number(l.negotiated_rate_per_connector) || tierRateForLineType(tier, lt),
+            notes: l.notes || "",
+          };
+        })
+      );
+    } else {
+      const defaultType: ChargerLineType = "ac_level_2";
+      setLines([
+        {
+          id: crypto.randomUUID(),
+          charger_type: defaultType,
+          connector_count: currentChargers || 1,
+          tier_rate_per_connector: tierRateForLineType(tier, defaultType),
+          negotiated_rate_per_connector: tierRateForLineType(tier, defaultType),
+          notes: "",
+        },
+      ]);
+    }
+  }, [open, tier, existingLines, currentBillingContactId, currentIsDemo, currentChargers]);
+
+  const totalConnectors = lines.reduce((s, l) => s + (Number(l.connector_count) || 0), 0);
+  const listMonthly = lines.reduce(
+    (s, l) => s + (Number(l.tier_rate_per_connector) || 0) * (Number(l.connector_count) || 0),
+    0
+  );
+  const negotiatedMonthly = lines.reduce(
+    (s, l) => s + (Number(l.negotiated_rate_per_connector) || 0) * (Number(l.connector_count) || 0),
+    0
+  );
   const discountAmount = Math.max(0, listMonthly - negotiatedMonthly);
-  const premiumAmount = Math.max(0, negotiatedMonthly - listMonthly);
-  const discountPct =
-    listMonthly > 0 ? (discountAmount / listMonthly) * 100 : 0;
-  const premiumPct =
-    listMonthly > 0 ? (premiumAmount / listMonthly) * 100 : 0;
-  const isOverridden = negotiatedInput !== "" && negotiatedMonthly !== listMonthly;
-  const needsDiscountReason = discountAmount > 0;
+  const discountPct = listMonthly > 0 ? (discountAmount / listMonthly) * 100 : 0;
+  const needsDiscountReason = lines.some(
+    (l) => Number(l.negotiated_rate_per_connector) < Number(l.tier_rate_per_connector)
+  ) || negotiatedMonthly < listMonthly;
   const isLargeDiscount = discountPct > 50;
 
   const annualPrepayAmount =
@@ -594,12 +633,43 @@ function EnrollmentModal({
 
   const today = new Date().toISOString().slice(0, 10);
   const validDate = effectiveDate >= today;
+  const linesValid =
+    lines.length > 0 &&
+    lines.every(
+      (l) =>
+        !!l.charger_type &&
+        Number(l.connector_count) >= 1 &&
+        Number(l.negotiated_rate_per_connector) >= 0
+    );
   const valid =
     !!tier &&
-    count > 0 &&
+    linesValid &&
     !!contactId &&
     validDate &&
     (!needsDiscountReason || discountReason.trim().length >= 10);
+
+  const updateLine = (id: string, patch: Partial<ChargerLine>) => {
+    setLines((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+  };
+  const removeLine = (id: string) => {
+    setLines((prev) => (prev.length <= 1 ? prev : prev.filter((l) => l.id !== id)));
+  };
+  const addLine = () => {
+    if (!tier) return;
+    const used = new Set(lines.map((l) => l.charger_type));
+    const next = CHARGER_LINE_TYPES.find((t) => !used.has(t)) || "ac_level_2";
+    setLines((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        charger_type: next,
+        connector_count: 1,
+        tier_rate_per_connector: tierRateForLineType(tier, next),
+        negotiated_rate_per_connector: tierRateForLineType(tier, next),
+        notes: "",
+      },
+    ]);
+  };
 
   const tierOrder: CoreTierName[] = ["essential", "priority", "elite"];
   const isDowngrade =
