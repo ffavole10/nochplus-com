@@ -44,6 +44,15 @@ type AccountMembership = {
   enrolled_at: string | null;
   chargers_enrolled_count: number;
   monthly_revenue: number;
+  list_monthly_revenue: number;
+  negotiated_monthly_revenue: number;
+  discount_amount: number;
+  discount_pct: number;
+  discount_reason: string | null;
+  billing_cycle: "monthly" | "annual_prepay";
+  annual_prepay_amount: number | null;
+  annual_savings: number | null;
+  annual_period_end: string | null;
   billing_contact_id: string | null;
   is_demo_membership: boolean;
   membership_notes: string | null;
