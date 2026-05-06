@@ -131,12 +131,27 @@ export function AccountMembershipTab({
       const { data, error } = await supabase
         .from("customers")
         .select(
-          "id, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, list_monthly_revenue, negotiated_monthly_revenue, discount_amount, discount_pct, discount_reason, billing_cycle, annual_prepay_amount, annual_savings, annual_period_end, billing_contact_id, is_demo_membership, membership_notes"
+          "id, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, list_monthly_revenue, negotiated_monthly_revenue, discount_amount, discount_pct, discount_reason, billing_cycle, annual_prepay_amount, annual_savings, annual_period_end, billing_contact_id, is_demo_membership, membership_notes, source_submission_id, source_type"
         )
         .eq("id", account.id)
         .maybeSingle();
       if (error) throw error;
       return data as unknown as AccountMembership | null;
+    },
+  });
+
+  // Look up the source submission display id for the chip
+  const { data: sourceSubmission } = useQuery({
+    queryKey: ["source_submission", membership?.source_submission_id],
+    enabled: !!membership?.source_submission_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("noch_plus_submissions")
+        .select("id, submission_id")
+        .eq("id", membership!.source_submission_id!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as SourceSubmissionMeta | null;
     },
   });
 
