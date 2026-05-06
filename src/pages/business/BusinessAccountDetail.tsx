@@ -27,11 +27,11 @@ import {
   ChargersTab,
   EstimatesTab,
   InvoicesTab,
-  MembershipTab,
   PipelineTab,
   ContactsTab,
   FilesTab,
 } from "@/components/business/account360/Tabs";
+import { AccountMembershipTab } from "@/components/business/membership/AccountMembershipTab";
 import { ActivityTab } from "@/components/business/account360/ActivityTab";
 import { FocusRibbon } from "@/components/business/strategy/FocusRibbon";
 
@@ -285,7 +285,7 @@ export default function BusinessAccountDetail() {
         </TabsContent>
 
         <TabsContent value="membership" className="mt-6">
-          <MembershipTab account={account} />
+          <AccountMembershipTab account={account} />
         </TabsContent>
 
         <TabsContent value="pipeline" className="mt-6">

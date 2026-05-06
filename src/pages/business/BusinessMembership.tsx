@@ -9,10 +9,9 @@ import { PlanBuilderTab } from "@/components/partnership-hub/PlanBuilderTab";
 import { PartnerPlanTab } from "@/components/partnership-hub/PartnerPlanTab";
 import { KnowledgeBaseTab } from "@/components/partnership-hub/KnowledgeBaseTab";
 import { DemoInvoicesTab } from "@/components/partnership-hub/DemoInvoicesTab";
-import NochPlusDashboard from "@/pages/placeholders/NochPlusDashboard";
-import NochPlusMembers from "@/pages/placeholders/NochPlusMembers";
 import { Card, CardContent } from "@/components/ui/card";
 import { MemberRoiSection } from "@/components/business/membership/MemberRoiSection";
+import { MembershipIndexDashboard } from "@/components/business/membership/MembershipIndexDashboard";
 
 export default function BusinessMembership() {
   const [tab, setTab] = useState("active-members");
@@ -39,15 +38,10 @@ export default function BusinessMembership() {
         <TabsContent value="active-members" className="mt-6 space-y-6">
           <Card>
             <CardContent className="p-0">
-              <NochPlusDashboard />
+              <MembershipIndexDashboard />
             </CardContent>
           </Card>
           <MemberRoiSection />
-          <Card>
-            <CardContent className="p-0">
-              <NochPlusMembers />
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="plan-tiers" className="mt-6">
