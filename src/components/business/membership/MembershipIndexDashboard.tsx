@@ -171,6 +171,31 @@ export function MembershipIndexDashboard() {
             <p className="text-2xl font-bold text-medium">{stats.demoCount}</p>
           </CardContent>
         </Card>
+        <Card className="border-l-4 border-l-slate-500 col-span-2 md:col-span-3 xl:col-span-2">
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground text-center mb-2">Charger Type Mix</p>
+            {typeMix.total === 0 ? (
+              <p className="text-xs text-muted-foreground text-center">No connectors enrolled</p>
+            ) : (
+              <div className="space-y-1 text-xs">
+                {(["ac_level_2", "dc_level_3", "ac_level_1"] as const).map((t) => {
+                  const c = typeMix.counts[t] || 0;
+                  const pct = typeMix.total > 0 ? (c / typeMix.total) * 100 : 0;
+                  const label = t === "ac_level_2" ? "AC L2" : t === "dc_level_3" ? "DC L3" : "AC L1";
+                  return (
+                    <div key={t} className="flex items-center gap-2">
+                      <span className="w-12 text-muted-foreground">{label}</span>
+                      <div className="flex-1 h-2 rounded bg-muted overflow-hidden">
+                        <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-12 text-right font-bold">{pct.toFixed(0)}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
