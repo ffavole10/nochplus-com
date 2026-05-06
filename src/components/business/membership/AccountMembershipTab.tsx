@@ -36,6 +36,8 @@ import {
 import { useContacts, useCreateContact } from "@/hooks/useContacts";
 import { ContactFormModal } from "@/components/business/ContactFormModal";
 import { formatCurrency } from "@/lib/formatters";
+import { consumeEnrollPrefill, type EnrollPrefill } from "@/lib/submissionEnrollPrefill";
+import { Link as RouterLink } from "react-router-dom";
 
 type AccountMembership = {
   id: string;
@@ -56,6 +58,13 @@ type AccountMembership = {
   billing_contact_id: string | null;
   is_demo_membership: boolean;
   membership_notes: string | null;
+  source_submission_id?: string | null;
+  source_type?: string | null;
+};
+
+type SourceSubmissionMeta = {
+  id: string;
+  submission_id: string;
 };
 
 const SELECTABLE_TIERS: CoreTierName[] = ["essential", "priority", "elite"];
@@ -122,12 +131,27 @@ export function AccountMembershipTab({
       const { data, error } = await supabase
         .from("customers")
         .select(
-          "id, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, list_monthly_revenue, negotiated_monthly_revenue, discount_amount, discount_pct, discount_reason, billing_cycle, annual_prepay_amount, annual_savings, annual_period_end, billing_contact_id, is_demo_membership, membership_notes"
+          "id, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, list_monthly_revenue, negotiated_monthly_revenue, discount_amount, discount_pct, discount_reason, billing_cycle, annual_prepay_amount, annual_savings, annual_period_end, billing_contact_id, is_demo_membership, membership_notes, source_submission_id, source_type"
         )
         .eq("id", account.id)
         .maybeSingle();
       if (error) throw error;
       return data as unknown as AccountMembership | null;
+    },
+  });
+
+  // Look up the source submission display id for the chip
+  const { data: sourceSubmission } = useQuery({
+    queryKey: ["source_submission", membership?.source_submission_id],
+    enabled: !!membership?.source_submission_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("noch_plus_submissions")
+        .select("id, submission_id")
+        .eq("id", membership!.source_submission_id!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as SourceSubmissionMeta | null;
     },
   });
 
@@ -165,9 +189,24 @@ export function AccountMembershipTab({
   const [confirmDowngradeFromTier, setConfirmDowngradeFromTier] = useState<
     CoreTierName | null
   >(null);
+  const [prefill, setPrefill] = useState<EnrollPrefill | null>(null);
+
+  // Consume submission-derived prefill once data is ready
+  useEffect(() => {
+    if (isLoading) return;
+    const p = consumeEnrollPrefill(account.id);
+    if (!p) return;
+    setPrefill(p);
+    // Default to priority tier if not enrolled, else use current tier
+    const tier =
+      (membership?.membership_tier as CoreTierName | undefined) || "priority";
+    setSelectedTier(tier);
+    setEnrollOpen(true);
+  }, [isLoading, account.id, membership?.membership_tier]);
 
   const openEnrollFor = (tier: CoreTierName) => {
     setSelectedTier(tier);
+    setPrefill(null);
     setEnrollOpen(true);
   };
 
@@ -292,9 +331,10 @@ export function AccountMembershipTab({
 
         <EnrollmentModal
           open={enrollOpen}
-          onOpenChange={setEnrollOpen}
+          onOpenChange={(v) => { setEnrollOpen(v); if (!v) setPrefill(null); }}
           account={account}
           tier={selectedTier}
+          prefill={prefill}
           onChangeTier={() => {
             setEnrollOpen(false);
           }}
@@ -339,6 +379,16 @@ export function AccountMembershipTab({
           <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">
             Special pricing
           </Badge>
+        )}
+        {sourceSubmission && (
+          <RouterLink
+            to="/business/submissions"
+            className="inline-flex items-center"
+          >
+            <Badge variant="outline" className="hover:bg-accent cursor-pointer">
+              Enrolled from submission {sourceSubmission.submission_id}
+            </Badge>
+          </RouterLink>
         )}
         {m.enrolled_at && (
           <span className="text-xs text-muted-foreground">
@@ -500,14 +550,15 @@ export function AccountMembershipTab({
 
       <EnrollmentModal
         open={enrollOpen}
-        onOpenChange={setEnrollOpen}
+        onOpenChange={(v) => { setEnrollOpen(v); if (!v) setPrefill(null); }}
         account={account}
         tier={selectedTier}
+        prefill={prefill}
         currentTier={(m.membership_tier as CoreTierName) || null}
         currentChargers={m.chargers_enrolled_count}
         currentBillingContactId={m.billing_contact_id}
         currentIsDemo={m.is_demo_membership}
-        isTierChange
+        isTierChange={!prefill || prefill.mode === "add_lines" ? true : false}
         onChangeTier={() => setEnrollOpen(false)}
         onSuccess={() => {
           qc.invalidateQueries({ queryKey: ["account_membership", account.id] });
@@ -591,6 +642,7 @@ function EnrollmentModal({
   currentBillingContactId,
   currentIsDemo,
   isTierChange,
+  prefill,
   onChangeTier,
   onSuccess,
 }: {
@@ -603,6 +655,7 @@ function EnrollmentModal({
   currentBillingContactId?: string | null;
   currentIsDemo?: boolean;
   isTierChange?: boolean;
+  prefill?: EnrollPrefill | null;
   onChangeTier: () => void;
   onSuccess: () => void;
 }) {
@@ -641,15 +694,40 @@ function EnrollmentModal({
   // Build initial lines whenever modal opens or tier changes
   useEffect(() => {
     if (!open || !tier) return;
-    setContactId(currentBillingContactId || "");
     setEffectiveDate(new Date().toISOString().slice(0, 10));
-    setNotes("");
     setIsDemo(!!currentIsDemo);
     setDiscountReason("");
     setBillingCycle("monthly");
 
-    if (existingLines.length > 0) {
-      // Recalc tier rates against the (possibly new) tier; preserve negotiated.
+    // Try to match prefill billing contact by email
+    let initialContactId = currentBillingContactId || "";
+    if (prefill?.billing_contact_email) {
+      const match = contacts.find(
+        (c) =>
+          (c.email || "").toLowerCase() ===
+          prefill.billing_contact_email!.toLowerCase()
+      );
+      if (match) initialContactId = match.id;
+    }
+    setContactId(initialContactId);
+    setNotes(prefill?.notes || "");
+
+    if (prefill && prefill.lines.length > 0) {
+      // Submission-driven prefill takes precedence
+      setLines(
+        prefill.lines.map((l) => ({
+          id: crypto.randomUUID(),
+          charger_type: l.charger_type as ChargerLineType,
+          connector_count: Math.max(1, l.connector_count),
+          tier_rate_per_connector: tierRateForLineType(tier, l.charger_type as ChargerLineType),
+          negotiated_rate_per_connector: tierRateForLineType(
+            tier,
+            l.charger_type as ChargerLineType
+          ),
+          notes: l.notes || "",
+        }))
+      );
+    } else if (existingLines.length > 0) {
       setLines(
         existingLines.map((l) => {
           const lt = l.charger_type as ChargerLineType;
@@ -677,7 +755,7 @@ function EnrollmentModal({
         },
       ]);
     }
-  }, [open, tier, existingLines, currentBillingContactId, currentIsDemo, currentChargers]);
+  }, [open, tier, existingLines, currentBillingContactId, currentIsDemo, currentChargers, prefill, contacts]);
 
   const totalConnectors = lines.reduce((s, l) => s + (Number(l.connector_count) || 0), 0);
   const listMonthly = lines.reduce(
@@ -789,6 +867,9 @@ function EnrollmentModal({
           billing_contact_id: contactId,
           is_demo_membership: isDemo,
           membership_notes: notes || null,
+          ...(prefill?.source_submission_id
+            ? { source_submission_id: prefill.source_submission_id, source_type: "submission" }
+            : {}),
         } as any)
         .eq("id", account.id);
       if (upErr) throw upErr;
@@ -834,8 +915,23 @@ function EnrollmentModal({
           annual_period_end: annualPeriodEnd,
           is_demo: isDemo,
           user_id: userRes?.user?.id || null,
+          ...(prefill?.source_submission_id
+            ? { source_submission_id: prefill.source_submission_id, source_type: "submission" }
+            : {}),
         } as any);
       if (hErr) throw hErr;
+
+      // Flag the source submission as enrolled
+      if (prefill?.source_submission_id) {
+        await supabase
+          .from("noch_plus_submissions")
+          .update({
+            membership_enrolled: true,
+            linked_membership_account_id: account.id,
+            membership_enrolled_at: new Date().toISOString(),
+          } as any)
+          .eq("id", prefill.source_submission_id);
+      }
     },
     onSuccess: () => {
       if (isDemo && billingCycle === "annual_prepay") {

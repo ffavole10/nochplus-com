@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { generateAssessmentReport } from "@/services/assessmentReportGenerator";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X, Play, FileDown, Plus } from "lucide-react";
+import { Search, Eye, Camera, CameraOff, FileText, ChevronLeft, ChevronRight, Save, Mail, Download, CheckCircle, XCircle, MessageSquare, Loader2, Clock, Archive, Pencil, X, Play, FileDown, Plus, BadgeCheck } from "lucide-react";
+import { Link as RouterLink } from "react-router-dom";
+import { SubmissionEnrollDialog } from "@/components/submissions/SubmissionEnrollDialog";
 import { useServiceTicketsStore, makeSteps } from "@/stores/serviceTicketsStore";
 import { persistTicketToDB, checkDuplicateTickets } from "@/hooks/useServiceTicketsDB";
 import type { TicketChargerInfo, ChargerBrand } from "@/types/ticket";
@@ -67,6 +69,10 @@ interface Submission {
   chargers: ChargerSubmission[];
   tickets_created?: boolean;
   tickets_created_at?: string | null;
+  company_id?: string | null;
+  membership_enrolled?: boolean | null;
+  membership_enrolled_at?: string | null;
+  linked_membership_account_id?: string | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -162,6 +168,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
   // Request info dialog
   const [requestInfoOpen, setRequestInfoOpen] = useState(false);
   const [requestInfoMessage, setRequestInfoMessage] = useState("");
+  const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
 
   const fetchSubmissions = async () => {
     setLoading(true);
@@ -908,8 +915,62 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
               {exportingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               {exportingPdf ? "Generating..." : "Export PDF"}
             </Button>
+            {(() => {
+              const hasChargers = selectedSubmission.chargers.length > 0;
+              const alreadyEnrolled = !!selectedSubmission.membership_enrolled;
+              return (
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  disabled={!hasChargers || alreadyEnrolled}
+                  title={
+                    !hasChargers
+                      ? "Add at least one charger to this submission before enrolling"
+                      : alreadyEnrolled
+                      ? "Customer is already enrolled in NOCH+"
+                      : undefined
+                  }
+                  onClick={() => setEnrollDialogOpen(true)}
+                >
+                  <BadgeCheck className="h-4 w-4" />
+                  {alreadyEnrolled
+                    ? "Enrolled"
+                    : selectedSubmission.company_id
+                    ? "Enroll in NOCH+"
+                    : "Enroll in NOCH+"}
+                </Button>
+              );
+            })()}
           </div>
         </div>
+
+        {selectedSubmission.membership_enrolled && selectedSubmission.linked_membership_account_id && (
+          <div className="rounded-md border border-optimal/40 bg-optimal/10 px-4 py-3 text-sm flex items-center gap-3">
+            <BadgeCheck className="h-5 w-5 text-optimal shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-optimal">
+                Customer enrolled in NOCH+
+                {selectedSubmission.membership_enrolled_at &&
+                  ` on ${format(new Date(selectedSubmission.membership_enrolled_at), "MMM d, yyyy")}`}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Active membership linked to this submission.
+              </p>
+            </div>
+            <RouterLink
+              to={`/business/accounts/${selectedSubmission.linked_membership_account_id}?tab=membership`}
+              className="text-xs text-primary hover:underline whitespace-nowrap"
+            >
+              View membership →
+            </RouterLink>
+          </div>
+        )}
+
+        <SubmissionEnrollDialog
+          open={enrollDialogOpen}
+          onOpenChange={setEnrollDialogOpen}
+          submission={selectedSubmission}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
           {/* LEFT SIDEBAR - Customer Info only */}

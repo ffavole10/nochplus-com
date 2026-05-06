@@ -2109,6 +2109,8 @@ export type Database = {
             | Database["public"]["Enums"]["account_relationship_type"]
             | null
           source: Database["public"]["Enums"]["account_source"] | null
+          source_submission_id: string | null
+          source_type: string
           status: string
           ticket_count: number
           total_revenue: number
@@ -2160,6 +2162,8 @@ export type Database = {
             | Database["public"]["Enums"]["account_relationship_type"]
             | null
           source?: Database["public"]["Enums"]["account_source"] | null
+          source_submission_id?: string | null
+          source_type?: string
           status?: string
           ticket_count?: number
           total_revenue?: number
@@ -2211,6 +2215,8 @@ export type Database = {
             | Database["public"]["Enums"]["account_relationship_type"]
             | null
           source?: Database["public"]["Enums"]["account_source"] | null
+          source_submission_id?: string | null
+          source_type?: string
           status?: string
           ticket_count?: number
           total_revenue?: number
@@ -2223,6 +2229,13 @@ export type Database = {
             columns: ["billing_contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_source_submission_id_fkey"
+            columns: ["source_submission_id"]
+            isOneToOne: false
+            referencedRelation: "noch_plus_submissions"
             referencedColumns: ["id"]
           },
         ]
@@ -2832,6 +2845,8 @@ export type Database = {
           monthly_revenue: number | null
           negotiated_monthly_revenue: number | null
           reason: string | null
+          source_submission_id: string | null
+          source_type: string
           tier: string | null
           user_id: string | null
         }
@@ -2851,6 +2866,8 @@ export type Database = {
           monthly_revenue?: number | null
           negotiated_monthly_revenue?: number | null
           reason?: string | null
+          source_submission_id?: string | null
+          source_type?: string
           tier?: string | null
           user_id?: string | null
         }
@@ -2870,6 +2887,8 @@ export type Database = {
           monthly_revenue?: number | null
           negotiated_monthly_revenue?: number | null
           reason?: string | null
+          source_submission_id?: string | null
+          source_type?: string
           tier?: string | null
           user_id?: string | null
         }
@@ -2886,6 +2905,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_enrollment_history_source_submission_id_fkey"
+            columns: ["source_submission_id"]
+            isOneToOne: false
+            referencedRelation: "noch_plus_submissions"
             referencedColumns: ["id"]
           },
         ]
@@ -3171,7 +3197,10 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          linked_membership_account_id: string | null
           location_id: string | null
+          membership_enrolled: boolean
+          membership_enrolled_at: string | null
           noch_plus_member: boolean
           phone: string
           referral_source: string | null
@@ -3197,7 +3226,10 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          linked_membership_account_id?: string | null
           location_id?: string | null
+          membership_enrolled?: boolean
+          membership_enrolled_at?: string | null
           noch_plus_member?: boolean
           phone: string
           referral_source?: string | null
@@ -3223,7 +3255,10 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          linked_membership_account_id?: string | null
           location_id?: string | null
+          membership_enrolled?: boolean
+          membership_enrolled_at?: string | null
           noch_plus_member?: boolean
           phone?: string
           referral_source?: string | null
@@ -3250,6 +3285,20 @@ export type Database = {
           {
             foreignKeyName: "noch_plus_submissions_company_id_fkey"
             columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "noch_plus_submissions_linked_membership_account_id_fkey"
+            columns: ["linked_membership_account_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "noch_plus_submissions_linked_membership_account_id_fkey"
+            columns: ["linked_membership_account_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
