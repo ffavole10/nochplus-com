@@ -2761,6 +2761,60 @@ export type Database = {
           },
         ]
       }
+      membership_charger_lines: {
+        Row: {
+          account_id: string
+          charger_type: string
+          connector_count: number
+          created_at: string
+          id: string
+          negotiated_rate_per_connector: number
+          notes: string | null
+          sort_order: number
+          tier_rate_per_connector: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          charger_type: string
+          connector_count: number
+          created_at?: string
+          id?: string
+          negotiated_rate_per_connector?: number
+          notes?: string | null
+          sort_order?: number
+          tier_rate_per_connector?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          charger_type?: string
+          connector_count?: number
+          created_at?: string
+          id?: string
+          negotiated_rate_per_connector?: number
+          notes?: string | null
+          sort_order?: number
+          tier_rate_per_connector?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_charger_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "membership_charger_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_enrollment_history: {
         Row: {
           account_id: string
