@@ -285,7 +285,7 @@ export default function BusinessAccountDetail() {
         </TabsContent>
 
         <TabsContent value="membership" className="mt-6">
-          <MembershipTab account={account} />
+          <AccountMembershipTab account={account} />
         </TabsContent>
 
         <TabsContent value="pipeline" className="mt-6">
