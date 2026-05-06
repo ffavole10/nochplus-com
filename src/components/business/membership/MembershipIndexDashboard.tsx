@@ -29,6 +29,10 @@ type AccountMember = {
   address: string | null;
   hq_city: string | null;
   hq_region: string | null;
+  geocoded_lat?: number | null;
+  geocoded_lng?: number | null;
+  location_override_lat?: number | null;
+  location_override_lng?: number | null;
 };
 
 export function MembershipIndexDashboard() {
@@ -42,7 +46,7 @@ export function MembershipIndexDashboard() {
       const { data, error } = await supabase
         .from("customers")
         .select(
-          "id, company, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, negotiated_monthly_revenue, list_monthly_revenue, discount_pct, billing_cycle, annual_period_end, is_demo_membership, address, hq_city, hq_region"
+          "id, company, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, negotiated_monthly_revenue, list_monthly_revenue, discount_pct, billing_cycle, annual_period_end, is_demo_membership, address, hq_city, hq_region, geocoded_lat, geocoded_lng, location_override_lat, location_override_lng"
         )
         .in("membership_status", ["active", "demo", "paused"])
         .order("enrolled_at", { ascending: false });
@@ -214,6 +218,10 @@ export function MembershipIndexDashboard() {
           address: m.address,
           hq_city: m.hq_city,
           hq_region: m.hq_region,
+          override_lat: m.location_override_lat ?? null,
+          override_lng: m.location_override_lng ?? null,
+          geocoded_lat: m.geocoded_lat ?? null,
+          geocoded_lng: m.geocoded_lng ?? null,
           lines: chargerLines
             .filter((l) => l.account_id === m.id)
             .map((l) => ({ charger_type: l.charger_type, connector_count: l.connector_count })),

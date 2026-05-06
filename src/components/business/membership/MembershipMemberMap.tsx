@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
-import { MapPin } from "lucide-react";
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
+import { MapPin, Plus, Minus, Maximize2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { lookupCityCoords, CITY_COORDS } from "@/components/flagged/cityLookup";
@@ -22,6 +22,10 @@ export interface MapMember {
   address: string | null;
   hq_city?: string | null;
   hq_region?: string | null;
+  override_lat?: number | null;
+  override_lng?: number | null;
+  geocoded_lat?: number | null;
+  geocoded_lng?: number | null;
   lines: { charger_type: string; connector_count: number }[];
 }
 
@@ -121,6 +125,13 @@ interface Props {
 export function MembershipMemberMap({ members, searchHighlight }: Props) {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<ClusterPoint | null>(null);
+  const [zoomState, setZoomState] = useState<{ coordinates: [number, number]; zoom: number }>({
+    coordinates: [-96, 38],
+    zoom: 1,
+  });
+  const setZoom = (z: number) =>
+    setZoomState((s) => ({ ...s, zoom: Math.max(1, Math.min(8, z)) }));
+  const resetView = () => setZoomState({ coordinates: [-96, 38], zoom: 1 });
 
   const { clusters, totalConnectors, totalMembers } = useMemo(() => {
     const map = new Map<string, ClusterPoint>();
@@ -135,15 +146,27 @@ export function MembershipMemberMap({ members, searchHighlight }: Props) {
       memberCount += 1;
       total += conn;
 
-      const candidates = candidateCityStates(m);
+      // Priority: override coords > geocoded coords > city lookup candidates
       let placed: { lat: number; lng: number; key: string } | null = null;
-      for (const cs of candidates) {
-        const raw = lookupCityCoords(cs.city, cs.state);
-        if (!raw) continue;
-        const norm = normalizeUSCoords(raw.lat, raw.lng);
-        if (!norm) continue;
-        placed = { lat: norm[0], lng: norm[1], key: `${cs.city.toLowerCase()}|${cs.state.toLowerCase()}` };
-        break;
+      const oLat = m.override_lat, oLng = m.override_lng;
+      if (typeof oLat === "number" && typeof oLng === "number") {
+        const norm = normalizeUSCoords(oLat, oLng);
+        if (norm) placed = { lat: norm[0], lng: norm[1], key: `override|${m.id}` };
+      }
+      if (!placed && typeof m.geocoded_lat === "number" && typeof m.geocoded_lng === "number") {
+        const norm = normalizeUSCoords(m.geocoded_lat, m.geocoded_lng);
+        if (norm) placed = { lat: norm[0], lng: norm[1], key: `geo|${m.id}` };
+      }
+      if (!placed) {
+        const candidates = candidateCityStates(m);
+        for (const cs of candidates) {
+          const raw = lookupCityCoords(cs.city, cs.state);
+          if (!raw) continue;
+          const norm = normalizeUSCoords(raw.lat, raw.lng);
+          if (!norm) continue;
+          placed = { lat: norm[0], lng: norm[1], key: `${cs.city.toLowerCase()}|${cs.state.toLowerCase()}` };
+          break;
+        }
       }
       if (!placed) {
         console.warn(`[MembershipMap] Could not geocode ${m.company} (address="${m.address}", hq="${m.hq_city}, ${m.hq_region}")`);
@@ -197,59 +220,89 @@ export function MembershipMemberMap({ members, searchHighlight }: Props) {
               projectionConfig={{ scale: 900 }}
               style={{ width: "100%", height: "100%" }}
             >
-              <Geographies geography={GEO_URL}>
-                {({ geographies }) =>
-                  geographies.map((geo) => (
-                    <Geography
-                      key={geo.rsmKey || geo.properties?.name}
-                      geography={geo}
-                      fill="hsl(210, 20%, 93%)"
-                      stroke="hsl(214, 32%, 85%)"
-                      strokeWidth={0.5}
-                      style={{
-                        default: { outline: "none" },
-                        hover: { fill: "hsl(210, 20%, 88%)", outline: "none" },
-                        pressed: { outline: "none" },
+              <ZoomableGroup
+                center={zoomState.coordinates}
+                zoom={zoomState.zoom}
+                minZoom={1}
+                maxZoom={8}
+                onMoveEnd={(pos: any) => setZoomState({ coordinates: pos.coordinates, zoom: pos.zoom })}
+              >
+                <Geographies geography={GEO_URL}>
+                  {({ geographies }) =>
+                    geographies.map((geo) => (
+                      <Geography
+                        key={geo.rsmKey || geo.properties?.name}
+                        geography={geo}
+                        fill="hsl(210, 20%, 93%)"
+                        stroke="hsl(214, 32%, 85%)"
+                        strokeWidth={0.5}
+                        style={{
+                          default: { outline: "none" },
+                          hover: { fill: "hsl(210, 20%, 88%)", outline: "none" },
+                          pressed: { outline: "none" },
+                        }}
+                      />
+                    ))
+                  }
+                </Geographies>
+                {clusters.map((c) => {
+                  const isHighlighted = highlightedKey === c.key;
+                  const baseR = markerSize(c.totalConnectors) + (isHighlighted ? 4 : 0);
+                  // Scale marker inversely so they don't balloon when zoomed in
+                  const r = baseR / Math.sqrt(zoomState.zoom);
+                  return (
+                    <Marker
+                      key={c.key}
+                      coordinates={[c.lng, c.lat]}
+                      onClick={() => {
+                        if (c.members.length > 1 && zoomState.zoom < 4) {
+                          setZoomState({ coordinates: [c.lng, c.lat], zoom: 4 });
+                        } else {
+                          setSelected(c);
+                        }
                       }}
-                    />
-                  ))
-                }
-              </Geographies>
-              {clusters.map((c) => {
-                const isHighlighted = highlightedKey === c.key;
-                return (
-                  <Marker
-                    key={c.key}
-                    coordinates={[c.lng, c.lat]}
-                    onClick={() => setSelected(c)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <circle
-                      r={markerSize(c.totalConnectors) + (isHighlighted ? 4 : 0)}
-                      fill={TYPE_COLOR[c.dominant]}
-                      fillOpacity={0.85}
-                      stroke={isHighlighted ? "#fbbf24" : "white"}
-                      strokeWidth={isHighlighted ? 3 : 1.5}
+                      style={{ cursor: "pointer" }}
                     >
-                      <title>
-                        {c.members.length === 1
-                          ? `${c.members[0].company} · ${c.totalConnectors} connectors`
-                          : `${c.members.length} members · ${c.totalConnectors} connectors`}
-                      </title>
-                    </circle>
-                    {c.members.length > 1 && (
-                      <text
-                        textAnchor="middle"
-                        y={4}
-                        style={{ fontSize: 9, fill: "white", fontWeight: 700, pointerEvents: "none" }}
+                      <circle
+                        r={r}
+                        fill={TYPE_COLOR[c.dominant]}
+                        fillOpacity={0.85}
+                        stroke={isHighlighted ? "#fbbf24" : "white"}
+                        strokeWidth={(isHighlighted ? 3 : 1.5) / Math.sqrt(zoomState.zoom)}
                       >
-                        {c.members.length}
-                      </text>
-                    )}
-                  </Marker>
-                );
-              })}
+                        <title>
+                          {c.members.length === 1
+                            ? `${c.members[0].company} · ${c.totalConnectors} connectors`
+                            : `${c.members.length} members · ${c.totalConnectors} connectors`}
+                        </title>
+                      </circle>
+                      {c.members.length > 1 && (
+                        <text
+                          textAnchor="middle"
+                          y={4 / Math.sqrt(zoomState.zoom)}
+                          style={{ fontSize: 9 / Math.sqrt(zoomState.zoom), fill: "white", fontWeight: 700, pointerEvents: "none" }}
+                        >
+                          {c.members.length}
+                        </text>
+                      )}
+                    </Marker>
+                  );
+                })}
+              </ZoomableGroup>
             </ComposableMap>
+
+            {/* Zoom controls */}
+            <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
+              <Button size="icon" variant="secondary" className="h-8 w-8 shadow" onClick={() => setZoom(zoomState.zoom * 1.5)} title="Zoom in">
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button size="icon" variant="secondary" className="h-8 w-8 shadow" onClick={() => setZoom(zoomState.zoom / 1.5)} title="Zoom out">
+                <Minus className="h-4 w-4" />
+              </Button>
+              <Button size="icon" variant="secondary" className="h-8 w-8 shadow" onClick={resetView} title="Reset view">
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            </div>
 
             {/* Legend */}
             <div className="absolute bottom-2 left-2 bg-card/90 border border-border rounded-md px-3 py-2 flex flex-wrap gap-3 text-[10px] text-muted-foreground z-10">
