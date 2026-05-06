@@ -58,6 +58,13 @@ type AccountMembership = {
   billing_contact_id: string | null;
   is_demo_membership: boolean;
   membership_notes: string | null;
+  source_submission_id?: string | null;
+  source_type?: string | null;
+};
+
+type SourceSubmissionMeta = {
+  id: string;
+  submission_id: string;
 };
 
 const SELECTABLE_TIERS: CoreTierName[] = ["essential", "priority", "elite"];
