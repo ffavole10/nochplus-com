@@ -47,6 +47,33 @@ export function MembershipIndexDashboard() {
     },
   });
 
+  const { data: chargerLines = [] } = useQuery({
+    queryKey: ["noch_plus_charger_lines_all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("membership_charger_lines")
+        .select("account_id, charger_type, connector_count");
+      if (error) throw error;
+      return (data || []) as { account_id: string; charger_type: string; connector_count: number }[];
+    },
+  });
+
+  const typeMix = useMemo(() => {
+    const activeIds = new Set(
+      members
+        .filter((m) => m.membership_status === "active" && !m.is_demo_membership)
+        .map((m) => m.id)
+    );
+    const counts: Record<string, number> = { ac_level_2: 0, dc_level_3: 0, ac_level_1: 0 };
+    let total = 0;
+    chargerLines.forEach((l) => {
+      if (!activeIds.has(l.account_id)) return;
+      counts[l.charger_type] = (counts[l.charger_type] || 0) + Number(l.connector_count || 0);
+      total += Number(l.connector_count || 0);
+    });
+    return { counts, total };
+  }, [chargerLines, members]);
+
   const stats = useMemo(() => {
     const activeOnly = members.filter(
       (m) => m.membership_status === "active" && !m.is_demo_membership
