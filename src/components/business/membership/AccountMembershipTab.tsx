@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, Loader2, BadgeCheck, FlaskConical, Plus, X as XIcon } from "lucide-react";
+import { Check, Loader2, BadgeCheck, FlaskConical, Plus, X as XIcon, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { MEMBERSHIP_VALUE_PROPS } from "@/constants/membershipValueProps";
 import {
@@ -425,7 +425,22 @@ export function AccountMembershipTab({
 
       {enrolledLines.length > 0 && (
         <section className="space-y-2">
-          <h3 className="text-sm font-bold">Charger configuration</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold">Charger configuration</h3>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              title="Edit charger configuration"
+              onClick={() => {
+                setSelectedTier((m.membership_tier as CoreTierName) || "priority");
+                setEnrollOpen(true);
+              }}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          </div>
           <Card>
             <CardContent className="p-0 divide-y divide-border">
               {enrolledLines.map((l: any) => {
