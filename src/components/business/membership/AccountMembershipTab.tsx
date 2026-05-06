@@ -331,9 +331,10 @@ export function AccountMembershipTab({
 
         <EnrollmentModal
           open={enrollOpen}
-          onOpenChange={setEnrollOpen}
+          onOpenChange={(v) => { setEnrollOpen(v); if (!v) setPrefill(null); }}
           account={account}
           tier={selectedTier}
+          prefill={prefill}
           onChangeTier={() => {
             setEnrollOpen(false);
           }}
