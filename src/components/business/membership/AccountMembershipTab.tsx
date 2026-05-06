@@ -867,6 +867,9 @@ function EnrollmentModal({
           billing_contact_id: contactId,
           is_demo_membership: isDemo,
           membership_notes: notes || null,
+          ...(prefill?.source_submission_id
+            ? { source_submission_id: prefill.source_submission_id, source_type: "submission" }
+            : {}),
         } as any)
         .eq("id", account.id);
       if (upErr) throw upErr;
