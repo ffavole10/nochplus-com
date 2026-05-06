@@ -87,6 +87,28 @@ function tierUnitPrice(tier: CoreTierName, type: "ac" | "dc") {
   return type === "ac" ? TIER_PRICING[tier].l2 : TIER_PRICING[tier].dc;
 }
 
+export type ChargerLineType = "ac_level_2" | "dc_level_3" | "ac_level_1";
+export const CHARGER_LINE_TYPES: ChargerLineType[] = ["ac_level_2", "dc_level_3", "ac_level_1"];
+export const CHARGER_LINE_LABELS: Record<ChargerLineType, string> = {
+  ac_level_2: "AC | Level 2",
+  dc_level_3: "DC | Level 3",
+  ac_level_1: "AC | Level 1",
+};
+export function tierRateForLineType(tier: CoreTierName, t: ChargerLineType): number {
+  if (t === "dc_level_3") return TIER_PRICING[tier].dc;
+  // L1 priced same as L2 list (rare, negotiable)
+  return TIER_PRICING[tier].l2;
+}
+
+export type ChargerLine = {
+  id: string;
+  charger_type: ChargerLineType;
+  connector_count: number;
+  tier_rate_per_connector: number;
+  negotiated_rate_per_connector: number;
+  notes: string;
+};
+
 export function AccountMembershipTab({
   account,
 }: {
