@@ -69,6 +69,10 @@ interface Submission {
   chargers: ChargerSubmission[];
   tickets_created?: boolean;
   tickets_created_at?: string | null;
+  company_id?: string | null;
+  membership_enrolled?: boolean | null;
+  membership_enrolled_at?: string | null;
+  linked_membership_account_id?: string | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
