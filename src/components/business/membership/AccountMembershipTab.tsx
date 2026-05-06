@@ -915,8 +915,23 @@ function EnrollmentModal({
           annual_period_end: annualPeriodEnd,
           is_demo: isDemo,
           user_id: userRes?.user?.id || null,
+          ...(prefill?.source_submission_id
+            ? { source_submission_id: prefill.source_submission_id, source_type: "submission" }
+            : {}),
         } as any);
       if (hErr) throw hErr;
+
+      // Flag the source submission as enrolled
+      if (prefill?.source_submission_id) {
+        await supabase
+          .from("noch_plus_submissions")
+          .update({
+            membership_enrolled: true,
+            linked_membership_account_id: account.id,
+            membership_enrolled_at: new Date().toISOString(),
+          } as any)
+          .eq("id", prefill.source_submission_id);
+      }
     },
     onSuccess: () => {
       if (isDemo && billingCycle === "annual_prepay") {
