@@ -36,6 +36,8 @@ import {
 import { useContacts, useCreateContact } from "@/hooks/useContacts";
 import { ContactFormModal } from "@/components/business/ContactFormModal";
 import { formatCurrency } from "@/lib/formatters";
+import { consumeEnrollPrefill, type EnrollPrefill } from "@/lib/submissionEnrollPrefill";
+import { Link as RouterLink } from "react-router-dom";
 
 type AccountMembership = {
   id: string;
