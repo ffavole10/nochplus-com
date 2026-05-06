@@ -380,6 +380,16 @@ export function AccountMembershipTab({
             Special pricing
           </Badge>
         )}
+        {sourceSubmission && (
+          <RouterLink
+            to="/business/submissions"
+            className="inline-flex items-center"
+          >
+            <Badge variant="outline" className="hover:bg-accent cursor-pointer">
+              Enrolled from submission {sourceSubmission.submission_id}
+            </Badge>
+          </RouterLink>
+        )}
         {m.enrolled_at && (
           <span className="text-xs text-muted-foreground">
             Member since {format(new Date(m.enrolled_at), "MMM d, yyyy")}
