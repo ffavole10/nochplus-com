@@ -111,26 +111,41 @@ export function MembershipMemberMap({ members, searchHighlight }: Props) {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<ClusterPoint | null>(null);
 
-  const { clusters, totalConnectors } = useMemo(() => {
+  const { clusters, totalConnectors, totalMembers } = useMemo(() => {
     const map = new Map<string, ClusterPoint>();
     let total = 0;
+    let memberCount = 0;
     members.forEach((m) => {
-      const cs = parseCityState(m);
-      if (!cs) return;
-      const raw = lookupCityCoords(cs.city, cs.state);
-      if (!raw) return;
-      const norm = normalizeUSCoords(raw.lat, raw.lng);
-      if (!norm) return;
-      const key = `${cs.city.toLowerCase()}|${cs.state.toLowerCase()}`;
       const conn = m.lines.reduce((s, l) => s + Number(l.connector_count || 0), 0);
+      if (conn === 0) {
+        console.warn(`[MembershipMap] Member ${m.company} has no charger lines`);
+        return;
+      }
+      memberCount += 1;
       total += conn;
-      const existing = map.get(key);
+
+      const candidates = candidateCityStates(m);
+      let placed: { lat: number; lng: number; key: string } | null = null;
+      for (const cs of candidates) {
+        const raw = lookupCityCoords(cs.city, cs.state);
+        if (!raw) continue;
+        const norm = normalizeUSCoords(raw.lat, raw.lng);
+        if (!norm) continue;
+        placed = { lat: norm[0], lng: norm[1], key: `${cs.city.toLowerCase()}|${cs.state.toLowerCase()}` };
+        break;
+      }
+      if (!placed) {
+        console.warn(`[MembershipMap] Could not geocode ${m.company} (address="${m.address}", hq="${m.hq_city}, ${m.hq_region}")`);
+        return;
+      }
+
+      const existing = map.get(placed.key);
       if (existing) {
         existing.members.push(m);
         existing.totalConnectors += conn;
       } else {
-        map.set(key, {
-          key, lat: norm[0], lng: norm[1], members: [m],
+        map.set(placed.key, {
+          key: placed.key, lat: placed.lat, lng: placed.lng, members: [m],
           totalConnectors: conn, dominant: "ac_l1",
         });
       }
@@ -139,7 +154,7 @@ export function MembershipMemberMap({ members, searchHighlight }: Props) {
       const allLines = c.members.flatMap((m) => m.lines);
       c.dominant = dominantType(allLines);
     });
-    return { clusters: Array.from(map.values()), totalConnectors: total };
+    return { clusters: Array.from(map.values()), totalConnectors: total, totalMembers: memberCount };
   }, [members]);
 
   const highlightedKey = useMemo(() => {
