@@ -472,7 +472,7 @@ export function AccountMembershipTab({
   );
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -480,6 +480,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
           {label}
         </p>
         <p className="text-lg font-bold mt-1">{value}</p>
+        {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
       </CardContent>
     </Card>
   );
