@@ -41,18 +41,40 @@ const TYPE_COLOR: Record<ClusterPoint["dominant"], string> = {
   ac_l1: "#6b7280",
 };
 
-function parseCityState(m: MapMember): { city: string; state: string } | null {
-  if (m.hq_city && m.hq_region) return { city: m.hq_city, state: m.hq_region };
+// Full state name → 2-letter abbreviation (cityLookup is keyed by abbrev)
+const STATE_ABBR: Record<string, string> = {
+  alabama: "al", alaska: "ak", arizona: "az", arkansas: "ar", california: "ca",
+  colorado: "co", connecticut: "ct", delaware: "de", florida: "fl", georgia: "ga",
+  hawaii: "hi", idaho: "id", illinois: "il", indiana: "in", iowa: "ia", kansas: "ks",
+  kentucky: "ky", louisiana: "la", maine: "me", maryland: "md", massachusetts: "ma",
+  michigan: "mi", minnesota: "mn", mississippi: "ms", missouri: "mo", montana: "mt",
+  nebraska: "ne", nevada: "nv", "new hampshire": "nh", "new jersey": "nj",
+  "new mexico": "nm", "new york": "ny", "north carolina": "nc", "north dakota": "nd",
+  ohio: "oh", oklahoma: "ok", oregon: "or", pennsylvania: "pa", "rhode island": "ri",
+  "south carolina": "sc", "south dakota": "sd", tennessee: "tn", texas: "tx",
+  utah: "ut", vermont: "vt", virginia: "va", washington: "wa", "west virginia": "wv",
+  wisconsin: "wi", wyoming: "wy", "district of columbia": "dc",
+};
+
+function normalizeState(s: string): string {
+  const v = s.trim().toLowerCase();
+  if (v.length === 2) return v;
+  return STATE_ABBR[v] || v;
+}
+
+function candidateCityStates(m: MapMember): { city: string; state: string }[] {
+  const out: { city: string; state: string }[] = [];
+  if (m.hq_city && m.hq_region) out.push({ city: m.hq_city, state: normalizeState(m.hq_region) });
   if (m.address) {
     const parts = m.address.split(",").map((p) => p.trim()).filter(Boolean);
     if (parts.length >= 2) {
       const stateZip = parts[parts.length - 1].split(/\s+/);
       const state = stateZip[0];
       const city = parts[parts.length - 2];
-      if (state && city) return { city, state };
+      if (state && city) out.push({ city, state: normalizeState(state) });
     }
   }
-  return null;
+  return out;
 }
 
 function dominantType(lines: MapMember["lines"]): ClusterPoint["dominant"] {
