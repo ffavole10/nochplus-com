@@ -760,13 +760,128 @@ function EnrollmentModal({
               </div>
             </div>
 
-            <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-sm">
-              Monthly revenue:{" "}
-              <span className="font-bold">{formatCurrency(monthly)}</span>
-              <span className="text-xs text-muted-foreground ml-2">
-                ({tier ? `$${tierUnitPrice(tier, chargerType)}` : "—"} ×{" "}
-                {count} chargers)
-              </span>
+            {/* Monthly revenue with override */}
+            <div className="space-y-2">
+              <Label className="text-xs">Monthly revenue</Label>
+              <div className="flex items-center gap-2 flex-wrap">
+                {isOverridden && (
+                  <span className="text-sm text-muted-foreground line-through">
+                    List: {formatCurrency(listMonthly)}
+                  </span>
+                )}
+                <div className="relative flex-1 min-w-[140px]">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    className="pl-6"
+                    value={negotiatedInput === "" ? listMonthly.toFixed(2) : negotiatedInput}
+                    onChange={(e) => setNegotiatedInput(e.target.value)}
+                    onFocus={(e) => {
+                      if (negotiatedInput === "") {
+                        setNegotiatedInput(listMonthly.toFixed(2));
+                        e.target.select();
+                      }
+                    }}
+                  />
+                </div>
+                {discountAmount > 0 ? (
+                  <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">
+                    -{discountPct.toFixed(1)}% discount
+                  </Badge>
+                ) : premiumAmount > 0 ? (
+                  <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">
+                    +{premiumPct.toFixed(1)}% premium
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">Standard pricing</Badge>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Tier rate {tier ? `$${tierUnitPrice(tier, chargerType)}` : "$—"} ×{" "}
+                {count} connectors = {formatCurrency(listMonthly)} standard. Override
+                if negotiated.
+              </p>
+              {isLargeDiscount && (
+                <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+                  This is a significant discount ({discountPct.toFixed(1)}%). Confirm
+                  before proceeding.
+                </div>
+              )}
+            </div>
+
+            {needsDiscountReason && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Discount reason * (10+ chars)</Label>
+                <Textarea
+                  rows={2}
+                  value={discountReason}
+                  onChange={(e) => setDiscountReason(e.target.value)}
+                  placeholder="Why is this account receiving a discount?"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  {discountReason.trim().length}/10
+                </p>
+              </div>
+            )}
+
+            {/* Billing cycle */}
+            <div className="space-y-2">
+              <Label className="text-xs">Billing cycle</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBillingCycle("monthly")}
+                  className={`text-left rounded-md border px-3 py-2 text-sm transition-colors ${
+                    billingCycle === "monthly"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-muted/40"
+                  }`}
+                >
+                  <p className="font-medium">Monthly</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Billed every month
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillingCycle("annual_prepay")}
+                  className={`text-left rounded-md border px-3 py-2 text-sm transition-colors ${
+                    billingCycle === "annual_prepay"
+                      ? "border-optimal bg-optimal/10"
+                      : "border-border hover:bg-muted/40"
+                  }`}
+                >
+                  <p className="font-medium">Pay annually</p>
+                  <p className="text-[11px] text-muted-foreground">1 month free</p>
+                </button>
+              </div>
+              {billingCycle === "annual_prepay" && annualPrepayAmount !== null && (
+                <div className="rounded-md border border-optimal/30 bg-optimal/10 px-3 py-2 text-xs space-y-0.5">
+                  <p>
+                    Annual prepay:{" "}
+                    <span className="font-bold">
+                      {formatCurrency(annualPrepayAmount)}
+                    </span>
+                  </p>
+                  <p>
+                    Savings:{" "}
+                    <span className="font-bold">
+                      {formatCurrency(annualSavings || 0)}
+                    </span>{" "}
+                    (1 month free)
+                  </p>
+                  <p>
+                    Effective monthly rate:{" "}
+                    <span className="font-bold">
+                      {formatCurrency(effectiveMonthlyOnAnnual || 0)}
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">
