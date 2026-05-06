@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { User, LogOut, Pencil, Check, X, Search, ChevronRight, FileText, Share2, Home, Target } from "lucide-react";
-import { useFocusMode } from "@/hooks/useFocus5";
+import { User, LogOut, Pencil, Check, X, ChevronRight, FileText, Share2, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -78,7 +77,6 @@ function getCampaignPageTitle(pathname: string): string | null {
 export function PlatformHeader() {
   const { session } = useAuth();
   const location = useLocation();
-  const focusMode = useFocusMode();
   const navigateRouter = useNavigate();
   const { selectedCampaignId, selectedCampaignName, setSelectedCampaignName, selectedCustomer } = useCampaignContext();
   const { filters, updateFilter } = useFilters();
