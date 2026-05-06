@@ -92,6 +92,8 @@ export const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   "reno|nv": { lat: 39.5296, lng: -119.8138 },
   "chandler|az": { lat: 33.3062, lng: -111.8413 },
   "scottsdale|az": { lat: 33.4942, lng: -111.9261 },
+  "greeley|co": { lat: 40.4233, lng: -104.7091 },
+  "riverside|ca": { lat: 33.9806, lng: -117.3755 },
 };
 
 export function lookupCityCoords(city: string, state: string): { lat: number; lng: number } | null {
