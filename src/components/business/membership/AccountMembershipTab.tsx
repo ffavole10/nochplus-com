@@ -550,14 +550,15 @@ export function AccountMembershipTab({
 
       <EnrollmentModal
         open={enrollOpen}
-        onOpenChange={setEnrollOpen}
+        onOpenChange={(v) => { setEnrollOpen(v); if (!v) setPrefill(null); }}
         account={account}
         tier={selectedTier}
+        prefill={prefill}
         currentTier={(m.membership_tier as CoreTierName) || null}
         currentChargers={m.chargers_enrolled_count}
         currentBillingContactId={m.billing_contact_id}
         currentIsDemo={m.is_demo_membership}
-        isTierChange
+        isTierChange={!prefill || prefill.mode === "add_lines" ? true : false}
         onChangeTier={() => setEnrollOpen(false)}
         onSuccess={() => {
           qc.invalidateQueries({ queryKey: ["account_membership", account.id] });
