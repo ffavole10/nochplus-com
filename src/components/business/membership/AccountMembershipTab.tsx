@@ -294,6 +294,16 @@ export function AccountMembershipTab({
           </Badge>
         )}
         <Badge variant="outline">{tierLabel}</Badge>
+        <Badge variant="outline" className="capitalize">
+          {m.billing_cycle === "annual_prepay"
+            ? `Annual${m.annual_period_end ? ` (paid through ${format(new Date(m.annual_period_end), "MMM d, yyyy")})` : ""}`
+            : "Monthly"}
+        </Badge>
+        {Number(m.discount_amount || 0) > 0 && (
+          <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">
+            Special pricing
+          </Badge>
+        )}
         {m.enrolled_at && (
           <span className="text-xs text-muted-foreground">
             Member since {format(new Date(m.enrolled_at), "MMM d, yyyy")}
@@ -302,15 +312,28 @@ export function AccountMembershipTab({
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="Chargers Enrolled" value={String(m.chargers_enrolled_count)} />
+        <StatTile label="Connectors Enrolled" value={String(m.chargers_enrolled_count)} />
         <StatTile
           label="Monthly Revenue"
-          value={formatCurrency(Number(m.monthly_revenue || 0))}
+          value={formatCurrency(Number(m.negotiated_monthly_revenue || m.monthly_revenue || 0))}
+          sub={
+            Number(m.discount_amount || 0) > 0
+              ? `List ${formatCurrency(Number(m.list_monthly_revenue || 0))} · -${Number(m.discount_pct || 0).toFixed(0)}%`
+              : undefined
+          }
         />
-        <StatTile
-          label="Member Since"
-          value={m.enrolled_at ? format(new Date(m.enrolled_at), "MMM yyyy") : "—"}
-        />
+        {m.billing_cycle === "annual_prepay" ? (
+          <StatTile
+            label="Annual Value"
+            value={formatCurrency(Number(m.annual_prepay_amount || 0))}
+            sub={m.annual_savings ? `Saves ${formatCurrency(Number(m.annual_savings))}` : undefined}
+          />
+        ) : (
+          <StatTile
+            label="Member Since"
+            value={m.enrolled_at ? format(new Date(m.enrolled_at), "MMM yyyy") : "—"}
+          />
+        )}
         <StatTile label="Plan" value={tierLabel} />
       </div>
 
