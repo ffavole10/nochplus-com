@@ -2066,7 +2066,9 @@ export type Database = {
       customers: {
         Row: {
           address: string
+          billing_contact_id: string | null
           categories: Json
+          chargers_enrolled_count: number
           company: string
           contact_name: string
           created_at: string
@@ -2077,14 +2079,20 @@ export type Database = {
           domain: string | null
           duplicate_confirmed_distinct_of: string[] | null
           email: string
+          enrolled_at: string | null
           headquarters_address: string | null
           hq_city: string | null
           hq_region: string | null
           id: string
           industry: string | null
           internal_notes: string | null
+          is_demo_membership: boolean
           last_service_date: string | null
           logo_url: string | null
+          membership_notes: string | null
+          membership_status: string
+          membership_tier: string | null
+          monthly_revenue: number
           notes: string
           phone: string
           pricing_type: string
@@ -2100,7 +2108,9 @@ export type Database = {
         }
         Insert: {
           address?: string
+          billing_contact_id?: string | null
           categories?: Json
+          chargers_enrolled_count?: number
           company: string
           contact_name: string
           created_at?: string
@@ -2111,14 +2121,20 @@ export type Database = {
           domain?: string | null
           duplicate_confirmed_distinct_of?: string[] | null
           email: string
+          enrolled_at?: string | null
           headquarters_address?: string | null
           hq_city?: string | null
           hq_region?: string | null
           id?: string
           industry?: string | null
           internal_notes?: string | null
+          is_demo_membership?: boolean
           last_service_date?: string | null
           logo_url?: string | null
+          membership_notes?: string | null
+          membership_status?: string
+          membership_tier?: string | null
+          monthly_revenue?: number
           notes?: string
           phone?: string
           pricing_type?: string
@@ -2134,7 +2150,9 @@ export type Database = {
         }
         Update: {
           address?: string
+          billing_contact_id?: string | null
           categories?: Json
+          chargers_enrolled_count?: number
           company?: string
           contact_name?: string
           created_at?: string
@@ -2145,14 +2163,20 @@ export type Database = {
           domain?: string | null
           duplicate_confirmed_distinct_of?: string[] | null
           email?: string
+          enrolled_at?: string | null
           headquarters_address?: string | null
           hq_city?: string | null
           hq_region?: string | null
           id?: string
           industry?: string | null
           internal_notes?: string | null
+          is_demo_membership?: boolean
           last_service_date?: string | null
           logo_url?: string | null
+          membership_notes?: string | null
+          membership_status?: string
+          membership_tier?: string | null
+          monthly_revenue?: number
           notes?: string
           phone?: string
           pricing_type?: string
@@ -2166,7 +2190,15 @@ export type Database = {
           updated_at?: string
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customers_billing_contact_id_fkey"
+            columns: ["billing_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deal_stage_transitions: {
         Row: {
@@ -2696,6 +2728,60 @@ export type Database = {
           {
             foreignKeyName: "locations_customer_id_fkey"
             columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      membership_enrollment_history: {
+        Row: {
+          account_id: string
+          action: string
+          chargers_count: number | null
+          created_at: string
+          id: string
+          is_demo: boolean
+          monthly_revenue: number | null
+          reason: string | null
+          tier: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_id: string
+          action: string
+          chargers_count?: number | null
+          created_at?: string
+          id?: string
+          is_demo?: boolean
+          monthly_revenue?: number | null
+          reason?: string | null
+          tier?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          action?: string
+          chargers_count?: number | null
+          created_at?: string
+          id?: string
+          is_demo?: boolean
+          monthly_revenue?: number | null
+          reason?: string | null
+          tier?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_enrollment_history_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "account_ops_snapshot"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "membership_enrollment_history_account_id_fkey"
+            columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
