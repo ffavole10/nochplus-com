@@ -74,6 +74,17 @@ function candidateCityStates(m: MapMember): { city: string; state: string }[] {
       if (state && city) out.push({ city, state: normalizeState(state) });
     }
   }
+  // Last resort: scan company name for a known city token (e.g. "Fontainebleau Las Vegas")
+  if (m.company) {
+    const name = m.company.toLowerCase();
+    for (const key of Object.keys(CITY_COORDS)) {
+      const [city, st] = key.split("|");
+      if (city.length >= 5 && name.includes(city)) {
+        out.push({ city, state: st });
+        break;
+      }
+    }
+  }
   return out;
 }
 
