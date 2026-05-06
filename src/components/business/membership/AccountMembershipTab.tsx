@@ -944,7 +944,7 @@ function EnrollmentModal({
             </label>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="px-6 py-4 border-t border-border shrink-0 bg-background">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
