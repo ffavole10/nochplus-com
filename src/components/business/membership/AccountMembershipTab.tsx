@@ -145,6 +145,19 @@ export function AccountMembershipTab({
     },
   });
 
+  const { data: enrolledLines = [] } = useQuery({
+    queryKey: ["membership_charger_lines", account.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("membership_charger_lines")
+        .select("*")
+        .eq("account_id", account.id)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<CoreTierName | null>(null);
   const [pauseOpen, setPauseOpen] = useState(false);
