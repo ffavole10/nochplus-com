@@ -6,7 +6,7 @@ import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps
 import { MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { lookupCityCoords } from "@/components/flagged/cityLookup";
+import { lookupCityCoords, CITY_COORDS } from "@/components/flagged/cityLookup";
 import { normalizeUSCoords } from "@/lib/coordsValidator";
 import { TIER_LABELS, TIER_BADGE_CLASSES, type TierName } from "@/constants/nochPlusTiers";
 
@@ -41,18 +41,51 @@ const TYPE_COLOR: Record<ClusterPoint["dominant"], string> = {
   ac_l1: "#6b7280",
 };
 
-function parseCityState(m: MapMember): { city: string; state: string } | null {
-  if (m.hq_city && m.hq_region) return { city: m.hq_city, state: m.hq_region };
+// Full state name → 2-letter abbreviation (cityLookup is keyed by abbrev)
+const STATE_ABBR: Record<string, string> = {
+  alabama: "al", alaska: "ak", arizona: "az", arkansas: "ar", california: "ca",
+  colorado: "co", connecticut: "ct", delaware: "de", florida: "fl", georgia: "ga",
+  hawaii: "hi", idaho: "id", illinois: "il", indiana: "in", iowa: "ia", kansas: "ks",
+  kentucky: "ky", louisiana: "la", maine: "me", maryland: "md", massachusetts: "ma",
+  michigan: "mi", minnesota: "mn", mississippi: "ms", missouri: "mo", montana: "mt",
+  nebraska: "ne", nevada: "nv", "new hampshire": "nh", "new jersey": "nj",
+  "new mexico": "nm", "new york": "ny", "north carolina": "nc", "north dakota": "nd",
+  ohio: "oh", oklahoma: "ok", oregon: "or", pennsylvania: "pa", "rhode island": "ri",
+  "south carolina": "sc", "south dakota": "sd", tennessee: "tn", texas: "tx",
+  utah: "ut", vermont: "vt", virginia: "va", washington: "wa", "west virginia": "wv",
+  wisconsin: "wi", wyoming: "wy", "district of columbia": "dc",
+};
+
+function normalizeState(s: string): string {
+  const v = s.trim().toLowerCase();
+  if (v.length === 2) return v;
+  return STATE_ABBR[v] || v;
+}
+
+function candidateCityStates(m: MapMember): { city: string; state: string }[] {
+  const out: { city: string; state: string }[] = [];
+  if (m.hq_city && m.hq_region) out.push({ city: m.hq_city, state: normalizeState(m.hq_region) });
   if (m.address) {
     const parts = m.address.split(",").map((p) => p.trim()).filter(Boolean);
     if (parts.length >= 2) {
       const stateZip = parts[parts.length - 1].split(/\s+/);
       const state = stateZip[0];
       const city = parts[parts.length - 2];
-      if (state && city) return { city, state };
+      if (state && city) out.push({ city, state: normalizeState(state) });
     }
   }
-  return null;
+  // Last resort: scan company name for a known city token (e.g. "Fontainebleau Las Vegas")
+  if (m.company) {
+    const name = m.company.toLowerCase();
+    for (const key of Object.keys(CITY_COORDS)) {
+      const [city, st] = key.split("|");
+      if (city.length >= 5 && name.includes(city)) {
+        out.push({ city, state: st });
+        break;
+      }
+    }
+  }
+  return out;
 }
 
 function dominantType(lines: MapMember["lines"]): ClusterPoint["dominant"] {
@@ -89,26 +122,41 @@ export function MembershipMemberMap({ members, searchHighlight }: Props) {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<ClusterPoint | null>(null);
 
-  const { clusters, totalConnectors } = useMemo(() => {
+  const { clusters, totalConnectors, totalMembers } = useMemo(() => {
     const map = new Map<string, ClusterPoint>();
     let total = 0;
+    let memberCount = 0;
     members.forEach((m) => {
-      const cs = parseCityState(m);
-      if (!cs) return;
-      const raw = lookupCityCoords(cs.city, cs.state);
-      if (!raw) return;
-      const norm = normalizeUSCoords(raw.lat, raw.lng);
-      if (!norm) return;
-      const key = `${cs.city.toLowerCase()}|${cs.state.toLowerCase()}`;
       const conn = m.lines.reduce((s, l) => s + Number(l.connector_count || 0), 0);
+      if (conn === 0) {
+        console.warn(`[MembershipMap] Member ${m.company} has no charger lines`);
+        return;
+      }
+      memberCount += 1;
       total += conn;
-      const existing = map.get(key);
+
+      const candidates = candidateCityStates(m);
+      let placed: { lat: number; lng: number; key: string } | null = null;
+      for (const cs of candidates) {
+        const raw = lookupCityCoords(cs.city, cs.state);
+        if (!raw) continue;
+        const norm = normalizeUSCoords(raw.lat, raw.lng);
+        if (!norm) continue;
+        placed = { lat: norm[0], lng: norm[1], key: `${cs.city.toLowerCase()}|${cs.state.toLowerCase()}` };
+        break;
+      }
+      if (!placed) {
+        console.warn(`[MembershipMap] Could not geocode ${m.company} (address="${m.address}", hq="${m.hq_city}, ${m.hq_region}")`);
+        return;
+      }
+
+      const existing = map.get(placed.key);
       if (existing) {
         existing.members.push(m);
         existing.totalConnectors += conn;
       } else {
-        map.set(key, {
-          key, lat: norm[0], lng: norm[1], members: [m],
+        map.set(placed.key, {
+          key: placed.key, lat: placed.lat, lng: placed.lng, members: [m],
           totalConnectors: conn, dominant: "ac_l1",
         });
       }
@@ -117,7 +165,7 @@ export function MembershipMemberMap({ members, searchHighlight }: Props) {
       const allLines = c.members.flatMap((m) => m.lines);
       c.dominant = dominantType(allLines);
     });
-    return { clusters: Array.from(map.values()), totalConnectors: total };
+    return { clusters: Array.from(map.values()), totalConnectors: total, totalMembers: memberCount };
   }, [members]);
 
   const highlightedKey = useMemo(() => {
@@ -134,7 +182,7 @@ export function MembershipMemberMap({ members, searchHighlight }: Props) {
           <MapPin className="h-4 w-4 text-primary" /> Member Locations
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          {members.length} member{members.length !== 1 ? "s" : ""} · {totalConnectors} connectors · marker size = connector count
+          {totalMembers} member{totalMembers !== 1 ? "s" : ""} · {totalConnectors} connectors · marker size = connector count
         </p>
       </CardHeader>
       <CardContent className="pt-0">
