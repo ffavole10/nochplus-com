@@ -189,9 +189,24 @@ export function AccountMembershipTab({
   const [confirmDowngradeFromTier, setConfirmDowngradeFromTier] = useState<
     CoreTierName | null
   >(null);
+  const [prefill, setPrefill] = useState<EnrollPrefill | null>(null);
+
+  // Consume submission-derived prefill once data is ready
+  useEffect(() => {
+    if (isLoading) return;
+    const p = consumeEnrollPrefill(account.id);
+    if (!p) return;
+    setPrefill(p);
+    // Default to priority tier if not enrolled, else use current tier
+    const tier =
+      (membership?.membership_tier as CoreTierName | undefined) || "priority";
+    setSelectedTier(tier);
+    setEnrollOpen(true);
+  }, [isLoading, account.id, membership?.membership_tier]);
 
   const openEnrollFor = (tier: CoreTierName) => {
     setSelectedTier(tier);
+    setPrefill(null);
     setEnrollOpen(true);
   };
 
