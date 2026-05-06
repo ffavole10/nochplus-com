@@ -694,15 +694,40 @@ function EnrollmentModal({
   // Build initial lines whenever modal opens or tier changes
   useEffect(() => {
     if (!open || !tier) return;
-    setContactId(currentBillingContactId || "");
     setEffectiveDate(new Date().toISOString().slice(0, 10));
-    setNotes("");
     setIsDemo(!!currentIsDemo);
     setDiscountReason("");
     setBillingCycle("monthly");
 
-    if (existingLines.length > 0) {
-      // Recalc tier rates against the (possibly new) tier; preserve negotiated.
+    // Try to match prefill billing contact by email
+    let initialContactId = currentBillingContactId || "";
+    if (prefill?.billing_contact_email) {
+      const match = contacts.find(
+        (c) =>
+          (c.email || "").toLowerCase() ===
+          prefill.billing_contact_email!.toLowerCase()
+      );
+      if (match) initialContactId = match.id;
+    }
+    setContactId(initialContactId);
+    setNotes(prefill?.notes || "");
+
+    if (prefill && prefill.lines.length > 0) {
+      // Submission-driven prefill takes precedence
+      setLines(
+        prefill.lines.map((l) => ({
+          id: crypto.randomUUID(),
+          charger_type: l.charger_type as ChargerLineType,
+          connector_count: Math.max(1, l.connector_count),
+          tier_rate_per_connector: tierRateForLineType(tier, l.charger_type as ChargerLineType),
+          negotiated_rate_per_connector: tierRateForLineType(
+            tier,
+            l.charger_type as ChargerLineType
+          ),
+          notes: l.notes || "",
+        }))
+      );
+    } else if (existingLines.length > 0) {
       setLines(
         existingLines.map((l) => {
           const lt = l.charger_type as ChargerLineType;
@@ -730,7 +755,7 @@ function EnrollmentModal({
         },
       ]);
     }
-  }, [open, tier, existingLines, currentBillingContactId, currentIsDemo, currentChargers]);
+  }, [open, tier, existingLines, currentBillingContactId, currentIsDemo, currentChargers, prefill, contacts]);
 
   const totalConnectors = lines.reduce((s, l) => s + (Number(l.connector_count) || 0), 0);
   const listMonthly = lines.reduce(
