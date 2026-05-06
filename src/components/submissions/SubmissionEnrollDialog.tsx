@@ -36,7 +36,7 @@ type Submission = {
   state: string;
   zip_code: string;
   customer_notes: string | null;
-  company_id: string | null;
+  company_id?: string | null;
   chargers: Array<{ charger_type: string }>;
 };
 
