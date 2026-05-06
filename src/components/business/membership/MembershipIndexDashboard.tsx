@@ -128,7 +128,7 @@ export function MembershipIndexDashboard() {
           <CardContent className="p-4 text-center">
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
               <Diamond className="h-3.5 w-3.5" />
-              Enrolled Chargers
+              Enrolled Connectors
             </p>
             <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {stats.enrolledChargers}
