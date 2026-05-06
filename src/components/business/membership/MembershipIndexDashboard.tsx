@@ -38,7 +38,7 @@ export function MembershipIndexDashboard() {
       const { data, error } = await supabase
         .from("customers")
         .select(
-          "id, company, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, is_demo_membership"
+          "id, company, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, negotiated_monthly_revenue, list_monthly_revenue, discount_pct, billing_cycle, annual_period_end, is_demo_membership"
         )
         .in("membership_status", ["active", "demo", "paused"])
         .order("enrolled_at", { ascending: false });
@@ -51,16 +51,25 @@ export function MembershipIndexDashboard() {
     const activeOnly = members.filter(
       (m) => m.membership_status === "active" && !m.is_demo_membership
     );
+    const negotiated = (m: AccountMember) =>
+      Number(m.negotiated_monthly_revenue || m.monthly_revenue || 0);
+    const list = (m: AccountMember) =>
+      Number(m.list_monthly_revenue || m.negotiated_monthly_revenue || m.monthly_revenue || 0);
+    const totalListAcrossActive = activeOnly.reduce((s, m) => s + list(m), 0);
+    const totalNegotiatedAcrossActive = activeOnly.reduce((s, m) => s + negotiated(m), 0);
+    const weightedDiscountPct =
+      totalListAcrossActive > 0
+        ? ((totalListAcrossActive - totalNegotiatedAcrossActive) / totalListAcrossActive) * 100
+        : 0;
     return {
       activeCount: activeOnly.length,
       enrolledChargers: activeOnly.reduce(
         (s, m) => s + (m.chargers_enrolled_count || 0),
         0
       ),
-      monthlyRevenue: activeOnly.reduce(
-        (s, m) => s + Number(m.monthly_revenue || 0),
-        0
-      ),
+      monthlyRevenue: totalNegotiatedAcrossActive,
+      annualContractCount: activeOnly.filter((m) => m.billing_cycle === "annual_prepay").length,
+      avgDiscountPct: weightedDiscountPct,
       demoCount: members.filter((m) => m.is_demo_membership).length,
     };
   }, [members]);
