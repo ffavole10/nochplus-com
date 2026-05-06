@@ -372,6 +372,60 @@ export function AccountMembershipTab({
         <StatTile label="Plan" value={tierLabel} />
       </div>
 
+      {enrolledLines.length > 0 && (
+        <section className="space-y-2">
+          <h3 className="text-sm font-bold">Charger configuration</h3>
+          <Card>
+            <CardContent className="p-0 divide-y divide-border">
+              {enrolledLines.map((l: any) => {
+                const lt = l.charger_type as ChargerLineType;
+                const sub =
+                  Number(l.negotiated_rate_per_connector) * Number(l.connector_count);
+                return (
+                  <div
+                    key={l.id}
+                    className="px-4 py-2.5 text-xs flex items-center gap-3 flex-wrap"
+                  >
+                    <span className="font-medium w-32">{CHARGER_LINE_LABELS[lt]}</span>
+                    <span className="text-muted-foreground">
+                      {l.connector_count} connector{l.connector_count === 1 ? "" : "s"}
+                    </span>
+                    <span className="text-muted-foreground">
+                      ${Number(l.negotiated_rate_per_connector).toFixed(2)}/connector
+                    </span>
+                    <span className="ml-auto font-bold">
+                      {formatCurrency(sub)}/mo
+                    </span>
+                  </div>
+                );
+              })}
+              <div className="px-4 py-2.5 text-xs flex items-center bg-muted/30">
+                <span className="font-bold w-32">Total</span>
+                <span className="text-muted-foreground">
+                  {enrolledLines.reduce(
+                    (s: number, l: any) => s + Number(l.connector_count || 0),
+                    0
+                  )}{" "}
+                  connectors
+                </span>
+                <span className="ml-auto font-bold">
+                  {formatCurrency(
+                    enrolledLines.reduce(
+                      (s: number, l: any) =>
+                        s +
+                        Number(l.negotiated_rate_per_connector) *
+                          Number(l.connector_count),
+                      0
+                    )
+                  )}
+                  /mo
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
       <section className="space-y-2">
         <h3 className="text-sm font-bold">Member ROI</h3>
         <Card className="border-dashed">
