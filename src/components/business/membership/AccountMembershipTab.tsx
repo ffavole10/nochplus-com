@@ -704,7 +704,7 @@ function EnrollmentModal({
           membership_tier: tier,
           membership_status: status,
           enrolled_at: new Date(effectiveDate).toISOString(),
-          chargers_enrolled_count: count,
+          chargers_enrolled_count: totalConnectors,
           monthly_revenue: negotiatedMonthly,
           list_monthly_revenue: listMonthly,
           negotiated_monthly_revenue: negotiatedMonthly,
@@ -722,6 +722,28 @@ function EnrollmentModal({
         .eq("id", account.id);
       if (upErr) throw upErr;
 
+      // Replace charger lines: delete existing, insert current.
+      const { error: delErr } = await supabase
+        .from("membership_charger_lines")
+        .delete()
+        .eq("account_id", account.id);
+      if (delErr) throw delErr;
+      const insertRows = lines.map((l, idx) => ({
+        account_id: account.id,
+        charger_type: l.charger_type,
+        connector_count: Number(l.connector_count) || 1,
+        tier_rate_per_connector: Number(l.tier_rate_per_connector) || 0,
+        negotiated_rate_per_connector: Number(l.negotiated_rate_per_connector) || 0,
+        notes: l.notes || null,
+        sort_order: idx,
+      }));
+      if (insertRows.length) {
+        const { error: insErr } = await supabase
+          .from("membership_charger_lines")
+          .insert(insertRows as any);
+        if (insErr) throw insErr;
+      }
+
       const { data: userRes } = await supabase.auth.getUser();
       const { error: hErr } = await supabase
         .from("membership_enrollment_history")
@@ -730,7 +752,7 @@ function EnrollmentModal({
           tier,
           action,
           reason: notes || null,
-          chargers_count: count,
+          chargers_count: totalConnectors,
           monthly_revenue: negotiatedMonthly,
           list_monthly_revenue: listMonthly,
           negotiated_monthly_revenue: negotiatedMonthly,
