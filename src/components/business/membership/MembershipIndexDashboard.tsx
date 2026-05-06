@@ -1,0 +1,209 @@
+import { useMemo, useState } from "react";
+import { Diamond, Users, DollarSign, FlaskConical } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { TIER_LABELS, TIER_BADGE_CLASSES, type TierName } from "@/constants/nochPlusTiers";
+
+type AccountMember = {
+  id: string;
+  company: string;
+  membership_tier: TierName | null;
+  membership_status: string;
+  enrolled_at: string | null;
+  chargers_enrolled_count: number;
+  monthly_revenue: number;
+  is_demo_membership: boolean;
+};
+
+export function MembershipIndexDashboard() {
+  const navigate = useNavigate();
+  const [includeDemo, setIncludeDemo] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const { data: members = [], isLoading } = useQuery({
+    queryKey: ["noch_plus_members_combined", includeDemo],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select(
+          "id, company, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, is_demo_membership"
+        )
+        .in("membership_status", ["active", "demo", "paused"])
+        .order("enrolled_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as AccountMember[];
+    },
+  });
+
+  const stats = useMemo(() => {
+    const activeOnly = members.filter(
+      (m) => m.membership_status === "active" && !m.is_demo_membership
+    );
+    return {
+      activeCount: activeOnly.length,
+      enrolledChargers: activeOnly.reduce(
+        (s, m) => s + (m.chargers_enrolled_count || 0),
+        0
+      ),
+      monthlyRevenue: activeOnly.reduce(
+        (s, m) => s + Number(m.monthly_revenue || 0),
+        0
+      ),
+      demoCount: members.filter((m) => m.is_demo_membership).length,
+    };
+  }, [members]);
+
+  const filtered = useMemo(() => {
+    let list = [...members];
+    if (!includeDemo) list = list.filter((m) => !m.is_demo_membership);
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter((m) => m.company?.toLowerCase().includes(q));
+    }
+    return list;
+  }, [members, includeDemo, search]);
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card className="border-l-4 border-l-primary">
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              <Users className="h-3.5 w-3.5" />
+              Active Members
+            </p>
+            <p className="text-2xl font-bold text-foreground">{stats.activeCount}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-purple-500">
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              <Diamond className="h-3.5 w-3.5" />
+              Enrolled Chargers
+            </p>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              {stats.enrolledChargers}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-optimal">
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              <DollarSign className="h-3.5 w-3.5" />
+              Monthly Revenue
+            </p>
+            <p className="text-2xl font-bold text-optimal">
+              ${Math.round(stats.monthlyRevenue).toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-medium">
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              <FlaskConical className="h-3.5 w-3.5" />
+              Demo Enrollments
+            </p>
+            <p className="text-2xl font-bold text-medium">{stats.demoCount}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search company..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={includeDemo}
+            onChange={(e) => setIncludeDemo(e.target.checked)}
+          />
+          Include demo enrollments
+        </label>
+      </div>
+
+      {/* List */}
+      {isLoading ? (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            Loading…
+          </CardContent>
+        </Card>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            No members yet. Enroll an account from its Membership tab.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-3">
+          {filtered.map((m) => {
+            const tier = (m.membership_tier as TierName) || "essential";
+            return (
+              <Card key={m.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4 flex items-center gap-3 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold">{m.company}</span>
+                      <Badge variant="outline" className={TIER_BADGE_CLASSES[tier]}>
+                        {TIER_LABELS[tier]}
+                      </Badge>
+                      {m.is_demo_membership && (
+                        <Badge className="bg-medium/15 text-medium border-medium/30">
+                          Demo
+                        </Badge>
+                      )}
+                      {m.membership_status === "paused" && (
+                        <Badge variant="outline">Paused</Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1 flex items-center gap-3 flex-wrap">
+                      <span>
+                        <strong className="text-foreground">
+                          {m.chargers_enrolled_count}
+                        </strong>{" "}
+                        chargers
+                      </span>
+                      <span>
+                        ${Number(m.monthly_revenue || 0).toLocaleString()} / mo
+                      </span>
+                      {m.enrolled_at && (
+                        <span>
+                          Since {format(new Date(m.enrolled_at), "MMM yyyy")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      navigate(`/business/accounts/${m.id}?tab=membership`)
+                    }
+                  >
+                    View
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
