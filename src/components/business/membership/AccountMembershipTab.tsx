@@ -100,7 +100,7 @@ export function AccountMembershipTab({
       const { data, error } = await supabase
         .from("customers")
         .select(
-          "id, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, billing_contact_id, is_demo_membership, membership_notes"
+          "id, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, list_monthly_revenue, negotiated_monthly_revenue, discount_amount, discount_pct, discount_reason, billing_cycle, annual_prepay_amount, annual_savings, annual_period_end, billing_contact_id, is_demo_membership, membership_notes"
         )
         .eq("id", account.id)
         .maybeSingle();
