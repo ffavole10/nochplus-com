@@ -2066,7 +2066,11 @@ export type Database = {
       customers: {
         Row: {
           address: string
+          annual_period_end: string | null
+          annual_prepay_amount: number | null
+          annual_savings: number | null
           billing_contact_id: string | null
+          billing_cycle: string
           categories: Json
           chargers_enrolled_count: number
           company: string
@@ -2076,6 +2080,9 @@ export type Database = {
           customer_type_other: string | null
           deleted_at: string | null
           description: string | null
+          discount_amount: number
+          discount_pct: number
+          discount_reason: string | null
           domain: string | null
           duplicate_confirmed_distinct_of: string[] | null
           email: string
@@ -2088,11 +2095,13 @@ export type Database = {
           internal_notes: string | null
           is_demo_membership: boolean
           last_service_date: string | null
+          list_monthly_revenue: number
           logo_url: string | null
           membership_notes: string | null
           membership_status: string
           membership_tier: string | null
           monthly_revenue: number
+          negotiated_monthly_revenue: number
           notes: string
           phone: string
           pricing_type: string
@@ -2108,7 +2117,11 @@ export type Database = {
         }
         Insert: {
           address?: string
+          annual_period_end?: string | null
+          annual_prepay_amount?: number | null
+          annual_savings?: number | null
           billing_contact_id?: string | null
+          billing_cycle?: string
           categories?: Json
           chargers_enrolled_count?: number
           company: string
@@ -2118,6 +2131,9 @@ export type Database = {
           customer_type_other?: string | null
           deleted_at?: string | null
           description?: string | null
+          discount_amount?: number
+          discount_pct?: number
+          discount_reason?: string | null
           domain?: string | null
           duplicate_confirmed_distinct_of?: string[] | null
           email: string
@@ -2130,11 +2146,13 @@ export type Database = {
           internal_notes?: string | null
           is_demo_membership?: boolean
           last_service_date?: string | null
+          list_monthly_revenue?: number
           logo_url?: string | null
           membership_notes?: string | null
           membership_status?: string
           membership_tier?: string | null
           monthly_revenue?: number
+          negotiated_monthly_revenue?: number
           notes?: string
           phone?: string
           pricing_type?: string
@@ -2150,7 +2168,11 @@ export type Database = {
         }
         Update: {
           address?: string
+          annual_period_end?: string | null
+          annual_prepay_amount?: number | null
+          annual_savings?: number | null
           billing_contact_id?: string | null
+          billing_cycle?: string
           categories?: Json
           chargers_enrolled_count?: number
           company?: string
@@ -2160,6 +2182,9 @@ export type Database = {
           customer_type_other?: string | null
           deleted_at?: string | null
           description?: string | null
+          discount_amount?: number
+          discount_pct?: number
+          discount_reason?: string | null
           domain?: string | null
           duplicate_confirmed_distinct_of?: string[] | null
           email?: string
@@ -2172,11 +2197,13 @@ export type Database = {
           internal_notes?: string | null
           is_demo_membership?: boolean
           last_service_date?: string | null
+          list_monthly_revenue?: number
           logo_url?: string | null
           membership_notes?: string | null
           membership_status?: string
           membership_tier?: string | null
           monthly_revenue?: number
+          negotiated_monthly_revenue?: number
           notes?: string
           phone?: string
           pricing_type?: string
@@ -2738,11 +2765,18 @@ export type Database = {
         Row: {
           account_id: string
           action: string
+          annual_period_end: string | null
+          annual_prepay_amount: number | null
+          billing_cycle: string | null
           chargers_count: number | null
           created_at: string
+          discount_pct: number | null
+          discount_reason: string | null
           id: string
           is_demo: boolean
+          list_monthly_revenue: number | null
           monthly_revenue: number | null
+          negotiated_monthly_revenue: number | null
           reason: string | null
           tier: string | null
           user_id: string | null
@@ -2750,11 +2784,18 @@ export type Database = {
         Insert: {
           account_id: string
           action: string
+          annual_period_end?: string | null
+          annual_prepay_amount?: number | null
+          billing_cycle?: string | null
           chargers_count?: number | null
           created_at?: string
+          discount_pct?: number | null
+          discount_reason?: string | null
           id?: string
           is_demo?: boolean
+          list_monthly_revenue?: number | null
           monthly_revenue?: number | null
+          negotiated_monthly_revenue?: number | null
           reason?: string | null
           tier?: string | null
           user_id?: string | null
@@ -2762,11 +2803,18 @@ export type Database = {
         Update: {
           account_id?: string
           action?: string
+          annual_period_end?: string | null
+          annual_prepay_amount?: number | null
+          billing_cycle?: string | null
           chargers_count?: number | null
           created_at?: string
+          discount_pct?: number | null
+          discount_reason?: string | null
           id?: string
           is_demo?: boolean
+          list_monthly_revenue?: number | null
           monthly_revenue?: number | null
+          negotiated_monthly_revenue?: number | null
           reason?: string | null
           tier?: string | null
           user_id?: string | null

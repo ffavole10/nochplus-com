@@ -44,6 +44,15 @@ type AccountMembership = {
   enrolled_at: string | null;
   chargers_enrolled_count: number;
   monthly_revenue: number;
+  list_monthly_revenue: number;
+  negotiated_monthly_revenue: number;
+  discount_amount: number;
+  discount_pct: number;
+  discount_reason: string | null;
+  billing_cycle: "monthly" | "annual_prepay";
+  annual_prepay_amount: number | null;
+  annual_savings: number | null;
+  annual_period_end: string | null;
   billing_contact_id: string | null;
   is_demo_membership: boolean;
   membership_notes: string | null;
@@ -91,7 +100,7 @@ export function AccountMembershipTab({
       const { data, error } = await supabase
         .from("customers")
         .select(
-          "id, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, billing_contact_id, is_demo_membership, membership_notes"
+          "id, membership_tier, membership_status, enrolled_at, chargers_enrolled_count, monthly_revenue, list_monthly_revenue, negotiated_monthly_revenue, discount_amount, discount_pct, discount_reason, billing_cycle, annual_prepay_amount, annual_savings, annual_period_end, billing_contact_id, is_demo_membership, membership_notes"
         )
         .eq("id", account.id)
         .maybeSingle();
@@ -285,6 +294,16 @@ export function AccountMembershipTab({
           </Badge>
         )}
         <Badge variant="outline">{tierLabel}</Badge>
+        <Badge variant="outline" className="capitalize">
+          {m.billing_cycle === "annual_prepay"
+            ? `Annual${m.annual_period_end ? ` (paid through ${format(new Date(m.annual_period_end), "MMM d, yyyy")})` : ""}`
+            : "Monthly"}
+        </Badge>
+        {Number(m.discount_amount || 0) > 0 && (
+          <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">
+            Special pricing
+          </Badge>
+        )}
         {m.enrolled_at && (
           <span className="text-xs text-muted-foreground">
             Member since {format(new Date(m.enrolled_at), "MMM d, yyyy")}
@@ -293,15 +312,28 @@ export function AccountMembershipTab({
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="Chargers Enrolled" value={String(m.chargers_enrolled_count)} />
+        <StatTile label="Connectors Enrolled" value={String(m.chargers_enrolled_count)} />
         <StatTile
           label="Monthly Revenue"
-          value={formatCurrency(Number(m.monthly_revenue || 0))}
+          value={formatCurrency(Number(m.negotiated_monthly_revenue || m.monthly_revenue || 0))}
+          sub={
+            Number(m.discount_amount || 0) > 0
+              ? `List ${formatCurrency(Number(m.list_monthly_revenue || 0))} · -${Number(m.discount_pct || 0).toFixed(0)}%`
+              : undefined
+          }
         />
-        <StatTile
-          label="Member Since"
-          value={m.enrolled_at ? format(new Date(m.enrolled_at), "MMM yyyy") : "—"}
-        />
+        {m.billing_cycle === "annual_prepay" ? (
+          <StatTile
+            label="Annual Value"
+            value={formatCurrency(Number(m.annual_prepay_amount || 0))}
+            sub={m.annual_savings ? `Saves ${formatCurrency(Number(m.annual_savings))}` : undefined}
+          />
+        ) : (
+          <StatTile
+            label="Member Since"
+            value={m.enrolled_at ? format(new Date(m.enrolled_at), "MMM yyyy") : "—"}
+          />
+        )}
         <StatTile label="Plan" value={tierLabel} />
       </div>
 
@@ -440,7 +472,7 @@ export function AccountMembershipTab({
   );
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -448,6 +480,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
           {label}
         </p>
         <p className="text-lg font-bold mt-1">{value}</p>
+        {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
       </CardContent>
     </Card>
   );
@@ -487,6 +520,11 @@ function EnrollmentModal({
     currentChargers ? String(currentChargers) : ""
   );
   const [chargerType, setChargerType] = useState<"ac" | "dc">("ac");
+  const [negotiatedInput, setNegotiatedInput] = useState<string>("");
+  const [discountReason, setDiscountReason] = useState("");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual_prepay">(
+    "monthly"
+  );
   const [contactId, setContactId] = useState<string>(currentBillingContactId || "");
   const [effectiveDate, setEffectiveDate] = useState<string>(
     new Date().toISOString().slice(0, 10)
@@ -496,7 +534,10 @@ function EnrollmentModal({
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [confirmDowngradeOpen, setConfirmDowngradeOpen] = useState(false);
 
-  // Reset when reopened
+  const count = Number(chargerCount) || 0;
+  const listMonthly = tier ? tierUnitPrice(tier, chargerType) * count : 0;
+
+  // Reset when reopened — wipe overrides so tier change doesn't carry old discount.
   useEffect(() => {
     if (open) {
       setChargerCount(currentChargers ? String(currentChargers) : "");
@@ -504,11 +545,30 @@ function EnrollmentModal({
       setEffectiveDate(new Date().toISOString().slice(0, 10));
       setNotes("");
       setIsDemo(!!currentIsDemo);
+      setNegotiatedInput("");
+      setDiscountReason("");
+      setBillingCycle("monthly");
     }
-  }, [open, currentChargers, currentBillingContactId, currentIsDemo]);
+  }, [open, currentChargers, currentBillingContactId, currentIsDemo, tier]);
 
-  const count = Number(chargerCount) || 0;
-  const monthly = tier ? tierUnitPrice(tier, chargerType) * count : 0;
+  const negotiatedMonthly =
+    negotiatedInput === "" ? listMonthly : Math.max(0, Number(negotiatedInput) || 0);
+  const discountAmount = Math.max(0, listMonthly - negotiatedMonthly);
+  const premiumAmount = Math.max(0, negotiatedMonthly - listMonthly);
+  const discountPct =
+    listMonthly > 0 ? (discountAmount / listMonthly) * 100 : 0;
+  const premiumPct =
+    listMonthly > 0 ? (premiumAmount / listMonthly) * 100 : 0;
+  const isOverridden = negotiatedInput !== "" && negotiatedMonthly !== listMonthly;
+  const needsDiscountReason = discountAmount > 0;
+  const isLargeDiscount = discountPct > 50;
+
+  const annualPrepayAmount =
+    billingCycle === "annual_prepay" ? negotiatedMonthly * 11 : null;
+  const annualSavings =
+    billingCycle === "annual_prepay" ? negotiatedMonthly : null;
+  const effectiveMonthlyOnAnnual =
+    billingCycle === "annual_prepay" ? (negotiatedMonthly * 11) / 12 : null;
 
   const today = new Date().toISOString().slice(0, 10);
   const validDate = effectiveDate >= today;
@@ -516,7 +576,8 @@ function EnrollmentModal({
     !!tier &&
     count > 0 &&
     !!contactId &&
-    validDate;
+    validDate &&
+    (!needsDiscountReason || discountReason.trim().length >= 10);
 
   const tierOrder: CoreTierName[] = ["essential", "priority", "elite"];
   const isDowngrade =
@@ -536,6 +597,15 @@ function EnrollmentModal({
         ? "upgraded"
         : "downgraded";
 
+      const annualPeriodEnd =
+        billingCycle === "annual_prepay"
+          ? (() => {
+              const d = new Date(effectiveDate);
+              d.setFullYear(d.getFullYear() + 1);
+              return d.toISOString();
+            })()
+          : null;
+
       const { error: upErr } = await supabase
         .from("customers")
         .update({
@@ -543,7 +613,16 @@ function EnrollmentModal({
           membership_status: status,
           enrolled_at: new Date(effectiveDate).toISOString(),
           chargers_enrolled_count: count,
-          monthly_revenue: monthly,
+          monthly_revenue: negotiatedMonthly,
+          list_monthly_revenue: listMonthly,
+          negotiated_monthly_revenue: negotiatedMonthly,
+          discount_amount: discountAmount,
+          discount_pct: discountPct,
+          discount_reason: needsDiscountReason ? discountReason : null,
+          billing_cycle: billingCycle,
+          annual_prepay_amount: annualPrepayAmount,
+          annual_savings: annualSavings,
+          annual_period_end: annualPeriodEnd,
           billing_contact_id: contactId,
           is_demo_membership: isDemo,
           membership_notes: notes || null,
@@ -560,13 +639,25 @@ function EnrollmentModal({
           action,
           reason: notes || null,
           chargers_count: count,
-          monthly_revenue: monthly,
+          monthly_revenue: negotiatedMonthly,
+          list_monthly_revenue: listMonthly,
+          negotiated_monthly_revenue: negotiatedMonthly,
+          discount_pct: discountPct,
+          discount_reason: needsDiscountReason ? discountReason : null,
+          billing_cycle: billingCycle,
+          annual_prepay_amount: annualPrepayAmount,
+          annual_period_end: annualPeriodEnd,
           is_demo: isDemo,
           user_id: userRes?.user?.id || null,
         } as any);
       if (hErr) throw hErr;
     },
     onSuccess: () => {
+      if (isDemo && billingCycle === "annual_prepay") {
+        toast.warning(
+          "Demo enrollments on annual prepay are unusual. Confirm this is intentional."
+        );
+      }
       toast.success(
         currentTier ? "Membership updated" : `${account.company} enrolled in NOCH+`
       );
@@ -669,13 +760,128 @@ function EnrollmentModal({
               </div>
             </div>
 
-            <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-sm">
-              Monthly revenue:{" "}
-              <span className="font-bold">{formatCurrency(monthly)}</span>
-              <span className="text-xs text-muted-foreground ml-2">
-                ({tier ? `$${tierUnitPrice(tier, chargerType)}` : "—"} ×{" "}
-                {count} chargers)
-              </span>
+            {/* Monthly revenue with override */}
+            <div className="space-y-2">
+              <Label className="text-xs">Monthly revenue</Label>
+              <div className="flex items-center gap-2 flex-wrap">
+                {isOverridden && (
+                  <span className="text-sm text-muted-foreground line-through">
+                    List: {formatCurrency(listMonthly)}
+                  </span>
+                )}
+                <div className="relative flex-1 min-w-[140px]">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    className="pl-6"
+                    value={negotiatedInput === "" ? listMonthly.toFixed(2) : negotiatedInput}
+                    onChange={(e) => setNegotiatedInput(e.target.value)}
+                    onFocus={(e) => {
+                      if (negotiatedInput === "") {
+                        setNegotiatedInput(listMonthly.toFixed(2));
+                        e.target.select();
+                      }
+                    }}
+                  />
+                </div>
+                {discountAmount > 0 ? (
+                  <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">
+                    -{discountPct.toFixed(1)}% discount
+                  </Badge>
+                ) : premiumAmount > 0 ? (
+                  <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">
+                    +{premiumPct.toFixed(1)}% premium
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">Standard pricing</Badge>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Tier rate {tier ? `$${tierUnitPrice(tier, chargerType)}` : "$—"} ×{" "}
+                {count} connectors = {formatCurrency(listMonthly)} standard. Override
+                if negotiated.
+              </p>
+              {isLargeDiscount && (
+                <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+                  This is a significant discount ({discountPct.toFixed(1)}%). Confirm
+                  before proceeding.
+                </div>
+              )}
+            </div>
+
+            {needsDiscountReason && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Discount reason * (10+ chars)</Label>
+                <Textarea
+                  rows={2}
+                  value={discountReason}
+                  onChange={(e) => setDiscountReason(e.target.value)}
+                  placeholder="Why is this account receiving a discount?"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  {discountReason.trim().length}/10
+                </p>
+              </div>
+            )}
+
+            {/* Billing cycle */}
+            <div className="space-y-2">
+              <Label className="text-xs">Billing cycle</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBillingCycle("monthly")}
+                  className={`text-left rounded-md border px-3 py-2 text-sm transition-colors ${
+                    billingCycle === "monthly"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-muted/40"
+                  }`}
+                >
+                  <p className="font-medium">Monthly</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Billed every month
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillingCycle("annual_prepay")}
+                  className={`text-left rounded-md border px-3 py-2 text-sm transition-colors ${
+                    billingCycle === "annual_prepay"
+                      ? "border-optimal bg-optimal/10"
+                      : "border-border hover:bg-muted/40"
+                  }`}
+                >
+                  <p className="font-medium">Pay annually</p>
+                  <p className="text-[11px] text-muted-foreground">1 month free</p>
+                </button>
+              </div>
+              {billingCycle === "annual_prepay" && annualPrepayAmount !== null && (
+                <div className="rounded-md border border-optimal/30 bg-optimal/10 px-3 py-2 text-xs space-y-0.5">
+                  <p>
+                    Annual prepay:{" "}
+                    <span className="font-bold">
+                      {formatCurrency(annualPrepayAmount)}
+                    </span>
+                  </p>
+                  <p>
+                    Savings:{" "}
+                    <span className="font-bold">
+                      {formatCurrency(annualSavings || 0)}
+                    </span>{" "}
+                    (1 month free)
+                  </p>
+                  <p>
+                    Effective monthly rate:{" "}
+                    <span className="font-bold">
+                      {formatCurrency(effectiveMonthlyOnAnnual || 0)}
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -759,7 +965,7 @@ function EnrollmentModal({
               <strong>{currentTier && TIER_LABELS[currentTier]}</strong> to{" "}
               <strong>{tier && TIER_LABELS[tier]}</strong> will reduce monthly revenue
               from <strong>{formatCurrency(currentChargers && currentTier ? tierUnitPrice(currentTier, chargerType) * (currentChargers || 0) : 0)}</strong>{" "}
-              to <strong>{formatCurrency(monthly)}</strong>. Continue?
+              to <strong>{formatCurrency(negotiatedMonthly)}</strong>. Continue?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
