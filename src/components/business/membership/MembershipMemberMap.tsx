@@ -6,7 +6,7 @@ import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps
 import { MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { lookupCityCoords } from "@/components/flagged/cityLookup";
+import { lookupCityCoords, CITY_COORDS } from "@/components/flagged/cityLookup";
 import { normalizeUSCoords } from "@/lib/coordsValidator";
 import { TIER_LABELS, TIER_BADGE_CLASSES, type TierName } from "@/constants/nochPlusTiers";
 
