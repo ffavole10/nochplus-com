@@ -202,6 +202,25 @@ export function MembershipIndexDashboard() {
         </Card>
       </div>
 
+      {/* Member Locations Map */}
+      <MembershipMemberMap
+        members={(includeDemo ? members : members.filter((m) => !m.is_demo_membership)).map<MapMember>((m) => ({
+          id: m.id,
+          company: m.company,
+          tier: m.membership_tier,
+          monthly_revenue: Number(m.negotiated_monthly_revenue || m.monthly_revenue || 0),
+          enrolled_at: m.enrolled_at,
+          is_demo: m.is_demo_membership,
+          address: m.address,
+          hq_city: m.hq_city,
+          hq_region: m.hq_region,
+          lines: chargerLines
+            .filter((l) => l.account_id === m.id)
+            .map((l) => ({ charger_type: l.charger_type, connector_count: l.connector_count })),
+        }))}
+        searchHighlight={search}
+      />
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-sm">
