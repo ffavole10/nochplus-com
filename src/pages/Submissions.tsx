@@ -164,6 +164,7 @@ function SubmissionPhotoThumb({ path, alt, onClick }: { path: string; alt: strin
   // Request info dialog
   const [requestInfoOpen, setRequestInfoOpen] = useState(false);
   const [requestInfoMessage, setRequestInfoMessage] = useState("");
+  const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
 
   const fetchSubmissions = async () => {
     setLoading(true);
