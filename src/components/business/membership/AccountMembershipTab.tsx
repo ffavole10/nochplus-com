@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, Loader2, BadgeCheck, FlaskConical } from "lucide-react";
+import { Check, Loader2, BadgeCheck, FlaskConical, Plus, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { MEMBERSHIP_VALUE_PROPS } from "@/constants/membershipValueProps";
 import {
