@@ -171,7 +171,7 @@ export function MembershipMemberMap({ members, searchHighlight }: Props) {
           <MapPin className="h-4 w-4 text-primary" /> Member Locations
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          {members.length} member{members.length !== 1 ? "s" : ""} · {totalConnectors} connectors · marker size = connector count
+          {totalMembers} member{totalMembers !== 1 ? "s" : ""} · {totalConnectors} connectors · marker size = connector count
         </p>
       </CardHeader>
       <CardContent className="pt-0">
