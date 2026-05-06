@@ -304,6 +304,7 @@ export function AccountMembershipTab({
             qc.invalidateQueries({ queryKey: ["membership_history", account.id] });
             qc.invalidateQueries({ queryKey: ["noch_plus_dashboard"] });
             qc.invalidateQueries({ queryKey: ["noch_plus_members_combined"] });
+            qc.invalidateQueries({ queryKey: ["membership_charger_lines", account.id] });
           }}
         />
       </div>
@@ -513,6 +514,7 @@ export function AccountMembershipTab({
           qc.invalidateQueries({ queryKey: ["membership_history", account.id] });
           qc.invalidateQueries({ queryKey: ["noch_plus_dashboard"] });
           qc.invalidateQueries({ queryKey: ["noch_plus_members_combined"] });
+            qc.invalidateQueries({ queryKey: ["membership_charger_lines", account.id] });
         }}
       />
 
@@ -533,6 +535,7 @@ export function AccountMembershipTab({
           qc.invalidateQueries({ queryKey: ["membership_history", account.id] });
           qc.invalidateQueries({ queryKey: ["noch_plus_dashboard"] });
           qc.invalidateQueries({ queryKey: ["noch_plus_members_combined"] });
+            qc.invalidateQueries({ queryKey: ["membership_charger_lines", account.id] });
         }}
       />
 
@@ -555,6 +558,7 @@ export function AccountMembershipTab({
           qc.invalidateQueries({ queryKey: ["membership_history", account.id] });
           qc.invalidateQueries({ queryKey: ["noch_plus_dashboard"] });
           qc.invalidateQueries({ queryKey: ["noch_plus_members_combined"] });
+            qc.invalidateQueries({ queryKey: ["membership_charger_lines", account.id] });
         }}
       />
     </div>
