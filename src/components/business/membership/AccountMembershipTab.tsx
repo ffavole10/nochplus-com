@@ -965,7 +965,7 @@ function EnrollmentModal({
               <strong>{currentTier && TIER_LABELS[currentTier]}</strong> to{" "}
               <strong>{tier && TIER_LABELS[tier]}</strong> will reduce monthly revenue
               from <strong>{formatCurrency(currentChargers && currentTier ? tierUnitPrice(currentTier, chargerType) * (currentChargers || 0) : 0)}</strong>{" "}
-              to <strong>{formatCurrency(monthly)}</strong>. Continue?
+              to <strong>{formatCurrency(negotiatedMonthly)}</strong>. Continue?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
