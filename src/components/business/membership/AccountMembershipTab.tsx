@@ -642,6 +642,7 @@ function EnrollmentModal({
   currentBillingContactId,
   currentIsDemo,
   isTierChange,
+  prefill,
   onChangeTier,
   onSuccess,
 }: {
@@ -654,6 +655,7 @@ function EnrollmentModal({
   currentBillingContactId?: string | null;
   currentIsDemo?: boolean;
   isTierChange?: boolean;
+  prefill?: EnrollPrefill | null;
   onChangeTier: () => void;
   onSuccess: () => void;
 }) {
