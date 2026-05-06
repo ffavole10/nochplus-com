@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
-import { MapPin } from "lucide-react";
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
+import { MapPin, Plus, Minus, Maximize2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { lookupCityCoords, CITY_COORDS } from "@/components/flagged/cityLookup";
@@ -22,6 +22,10 @@ export interface MapMember {
   address: string | null;
   hq_city?: string | null;
   hq_region?: string | null;
+  override_lat?: number | null;
+  override_lng?: number | null;
+  geocoded_lat?: number | null;
+  geocoded_lng?: number | null;
   lines: { charger_type: string; connector_count: number }[];
 }
 
