@@ -253,26 +253,6 @@ export function PlatformHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => focusMode.toggle(!focusMode.enabled)}
-            onContextMenu={(e) => { e.preventDefault(); navigateRouter("/business/strategy"); }}
-            title={focusMode.enabled ? "Click to turn off Focus mode" : "Click to turn on Focus mode (filters platform to your Focus 5)"}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
-              focusMode.enabled
-                ? "bg-amber-400/90 border-amber-500 text-amber-950 hover:bg-amber-400 shadow-[0_0_0_3px_rgba(251,191,36,0.15)]"
-                : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-            data-tour="focus-mode-toggle"
-          >
-            <Target className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">
-              {focusMode.enabled
-                ? `Focus mode: ON · ${focusMode.quarter || ""}`
-                : "Focus mode: OFF"}
-            </span>
-          </button>
           <CommandPaletteTrigger />
           {isDashboard && (
             <Button
