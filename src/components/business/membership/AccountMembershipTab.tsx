@@ -705,8 +705,8 @@ function EnrollmentModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+        <DialogContent className="max-w-lg p-0 flex flex-col max-h-[90vh] gap-0 sm:max-w-lg max-sm:max-w-[100vw] max-sm:max-h-[100vh] max-sm:h-[100vh] max-sm:rounded-none">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
             <DialogTitle>
               {isTierChange ? "Change tier for " : "Enroll "} {account.company}
               {tier && ` — ${TIER_LABELS[tier]}`}
@@ -718,7 +718,7 @@ function EnrollmentModal({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto px-6 py-4 flex-1 min-h-0">
             <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
               <div className="text-sm">
                 <span className="text-muted-foreground">Tier:</span>{" "}
