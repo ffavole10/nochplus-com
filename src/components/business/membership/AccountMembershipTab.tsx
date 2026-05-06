@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, Loader2, BadgeCheck, FlaskConical } from "lucide-react";
+import { Check, Loader2, BadgeCheck, FlaskConical, Plus, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { MEMBERSHIP_VALUE_PROPS } from "@/constants/membershipValueProps";
 import {
@@ -87,6 +87,28 @@ function tierUnitPrice(tier: CoreTierName, type: "ac" | "dc") {
   return type === "ac" ? TIER_PRICING[tier].l2 : TIER_PRICING[tier].dc;
 }
 
+export type ChargerLineType = "ac_level_2" | "dc_level_3" | "ac_level_1";
+export const CHARGER_LINE_TYPES: ChargerLineType[] = ["ac_level_2", "dc_level_3", "ac_level_1"];
+export const CHARGER_LINE_LABELS: Record<ChargerLineType, string> = {
+  ac_level_2: "AC | Level 2",
+  dc_level_3: "DC | Level 3",
+  ac_level_1: "AC | Level 1",
+};
+export function tierRateForLineType(tier: CoreTierName, t: ChargerLineType): number {
+  if (t === "dc_level_3") return TIER_PRICING[tier].dc;
+  // L1 priced same as L2 list (rare, negotiable)
+  return TIER_PRICING[tier].l2;
+}
+
+export type ChargerLine = {
+  id: string;
+  charger_type: ChargerLineType;
+  connector_count: number;
+  tier_rate_per_connector: number;
+  negotiated_rate_per_connector: number;
+  notes: string;
+};
+
 export function AccountMembershipTab({
   account,
 }: {
@@ -120,6 +142,19 @@ export function AccountMembershipTab({
         .limit(10);
       if (error) throw error;
       return data || [];
+    },
+  });
+
+  const { data: enrolledLines = [] } = useQuery({
+    queryKey: ["membership_charger_lines", account.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("membership_charger_lines")
+        .select("*")
+        .eq("account_id", account.id)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data || []) as any[];
     },
   });
 
@@ -269,6 +304,7 @@ export function AccountMembershipTab({
             qc.invalidateQueries({ queryKey: ["membership_history", account.id] });
             qc.invalidateQueries({ queryKey: ["noch_plus_dashboard"] });
             qc.invalidateQueries({ queryKey: ["noch_plus_members_combined"] });
+            qc.invalidateQueries({ queryKey: ["membership_charger_lines", account.id] });
           }}
         />
       </div>
@@ -336,6 +372,60 @@ export function AccountMembershipTab({
         )}
         <StatTile label="Plan" value={tierLabel} />
       </div>
+
+      {enrolledLines.length > 0 && (
+        <section className="space-y-2">
+          <h3 className="text-sm font-bold">Charger configuration</h3>
+          <Card>
+            <CardContent className="p-0 divide-y divide-border">
+              {enrolledLines.map((l: any) => {
+                const lt = l.charger_type as ChargerLineType;
+                const sub =
+                  Number(l.negotiated_rate_per_connector) * Number(l.connector_count);
+                return (
+                  <div
+                    key={l.id}
+                    className="px-4 py-2.5 text-xs flex items-center gap-3 flex-wrap"
+                  >
+                    <span className="font-medium w-32">{CHARGER_LINE_LABELS[lt]}</span>
+                    <span className="text-muted-foreground">
+                      {l.connector_count} connector{l.connector_count === 1 ? "" : "s"}
+                    </span>
+                    <span className="text-muted-foreground">
+                      ${Number(l.negotiated_rate_per_connector).toFixed(2)}/connector
+                    </span>
+                    <span className="ml-auto font-bold">
+                      {formatCurrency(sub)}/mo
+                    </span>
+                  </div>
+                );
+              })}
+              <div className="px-4 py-2.5 text-xs flex items-center bg-muted/30">
+                <span className="font-bold w-32">Total</span>
+                <span className="text-muted-foreground">
+                  {enrolledLines.reduce(
+                    (s: number, l: any) => s + Number(l.connector_count || 0),
+                    0
+                  )}{" "}
+                  connectors
+                </span>
+                <span className="ml-auto font-bold">
+                  {formatCurrency(
+                    enrolledLines.reduce(
+                      (s: number, l: any) =>
+                        s +
+                        Number(l.negotiated_rate_per_connector) *
+                          Number(l.connector_count),
+                      0
+                    )
+                  )}
+                  /mo
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       <section className="space-y-2">
         <h3 className="text-sm font-bold">Member ROI</h3>
@@ -424,6 +514,7 @@ export function AccountMembershipTab({
           qc.invalidateQueries({ queryKey: ["membership_history", account.id] });
           qc.invalidateQueries({ queryKey: ["noch_plus_dashboard"] });
           qc.invalidateQueries({ queryKey: ["noch_plus_members_combined"] });
+            qc.invalidateQueries({ queryKey: ["membership_charger_lines", account.id] });
         }}
       />
 
@@ -444,6 +535,7 @@ export function AccountMembershipTab({
           qc.invalidateQueries({ queryKey: ["membership_history", account.id] });
           qc.invalidateQueries({ queryKey: ["noch_plus_dashboard"] });
           qc.invalidateQueries({ queryKey: ["noch_plus_members_combined"] });
+            qc.invalidateQueries({ queryKey: ["membership_charger_lines", account.id] });
         }}
       />
 
@@ -466,6 +558,7 @@ export function AccountMembershipTab({
           qc.invalidateQueries({ queryKey: ["membership_history", account.id] });
           qc.invalidateQueries({ queryKey: ["noch_plus_dashboard"] });
           qc.invalidateQueries({ queryKey: ["noch_plus_members_combined"] });
+            qc.invalidateQueries({ queryKey: ["membership_charger_lines", account.id] });
         }}
       />
     </div>
@@ -516,11 +609,22 @@ function EnrollmentModal({
   const { data: contacts = [] } = useContacts(account.id);
   const createContact = useCreateContact();
 
-  const [chargerCount, setChargerCount] = useState<string>(
-    currentChargers ? String(currentChargers) : ""
-  );
-  const [chargerType, setChargerType] = useState<"ac" | "dc">("ac");
-  const [negotiatedInput, setNegotiatedInput] = useState<string>("");
+  // Load existing charger lines for this account (used when changing tier)
+  const { data: existingLines = [] } = useQuery({
+    queryKey: ["membership_charger_lines", account.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("membership_charger_lines")
+        .select("*")
+        .eq("account_id", account.id)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: open,
+  });
+
+  const [lines, setLines] = useState<ChargerLine[]>([]);
   const [discountReason, setDiscountReason] = useState("");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual_prepay">(
     "monthly"
@@ -534,33 +638,61 @@ function EnrollmentModal({
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [confirmDowngradeOpen, setConfirmDowngradeOpen] = useState(false);
 
-  const count = Number(chargerCount) || 0;
-  const listMonthly = tier ? tierUnitPrice(tier, chargerType) * count : 0;
-
-  // Reset when reopened — wipe overrides so tier change doesn't carry old discount.
+  // Build initial lines whenever modal opens or tier changes
   useEffect(() => {
-    if (open) {
-      setChargerCount(currentChargers ? String(currentChargers) : "");
-      setContactId(currentBillingContactId || "");
-      setEffectiveDate(new Date().toISOString().slice(0, 10));
-      setNotes("");
-      setIsDemo(!!currentIsDemo);
-      setNegotiatedInput("");
-      setDiscountReason("");
-      setBillingCycle("monthly");
-    }
-  }, [open, currentChargers, currentBillingContactId, currentIsDemo, tier]);
+    if (!open || !tier) return;
+    setContactId(currentBillingContactId || "");
+    setEffectiveDate(new Date().toISOString().slice(0, 10));
+    setNotes("");
+    setIsDemo(!!currentIsDemo);
+    setDiscountReason("");
+    setBillingCycle("monthly");
 
-  const negotiatedMonthly =
-    negotiatedInput === "" ? listMonthly : Math.max(0, Number(negotiatedInput) || 0);
+    if (existingLines.length > 0) {
+      // Recalc tier rates against the (possibly new) tier; preserve negotiated.
+      setLines(
+        existingLines.map((l) => {
+          const lt = l.charger_type as ChargerLineType;
+          return {
+            id: l.id,
+            charger_type: lt,
+            connector_count: Number(l.connector_count) || 1,
+            tier_rate_per_connector: tierRateForLineType(tier, lt),
+            negotiated_rate_per_connector:
+              Number(l.negotiated_rate_per_connector) || tierRateForLineType(tier, lt),
+            notes: l.notes || "",
+          };
+        })
+      );
+    } else {
+      const defaultType: ChargerLineType = "ac_level_2";
+      setLines([
+        {
+          id: crypto.randomUUID(),
+          charger_type: defaultType,
+          connector_count: currentChargers || 1,
+          tier_rate_per_connector: tierRateForLineType(tier, defaultType),
+          negotiated_rate_per_connector: tierRateForLineType(tier, defaultType),
+          notes: "",
+        },
+      ]);
+    }
+  }, [open, tier, existingLines, currentBillingContactId, currentIsDemo, currentChargers]);
+
+  const totalConnectors = lines.reduce((s, l) => s + (Number(l.connector_count) || 0), 0);
+  const listMonthly = lines.reduce(
+    (s, l) => s + (Number(l.tier_rate_per_connector) || 0) * (Number(l.connector_count) || 0),
+    0
+  );
+  const negotiatedMonthly = lines.reduce(
+    (s, l) => s + (Number(l.negotiated_rate_per_connector) || 0) * (Number(l.connector_count) || 0),
+    0
+  );
   const discountAmount = Math.max(0, listMonthly - negotiatedMonthly);
-  const premiumAmount = Math.max(0, negotiatedMonthly - listMonthly);
-  const discountPct =
-    listMonthly > 0 ? (discountAmount / listMonthly) * 100 : 0;
-  const premiumPct =
-    listMonthly > 0 ? (premiumAmount / listMonthly) * 100 : 0;
-  const isOverridden = negotiatedInput !== "" && negotiatedMonthly !== listMonthly;
-  const needsDiscountReason = discountAmount > 0;
+  const discountPct = listMonthly > 0 ? (discountAmount / listMonthly) * 100 : 0;
+  const needsDiscountReason = lines.some(
+    (l) => Number(l.negotiated_rate_per_connector) < Number(l.tier_rate_per_connector)
+  ) || negotiatedMonthly < listMonthly;
   const isLargeDiscount = discountPct > 50;
 
   const annualPrepayAmount =
@@ -572,12 +704,43 @@ function EnrollmentModal({
 
   const today = new Date().toISOString().slice(0, 10);
   const validDate = effectiveDate >= today;
+  const linesValid =
+    lines.length > 0 &&
+    lines.every(
+      (l) =>
+        !!l.charger_type &&
+        Number(l.connector_count) >= 1 &&
+        Number(l.negotiated_rate_per_connector) >= 0
+    );
   const valid =
     !!tier &&
-    count > 0 &&
+    linesValid &&
     !!contactId &&
     validDate &&
     (!needsDiscountReason || discountReason.trim().length >= 10);
+
+  const updateLine = (id: string, patch: Partial<ChargerLine>) => {
+    setLines((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+  };
+  const removeLine = (id: string) => {
+    setLines((prev) => (prev.length <= 1 ? prev : prev.filter((l) => l.id !== id)));
+  };
+  const addLine = () => {
+    if (!tier) return;
+    const used = new Set(lines.map((l) => l.charger_type));
+    const next = CHARGER_LINE_TYPES.find((t) => !used.has(t)) || "ac_level_2";
+    setLines((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        charger_type: next,
+        connector_count: 1,
+        tier_rate_per_connector: tierRateForLineType(tier, next),
+        negotiated_rate_per_connector: tierRateForLineType(tier, next),
+        notes: "",
+      },
+    ]);
+  };
 
   const tierOrder: CoreTierName[] = ["essential", "priority", "elite"];
   const isDowngrade =
@@ -612,7 +775,7 @@ function EnrollmentModal({
           membership_tier: tier,
           membership_status: status,
           enrolled_at: new Date(effectiveDate).toISOString(),
-          chargers_enrolled_count: count,
+          chargers_enrolled_count: totalConnectors,
           monthly_revenue: negotiatedMonthly,
           list_monthly_revenue: listMonthly,
           negotiated_monthly_revenue: negotiatedMonthly,
@@ -630,6 +793,28 @@ function EnrollmentModal({
         .eq("id", account.id);
       if (upErr) throw upErr;
 
+      // Replace charger lines: delete existing, insert current.
+      const { error: delErr } = await supabase
+        .from("membership_charger_lines")
+        .delete()
+        .eq("account_id", account.id);
+      if (delErr) throw delErr;
+      const insertRows = lines.map((l, idx) => ({
+        account_id: account.id,
+        charger_type: l.charger_type,
+        connector_count: Number(l.connector_count) || 1,
+        tier_rate_per_connector: Number(l.tier_rate_per_connector) || 0,
+        negotiated_rate_per_connector: Number(l.negotiated_rate_per_connector) || 0,
+        notes: l.notes || null,
+        sort_order: idx,
+      }));
+      if (insertRows.length) {
+        const { error: insErr } = await supabase
+          .from("membership_charger_lines")
+          .insert(insertRows as any);
+        if (insErr) throw insErr;
+      }
+
       const { data: userRes } = await supabase.auth.getUser();
       const { error: hErr } = await supabase
         .from("membership_enrollment_history")
@@ -638,7 +823,7 @@ function EnrollmentModal({
           tier,
           action,
           reason: notes || null,
-          chargers_count: count,
+          chargers_count: totalConnectors,
           monthly_revenue: negotiatedMonthly,
           list_monthly_revenue: listMonthly,
           negotiated_monthly_revenue: negotiatedMonthly,
@@ -735,82 +920,194 @@ function EnrollmentModal({
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Charger count *</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={chargerCount}
-                  onChange={(e) => setChargerCount(e.target.value)}
-                  placeholder="e.g. 12"
-                />
+            {/* Charger configuration */}
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-sm font-bold">Charger configuration</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Add a line for each charger type in this account.
+                </p>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Charger type</Label>
-                <Select value={chargerType} onValueChange={(v) => setChargerType(v as any)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ac">AC | Level 2</SelectItem>
-                    <SelectItem value="dc">DC | Level 3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              <div className="space-y-3">
+                {lines.map((line) => {
+                  const lineList =
+                    Number(line.tier_rate_per_connector) * Number(line.connector_count);
+                  const lineNeg =
+                    Number(line.negotiated_rate_per_connector) *
+                    Number(line.connector_count);
+                  const lineDiscount = lineList - lineNeg;
+                  const linePct = lineList > 0 ? (Math.abs(lineDiscount) / lineList) * 100 : 0;
+                  return (
+                    <div
+                      key={line.id}
+                      className="relative rounded-md border border-border p-3 space-y-2"
+                    >
+                      <button
+                        type="button"
+                        disabled={lines.length <= 1}
+                        onClick={() => removeLine(line.id)}
+                        className="absolute top-2 right-2 text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:cursor-not-allowed"
+                        aria-label="Remove line"
+                      >
+                        <XIcon className="h-3.5 w-3.5" />
+                      </button>
 
-            {/* Monthly revenue with override */}
-            <div className="space-y-2">
-              <Label className="text-xs">Monthly revenue</Label>
-              <div className="flex items-center gap-2 flex-wrap">
-                {isOverridden && (
-                  <span className="text-sm text-muted-foreground line-through">
-                    List: {formatCurrency(listMonthly)}
-                  </span>
-                )}
-                <div className="relative flex-1 min-w-[140px]">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    $
-                  </span>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    className="pl-6"
-                    value={negotiatedInput === "" ? listMonthly.toFixed(2) : negotiatedInput}
-                    onChange={(e) => setNegotiatedInput(e.target.value)}
-                    onFocus={(e) => {
-                      if (negotiatedInput === "") {
-                        setNegotiatedInput(listMonthly.toFixed(2));
-                        e.target.select();
-                      }
-                    }}
-                  />
+                      <div className="grid grid-cols-12 gap-2 pr-6">
+                        <div className="col-span-5 space-y-1">
+                          <Label className="text-[10px] uppercase tracking-wide">
+                            Type
+                          </Label>
+                          <Select
+                            value={line.charger_type}
+                            onValueChange={(v) => {
+                              const t = v as ChargerLineType;
+                              const newTierRate = tier ? tierRateForLineType(tier, t) : 0;
+                              updateLine(line.id, {
+                                charger_type: t,
+                                tier_rate_per_connector: newTierRate,
+                                negotiated_rate_per_connector: newTierRate,
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {CHARGER_LINE_TYPES.map((t) => (
+                                <SelectItem key={t} value={t}>
+                                  {CHARGER_LINE_LABELS[t]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-3 space-y-1">
+                          <Label className="text-[10px] uppercase tracking-wide">
+                            Connectors
+                          </Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            className="h-9"
+                            value={line.connector_count}
+                            onChange={(e) =>
+                              updateLine(line.id, {
+                                connector_count: Math.max(1, Number(e.target.value) || 1),
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-span-4 space-y-1">
+                          <Label className="text-[10px] uppercase tracking-wide">
+                            $ / connector
+                          </Label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                              $
+                            </span>
+                            <Input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              className="pl-6 h-9"
+                              value={line.negotiated_rate_per_connector}
+                              onChange={(e) =>
+                                updateLine(line.id, {
+                                  negotiated_rate_per_connector: Math.max(
+                                    0,
+                                    Number(e.target.value) || 0
+                                  ),
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 flex-wrap pr-6">
+                        <p className="text-[10px] text-muted-foreground">
+                          List ${Number(line.tier_rate_per_connector).toFixed(2)} ·{" "}
+                          {tier ? TIER_LABELS[tier] : "—"} ·{" "}
+                          {CHARGER_LINE_LABELS[line.charger_type]}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          {lineDiscount > 0 ? (
+                            <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px]">
+                              -{linePct.toFixed(1)}% discount
+                            </Badge>
+                          ) : lineDiscount < 0 ? (
+                            <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30 text-[10px]">
+                              +{linePct.toFixed(1)}% premium
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px]">
+                              Standard
+                            </Badge>
+                          )}
+                          <span className="text-sm font-bold">
+                            {formatCurrency(lineNeg)}/mo
+                          </span>
+                        </div>
+                      </div>
+
+                      <Textarea
+                        rows={1}
+                        value={line.notes}
+                        onChange={(e) => updateLine(line.id, { notes: e.target.value })}
+                        placeholder="Line notes (optional)"
+                        className="text-xs"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addLine}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1.5" /> Add charger line
+              </Button>
+
+              {/* Totals summary */}
+              <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Total connectors</span>
+                  <span className="font-bold">{totalConnectors}</span>
                 </div>
-                {discountAmount > 0 ? (
-                  <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">
-                    -{discountPct.toFixed(1)}% discount
-                  </Badge>
-                ) : premiumAmount > 0 ? (
-                  <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">
-                    +{premiumPct.toFixed(1)}% premium
-                  </Badge>
-                ) : (
-                  <Badge variant="outline">Standard pricing</Badge>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">List monthly</span>
+                  <span
+                    className={
+                      discountAmount > 0
+                        ? "line-through text-muted-foreground"
+                        : "font-bold"
+                    }
+                  >
+                    {formatCurrency(listMonthly)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Negotiated monthly</span>
+                  <div className="flex items-center gap-2">
+                    {discountAmount > 0 && (
+                      <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px]">
+                        -{discountPct.toFixed(1)}%
+                      </Badge>
+                    )}
+                    <span className="font-bold text-base">
+                      {formatCurrency(negotiatedMonthly)}
+                    </span>
+                  </div>
+                </div>
+                {isLargeDiscount && (
+                  <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-400 mt-2">
+                    Significant discount ({discountPct.toFixed(1)}%). Confirm before proceeding.
+                  </div>
                 )}
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                Tier rate {tier ? `$${tierUnitPrice(tier, chargerType)}` : "$—"} ×{" "}
-                {count} connectors = {formatCurrency(listMonthly)} standard. Override
-                if negotiated.
-              </p>
-              {isLargeDiscount && (
-                <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
-                  This is a significant discount ({discountPct.toFixed(1)}%). Confirm
-                  before proceeding.
-                </div>
-              )}
             </div>
 
             {needsDiscountReason && (
@@ -964,7 +1261,7 @@ function EnrollmentModal({
               Downgrading from{" "}
               <strong>{currentTier && TIER_LABELS[currentTier]}</strong> to{" "}
               <strong>{tier && TIER_LABELS[tier]}</strong> will reduce monthly revenue
-              from <strong>{formatCurrency(currentChargers && currentTier ? tierUnitPrice(currentTier, chargerType) * (currentChargers || 0) : 0)}</strong>{" "}
+              from <strong>{formatCurrency(listMonthly)}</strong>{" "}
               to <strong>{formatCurrency(negotiatedMonthly)}</strong>. Continue?
             </DialogDescription>
           </DialogHeader>

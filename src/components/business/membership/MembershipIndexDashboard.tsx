@@ -47,6 +47,33 @@ export function MembershipIndexDashboard() {
     },
   });
 
+  const { data: chargerLines = [] } = useQuery({
+    queryKey: ["noch_plus_charger_lines_all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("membership_charger_lines")
+        .select("account_id, charger_type, connector_count");
+      if (error) throw error;
+      return (data || []) as { account_id: string; charger_type: string; connector_count: number }[];
+    },
+  });
+
+  const typeMix = useMemo(() => {
+    const activeIds = new Set(
+      members
+        .filter((m) => m.membership_status === "active" && !m.is_demo_membership)
+        .map((m) => m.id)
+    );
+    const counts: Record<string, number> = { ac_level_2: 0, dc_level_3: 0, ac_level_1: 0 };
+    let total = 0;
+    chargerLines.forEach((l) => {
+      if (!activeIds.has(l.account_id)) return;
+      counts[l.charger_type] = (counts[l.charger_type] || 0) + Number(l.connector_count || 0);
+      total += Number(l.connector_count || 0);
+    });
+    return { counts, total };
+  }, [chargerLines, members]);
+
   const stats = useMemo(() => {
     const activeOnly = members.filter(
       (m) => m.membership_status === "active" && !m.is_demo_membership
@@ -101,7 +128,7 @@ export function MembershipIndexDashboard() {
           <CardContent className="p-4 text-center">
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
               <Diamond className="h-3.5 w-3.5" />
-              Enrolled Chargers
+              Enrolled Connectors
             </p>
             <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {stats.enrolledChargers}
@@ -142,6 +169,31 @@ export function MembershipIndexDashboard() {
               Demo Enrollments
             </p>
             <p className="text-2xl font-bold text-medium">{stats.demoCount}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-slate-500 col-span-2 md:col-span-3 xl:col-span-2">
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground text-center mb-2">Charger Type Mix</p>
+            {typeMix.total === 0 ? (
+              <p className="text-xs text-muted-foreground text-center">No connectors enrolled</p>
+            ) : (
+              <div className="space-y-1 text-xs">
+                {(["ac_level_2", "dc_level_3", "ac_level_1"] as const).map((t) => {
+                  const c = typeMix.counts[t] || 0;
+                  const pct = typeMix.total > 0 ? (c / typeMix.total) * 100 : 0;
+                  const label = t === "ac_level_2" ? "AC L2" : t === "dc_level_3" ? "DC L3" : "AC L1";
+                  return (
+                    <div key={t} className="flex items-center gap-2">
+                      <span className="w-12 text-muted-foreground">{label}</span>
+                      <div className="flex-1 h-2 rounded bg-muted overflow-hidden">
+                        <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-12 text-right font-bold">{pct.toFixed(0)}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
