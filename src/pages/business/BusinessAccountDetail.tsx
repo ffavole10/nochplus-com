@@ -27,11 +27,11 @@ import {
   ChargersTab,
   EstimatesTab,
   InvoicesTab,
-  MembershipTab,
   PipelineTab,
   ContactsTab,
   FilesTab,
 } from "@/components/business/account360/Tabs";
+import { AccountMembershipTab } from "@/components/business/membership/AccountMembershipTab";
 import { ActivityTab } from "@/components/business/account360/ActivityTab";
 import { FocusRibbon } from "@/components/business/strategy/FocusRibbon";
 
