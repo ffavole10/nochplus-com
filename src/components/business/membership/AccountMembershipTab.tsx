@@ -520,6 +520,11 @@ function EnrollmentModal({
     currentChargers ? String(currentChargers) : ""
   );
   const [chargerType, setChargerType] = useState<"ac" | "dc">("ac");
+  const [negotiatedInput, setNegotiatedInput] = useState<string>("");
+  const [discountReason, setDiscountReason] = useState("");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual_prepay">(
+    "monthly"
+  );
   const [contactId, setContactId] = useState<string>(currentBillingContactId || "");
   const [effectiveDate, setEffectiveDate] = useState<string>(
     new Date().toISOString().slice(0, 10)
@@ -529,7 +534,10 @@ function EnrollmentModal({
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [confirmDowngradeOpen, setConfirmDowngradeOpen] = useState(false);
 
-  // Reset when reopened
+  const count = Number(chargerCount) || 0;
+  const listMonthly = tier ? tierUnitPrice(tier, chargerType) * count : 0;
+
+  // Reset when reopened — wipe overrides so tier change doesn't carry old discount.
   useEffect(() => {
     if (open) {
       setChargerCount(currentChargers ? String(currentChargers) : "");
@@ -537,11 +545,30 @@ function EnrollmentModal({
       setEffectiveDate(new Date().toISOString().slice(0, 10));
       setNotes("");
       setIsDemo(!!currentIsDemo);
+      setNegotiatedInput("");
+      setDiscountReason("");
+      setBillingCycle("monthly");
     }
-  }, [open, currentChargers, currentBillingContactId, currentIsDemo]);
+  }, [open, currentChargers, currentBillingContactId, currentIsDemo, tier]);
 
-  const count = Number(chargerCount) || 0;
-  const monthly = tier ? tierUnitPrice(tier, chargerType) * count : 0;
+  const negotiatedMonthly =
+    negotiatedInput === "" ? listMonthly : Math.max(0, Number(negotiatedInput) || 0);
+  const discountAmount = Math.max(0, listMonthly - negotiatedMonthly);
+  const premiumAmount = Math.max(0, negotiatedMonthly - listMonthly);
+  const discountPct =
+    listMonthly > 0 ? (discountAmount / listMonthly) * 100 : 0;
+  const premiumPct =
+    listMonthly > 0 ? (premiumAmount / listMonthly) * 100 : 0;
+  const isOverridden = negotiatedInput !== "" && negotiatedMonthly !== listMonthly;
+  const needsDiscountReason = discountAmount > 0;
+  const isLargeDiscount = discountPct > 50;
+
+  const annualPrepayAmount =
+    billingCycle === "annual_prepay" ? negotiatedMonthly * 11 : null;
+  const annualSavings =
+    billingCycle === "annual_prepay" ? negotiatedMonthly : null;
+  const effectiveMonthlyOnAnnual =
+    billingCycle === "annual_prepay" ? (negotiatedMonthly * 11) / 12 : null;
 
   const today = new Date().toISOString().slice(0, 10);
   const validDate = effectiveDate >= today;
@@ -549,7 +576,8 @@ function EnrollmentModal({
     !!tier &&
     count > 0 &&
     !!contactId &&
-    validDate;
+    validDate &&
+    (!needsDiscountReason || discountReason.trim().length >= 10);
 
   const tierOrder: CoreTierName[] = ["essential", "priority", "elite"];
   const isDowngrade =
@@ -569,6 +597,15 @@ function EnrollmentModal({
         ? "upgraded"
         : "downgraded";
 
+      const annualPeriodEnd =
+        billingCycle === "annual_prepay"
+          ? (() => {
+              const d = new Date(effectiveDate);
+              d.setFullYear(d.getFullYear() + 1);
+              return d.toISOString();
+            })()
+          : null;
+
       const { error: upErr } = await supabase
         .from("customers")
         .update({
@@ -576,7 +613,16 @@ function EnrollmentModal({
           membership_status: status,
           enrolled_at: new Date(effectiveDate).toISOString(),
           chargers_enrolled_count: count,
-          monthly_revenue: monthly,
+          monthly_revenue: negotiatedMonthly,
+          list_monthly_revenue: listMonthly,
+          negotiated_monthly_revenue: negotiatedMonthly,
+          discount_amount: discountAmount,
+          discount_pct: discountPct,
+          discount_reason: needsDiscountReason ? discountReason : null,
+          billing_cycle: billingCycle,
+          annual_prepay_amount: annualPrepayAmount,
+          annual_savings: annualSavings,
+          annual_period_end: annualPeriodEnd,
           billing_contact_id: contactId,
           is_demo_membership: isDemo,
           membership_notes: notes || null,
@@ -593,13 +639,25 @@ function EnrollmentModal({
           action,
           reason: notes || null,
           chargers_count: count,
-          monthly_revenue: monthly,
+          monthly_revenue: negotiatedMonthly,
+          list_monthly_revenue: listMonthly,
+          negotiated_monthly_revenue: negotiatedMonthly,
+          discount_pct: discountPct,
+          discount_reason: needsDiscountReason ? discountReason : null,
+          billing_cycle: billingCycle,
+          annual_prepay_amount: annualPrepayAmount,
+          annual_period_end: annualPeriodEnd,
           is_demo: isDemo,
           user_id: userRes?.user?.id || null,
         } as any);
       if (hErr) throw hErr;
     },
     onSuccess: () => {
+      if (isDemo && billingCycle === "annual_prepay") {
+        toast.warning(
+          "Demo enrollments on annual prepay are unusual. Confirm this is intentional."
+        );
+      }
       toast.success(
         currentTier ? "Membership updated" : `${account.company} enrolled in NOCH+`
       );
