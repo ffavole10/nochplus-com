@@ -87,7 +87,7 @@ export function MembershipIndexDashboard() {
   return (
     <div className="p-6 space-y-6">
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         <Card className="border-l-4 border-l-primary">
           <CardContent className="p-4 text-center">
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
@@ -116,6 +116,22 @@ export function MembershipIndexDashboard() {
             </p>
             <p className="text-2xl font-bold text-optimal">
               ${Math.round(stats.monthlyRevenue).toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">Annual Contracts</p>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {stats.annualContractCount}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-amber-500">
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">Avg Discount %</p>
+            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              {stats.avgDiscountPct.toFixed(1)}%
             </p>
           </CardContent>
         </Card>
