@@ -2087,6 +2087,10 @@ export type Database = {
           duplicate_confirmed_distinct_of: string[] | null
           email: string
           enrolled_at: string | null
+          geocoded_at: string | null
+          geocoded_lat: number | null
+          geocoded_lng: number | null
+          geocoding_confidence: string | null
           headquarters_address: string | null
           hq_city: string | null
           hq_region: string | null
@@ -2096,6 +2100,8 @@ export type Database = {
           is_demo_membership: boolean
           last_service_date: string | null
           list_monthly_revenue: number
+          location_override_lat: number | null
+          location_override_lng: number | null
           logo_url: string | null
           membership_notes: string | null
           membership_status: string
@@ -2140,6 +2146,10 @@ export type Database = {
           duplicate_confirmed_distinct_of?: string[] | null
           email: string
           enrolled_at?: string | null
+          geocoded_at?: string | null
+          geocoded_lat?: number | null
+          geocoded_lng?: number | null
+          geocoding_confidence?: string | null
           headquarters_address?: string | null
           hq_city?: string | null
           hq_region?: string | null
@@ -2149,6 +2159,8 @@ export type Database = {
           is_demo_membership?: boolean
           last_service_date?: string | null
           list_monthly_revenue?: number
+          location_override_lat?: number | null
+          location_override_lng?: number | null
           logo_url?: string | null
           membership_notes?: string | null
           membership_status?: string
@@ -2193,6 +2205,10 @@ export type Database = {
           duplicate_confirmed_distinct_of?: string[] | null
           email?: string
           enrolled_at?: string | null
+          geocoded_at?: string | null
+          geocoded_lat?: number | null
+          geocoded_lng?: number | null
+          geocoding_confidence?: string | null
           headquarters_address?: string | null
           hq_city?: string | null
           hq_region?: string | null
@@ -2202,6 +2218,8 @@ export type Database = {
           is_demo_membership?: boolean
           last_service_date?: string | null
           list_monthly_revenue?: number
+          location_override_lat?: number | null
+          location_override_lng?: number | null
           logo_url?: string | null
           membership_notes?: string | null
           membership_status?: string
