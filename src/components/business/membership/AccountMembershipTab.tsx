@@ -849,82 +849,194 @@ function EnrollmentModal({
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Charger count *</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={chargerCount}
-                  onChange={(e) => setChargerCount(e.target.value)}
-                  placeholder="e.g. 12"
-                />
+            {/* Charger configuration */}
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-sm font-bold">Charger configuration</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Add a line for each charger type in this account.
+                </p>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Charger type</Label>
-                <Select value={chargerType} onValueChange={(v) => setChargerType(v as any)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ac">AC | Level 2</SelectItem>
-                    <SelectItem value="dc">DC | Level 3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              <div className="space-y-3">
+                {lines.map((line) => {
+                  const lineList =
+                    Number(line.tier_rate_per_connector) * Number(line.connector_count);
+                  const lineNeg =
+                    Number(line.negotiated_rate_per_connector) *
+                    Number(line.connector_count);
+                  const lineDiscount = lineList - lineNeg;
+                  const linePct = lineList > 0 ? (Math.abs(lineDiscount) / lineList) * 100 : 0;
+                  return (
+                    <div
+                      key={line.id}
+                      className="relative rounded-md border border-border p-3 space-y-2"
+                    >
+                      <button
+                        type="button"
+                        disabled={lines.length <= 1}
+                        onClick={() => removeLine(line.id)}
+                        className="absolute top-2 right-2 text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:cursor-not-allowed"
+                        aria-label="Remove line"
+                      >
+                        <XIcon className="h-3.5 w-3.5" />
+                      </button>
 
-            {/* Monthly revenue with override */}
-            <div className="space-y-2">
-              <Label className="text-xs">Monthly revenue</Label>
-              <div className="flex items-center gap-2 flex-wrap">
-                {isOverridden && (
-                  <span className="text-sm text-muted-foreground line-through">
-                    List: {formatCurrency(listMonthly)}
-                  </span>
-                )}
-                <div className="relative flex-1 min-w-[140px]">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    $
-                  </span>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    className="pl-6"
-                    value={negotiatedInput === "" ? listMonthly.toFixed(2) : negotiatedInput}
-                    onChange={(e) => setNegotiatedInput(e.target.value)}
-                    onFocus={(e) => {
-                      if (negotiatedInput === "") {
-                        setNegotiatedInput(listMonthly.toFixed(2));
-                        e.target.select();
-                      }
-                    }}
-                  />
+                      <div className="grid grid-cols-12 gap-2 pr-6">
+                        <div className="col-span-5 space-y-1">
+                          <Label className="text-[10px] uppercase tracking-wide">
+                            Type
+                          </Label>
+                          <Select
+                            value={line.charger_type}
+                            onValueChange={(v) => {
+                              const t = v as ChargerLineType;
+                              const newTierRate = tier ? tierRateForLineType(tier, t) : 0;
+                              updateLine(line.id, {
+                                charger_type: t,
+                                tier_rate_per_connector: newTierRate,
+                                negotiated_rate_per_connector: newTierRate,
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {CHARGER_LINE_TYPES.map((t) => (
+                                <SelectItem key={t} value={t}>
+                                  {CHARGER_LINE_LABELS[t]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-3 space-y-1">
+                          <Label className="text-[10px] uppercase tracking-wide">
+                            Connectors
+                          </Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            className="h-9"
+                            value={line.connector_count}
+                            onChange={(e) =>
+                              updateLine(line.id, {
+                                connector_count: Math.max(1, Number(e.target.value) || 1),
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-span-4 space-y-1">
+                          <Label className="text-[10px] uppercase tracking-wide">
+                            $ / connector
+                          </Label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                              $
+                            </span>
+                            <Input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              className="pl-6 h-9"
+                              value={line.negotiated_rate_per_connector}
+                              onChange={(e) =>
+                                updateLine(line.id, {
+                                  negotiated_rate_per_connector: Math.max(
+                                    0,
+                                    Number(e.target.value) || 0
+                                  ),
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 flex-wrap pr-6">
+                        <p className="text-[10px] text-muted-foreground">
+                          List ${Number(line.tier_rate_per_connector).toFixed(2)} ·{" "}
+                          {tier ? TIER_LABELS[tier] : "—"} ·{" "}
+                          {CHARGER_LINE_LABELS[line.charger_type]}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          {lineDiscount > 0 ? (
+                            <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px]">
+                              -{linePct.toFixed(1)}% discount
+                            </Badge>
+                          ) : lineDiscount < 0 ? (
+                            <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30 text-[10px]">
+                              +{linePct.toFixed(1)}% premium
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px]">
+                              Standard
+                            </Badge>
+                          )}
+                          <span className="text-sm font-bold">
+                            {formatCurrency(lineNeg)}/mo
+                          </span>
+                        </div>
+                      </div>
+
+                      <Textarea
+                        rows={1}
+                        value={line.notes}
+                        onChange={(e) => updateLine(line.id, { notes: e.target.value })}
+                        placeholder="Line notes (optional)"
+                        className="text-xs"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addLine}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1.5" /> Add charger line
+              </Button>
+
+              {/* Totals summary */}
+              <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Total connectors</span>
+                  <span className="font-bold">{totalConnectors}</span>
                 </div>
-                {discountAmount > 0 ? (
-                  <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">
-                    -{discountPct.toFixed(1)}% discount
-                  </Badge>
-                ) : premiumAmount > 0 ? (
-                  <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">
-                    +{premiumPct.toFixed(1)}% premium
-                  </Badge>
-                ) : (
-                  <Badge variant="outline">Standard pricing</Badge>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">List monthly</span>
+                  <span
+                    className={
+                      discountAmount > 0
+                        ? "line-through text-muted-foreground"
+                        : "font-bold"
+                    }
+                  >
+                    {formatCurrency(listMonthly)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Negotiated monthly</span>
+                  <div className="flex items-center gap-2">
+                    {discountAmount > 0 && (
+                      <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px]">
+                        -{discountPct.toFixed(1)}%
+                      </Badge>
+                    )}
+                    <span className="font-bold text-base">
+                      {formatCurrency(negotiatedMonthly)}
+                    </span>
+                  </div>
+                </div>
+                {isLargeDiscount && (
+                  <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-400 mt-2">
+                    Significant discount ({discountPct.toFixed(1)}%). Confirm before proceeding.
+                  </div>
                 )}
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                Tier rate {tier ? `$${tierUnitPrice(tier, chargerType)}` : "$—"} ×{" "}
-                {count} connectors = {formatCurrency(listMonthly)} standard. Override
-                if negotiated.
-              </p>
-              {isLargeDiscount && (
-                <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
-                  This is a significant discount ({discountPct.toFixed(1)}%). Confirm
-                  before proceeding.
-                </div>
-              )}
             </div>
 
             {needsDiscountReason && (
