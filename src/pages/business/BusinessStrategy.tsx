@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAllStrategies, useTourCompleted, useMarkTourCompleted } from "@/hooks/useStrategy";
 import { useFocusMode } from "@/hooks/useFocus5";
+import { FocusModeToggle } from "@/components/business/FocusModeToggle";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useDeals } from "@/hooks/useDeals";
 import { supabase } from "@/integrations/supabase/client";
@@ -228,12 +229,15 @@ export default function BusinessStrategy() {
     <TooltipProvider>
       <div className={cn("p-6 space-y-4", focusMode.enabled && "ring-2 ring-amber-400/60 rounded-md m-2")}>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-            <TabsTrigger value="weekly_review">Weekly Review</TabsTrigger>
-            <TabsTrigger value="quarterly_review">Quarterly Review</TabsTrigger>
-            <TabsTrigger value="annual_view">Annual View</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between gap-3">
+            <TabsList>
+              <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+              <TabsTrigger value="weekly_review">Weekly Review</TabsTrigger>
+              <TabsTrigger value="quarterly_review">Quarterly Review</TabsTrigger>
+              <TabsTrigger value="annual_view">Annual View</TabsTrigger>
+            </TabsList>
+            <FocusModeToggle />
+          </div>
           <TabsContent value="weekly_review" className="mt-4">
             <WeeklyReviewTab />
           </TabsContent>
