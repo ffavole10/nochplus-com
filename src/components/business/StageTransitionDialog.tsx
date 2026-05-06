@@ -165,7 +165,7 @@ export function StageTransitionDialog({
             </div>
           )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="px-6 py-4 border-t border-border shrink-0 bg-background">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleConfirm} disabled={commit.isPending || !!validation || reasonOtherNeedsNotes && (type === "closed_won" || type === "closed_lost")}>
             {commit.isPending && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}
